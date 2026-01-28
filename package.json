@@ -1,0 +1,53 @@
+{
+  "name": "sales-planner-back",
+  "version": "0.0.1",
+  "description": "NestJS API for sales planner",
+  "author": "Damir Manapov",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "nest build",
+    "start": "nest start",
+    "start:dev": "nest start --watch",
+    "start:debug": "nest start --debug --watch",
+    "start:prod": "node dist/main.js",
+    "lint": "biome lint --error-on-warnings .",
+    "lint:fix": "biome lint --write .",
+    "format": "biome format --write .",
+    "format:check": "biome format .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:cov": "vitest run --coverage",
+    "compose:up": "docker compose up starter -d",
+    "compose:down": "docker compose down",
+    "compose:restart": "docker compose restart",
+    "compose:reset": "docker compose down -v --remove-orphans"
+  },
+  "dependencies": {
+    "@nestjs/common": "^11.1.12",
+    "@nestjs/core": "^11.1.12",
+    "@nestjs/platform-express": "^11.1.12",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "supertest": "^7.0.0"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "^2.3.13",
+    "@nestjs/cli": "^11.0.16",
+    "@nestjs/testing": "^11.1.12",
+    "@swc/core": "^1.15.11",
+    "@types/express": "^5.0.6",
+    "@types/node": "^25.0.10",
+    "@types/supertest": "^6.0.3",
+    "@vitest/coverage-v8": "^4.0.18",
+    "ts-node": "^10.9.2",
+    "tsconfig-paths": "^4.2.0",
+    "typescript": "^5.9.3",
+    "unplugin-swc": "^1.5.9",
+    "vitest": "^4.0.18"
+  },
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}
