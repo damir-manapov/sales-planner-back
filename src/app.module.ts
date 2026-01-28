@@ -10,6 +10,7 @@ import { UserRolesModule } from './user-roles/index.js';
 import { TenantsModule } from './tenants/index.js';
 import { ShopsModule } from './shops/index.js';
 import { UserShopsModule } from './user-shops/index.js';
+import { ApiKeysModule } from './api-keys/index.js';
 import { BootstrapModule } from './bootstrap/index.js';
 
 @Module({
@@ -26,6 +27,7 @@ import { BootstrapModule } from './bootstrap/index.js';
     TenantsModule,
     ShopsModule,
     UserShopsModule,
+    ApiKeysModule,
     BootstrapModule,
   ],
   controllers: [AppController],

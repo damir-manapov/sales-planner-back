@@ -4,14 +4,12 @@ import { DatabaseService } from '../database/index.js';
 export interface CreateUserDto {
   email: string;
   name: string;
-  api_key?: string;
 }
 
 export interface User {
   id: number;
   email: string;
   name: string;
-  api_key: string | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -28,10 +26,6 @@ export class UsersService {
     return this.db.selectFrom('users').selectAll().where('id', '=', id).executeTakeFirst();
   }
 
-  async findByApiKey(apiKey: string): Promise<User | undefined> {
-    return this.db.selectFrom('users').selectAll().where('api_key', '=', apiKey).executeTakeFirst();
-  }
-
   async findByEmail(email: string): Promise<User | undefined> {
     return this.db.selectFrom('users').selectAll().where('email', '=', email).executeTakeFirst();
   }
@@ -42,7 +36,6 @@ export class UsersService {
       .values({
         email: dto.email,
         name: dto.name,
-        api_key: dto.api_key ?? null,
         updated_at: new Date(),
       })
       .returningAll()

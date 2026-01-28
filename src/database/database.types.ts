@@ -9,7 +9,17 @@ export interface UsersTable {
   id: Generated<number>;
   email: string;
   name: string;
-  api_key: string | null;
+  created_at: ColumnType<Date, never, never>;
+  updated_at: Timestamp;
+}
+
+export interface ApiKeysTable {
+  id: Generated<number>;
+  user_id: number;
+  key: string;
+  name: string | null;
+  expires_at: Date | null;
+  last_used_at: Date | null;
   created_at: ColumnType<Date, never, never>;
   updated_at: Timestamp;
 }
@@ -53,6 +63,7 @@ export interface UserShopsTable {
 
 export interface Database {
   users: UsersTable;
+  api_keys: ApiKeysTable;
   roles: RolesTable;
   user_roles: UserRolesTable;
   tenants: TenantsTable;

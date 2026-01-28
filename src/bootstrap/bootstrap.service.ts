@@ -3,6 +3,7 @@ import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service.js';
 import { RolesService } from '../roles/roles.service.js';
 import { UserRolesService } from '../user-roles/user-roles.service.js';
+import { ApiKeysService } from '../api-keys/api-keys.service.js';
 
 @Injectable()
 export class BootstrapService implements OnModuleInit {
@@ -13,6 +14,7 @@ export class BootstrapService implements OnModuleInit {
     private readonly usersService: UsersService,
     private readonly rolesService: RolesService,
     private readonly userRolesService: UserRolesService,
+    private readonly apiKeysService: ApiKeysService,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -45,13 +47,23 @@ export class BootstrapService implements OnModuleInit {
     }
 
     // Check if user with this API key already exists
-    let adminUser = await this.usersService.findByApiKey(systemAdminKey);
+    const existingApiKey = await this.apiKeysService.findByKey(systemAdminKey);
+    let adminUser = existingApiKey
+      ? await this.usersService.findById(existingApiKey.user_id)
+      : undefined;
+
     if (!adminUser) {
       this.logger.log('Creating system admin user...');
       adminUser = await this.usersService.create({
         email: 'admin@system.local',
         name: 'System Admin',
-        api_key: systemAdminKey,
+      });
+
+      // Create API key for admin
+      await this.apiKeysService.create({
+        user_id: adminUser.id,
+        key: systemAdminKey,
+        name: 'System Admin Key',
       });
     }
 
