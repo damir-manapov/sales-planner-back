@@ -8,6 +8,10 @@ import { Database } from './database.types.js';
 export class DatabaseService extends Kysely<Database> implements OnModuleDestroy {
   constructor(configService: ConfigService) {
     const connectionString = configService.get<string>('database.connectionString');
+    const host = configService.get<string>('database.host');
+
+    // Enable SSL for Neon or any cloud provider requiring SSL
+    const isNeonHost = host?.includes('neon.tech') || false;
 
     const poolConfig: pg.PoolConfig = connectionString
       ? {
@@ -16,11 +20,12 @@ export class DatabaseService extends Kysely<Database> implements OnModuleDestroy
           max: 10,
         }
       : {
-          host: configService.get<string>('database.host'),
+          host,
           port: configService.get<number>('database.port'),
           database: configService.get<string>('database.database'),
           user: configService.get<string>('database.user'),
           password: configService.get<string>('database.password'),
+          ssl: isNeonHost ? { rejectUnauthorized: false } : undefined,
           max: 10,
         };
 
