@@ -18,6 +18,10 @@ export class TenantsService {
     return this.db.selectFrom('tenants').selectAll().where('id', '=', id).executeTakeFirst();
   }
 
+  async findByOwnerId(ownerId: number): Promise<Tenant[]> {
+    return this.db.selectFrom('tenants').selectAll().where('owner_id', '=', ownerId).execute();
+  }
+
   async create(dto: CreateTenantDto): Promise<Tenant> {
     return this.db.insertInto('tenants').values(dto).returningAll().executeTakeFirstOrThrow();
   }

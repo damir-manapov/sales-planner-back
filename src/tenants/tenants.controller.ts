@@ -6,6 +6,7 @@ import {
   Delete,
   Body,
   Param,
+  Query,
   ParseIntPipe,
   NotFoundException,
 } from '@nestjs/common';
@@ -16,7 +17,10 @@ export class TenantsController {
   constructor(private readonly tenantsService: TenantsService) {}
 
   @Get()
-  async findAll(): Promise<Tenant[]> {
+  async findAll(@Query('owner_id') ownerId?: string): Promise<Tenant[]> {
+    if (ownerId) {
+      return this.tenantsService.findByOwnerId(Number.parseInt(ownerId, 10));
+    }
     return this.tenantsService.findAll();
   }
 

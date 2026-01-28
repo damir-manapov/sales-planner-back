@@ -42,6 +42,7 @@ export interface UserRolesTable {
 export interface TenantsTable {
   id: Generated<number>;
   title: string;
+  owner_id: number | null;
   created_at: ColumnType<Date, never, never>;
   updated_at: Timestamp;
 }
