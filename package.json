@@ -28,8 +28,14 @@
   },
   "dependencies": {
     "@nestjs/common": "^11.1.12",
+    "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.12",
+    "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.1.12",
+    "jwks-rsa": "^3.2.2",
+    "keycloak-connect": "^26.1.1",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "supertest": "^7.0.0"
@@ -42,6 +48,7 @@
     "@swc/core": "^1.15.11",
     "@types/express": "^5.0.6",
     "@types/node": "^25.0.10",
+    "@types/passport-jwt": "^4.0.1",
     "@types/supertest": "^6.0.3",
     "@vitest/coverage-v8": "^4.0.18",
     "ts-node": "^10.9.2",
