@@ -7,7 +7,7 @@ if ! command -v gitleaks &> /dev/null; then
   echo "Install from: https://github.com/gitleaks/gitleaks/releases"
   exit 1
 fi
-gitleaks git --source=. --verbose
+gitleaks git --verbose
 echo "gitleaks: OK"
 
 echo "=== Checking outdated dependencies ==="
