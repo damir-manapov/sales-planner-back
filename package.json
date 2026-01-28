@@ -4,7 +4,6 @@
   "description": "NestJS API for sales planner",
   "author": "Damir Manapov",
   "license": "MIT",
-  "type": "module",
   "scripts": {
     "build": "nest build",
     "start": "nest start",
@@ -45,6 +44,7 @@
     "@nestjs/cli": "^11.0.16",
     "@nestjs/schematics": "^11.0.9",
     "@nestjs/testing": "^11.1.12",
+    "@swc/cli": "^0.7.10",
     "@swc/core": "^1.15.11",
     "@types/express": "^5.0.6",
     "@types/node": "^25.0.10",
