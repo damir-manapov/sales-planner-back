@@ -45,23 +45,37 @@ pnpm build
 pnpm start:prod
 ```
 
+## Testing
+
+```bash
+pnpm test           # Run unit tests
+pnpm test:watch     # Run unit tests in watch mode
+pnpm test:cov       # Run unit tests with coverage
+pnpm test:e2e       # Run e2e tests
+pnpm test:e2e:watch # Run e2e tests in watch mode
+```
+
 ## Scripts
 
-- `pnpm build` - Build the application
-- `pnpm start` - Start the application
-- `pnpm start:dev` - Start in development mode with watch
-- `pnpm start:prod` - Start production build
-- `pnpm test` - Run tests
-- `pnpm test:cov` - Run tests with coverage
-- `pnpm lint` - Run linter
-- `pnpm format` - Format code
-- `pnpm typecheck` - Check types
+| Script | Description |
+|--------|-------------|
+| `pnpm build` | Build the application |
+| `pnpm start` | Start the application |
+| `pnpm start:dev` | Start in development mode with watch |
+| `pnpm start:prod` | Start production build |
+| `pnpm lint` | Run linter |
+| `pnpm lint:fix` | Run linter and fix issues |
+| `pnpm format` | Format code |
+| `pnpm format:check` | Check code formatting |
+| `pnpm typecheck` | Check types |
 
 ### Check scripts
 
-- `./check.sh` - Format, lint, typecheck, and run tests
-- `./health.sh` - Check gitleaks, outdated deps, and vulnerabilities
-- `./all-checks.sh` - Run both check.sh and health.sh
+| Script | Description |
+|--------|-------------|
+| `./check.sh` | Format, lint, typecheck, and run unit tests |
+| `./health.sh` | Check gitleaks, outdated deps, and vulnerabilities |
+| `./all-checks.sh` | Run both check.sh and health.sh |
 
 ## Docker Compose
 
@@ -70,4 +84,26 @@ pnpm compose:up      # Start services
 pnpm compose:down    # Stop services
 pnpm compose:restart # Restart services
 pnpm compose:reset   # Reset (remove volumes and orphans)
+```
+
+## Project Structure
+
+```
+sales-planner-back/
+├── src/                    # Application source code
+│   ├── main.ts             # Application entry point
+│   ├── app.module.ts       # Root module
+│   ├── app.controller.ts   # Root controller
+│   ├── app.service.ts      # Root service
+│   └── *.spec.ts           # Unit tests
+├── test/                   # E2E tests
+│   └── *.e2e.spec.ts
+├── check.sh                # Format, lint, typecheck, unit tests
+├── health.sh               # Security and dependency checks
+├── all-checks.sh           # Run all checks
+├── docker-compose.yml      # Docker services
+├── biome.json              # Biome linter/formatter config
+├── tsconfig.json           # TypeScript config
+├── vitest.config.ts        # Vitest config (unit tests)
+└── vitest.config.e2e.ts    # Vitest config (e2e tests)
 ```
