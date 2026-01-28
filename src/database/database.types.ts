@@ -36,6 +36,7 @@ export interface UserRolesTable {
   id: Generated<number>;
   user_id: number;
   role_id: number;
+  tenant_id: number | null;
   created_at: ColumnType<Date, never, never>;
 }
 

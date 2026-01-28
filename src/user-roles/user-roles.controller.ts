@@ -19,7 +19,11 @@ export class UserRolesController {
   async findAll(
     @Query('userId') userId?: string,
     @Query('roleId') roleId?: string,
+    @Query('tenantId') tenantId?: string,
   ): Promise<UserRole[]> {
+    if (tenantId) {
+      return this.userRolesService.findByTenantId(Number(tenantId));
+    }
     if (userId) {
       return this.userRolesService.findByUserId(Number(userId));
     }
