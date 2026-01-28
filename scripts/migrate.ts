@@ -12,18 +12,20 @@ config({ path: '.env' });
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
 async function migrate() {
-  const host = process.env.DATABASE_HOST;
-  const isNeonHost = host?.includes('neon.tech') || false;
+  const url = process.env.DATABASE_URL;
 
-  console.log(`Connecting to database: ${host}:${process.env.DATABASE_PORT}/${process.env.DATABASE_NAME}`);
+  if (!url) {
+    throw new Error('DATABASE_URL is required');
+  }
+
+  const parsed = new URL(url);
+  const ssl = parsed.searchParams.get('sslmode') === 'require';
+
+  console.log(`Connecting to database: ${parsed.hostname}:${parsed.port}${parsed.pathname}`);
 
   const pool = new pg.Pool({
-    host,
-    port: Number(process.env.DATABASE_PORT) || 5432,
-    database: process.env.DATABASE_NAME,
-    user: process.env.DATABASE_USER,
-    password: process.env.DATABASE_PASSWORD,
-    ssl: isNeonHost ? { rejectUnauthorized: false } : undefined,
+    connectionString: url,
+    ssl: ssl ? { rejectUnauthorized: false } : undefined,
   });
 
   const migrationsDir = path.join(__dirname, '..', 'migrations');

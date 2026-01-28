@@ -7,21 +7,20 @@ import { Database } from './database.types.js';
 @Injectable()
 export class DatabaseService extends Kysely<Database> implements OnModuleDestroy {
   constructor(configService: ConfigService) {
-    const connectionString = configService.get<string>('database.connectionString');
-    const host = configService.get<string>('database.host') || 'localhost';
-    const port = configService.get<number>('database.port') || 5432;
-    const database = configService.get<string>('database.database') || 'sales_planner';
-    const user = configService.get<string>('database.user') || 'postgres';
-    const password = configService.get<string>('database.password') || 'postgres';
+    const url = configService.get<string>('database.url');
+    const host = configService.get<string>('database.host');
+    const port = configService.get<number>('database.port');
+    const database = configService.get<string>('database.database');
+    const user = configService.get<string>('database.user');
+    const password = configService.get<string>('database.password');
+    const ssl = configService.get<boolean>('database.ssl');
+    const serverless = configService.get<boolean>('database.serverless');
 
-    // Enable SSL for Neon or any cloud provider requiring SSL
-    const isNeonHost = host?.includes('neon.tech') || false;
-
-    const poolConfig: pg.PoolConfig = connectionString
+    const poolConfig: pg.PoolConfig = url
       ? {
-          connectionString,
-          ssl: { rejectUnauthorized: false },
-          max: 1, // Serverless-friendly
+          connectionString: url,
+          ssl: ssl ? { rejectUnauthorized: false } : undefined,
+          max: serverless ? 1 : 10,
           connectionTimeoutMillis: 5000,
         }
       : {
@@ -30,8 +29,8 @@ export class DatabaseService extends Kysely<Database> implements OnModuleDestroy
           database,
           user,
           password,
-          ssl: isNeonHost ? { rejectUnauthorized: false } : undefined,
-          max: 10,
+          ssl: ssl ? { rejectUnauthorized: false } : undefined,
+          max: serverless ? 1 : 10,
           connectionTimeoutMillis: 5000,
         };
 
