@@ -4,12 +4,14 @@ import { DatabaseService } from '../database/index.js';
 export interface CreateUserDto {
   email: string;
   name: string;
+  default_shop_id?: number;
 }
 
 export interface User {
   id: number;
   email: string;
   name: string;
+  default_shop_id: number | null;
   created_at: Date;
   updated_at: Date;
 }

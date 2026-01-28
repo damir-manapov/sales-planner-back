@@ -9,6 +9,7 @@ export interface UsersTable {
   id: Generated<number>;
   email: string;
   name: string;
+  default_shop_id: number | null;
   created_at: ColumnType<Date, never, never>;
   updated_at: Timestamp;
 }
