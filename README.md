@@ -144,7 +144,10 @@ sales-planner-back/
 │   ├── user-roles/             # User-Role associations
 │   ├── api-keys/               # API keys management
 │   ├── marketplaces/           # Marketplaces CRUD
-│   └── bootstrap/              # System admin initialization
+│   └── bootstrap/              # System admin & seed data initialization
+├── data/
+│   └── common/                 # Seed data (JSON files)
+│       └── marketplaces.json   # Marketplace definitions
 ├── migrations/                 # SQL migrations
 ├── api/                        # Vercel serverless handler
 │   └── index.ts

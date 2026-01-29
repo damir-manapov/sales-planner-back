@@ -99,8 +99,8 @@ importers:
         specifier: ^1.5.9
         version: 1.5.9(@swc/core@1.15.11)(rollup@4.57.0)
       vercel:
-        specifier: ^50.9.1
-        version: 50.9.1(@swc/core@1.15.11)(rollup@4.57.0)(typescript@5.9.3)
+        specifier: ^50.9.2
+        version: 50.9.2(@swc/core@1.15.11)(rollup@4.57.0)(typescript@5.9.3)
       vitest:
         specifier: ^4.0.18
         version: 4.0.18(@edge-runtime/vm@3.2.0)(@types/node@25.1.0)(terser@5.46.0)(tsx@4.21.0)
@@ -3681,8 +3681,8 @@ packages:
     resolution: {integrity: sha512-BNGbWLfd0eUPabhkXUVm0j8uuvREyTh5ovRa/dyow/BqAbZJyC+5fU+IzQOzmAKzYqYRAISoRhdQr3eIZ/PXqg==}
     engines: {node: '>= 0.8'}
 
-  vercel@50.9.1:
-    resolution: {integrity: sha512-ZohNx0olOCMYUH9qdVeubvPhcCDhXSE0I+d0B80ul6UxrP4uWQj5PM1rzGAP7L0qzWUH1fSShS8doOv8i/X6KA==}
+  vercel@50.9.2:
+    resolution: {integrity: sha512-ZLYiIE0+06LKljlvoHEQ1A1ypHgMyTusElL5G0Caxc6qRnaRNNTwtMu8XR/ING74+osE8NMhwkivVpxUr1mpvQ==}
     engines: {node: '>= 18'}
     hasBin: true
 
@@ -7410,7 +7410,7 @@ snapshots:
 
   vary@1.1.2: {}
 
-  vercel@50.9.1(@swc/core@1.15.11)(rollup@4.57.0)(typescript@5.9.3):
+  vercel@50.9.2(@swc/core@1.15.11)(rollup@4.57.0)(typescript@5.9.3):
     dependencies:
       '@vercel/backends': 0.0.23(rollup@4.57.0)(typescript@5.9.3)
       '@vercel/blob': 1.0.2

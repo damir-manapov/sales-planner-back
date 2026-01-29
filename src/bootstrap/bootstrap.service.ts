@@ -1,9 +1,12 @@
 import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { UsersService } from '../users/users.service.js';
 import { RolesService } from '../roles/roles.service.js';
 import { UserRolesService } from '../user-roles/user-roles.service.js';
 import { ApiKeysService } from '../api-keys/api-keys.service.js';
+import { MarketplacesService, CreateMarketplaceDto } from '../marketplaces/marketplaces.service.js';
 
 @Injectable()
 export class BootstrapService implements OnModuleInit {
@@ -15,10 +18,12 @@ export class BootstrapService implements OnModuleInit {
     private readonly rolesService: RolesService,
     private readonly userRolesService: UserRolesService,
     private readonly apiKeysService: ApiKeysService,
+    private readonly marketplacesService: MarketplacesService,
   ) {}
 
   async onModuleInit(): Promise<void> {
     await this.ensureSystemAdmin();
+    await this.seedMarketplaces();
   }
 
   private async ensureSystemAdmin(): Promise<void> {
@@ -78,5 +83,20 @@ export class BootstrapService implements OnModuleInit {
     }
 
     this.logger.log('System admin initialization complete');
+  }
+
+  private async seedMarketplaces(): Promise<void> {
+    const marketplacesData: CreateMarketplaceDto[] = JSON.parse(
+      readFileSync(join(__dirname, '../../data/common/marketplaces.json'), 'utf-8'),
+    );
+
+    for (const marketplace of marketplacesData) {
+      const existing = await this.marketplacesService.findById(marketplace.id);
+      if (!existing) {
+        this.logger.log(`Creating marketplace: ${marketplace.title}`);
+        await this.marketplacesService.create(marketplace);
+      }
+    }
+    this.logger.log('Marketplaces seeding complete');
   }
 }
