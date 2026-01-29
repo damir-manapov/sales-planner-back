@@ -11,8 +11,15 @@ import {
   NotFoundException,
   UseGuards,
   Req,
+  ForbiddenException,
 } from '@nestjs/common';
-import { TenantsService, CreateTenantDto, Tenant } from './tenants.service.js';
+import {
+  TenantsService,
+  CreateTenantDto,
+  Tenant,
+  CreateTenantWithShopDto,
+  TenantWithShopAndApiKey,
+} from './tenants.service.js';
 import { AuthGuard, AuthenticatedRequest } from '../auth/index.js';
 
 @Controller('tenants')
@@ -73,5 +80,18 @@ export class TenantsController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<void> {
     await this.tenantsService.delete(id);
+  }
+
+  @Post('with-shop')
+  async createWithShop(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: CreateTenantWithShopDto,
+  ): Promise<TenantWithShopAndApiKey> {
+    // Only systemAdmin can create tenant with shop
+    if (!req.user.isSystemAdmin) {
+      throw new ForbiddenException('Only systemAdmin can create tenant with shop');
+    }
+
+    return this.tenantsService.createTenantWithShop(dto);
   }
 }
