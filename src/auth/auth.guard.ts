@@ -1,8 +1,18 @@
-import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from '@nestjs/common';
+import {
+  Injectable,
+  CanActivate,
+  ExecutionContext,
+  UnauthorizedException,
+  ForbiddenException,
+  BadRequestException,
+} from '@nestjs/common';
+import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { ApiKeysService } from '../api-keys/api-keys.service.js';
 import { UserRolesService } from '../user-roles/user-roles.service.js';
 import { TenantsService } from '../tenants/tenants.service.js';
+import { ACCESS_LEVEL_KEY, AccessLevel } from './decorators.js';
+import { hasReadAccess, hasWriteAccess } from './access-control.js';
 
 export interface TenantRole {
   tenantId: number;
@@ -33,6 +43,7 @@ export class AuthGuard implements CanActivate {
     private readonly apiKeysService: ApiKeysService,
     private readonly userRolesService: UserRolesService,
     private readonly tenantsService: TenantsService,
+    private readonly reflector: Reflector,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -111,6 +122,29 @@ export class AuthGuard implements CanActivate {
       shopRoles,
       isSystemAdmin,
     };
+
+    // Check access level if metadata is set
+    const accessLevel = this.reflector.get<AccessLevel>(ACCESS_LEVEL_KEY, context.getHandler());
+    if (accessLevel && accessLevel !== AccessLevel.NONE) {
+      const shopId = Number.parseInt(request.query.shop_id as string, 10);
+      const tenantId = Number.parseInt(request.query.tenant_id as string, 10);
+
+      if (Number.isNaN(shopId) || Number.isNaN(tenantId)) {
+        throw new BadRequestException('shop_id and tenant_id are required');
+      }
+
+      if (!request.user.tenantIds.includes(tenantId)) {
+        throw new ForbiddenException('Access to this tenant is not allowed');
+      }
+
+      if (accessLevel === AccessLevel.READ && !hasReadAccess(request.user, shopId, tenantId)) {
+        throw new ForbiddenException('Viewer or editor role required for this shop');
+      }
+
+      if (accessLevel === AccessLevel.WRITE && !hasWriteAccess(request.user, shopId, tenantId)) {
+        throw new ForbiddenException('Editor role required for this shop');
+      }
+    }
 
     return true;
   }

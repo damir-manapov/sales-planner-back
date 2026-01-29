@@ -23,8 +23,10 @@ import { isValidPeriod } from '../lib/index.js';
 import {
   AuthGuard,
   AuthenticatedRequest,
-  validateReadAccess,
-  validateWriteAccess,
+  RequireReadAccess,
+  RequireWriteAccess,
+  ShopContext,
+  type ShopContextType,
 } from '../auth/index.js';
 
 interface ImportSalesHistoryItem {
@@ -46,15 +48,13 @@ export class SalesHistoryController {
   constructor(private readonly salesHistoryService: SalesHistoryService) {}
 
   @Get()
+  @RequireReadAccess()
   async findAll(
-    @Req() req: AuthenticatedRequest,
-    @Query('shop_id', ParseIntPipe) shopId: number,
-    @Query('tenant_id', ParseIntPipe) tenantId: number,
+    @Req() _req: AuthenticatedRequest,
+    @ShopContext() ctx: ShopContextType,
     @Query('period_from') periodFrom?: string,
     @Query('period_to') periodTo?: string,
   ): Promise<SalesHistory[]> {
-    validateReadAccess(req.user, shopId, tenantId);
-
     if (periodFrom && !isValidPeriod(periodFrom)) {
       throw new BadRequestException('period_from must be in YYYY-MM format');
     }
@@ -62,19 +62,17 @@ export class SalesHistoryController {
       throw new BadRequestException('period_to must be in YYYY-MM format');
     }
 
-    return this.salesHistoryService.findByShopAndPeriod(shopId, periodFrom, periodTo);
+    return this.salesHistoryService.findByShopAndPeriod(ctx.shopId, periodFrom, periodTo);
   }
 
   @Get('export/json')
+  @RequireReadAccess()
   async exportJson(
-    @Req() req: AuthenticatedRequest,
-    @Query('shop_id', ParseIntPipe) shopId: number,
-    @Query('tenant_id', ParseIntPipe) tenantId: number,
+    @Req() _req: AuthenticatedRequest,
+    @ShopContext() ctx: ShopContextType,
     @Query('period_from') periodFrom?: string,
     @Query('period_to') periodTo?: string,
   ): Promise<Array<{ sku_code: string; period: string; quantity: number }>> {
-    validateReadAccess(req.user, shopId, tenantId);
-
     if (periodFrom && !isValidPeriod(periodFrom)) {
       throw new BadRequestException('period_from must be in YYYY-MM format');
     }
@@ -82,24 +80,22 @@ export class SalesHistoryController {
       throw new BadRequestException('period_to must be in YYYY-MM format');
     }
 
-    return this.salesHistoryService.exportForShop(shopId, periodFrom, periodTo);
+    return this.salesHistoryService.exportForShop(ctx.shopId, periodFrom, periodTo);
   }
 
   @Get(':id')
+  @RequireReadAccess()
   async findById(
-    @Req() req: AuthenticatedRequest,
-    @Query('shop_id', ParseIntPipe) shopId: number,
-    @Query('tenant_id', ParseIntPipe) tenantId: number,
+    @Req() _req: AuthenticatedRequest,
+    @ShopContext() ctx: ShopContextType,
     @Param('id', ParseIntPipe) id: number,
   ): Promise<SalesHistory> {
-    validateReadAccess(req.user, shopId, tenantId);
-
     const record = await this.salesHistoryService.findById(id);
     if (!record) {
       throw new NotFoundException(`Sales history record with id ${id} not found`);
     }
 
-    if (record.shop_id !== shopId || record.tenant_id !== tenantId) {
+    if (record.shop_id !== ctx.shopId || record.tenant_id !== ctx.tenantId) {
       throw new NotFoundException(
         `Sales history record with id ${id} not found in this shop/tenant`,
       );
@@ -109,41 +105,37 @@ export class SalesHistoryController {
   }
 
   @Post()
+  @RequireWriteAccess()
   async create(
-    @Req() req: AuthenticatedRequest,
-    @Query('shop_id', ParseIntPipe) shopId: number,
-    @Query('tenant_id', ParseIntPipe) tenantId: number,
+    @Req() _req: AuthenticatedRequest,
+    @ShopContext() ctx: ShopContextType,
     @Body() dto: Omit<CreateSalesHistoryDto, 'shop_id' | 'tenant_id'>,
   ): Promise<SalesHistory> {
-    validateWriteAccess(req.user, shopId, tenantId);
-
     if (!isValidPeriod(dto.period)) {
       throw new BadRequestException('period must be in YYYY-MM format with valid month (01-12)');
     }
 
     return this.salesHistoryService.create({
       ...dto,
-      shop_id: shopId,
-      tenant_id: tenantId,
+      shop_id: ctx.shopId,
+      tenant_id: ctx.tenantId,
     });
   }
 
   @Put(':id')
+  @RequireWriteAccess()
   async update(
-    @Req() req: AuthenticatedRequest,
-    @Query('shop_id', ParseIntPipe) shopId: number,
-    @Query('tenant_id', ParseIntPipe) tenantId: number,
+    @Req() _req: AuthenticatedRequest,
+    @ShopContext() ctx: ShopContextType,
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateSalesHistoryDto,
   ): Promise<SalesHistory> {
-    validateWriteAccess(req.user, shopId, tenantId);
-
     const existing = await this.salesHistoryService.findById(id);
     if (!existing) {
       throw new NotFoundException(`Sales history record with id ${id} not found`);
     }
 
-    if (existing.shop_id !== shopId || existing.tenant_id !== tenantId) {
+    if (existing.shop_id !== ctx.shopId || existing.tenant_id !== ctx.tenantId) {
       throw new NotFoundException(
         `Sales history record with id ${id} not found in this shop/tenant`,
       );
@@ -157,20 +149,18 @@ export class SalesHistoryController {
   }
 
   @Delete(':id')
+  @RequireWriteAccess()
   async delete(
-    @Req() req: AuthenticatedRequest,
-    @Query('shop_id', ParseIntPipe) shopId: number,
-    @Query('tenant_id', ParseIntPipe) tenantId: number,
+    @Req() _req: AuthenticatedRequest,
+    @ShopContext() ctx: ShopContextType,
     @Param('id', ParseIntPipe) id: number,
   ): Promise<void> {
-    validateWriteAccess(req.user, shopId, tenantId);
-
     const existing = await this.salesHistoryService.findById(id);
     if (!existing) {
       throw new NotFoundException(`Sales history record with id ${id} not found`);
     }
 
-    if (existing.shop_id !== shopId || existing.tenant_id !== tenantId) {
+    if (existing.shop_id !== ctx.shopId || existing.tenant_id !== ctx.tenantId) {
       throw new NotFoundException(
         `Sales history record with id ${id} not found in this shop/tenant`,
       );
@@ -180,18 +170,16 @@ export class SalesHistoryController {
   }
 
   @Post('import')
+  @RequireWriteAccess()
   async importJson(
-    @Req() req: AuthenticatedRequest,
-    @Query('shop_id', ParseIntPipe) shopId: number,
-    @Query('tenant_id', ParseIntPipe) tenantId: number,
+    @Req() _req: AuthenticatedRequest,
+    @ShopContext() ctx: ShopContextType,
     @Body() items: ImportSalesHistoryItem[],
   ): Promise<ImportResult> {
-    validateWriteAccess(req.user, shopId, tenantId);
-
     if (!Array.isArray(items)) {
       throw new BadRequestException('Body must be an array of sales history items');
     }
 
-    return this.salesHistoryService.bulkUpsert(items, shopId, tenantId);
+    return this.salesHistoryService.bulkUpsert(items, ctx.shopId, ctx.tenantId);
   }
 }
