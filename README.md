@@ -51,6 +51,42 @@ For protected endpoints (e.g., SKUs):
 
 All protected endpoints require an API key in the `x-api-key` header. The API key is linked to a user, and the user's roles determine access permissions.
 
+### Decorator-Based Access Control
+
+The API uses NestJS decorators for clean, declarative access control in controllers:
+
+**Access Level Decorators:**
+- `@RequireReadAccess()` - Validates user has read access (viewer, editor, tenantAdmin, tenantOwner, or systemAdmin)
+- `@RequireWriteAccess()` - Validates user has write access (editor, tenantAdmin, tenantOwner, or systemAdmin)
+
+**Context Decorator:**
+- `@ShopContext()` - Automatically extracts and validates `shop_id` and `tenant_id` from query parameters
+
+**Example:**
+```typescript
+@Get()
+@RequireReadAccess()
+async findAll(@ShopContext() ctx: ShopContextType): Promise<Sku[]> {
+  return this.skusService.findByShopId(ctx.shopId);
+}
+
+@Post()
+@RequireWriteAccess()
+async create(
+  @ShopContext() ctx: ShopContextType,
+  @Body() dto: CreateSkuDto,
+): Promise<Sku> {
+  return this.skusService.create({ ...dto, shop_id: ctx.shopId, tenant_id: ctx.tenantId });
+}
+```
+
+The decorators work with `AuthGuard` which:
+1. Validates the API key
+2. Checks access level metadata from decorators
+3. Extracts and validates `shop_id`/`tenant_id` from query params
+4. Verifies user has appropriate role-based access
+5. Throws `BadRequestException` for missing parameters or `ForbiddenException` for insufficient permissions
+
 ## Prerequisites
 
 - Node.js 20+
