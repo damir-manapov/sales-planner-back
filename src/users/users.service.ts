@@ -21,14 +21,14 @@ export interface UserRole {
   id: number;
   role_name: string;
   tenant_id: number | null;
-  tenant_name: string | null;
+  tenant_title: string | null;
   shop_id: number | null;
-  shop_name: string | null;
+  shop_title: string | null;
 }
 
 export interface TenantInfo {
   id: number;
-  name: string;
+  title: string;
   is_owner: boolean;
 }
 
@@ -87,7 +87,7 @@ export class UsersService {
       return null;
     }
 
-    // Get user roles with tenant/shop names
+    // Get user roles with tenant/shop titles
     const rolesResult = await this.db
       .selectFrom('user_roles')
       .innerJoin('roles', 'roles.id', 'user_roles.role_id')
@@ -96,9 +96,9 @@ export class UsersService {
       .select('user_roles.id')
       .select(sql<string>`roles.name`.as('role_name'))
       .select('user_roles.tenant_id')
-      .select(sql<string | null>`tenants.title`.as('tenant_name'))
+      .select(sql<string | null>`tenants.title`.as('tenant_title'))
       .select('user_roles.shop_id')
-      .select(sql<string | null>`shops.title`.as('shop_name'))
+      .select(sql<string | null>`shops.title`.as('shop_title'))
       .where('user_roles.user_id', '=', userId)
       .execute();
 
@@ -106,9 +106,9 @@ export class UsersService {
       id: r.id ?? 0,
       role_name: r.role_name,
       tenant_id: r.tenant_id,
-      tenant_name: r.tenant_name,
+      tenant_title: r.tenant_title,
       shop_id: r.shop_id,
-      shop_name: r.shop_name,
+      shop_title: r.shop_title,
     }));
 
     // Get all tenants user has access to (through roles)
@@ -120,14 +120,14 @@ export class UsersService {
     const tenantsResult = await this.db
       .selectFrom('tenants')
       .select('id')
-      .select(sql<string>`title`.as('name'))
+      .select('title')
       .select('owner_id')
       .where('id', 'in', tenantIds.length > 0 ? tenantIds : [-1])
       .execute();
 
     const tenants: TenantInfo[] = tenantsResult.map((t) => ({
       id: t.id,
-      name: t.name,
+      title: t.title,
       is_owner: t.owner_id === userId,
     }));
 

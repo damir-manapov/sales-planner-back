@@ -94,16 +94,16 @@ describe('Me (e2e)', () => {
     const role = response.body.roles[0];
     expect(role).toHaveProperty('role_name', 'editor');
     expect(role).toHaveProperty('tenant_id', tenantId);
-    expect(role.tenant_name).toBeTruthy();
+    expect(role.tenant_title).toBeTruthy();
     expect(role).toHaveProperty('shop_id', shopId);
-    expect(role.shop_name).toBeTruthy();
+    expect(role.shop_title).toBeTruthy();
 
     // Check tenants
     expect(Array.isArray(response.body.tenants)).toBe(true);
     expect(response.body.tenants.length).toBeGreaterThan(0);
     const tenant = response.body.tenants[0];
     expect(tenant).toHaveProperty('id', tenantId);
-    expect(tenant.name).toBeTruthy();
+    expect(tenant.title).toBeTruthy();
     expect(tenant).toHaveProperty('is_owner', true);
   });
 });

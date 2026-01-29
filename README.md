@@ -14,6 +14,7 @@ NestJS API for sales planning and management with Kysely + PostgreSQL (Neon).
 - **Marketplaces** - Marketplace management (string IDs)
 - **SKUs** - SKU management linked to shops (unique code per shop)
 - **Sales History** - Monthly sales data per SKU (shop-level entity)
+- **Me** - Get current user data with roles and tenants
 - **Bootstrap** - Auto-creates systemAdmin user and seeds default roles on startup
 
 ## Role-Based Access Control
@@ -50,6 +51,20 @@ For protected endpoints (e.g., SKUs):
 ### Authentication
 
 All protected endpoints require an API key in the `x-api-key` header. The API key is linked to a user, and the user's roles determine access permissions.
+
+**Getting Current User Information:**
+
+To retrieve the current authenticated user's data including their roles and tenants, use:
+
+```bash
+GET /me
+Headers: x-api-key: <your-api-key>
+```
+
+Response includes:
+- User basic info (id, name, email)
+- Roles with scope (including tenant/shop names where applicable)
+- Tenants the user has access to (with ownership flag)
 
 ### Decorator-Based Access Control
 
