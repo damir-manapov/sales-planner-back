@@ -293,17 +293,17 @@ curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
   "http://localhost:3000/sales-history?shop_id=1&tenant_id=1" \
   -d '{"sku_id": 1, "period": "2026-01", "quantity": 100, "amount": "1500.50"}'
 
-# Import sales history (upserts by sku_id + period)
+# Import sales history (upserts by sku_code + period)
 curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
   "http://localhost:3000/sales-history/import?shop_id=1&tenant_id=1" \
-  -d '[{"sku_id": 1, "period": "2026-01", "quantity": 100, "amount": "1500.50"}]'
+  -d '[{"sku_code": "SKU-001", "period": "2026-01", "quantity": 100, "amount": "1500.50"}]'
 ```
 
-Sales history JSON format:
+Sales history import JSON format (uses `sku_code` for user convenience):
 ```json
 [
-  {"sku_id": 1, "period": "2026-01", "quantity": 100, "amount": "1500.50"},
-  {"sku_id": 2, "period": "2026-01", "quantity": 50, "amount": "750.00"}
+  {"sku_code": "SKU-001", "period": "2026-01", "quantity": 100, "amount": "1500.50"},
+  {"sku_code": "SKU-002", "period": "2026-01", "quantity": 50, "amount": "750.00"}
 ]
 ```
 

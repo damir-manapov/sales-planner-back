@@ -28,7 +28,7 @@ import {
 } from '../auth/index.js';
 
 interface ImportSalesHistoryItem {
-  sku_id: number;
+  sku_code: string;
   period: string; // "YYYY-MM"
   quantity: number;
   amount: string;

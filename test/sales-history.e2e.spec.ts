@@ -9,6 +9,7 @@ describe('Sales History (e2e)', () => {
   let tenantId: number;
   let shopId: number;
   let skuId: number;
+  let skuCode: string;
   let salesHistoryId: number;
   let testUserId: number;
   let testUserApiKey: string;
@@ -61,10 +62,11 @@ describe('Sales History (e2e)', () => {
       .send({ user_id: testUserId, role_id: editorRoleId, tenant_id: tenantId, shop_id: shopId });
 
     // Create a test SKU
+    skuCode = `SKU-SALES-${Date.now()}`;
     const skuRes = await request(app.getHttpServer())
       .post(`/skus?shop_id=${shopId}&tenant_id=${tenantId}`)
       .set('X-API-Key', testUserApiKey)
-      .send({ code: `SKU-SALES-${Date.now()}`, title: 'Test SKU for Sales' });
+      .send({ code: skuCode, title: 'Test SKU for Sales' });
     skuId = skuRes.body.id;
   });
 
@@ -206,8 +208,8 @@ describe('Sales History (e2e)', () => {
   describe('Bulk import', () => {
     it('POST /sales-history/import - should import multiple records', async () => {
       const items = [
-        { sku_id: skuId, period: '2025-11', quantity: 80, amount: '1200.00' },
-        { sku_id: skuId, period: '2025-12', quantity: 90, amount: '1350.00' },
+        { sku_code: skuCode, period: '2025-11', quantity: 80, amount: '1200.00' },
+        { sku_code: skuCode, period: '2025-12', quantity: 90, amount: '1350.00' },
       ];
 
       const response = await request(app.getHttpServer())
@@ -222,7 +224,7 @@ describe('Sales History (e2e)', () => {
     });
 
     it('POST /sales-history/import - should upsert existing records', async () => {
-      const items = [{ sku_id: skuId, period: '2025-11', quantity: 100, amount: '1500.00' }];
+      const items = [{ sku_code: skuCode, period: '2025-11', quantity: 100, amount: '1500.00' }];
 
       const response = await request(app.getHttpServer())
         .post(`/sales-history/import?shop_id=${shopId}&tenant_id=${tenantId}`)

@@ -184,7 +184,7 @@ export class SalesHistoryService {
   }
 
   async bulkUpsert(
-    items: Array<{ sku_id: number; period: string; quantity: number; amount: string }>,
+    items: Array<{ sku_code: string; period: string; quantity: number; amount: string }>,
     shopId: number,
     tenantId: number,
   ): Promise<{ created: number; updated: number; errors: string[] }> {
@@ -193,17 +193,18 @@ export class SalesHistoryService {
     }
 
     const errors: string[] = [];
-    const validItems: Array<{
-      sku_id: number;
+
+    // Validate items first
+    const validatedItems: Array<{
+      sku_code: string;
       period: string;
-      periodDate: Date;
       quantity: number;
       amount: string;
     }> = [];
 
     items.forEach((item, i) => {
-      if (!item.sku_id || !item.period) {
-        errors.push(`Invalid item at index ${i}: sku_id and period are required`);
+      if (!item.sku_code || !item.period) {
+        errors.push(`Invalid item at index ${i}: sku_code and period are required`);
         return;
       }
       if (!isValidPeriod(item.period)) {
@@ -212,8 +213,43 @@ export class SalesHistoryService {
         );
         return;
       }
+      validatedItems.push(item);
+    });
+
+    if (validatedItems.length === 0) {
+      return { created: 0, updated: 0, errors };
+    }
+
+    // Resolve SKU codes to IDs
+    const skuCodes = [...new Set(validatedItems.map((i) => i.sku_code))];
+    const skus = await this.db
+      .selectFrom('skus')
+      .select(['id', 'code'])
+      .where('shop_id', '=', shopId)
+      .where('code', 'in', skuCodes)
+      .execute();
+
+    const skuCodeToId = new Map(skus.map((s) => [s.code, s.id]));
+
+    // Map items to include sku_id, tracking errors for missing SKUs
+    const validItems: Array<{
+      sku_id: number;
+      sku_code: string;
+      period: string;
+      periodDate: Date;
+      quantity: number;
+      amount: string;
+    }> = [];
+
+    validatedItems.forEach((item, i) => {
+      const skuId = skuCodeToId.get(item.sku_code);
+      if (!skuId) {
+        errors.push(`Invalid item at index ${i}: SKU code "${item.sku_code}" not found in shop`);
+        return;
+      }
       validItems.push({
         ...item,
+        sku_id: skuId,
         periodDate: periodToDate(item.period),
       });
     });
