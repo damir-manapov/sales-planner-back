@@ -82,6 +82,19 @@ export interface SkusTable {
   updated_at: Timestamp;
 }
 
+export interface SalesHistoryTable {
+  id: Generated<number>;
+  shop_id: number;
+  tenant_id: number;
+  sku_id: number;
+  year: number;
+  month: number;
+  quantity: Generated<number>;
+  amount: Generated<string>;
+  created_at: ColumnType<Date, never, never>;
+  updated_at: Timestamp;
+}
+
 export interface Database {
   users: UsersTable;
   api_keys: ApiKeysTable;
@@ -92,4 +105,5 @@ export interface Database {
   user_shops: UserShopsTable;
   marketplaces: MarketplacesTable;
   skus: SkusTable;
+  sales_history: SalesHistoryTable;
 }

@@ -13,6 +13,7 @@ NestJS API for sales planning and management with Kysely + PostgreSQL (Neon).
 - **API Keys** - API keys with optional expiration, linked to users
 - **Marketplaces** - Marketplace management (string IDs)
 - **SKUs** - SKU management linked to shops (unique code per shop)
+- **Sales History** - Monthly sales data per SKU (shop-level entity)
 - **Bootstrap** - Auto-creates systemAdmin user and seeds default roles on startup
 
 ## Role-Based Access Control
@@ -177,8 +178,7 @@ sales-planner-back/
 │   ├── user-roles/             # User-Role associations
 │   ├── api-keys/               # API keys management
 │   ├── marketplaces/           # Marketplaces CRUD
-│   ├── skus/                   # SKUs CRUD
-│   └── bootstrap/              # System admin & seed data initialization
+│   ├── skus/                   # SKUs CRUD│   ├── sales-history/         # Sales history (monthly data per SKU)│   └── bootstrap/              # System admin & seed data initialization
 ├── data/
 │   └── common/                 # Seed data (JSON files)
 │       └── marketplaces.json   # Marketplace definitions
@@ -224,6 +224,9 @@ sales-planner-back/
 | `/skus/import/json` | POST | Import/upsert SKUs from JSON array |
 | `/skus/import/csv` | POST | Import/upsert SKUs from CSV |
 | `/skus/:id` | GET, PUT, DELETE | SKU CRUD (requires `shop_id` and `tenant_id` query params) |
+| `/sales-history` | GET, POST | List/create sales history (requires `shop_id` and `tenant_id` query params) |
+| `/sales-history/import` | POST | Import/upsert sales history from JSON array |
+| `/sales-history/:id` | GET, PUT, DELETE | Sales history CRUD (requires `shop_id` and `tenant_id` query params) |
 
 ### SKU Endpoints
 
@@ -261,6 +264,38 @@ CSV format for import:
 code,title
 SKU-001,Product 1
 SKU-002,Product 2
+```
+
+### Sales History Endpoints
+
+All sales history endpoints require `shop_id` and `tenant_id` query parameters for access control:
+
+```bash
+# List sales history for a shop
+curl -H "x-api-key: $API_KEY" \
+  "http://localhost:3000/sales-history?shop_id=1&tenant_id=1"
+
+# Filter by year and month
+curl -H "x-api-key: $API_KEY" \
+  "http://localhost:3000/sales-history?shop_id=1&tenant_id=1&year=2026&month=1"
+
+# Create a sales history record
+curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
+  "http://localhost:3000/sales-history?shop_id=1&tenant_id=1" \
+  -d '{"sku_id": 1, "year": 2026, "month": 1, "quantity": 100, "amount": "1500.50"}'
+
+# Import sales history (upserts by sku_id + year + month)
+curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
+  "http://localhost:3000/sales-history/import?shop_id=1&tenant_id=1" \
+  -d '[{"sku_id": 1, "year": 2026, "month": 1, "quantity": 100, "amount": "1500.50"}]'
+```
+
+Sales history JSON format:
+```json
+[
+  {"sku_id": 1, "year": 2026, "month": 1, "quantity": 100, "amount": "1500.50"},
+  {"sku_id": 2, "year": 2026, "month": 1, "quantity": 50, "amount": "750.00"}
+]
 ```
 
 ## Deployment

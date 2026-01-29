@@ -14,6 +14,7 @@ import { ApiKeysModule } from './api-keys/index.js';
 import { BootstrapModule } from './bootstrap/index.js';
 import { MarketplacesModule } from './marketplaces/index.js';
 import { SkusModule } from './skus/index.js';
+import { SalesHistoryModule } from './sales-history/index.js';
 import { AuthModule } from './auth/index.js';
 
 @Module({
@@ -35,6 +36,7 @@ import { AuthModule } from './auth/index.js';
     BootstrapModule,
     MarketplacesModule,
     SkusModule,
+    SalesHistoryModule,
   ],
   controllers: [AppController],
   providers: [AppService],
