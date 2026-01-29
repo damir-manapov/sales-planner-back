@@ -10,6 +10,7 @@ describe('Me (e2e)', () => {
   let userId: number;
   let tenantId: number;
   let shopId: number;
+  let userEmail: string;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -20,9 +21,10 @@ describe('Me (e2e)', () => {
     await app.init();
 
     // Create test data
+    userEmail = `testuser-${Date.now()}@example.com`;
     const userResponse = await request(app.getHttpServer())
       .post('/users')
-      .send({ name: 'Test User', email: `testuser-${Date.now()}@example.com` });
+      .send({ name: 'Test User', email: userEmail });
     userId = userResponse.body.id;
 
     const tenantResponse = await request(app.getHttpServer())
@@ -42,7 +44,7 @@ describe('Me (e2e)', () => {
 
     // Assign a role
     const rolesResponse = await request(app.getHttpServer()).get('/roles');
-    const editorRole = rolesResponse.body.find((r: any) => r.name === 'editor');
+    const editorRole = rolesResponse.body.find((r: { name: string }) => r.name === 'editor');
 
     await request(app.getHttpServer()).post('/user-roles').send({
       user_id: userId,
@@ -72,24 +74,17 @@ describe('Me (e2e)', () => {
   });
 
   it('GET /me - should return 401 with invalid API key', async () => {
-    const response = await request(app.getHttpServer())
-      .get('/me')
-      .set('x-api-key', 'invalid-key');
+    const response = await request(app.getHttpServer()).get('/me').set('x-api-key', 'invalid-key');
     expect(response.status).toBe(401);
   });
 
   it('GET /me - should return current user with roles and tenants', async () => {
     const response = await request(app.getHttpServer()).get('/me').set('x-api-key', apiKey);
 
-    if (response.status !== 200) {
-      console.error('Error response:', response.status, response.body);
-    }
-    
     expect(response.status).toBe(200);
     expect(response.body).toHaveProperty('id', userId);
     expect(response.body).toHaveProperty('name', 'Test User');
-    expect(response.body).toHaveProperty('email');
-    expect(response.body.email).toContain('testuser');
+    expect(response.body).toHaveProperty('email', userEmail);
     expect(response.body).toHaveProperty('roles');
     expect(response.body).toHaveProperty('tenants');
 

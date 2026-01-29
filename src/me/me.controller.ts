@@ -1,16 +1,12 @@
 import { Controller, Get, Headers, UnauthorizedException, NotFoundException } from '@nestjs/common';
 import { UsersService } from '../users/users.service.js';
 import { ApiKeysService } from '../api-keys/api-keys.service.js';
-import { UserRolesService } from '../user-roles/user-roles.service.js';
-import { TenantsService } from '../tenants/tenants.service.js';
 
 @Controller('me')
 export class MeController {
   constructor(
     private readonly usersService: UsersService,
     private readonly apiKeysService: ApiKeysService,
-    private readonly userRolesService: UserRolesService,
-    private readonly tenantsService: TenantsService,
   ) {}
 
   @Get()
