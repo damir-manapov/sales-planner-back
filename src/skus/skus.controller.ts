@@ -48,6 +48,16 @@ export class SkusController {
     return this.skusService.findByShopId(shopId);
   }
 
+  @Get('export/json')
+  async exportJson(
+    @Req() req: AuthenticatedRequest,
+    @Query('shop_id', ParseIntPipe) shopId: number,
+    @Query('tenant_id', ParseIntPipe) tenantId: number,
+  ): Promise<Array<{ code: string; title: string }>> {
+    validateReadAccess(req.user, shopId, tenantId);
+    return this.skusService.exportForShop(shopId);
+  }
+
   @Get(':id')
   async findById(
     @Req() req: AuthenticatedRequest,

@@ -149,4 +149,15 @@ export class SkusService {
 
     return { created, updated, errors };
   }
+
+  async exportForShop(shopId: number): Promise<Array<{ code: string; title: string }>> {
+    const skus = await this.db
+      .selectFrom('skus')
+      .select(['code', 'title'])
+      .where('shop_id', '=', shopId)
+      .orderBy('code', 'asc')
+      .execute();
+
+    return skus;
+  }
 }

@@ -259,5 +259,58 @@ describe('Sales History (e2e)', () => {
       expect(createdSku).toBeDefined();
       expect(createdSku.title).toBe(newSkuCode); // Title defaults to code
     });
+
+    it('GET /sales-history/export/json - should export sales history in import format', async () => {
+      // Create SKU and sales history data
+      const exportSkuCode = `EXPORT-SH-${Date.now()}`;
+      await request(app.getHttpServer())
+        .post(`/skus/import/json?shop_id=${shopId}&tenant_id=${tenantId}`)
+        .set('X-API-Key', testUserApiKey)
+        .send([{ code: exportSkuCode, title: 'Export Test SKU' }]);
+
+      // Import sales history
+      await request(app.getHttpServer())
+        .post(`/sales-history/import?shop_id=${shopId}&tenant_id=${tenantId}`)
+        .set('X-API-Key', testUserApiKey)
+        .send([{ sku_code: exportSkuCode, period: '2025-07', quantity: 100, amount: '1500.00' }]);
+
+      // Export
+      const response = await request(app.getHttpServer())
+        .get(`/sales-history/export/json?shop_id=${shopId}&tenant_id=${tenantId}`)
+        .set('X-API-Key', testUserApiKey);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+
+      const exported = response.body as Array<{
+        sku_code: string;
+        period: string;
+        quantity: number;
+        amount: string;
+      }>;
+      const item = exported.find((r) => r.sku_code === exportSkuCode && r.period === '2025-07');
+      expect(item).toBeDefined();
+      expect(item).toEqual({
+        sku_code: exportSkuCode,
+        period: '2025-07',
+        quantity: 100,
+        amount: '1500.00',
+      });
+    });
+
+    it('GET /sales-history/export/json - should filter by period', async () => {
+      const response = await request(app.getHttpServer())
+        .get(
+          `/sales-history/export/json?shop_id=${shopId}&tenant_id=${tenantId}&period_from=2025-07&period_to=2025-07`,
+        )
+        .set('X-API-Key', testUserApiKey);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+
+      // All returned items should have period 2025-07
+      const periods = (response.body as Array<{ period: string }>).map((r) => r.period);
+      expect(periods.every((p) => p === '2025-07')).toBe(true);
+    });
   });
 });

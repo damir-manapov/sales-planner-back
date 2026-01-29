@@ -66,6 +66,26 @@ export class SalesHistoryController {
     return this.salesHistoryService.findByShopAndPeriod(shopId, periodFrom, periodTo);
   }
 
+  @Get('export/json')
+  async exportJson(
+    @Req() req: AuthenticatedRequest,
+    @Query('shop_id', ParseIntPipe) shopId: number,
+    @Query('tenant_id', ParseIntPipe) tenantId: number,
+    @Query('period_from') periodFrom?: string,
+    @Query('period_to') periodTo?: string,
+  ): Promise<Array<{ sku_code: string; period: string; quantity: number; amount: string }>> {
+    validateReadAccess(req.user, shopId, tenantId);
+
+    if (periodFrom && !isValidPeriod(periodFrom)) {
+      throw new BadRequestException('period_from must be in YYYY-MM format');
+    }
+    if (periodTo && !isValidPeriod(periodTo)) {
+      throw new BadRequestException('period_to must be in YYYY-MM format');
+    }
+
+    return this.salesHistoryService.exportForShop(shopId, periodFrom, periodTo);
+  }
+
   @Get(':id')
   async findById(
     @Req() req: AuthenticatedRequest,

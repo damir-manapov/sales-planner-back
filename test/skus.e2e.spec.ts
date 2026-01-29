@@ -384,6 +384,36 @@ describe('SKUs (e2e)', () => {
 
       expect(response.status).toBe(400);
     });
+
+    it('GET /skus/export/json - should export SKUs in import format', async () => {
+      // First create some SKUs to export
+      const code1 = `EXPORT-SKU-1-${Date.now()}`;
+      const code2 = `EXPORT-SKU-2-${Date.now()}`;
+
+      await request(app.getHttpServer())
+        .post(`/skus/import/json?shop_id=${shopId}&tenant_id=${tenantId}`)
+        .set('X-API-Key', testUserApiKey)
+        .send([
+          { code: code1, title: 'Export Test SKU 1' },
+          { code: code2, title: 'Export Test SKU 2' },
+        ]);
+
+      const response = await request(app.getHttpServer())
+        .get(`/skus/export/json?shop_id=${shopId}&tenant_id=${tenantId}`)
+        .set('X-API-Key', testUserApiKey);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+
+      const exported = response.body as Array<{ code: string; title: string }>;
+      const exportedCodes = exported.map((s) => s.code);
+      expect(exportedCodes).toContain(code1);
+      expect(exportedCodes).toContain(code2);
+
+      // Verify format matches import format (only code and title)
+      const item = exported.find((s) => s.code === code1);
+      expect(item).toEqual({ code: code1, title: 'Export Test SKU 1' });
+    });
   });
 
   describe('Viewer role access', () => {

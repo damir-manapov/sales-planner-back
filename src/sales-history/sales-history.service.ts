@@ -323,6 +323,37 @@ export class SalesHistoryService {
 
     return { created, updated, skus_created: skusCreated, errors };
   }
+
+  async exportForShop(
+    shopId: number,
+    periodFrom?: string,
+    periodTo?: string,
+  ): Promise<Array<{ sku_code: string; period: string; quantity: number; amount: string }>> {
+    let query = this.db
+      .selectFrom('sales_history')
+      .innerJoin('skus', 'skus.id', 'sales_history.sku_id')
+      .select([
+        'skus.code as sku_code',
+        sql<string>`to_char(sales_history.period, 'YYYY-MM')`.as('period'),
+        'sales_history.quantity',
+        'sales_history.amount',
+      ])
+      .where('sales_history.shop_id', '=', shopId);
+
+    if (periodFrom) {
+      query = query.where('sales_history.period', '>=', periodToDate(periodFrom));
+    }
+    if (periodTo) {
+      query = query.where('sales_history.period', '<=', periodToDate(periodTo));
+    }
+
+    const rows = await query
+      .orderBy('skus.code', 'asc')
+      .orderBy('sales_history.period', 'asc')
+      .execute();
+
+    return rows;
+  }
 }
 
 export { isValidPeriod };
