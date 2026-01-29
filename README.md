@@ -242,7 +242,7 @@ sales-planner-back/
 ├── migrations/                 # SQL migrations
 ├── api/                        # Vercel serverless handler
 │   └── index.ts
-├── test/                       # E2E tests
+├── tests/                      # E2E tests
 ├── scripts/                    # Utility scripts
 ├── check.sh                    # Format, lint, typecheck, unit tests
 ├── health.sh                   # Security and dependency checks
