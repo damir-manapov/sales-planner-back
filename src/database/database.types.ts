@@ -64,6 +64,13 @@ export interface UserShopsTable {
   created_at: ColumnType<Date, never, never>;
 }
 
+export interface MarketplacesTable {
+  id: string;
+  title: string;
+  created_at: ColumnType<Date, never, never>;
+  updated_at: Timestamp;
+}
+
 export interface Database {
   users: UsersTable;
   api_keys: ApiKeysTable;
@@ -72,4 +79,5 @@ export interface Database {
   tenants: TenantsTable;
   shops: ShopsTable;
   user_shops: UserShopsTable;
+  marketplaces: MarketplacesTable;
 }

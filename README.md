@@ -11,6 +11,7 @@ NestJS API for sales planning and management with Kysely + PostgreSQL (Neon).
 - **Roles** - Role-based access control
 - **User-Roles** - Assign roles to users
 - **API Keys** - API keys with optional expiration, linked to users
+- **Marketplaces** - Marketplace management (string IDs)
 - **Bootstrap** - Auto-creates systemAdmin user on startup
 
 ## Prerequisites
@@ -142,6 +143,7 @@ sales-planner-back/
 │   ├── roles/                  # Roles CRUD
 │   ├── user-roles/             # User-Role associations
 │   ├── api-keys/               # API keys management
+│   ├── marketplaces/           # Marketplaces CRUD
 │   └── bootstrap/              # System admin initialization
 ├── migrations/                 # SQL migrations
 ├── api/                        # Vercel serverless handler
@@ -177,6 +179,8 @@ sales-planner-back/
 | `/user-roles/:id` | DELETE | Delete user-role link |
 | `/api-keys` | GET, POST | List/create API keys |
 | `/api-keys/:id` | GET, PUT, DELETE | API key CRUD |
+| `/marketplaces` | GET, POST | List/create marketplaces |
+| `/marketplaces/:id` | GET, PUT, DELETE | Marketplace CRUD |
 
 ## Deployment
 

@@ -1,0 +1,2 @@
+# False positive: JDBC connection string port/database name, not a secret
+1d254dac5ebd10d68f50bcf07d32830f129d60ce:docker-compose.yml:generic-api-key:33

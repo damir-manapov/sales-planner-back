@@ -12,6 +12,7 @@ import { ShopsModule } from './shops/index.js';
 import { UserShopsModule } from './user-shops/index.js';
 import { ApiKeysModule } from './api-keys/index.js';
 import { BootstrapModule } from './bootstrap/index.js';
+import { MarketplacesModule } from './marketplaces/index.js';
 
 @Module({
   imports: [
@@ -29,6 +30,7 @@ import { BootstrapModule } from './bootstrap/index.js';
     UserShopsModule,
     ApiKeysModule,
     BootstrapModule,
+    MarketplacesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
