@@ -172,19 +172,28 @@ describe('Tenants (e2e)', () => {
       expect(response.status).toBe(404);
     });
 
-    it('PATCH /tenants/:id - should update tenant', async () => {
+    it('PUT /tenants/:id - should update tenant', async () => {
       const updatedData = {
         title: `Updated Tenant ${Date.now()}`,
       };
 
       const response = await request(app.getHttpServer())
-        .patch(`/tenants/${createdTenantId}`)
+        .put(`/tenants/${createdTenantId}`)
         .set('X-API-Key', testUserApiKey)
         .send(updatedData);
 
       expect(response.status).toBe(200);
       expect(response.body.title).toBe(updatedData.title);
       expect(response.body.created_by).toBe(testUserId); // Should remain unchanged
+    });
+
+    it('GET /tenants/:id - should return updated tenant', async () => {
+      const response = await request(app.getHttpServer())
+        .get(`/tenants/${createdTenantId}`)
+        .set('X-API-Key', testUserApiKey);
+
+      expect(response.status).toBe(200);
+      expect(response.body.id).toBe(createdTenantId);
     });
 
     it('DELETE /tenants/:id - should delete tenant', async () => {
@@ -241,6 +250,9 @@ describe('Tenants (e2e)', () => {
       await request(app.getHttpServer())
         .delete(`/tenants/${tenant2Res.body.id}`)
         .set('X-API-Key', user2ApiKey);
+      await request(app.getHttpServer()).delete(`/users/${user2Id}`);
+    });
+  });
 
   describe('Create tenant with shop', () => {
     it('POST /tenants/with-shop-and-user - should return 403 for non-systemAdmin', async () => {
@@ -305,9 +317,6 @@ describe('Tenants (e2e)', () => {
         .delete(`/tenants/${response.body.tenant.id}`)
         .set('X-API-Key', systemAdminApiKey);
       await request(app.getHttpServer()).delete(`/users/${response.body.user.id}`);
-    });
-  });
-      await request(app.getHttpServer()).delete(`/users/${user2Id}`);
     });
   });
 });
