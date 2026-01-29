@@ -9,7 +9,8 @@ export type CreateTenantDto = Insertable<Tenants>;
 export interface CreateTenantWithShopDto {
   tenantTitle: string;
   shopTitle: string;
-  ownerId: number;
+  userEmail: string;
+  userName: string;
 }
 
 export interface TenantWithShopAndApiKey {
@@ -18,6 +19,11 @@ export interface TenantWithShopAndApiKey {
     id: number;
     title: string;
     tenant_id: number;
+  };
+  user: {
+    id: number;
+    email: string;
+    name: string;
   };
   apiKey: string;
 }
@@ -57,13 +63,35 @@ export class TenantsService {
 
   async createTenantWithShop(dto: CreateTenantWithShopDto): Promise<TenantWithShopAndApiKey> {
     return this.db.transaction().execute(async (trx) => {
-      // Create tenant
+      // Create user
+      const user = await trx
+        .insertInto('users')
+        .values({
+          email: dto.userEmail,
+          name: dto.userName,
+          updated_at: new Date(),
+        })
+        .returningAll()
+        .executeTakeFirstOrThrow();
+
+      // Generate API key for the user
+      const apiKeyValue = `sk_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
+      await trx
+        .insertInto('api_keys')
+        .values({
+          user_id: user.id,
+          key: apiKeyValue,
+          name: 'Default API Key',
+        })
+        .execute();
+
+      // Create tenant with user as owner
       const tenant = await trx
         .insertInto('tenants')
         .values({
           title: dto.tenantTitle,
-          owner_id: dto.ownerId,
-          created_by: dto.ownerId,
+          owner_id: user.id,
+          created_by: user.id,
         })
         .returningAll()
         .executeTakeFirstOrThrow();
@@ -78,19 +106,6 @@ export class TenantsService {
         .returningAll()
         .executeTakeFirstOrThrow();
 
-      // Get user's first API key
-      const apiKey = await trx
-        .selectFrom('api_keys')
-        .select('key')
-        .where('user_id', '=', dto.ownerId)
-        .orderBy('created_at', 'asc')
-        .limit(1)
-        .executeTakeFirst();
-
-      if (!apiKey) {
-        throw new Error(`User ${dto.ownerId} does not have any API keys`);
-      }
-
       return {
         tenant,
         shop: {
@@ -98,7 +113,12 @@ export class TenantsService {
           title: shop.title,
           tenant_id: shop.tenant_id,
         },
-        apiKey: apiKey.key,
+        user: {
+          id: user.id,
+          email: user.email,
+          name: user.name,
+        },
+        apiKey: apiKeyValue,
       };
     });
   }
