@@ -280,15 +280,18 @@ sales-planner-back/
 | `/skus` | GET, POST | List/create SKUs (requires `shop_id` and `tenant_id` query params) |
 | `/skus/examples/json` | GET | Download example JSON file for import (no auth required) |
 | `/skus/examples/csv` | GET | Download example CSV file for import (no auth required) |
-| `/skus/export/json` | GET | Export all SKUs in import format |
+| `/skus/export/json` | GET | Export all SKUs in JSON format |
+| `/skus/export/csv` | GET | Export all SKUs in CSV format |
 | `/skus/import/json` | POST | Import/upsert SKUs from JSON array |
 | `/skus/import/csv` | POST | Import/upsert SKUs from CSV |
 | `/skus/:id` | GET, PUT, DELETE | SKU CRUD (requires `shop_id` and `tenant_id` query params) |
 | `/sales-history` | GET, POST | List/create sales history (requires `shop_id` and `tenant_id` query params) |
 | `/sales-history/examples/json` | GET | Download example JSON file for import (no auth required) |
 | `/sales-history/examples/csv` | GET | Download example CSV file for import (no auth required) |
-| `/sales-history/export/json` | GET | Export sales history in import format (supports period filters) |
+| `/sales-history/export/json` | GET | Export sales history in JSON format (supports period filters) |
+| `/sales-history/export/csv` | GET | Export sales history in CSV format (supports period filters) |
 | `/sales-history/import` | POST | Import/upsert sales history from JSON array (auto-creates missing SKUs) |
+| `/sales-history/import/csv` | POST | Import/upsert sales history from CSV (auto-creates missing SKUs) |
 | `/sales-history/:id` | GET, PUT, DELETE | Sales history CRUD (requires `shop_id` and `tenant_id` query params) |
 
 ### SKU Endpoints
@@ -321,12 +324,24 @@ curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
   "http://localhost:3000/skus/import/csv?shop_id=1&tenant_id=1" \
   -d '{"content": "code,title\nSKU-001,Product 1\nSKU-002,Product 2"}'
 
-# Export SKUs (same format as import)
+# Export SKUs as JSON (same format as import)
 curl -H "x-api-key: $API_KEY" \
   "http://localhost:3000/skus/export/json?shop_id=1&tenant_id=1"
+
+# Export SKUs as CSV
+curl -H "x-api-key: $API_KEY" \
+  "http://localhost:3000/skus/export/csv?shop_id=1&tenant_id=1"
 ```
 
-CSV format for import:
+SKU JSON format:
+```json
+[
+  {"code": "SKU-001", "title": "Product 1"},
+  {"code": "SKU-002", "title": "Product 2"}
+]
+```
+
+SKU CSV format:
 ```csv
 code,title
 SKU-001,Product 1
@@ -363,21 +378,37 @@ curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
   "http://localhost:3000/sales-history/import?shop_id=1&tenant_id=1" \
   -d '[{"sku_code": "SKU-001", "period": "2026-01", "quantity": 100}]'
 
-# Export sales history (same format as import)
+# Export sales history as JSON (same format as import)
 curl -H "x-api-key: $API_KEY" \
   "http://localhost:3000/sales-history/export/json?shop_id=1&tenant_id=1"
 
-# Export with period filter
+# Export sales history as CSV
+curl -H "x-api-key: $API_KEY" \
+  "http://localhost:3000/sales-history/export/csv?shop_id=1&tenant_id=1"
+
+# Export with period filter (works for both JSON and CSV)
 curl -H "x-api-key: $API_KEY" \
   "http://localhost:3000/sales-history/export/json?shop_id=1&tenant_id=1&period_from=2026-01&period_to=2026-12"
+
+# Import sales history from CSV (upserts by sku_code + period, auto-creates missing SKUs)
+curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
+  "http://localhost:3000/sales-history/import/csv?shop_id=1&tenant_id=1" \
+  -d '{"content": "sku_code,period,quantity\nSKU-001,2026-01,100\nSKU-002,2026-01,50"}'
 ```
 
-Sales history import JSON format (uses `sku_code` for user convenience):
+Sales history JSON format (uses `sku_code` for user convenience):
 ```json
 [
   {"sku_code": "SKU-001", "period": "2026-01", "quantity": 100},
   {"sku_code": "SKU-002", "period": "2026-01", "quantity": 50}
 ]
+```
+
+Sales history CSV format:
+```csv
+sku_code,period,quantity
+SKU-001,2026-01,100
+SKU-002,2026-01,50
 ```
 
 ## Deployment
