@@ -23,8 +23,8 @@ export interface SalesHistory {
   sku_id: number;
   period: string; // "YYYY-MM" format
   quantity: number;
-  created_at: Date | null;
-  updated_at: Date | null;
+  created_at: Date;
+  updated_at: Date;
 }
 
 @Injectable()
@@ -38,8 +38,8 @@ export class SalesHistoryService {
     sku_id: number;
     period: Date;
     quantity: number;
-    created_at: Date | null;
-    updated_at: Date | null;
+    created_at: Date;
+    updated_at: Date;
   }): SalesHistory {
     return {
       ...row,

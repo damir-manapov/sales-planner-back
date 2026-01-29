@@ -152,14 +152,14 @@ export interface Roles {
 }
 
 export interface SalesHistory {
-  created_at: Generated<Timestamp | null>;
+  created_at: Generated<Timestamp>;
   id: Generated<number>;
   period: Timestamp;
   quantity: Generated<number>;
   shop_id: number;
   sku_id: number;
   tenant_id: number;
-  updated_at: Generated<Timestamp | null>;
+  updated_at: Generated<Timestamp>;
 }
 
 export interface Shops {
