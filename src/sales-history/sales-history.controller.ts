@@ -13,14 +13,13 @@ import {
   UseGuards,
   Req,
 } from '@nestjs/common';
-import { parse } from 'csv-parse/sync';
 import {
   SalesHistoryService,
   CreateSalesHistoryDto,
   UpdateSalesHistoryDto,
   SalesHistory,
 } from './sales-history.service.js';
-import { isValidPeriod } from '../lib/index.js';
+import { isValidPeriod, toCsv, fromCsv } from '../lib/index.js';
 import {
   AuthGuard,
   AuthenticatedRequest,
@@ -100,9 +99,7 @@ export class SalesHistoryController {
     }
 
     const items = await this.salesHistoryService.exportForShop(ctx.shopId, periodFrom, periodTo);
-    const header = 'sku_code,period,quantity';
-    const rows = items.map((item) => `${item.sku_code},${item.period},${item.quantity}`);
-    return { content: [header, ...rows].join('\n') };
+    return { content: toCsv(items, ['sku_code', 'period', 'quantity']) };
   }
 
   @Get(':id')
@@ -212,46 +209,24 @@ export class SalesHistoryController {
     @ShopContext() ctx: ShopContextType,
     @Body() body: { content: string },
   ): Promise<ImportResult> {
-    if (!body.content || typeof body.content !== 'string') {
-      throw new BadRequestException('Body must contain a "content" string field with CSV data');
-    }
+    const records = fromCsv<{ sku_code: string; period: string; quantity: string }>(body.content, [
+      'sku_code',
+      'period',
+      'quantity',
+    ]);
 
-    try {
-      const records = parse(body.content, {
-        columns: true,
-        skip_empty_lines: true,
-        trim: true,
-      }) as Array<Record<string, string>>;
-
-      const items: ImportSalesHistoryItem[] = records.map((record) => {
-        if (!record.sku_code) {
-          throw new BadRequestException('CSV must have a "sku_code" column');
-        }
-        if (!record.period) {
-          throw new BadRequestException('CSV must have a "period" column');
-        }
-        if (!record.quantity) {
-          throw new BadRequestException('CSV must have a "quantity" column');
-        }
-        const quantity = Number.parseFloat(record.quantity);
-        if (Number.isNaN(quantity)) {
-          throw new BadRequestException(`Invalid quantity value: ${record.quantity}`);
-        }
-        return {
-          sku_code: record.sku_code,
-          period: record.period,
-          quantity,
-        };
-      });
-
-      return this.salesHistoryService.bulkUpsert(items, ctx.shopId, ctx.tenantId);
-    } catch (error) {
-      if (error instanceof BadRequestException) {
-        throw error;
+    const items: ImportSalesHistoryItem[] = records.map((record) => {
+      const quantity = Number.parseFloat(record.quantity);
+      if (Number.isNaN(quantity)) {
+        throw new BadRequestException(`Invalid quantity value: ${record.quantity}`);
       }
-      throw new BadRequestException(
-        `Failed to parse CSV: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      );
-    }
+      return {
+        sku_code: record.sku_code,
+        period: record.period,
+        quantity,
+      };
+    });
+
+    return this.salesHistoryService.bulkUpsert(items, ctx.shopId, ctx.tenantId);
   }
 }

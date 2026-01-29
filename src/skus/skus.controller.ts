@@ -12,8 +12,8 @@ import {
   UseGuards,
   Req,
 } from '@nestjs/common';
-import { parse } from 'csv-parse/sync';
 import { SkusService, CreateSkuDto, UpdateSkuDto, Sku } from './skus.service.js';
+import { toCsv, fromCsv } from '../lib/index.js';
 import {
   AuthGuard,
   AuthenticatedRequest,
@@ -64,9 +64,7 @@ export class SkusController {
     @ShopContext() ctx: ShopContextType,
   ): Promise<{ content: string }> {
     const items = await this.skusService.exportForShop(ctx.shopId);
-    const header = 'code,title';
-    const rows = items.map((item) => `${item.code},"${item.title.replace(/"/g, '""')}"`);
-    return { content: [header, ...rows].join('\n') };
+    return { content: toCsv(items, ['code', 'title']) };
   }
 
   @Get(':id')
@@ -156,39 +154,12 @@ export class SkusController {
     @ShopContext() ctx: ShopContextType,
     @Body() body: { content: string },
   ): Promise<ImportResult> {
-    if (!body.content || typeof body.content !== 'string') {
-      throw new BadRequestException('Body must contain a "content" string field with CSV data');
-    }
-
-    try {
-      const records = parse(body.content, {
-        columns: true,
-        skip_empty_lines: true,
-        trim: true,
-      }) as Array<Record<string, string>>;
-
-      const items: ImportSkuItem[] = records.map((record) => {
-        if (!record.code) {
-          throw new BadRequestException('CSV must have a "code" column');
-        }
-        if (!record.title) {
-          throw new BadRequestException('CSV must have a "title" column');
-        }
-        return {
-          code: record.code,
-          title: record.title,
-        };
-      });
-
-      return this.skusService.bulkUpsert(items, ctx.shopId, ctx.tenantId);
-    } catch (error) {
-      if (error instanceof BadRequestException) {
-        throw error;
-      }
-      throw new BadRequestException(
-        `Failed to parse CSV: ${error instanceof Error ? error.message : 'Unknown error'}`,
-      );
-    }
+    const records = fromCsv<{ code: string; title: string }>(body.content, ['code', 'title']);
+    const items: ImportSkuItem[] = records.map((record) => ({
+      code: record.code,
+      title: record.title,
+    }));
+    return this.skusService.bulkUpsert(items, ctx.shopId, ctx.tenantId);
   }
 
   @Delete(':id')
