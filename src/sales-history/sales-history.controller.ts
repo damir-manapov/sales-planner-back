@@ -19,13 +19,13 @@ import {
   CreateSalesHistoryDto,
   UpdateSalesHistoryDto,
   SalesHistory,
+  isValidPeriod,
 } from './sales-history.service.js';
 import { AuthGuard, AuthenticatedRequest } from '../auth/index.js';
 
 interface ImportSalesHistoryItem {
   sku_id: number;
-  year: number;
-  month: number;
+  period: string; // "YYYY-MM"
   quantity: number;
   amount: string;
 }
@@ -111,15 +111,19 @@ export class SalesHistoryController {
     @Req() req: AuthenticatedRequest,
     @Query('shop_id', ParseIntPipe) shopId: number,
     @Query('tenant_id', ParseIntPipe) tenantId: number,
-    @Query('year') year?: string,
-    @Query('month') month?: string,
+    @Query('period_from') periodFrom?: string,
+    @Query('period_to') periodTo?: string,
   ): Promise<SalesHistory[]> {
     this.validateReadAccess(req.user, shopId, tenantId);
-    return this.salesHistoryService.findByShopAndPeriod(
-      shopId,
-      year ? parseInt(year, 10) : undefined,
-      month ? parseInt(month, 10) : undefined,
-    );
+
+    if (periodFrom && !isValidPeriod(periodFrom)) {
+      throw new BadRequestException('period_from must be in YYYY-MM format');
+    }
+    if (periodTo && !isValidPeriod(periodTo)) {
+      throw new BadRequestException('period_to must be in YYYY-MM format');
+    }
+
+    return this.salesHistoryService.findByShopAndPeriod(shopId, periodFrom, periodTo);
   }
 
   @Get(':id')
@@ -154,8 +158,8 @@ export class SalesHistoryController {
   ): Promise<SalesHistory> {
     this.validateWriteAccess(req.user, shopId, tenantId);
 
-    if (dto.month < 1 || dto.month > 12) {
-      throw new BadRequestException('Month must be between 1 and 12');
+    if (!isValidPeriod(dto.period)) {
+      throw new BadRequestException('period must be in YYYY-MM format with valid month (01-12)');
     }
 
     return this.salesHistoryService.create({

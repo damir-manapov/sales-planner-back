@@ -87,8 +87,7 @@ export interface SalesHistoryTable {
   shop_id: number;
   tenant_id: number;
   sku_id: number;
-  year: number;
-  month: number;
+  period: Date;
   quantity: Generated<number>;
   amount: Generated<string>;
   created_at: ColumnType<Date, never, never>;

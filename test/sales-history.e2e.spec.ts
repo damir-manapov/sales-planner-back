@@ -100,8 +100,7 @@ describe('Sales History (e2e)', () => {
     it('POST /sales-history - should create sales history record', async () => {
       const newRecord = {
         sku_id: skuId,
-        year: 2026,
-        month: 1,
+        period: '2026-01',
         quantity: 100,
         amount: '1500.50',
       };
@@ -114,8 +113,7 @@ describe('Sales History (e2e)', () => {
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('id');
       expect(response.body.sku_id).toBe(skuId);
-      expect(response.body.year).toBe(2026);
-      expect(response.body.month).toBe(1);
+      expect(response.body.period).toBe('2026-01');
       expect(response.body.quantity).toBe(100);
       expect(response.body.shop_id).toBe(shopId);
       expect(response.body.tenant_id).toBe(tenantId);
@@ -123,14 +121,27 @@ describe('Sales History (e2e)', () => {
       salesHistoryId = response.body.id;
     });
 
-    it('POST /sales-history - should reject invalid month', async () => {
+    it('POST /sales-history - should reject invalid period format', async () => {
       const response = await request(app.getHttpServer())
         .post(`/sales-history?shop_id=${shopId}&tenant_id=${tenantId}`)
         .set('X-API-Key', testUserApiKey)
         .send({
           sku_id: skuId,
-          year: 2026,
-          month: 13,
+          period: '2026-13', // invalid month
+          quantity: 50,
+          amount: '500.00',
+        });
+
+      expect(response.status).toBe(400);
+    });
+
+    it('POST /sales-history - should reject invalid period string', async () => {
+      const response = await request(app.getHttpServer())
+        .post(`/sales-history?shop_id=${shopId}&tenant_id=${tenantId}`)
+        .set('X-API-Key', testUserApiKey)
+        .send({
+          sku_id: skuId,
+          period: '2026-1', // missing leading zero
           quantity: 50,
           amount: '500.00',
         });
@@ -148,15 +159,17 @@ describe('Sales History (e2e)', () => {
       expect(response.body.length).toBeGreaterThan(0);
     });
 
-    it('GET /sales-history - should filter by year', async () => {
+    it('GET /sales-history - should filter by period range', async () => {
       const response = await request(app.getHttpServer())
-        .get(`/sales-history?shop_id=${shopId}&tenant_id=${tenantId}&year=2026`)
+        .get(
+          `/sales-history?shop_id=${shopId}&tenant_id=${tenantId}&period_from=2026-01&period_to=2026-12`,
+        )
         .set('X-API-Key', testUserApiKey);
 
       expect(response.status).toBe(200);
       expect(Array.isArray(response.body)).toBe(true);
-      response.body.forEach((r: { year: number }) => {
-        expect(r.year).toBe(2026);
+      response.body.forEach((r: { period: string }) => {
+        expect(r.period >= '2026-01' && r.period <= '2026-12').toBe(true);
       });
     });
 
@@ -193,8 +206,8 @@ describe('Sales History (e2e)', () => {
   describe('Bulk import', () => {
     it('POST /sales-history/import - should import multiple records', async () => {
       const items = [
-        { sku_id: skuId, year: 2025, month: 11, quantity: 80, amount: '1200.00' },
-        { sku_id: skuId, year: 2025, month: 12, quantity: 90, amount: '1350.00' },
+        { sku_id: skuId, period: '2025-11', quantity: 80, amount: '1200.00' },
+        { sku_id: skuId, period: '2025-12', quantity: 90, amount: '1350.00' },
       ];
 
       const response = await request(app.getHttpServer())
@@ -209,7 +222,7 @@ describe('Sales History (e2e)', () => {
     });
 
     it('POST /sales-history/import - should upsert existing records', async () => {
-      const items = [{ sku_id: skuId, year: 2025, month: 11, quantity: 100, amount: '1500.00' }];
+      const items = [{ sku_id: skuId, period: '2025-11', quantity: 100, amount: '1500.00' }];
 
       const response = await request(app.getHttpServer())
         .post(`/sales-history/import?shop_id=${shopId}&tenant_id=${tenantId}`)

@@ -268,33 +268,34 @@ SKU-002,Product 2
 
 ### Sales History Endpoints
 
-All sales history endpoints require `shop_id` and `tenant_id` query parameters for access control:
+All sales history endpoints require `shop_id` and `tenant_id` query parameters for access control.
+Period is specified in `YYYY-MM` format (stored as DATE, first of month).
 
 ```bash
 # List sales history for a shop
 curl -H "x-api-key: $API_KEY" \
   "http://localhost:3000/sales-history?shop_id=1&tenant_id=1"
 
-# Filter by year and month
+# Filter by period range
 curl -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/sales-history?shop_id=1&tenant_id=1&year=2026&month=1"
+  "http://localhost:3000/sales-history?shop_id=1&tenant_id=1&period_from=2026-01&period_to=2026-12"
 
 # Create a sales history record
 curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
   "http://localhost:3000/sales-history?shop_id=1&tenant_id=1" \
-  -d '{"sku_id": 1, "year": 2026, "month": 1, "quantity": 100, "amount": "1500.50"}'
+  -d '{"sku_id": 1, "period": "2026-01", "quantity": 100, "amount": "1500.50"}'
 
-# Import sales history (upserts by sku_id + year + month)
+# Import sales history (upserts by sku_id + period)
 curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
   "http://localhost:3000/sales-history/import?shop_id=1&tenant_id=1" \
-  -d '[{"sku_id": 1, "year": 2026, "month": 1, "quantity": 100, "amount": "1500.50"}]'
+  -d '[{"sku_id": 1, "period": "2026-01", "quantity": 100, "amount": "1500.50"}]'
 ```
 
 Sales history JSON format:
 ```json
 [
-  {"sku_id": 1, "year": 2026, "month": 1, "quantity": 100, "amount": "1500.50"},
-  {"sku_id": 2, "year": 2026, "month": 1, "quantity": 50, "amount": "750.00"}
+  {"sku_id": 1, "period": "2026-01", "quantity": 100, "amount": "1500.50"},
+  {"sku_id": 2, "period": "2026-01", "quantity": 50, "amount": "750.00"}
 ]
 ```
 
