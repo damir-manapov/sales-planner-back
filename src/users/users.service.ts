@@ -103,7 +103,7 @@ export class UsersService {
       .execute();
 
     const roles: UserRole[] = rolesResult.map((r) => ({
-      id: r.id ?? 0,
+      id: r.id,
       role_name: r.role_name,
       tenant_id: r.tenant_id,
       tenant_title: r.tenant_title,
