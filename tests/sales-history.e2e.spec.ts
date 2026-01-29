@@ -348,4 +348,29 @@ describe('Sales History (e2e)', () => {
       expect(imported?.quantity).toBe(75);
     });
   });
+
+  describe('Example downloads', () => {
+    it('GET /sales-history/examples/json - should return JSON example without auth', async () => {
+      const response = await request(app.getHttpServer()).get('/sales-history/examples/json');
+
+      expect(response.status).toBe(200);
+      expect(response.headers['content-type']).toContain('application/json');
+      expect(response.headers['content-disposition']).toContain('sales-history-example.json');
+      expect(Array.isArray(response.body)).toBe(true);
+      expect(response.body.length).toBeGreaterThan(0);
+      expect(response.body[0]).toHaveProperty('sku_code');
+      expect(response.body[0]).toHaveProperty('period');
+      expect(response.body[0]).toHaveProperty('quantity');
+    });
+
+    it('GET /sales-history/examples/csv - should return CSV example without auth', async () => {
+      const response = await request(app.getHttpServer()).get('/sales-history/examples/csv');
+
+      expect(response.status).toBe(200);
+      expect(response.headers['content-type']).toContain('text/csv');
+      expect(response.headers['content-disposition']).toContain('sales-history-example.csv');
+      expect(response.text).toContain('sku_code,period,quantity');
+      expect(response.text).toContain('SKU-001');
+    });
+  });
 });
