@@ -9,7 +9,6 @@ import {
   Query,
   ParseIntPipe,
   NotFoundException,
-  ForbiddenException,
   BadRequestException,
   UseGuards,
   Req,
@@ -21,7 +20,12 @@ import {
   SalesHistory,
   isValidPeriod,
 } from './sales-history.service.js';
-import { AuthGuard, AuthenticatedRequest } from '../auth/index.js';
+import {
+  AuthGuard,
+  AuthenticatedRequest,
+  validateReadAccess,
+  validateWriteAccess,
+} from '../auth/index.js';
 
 interface ImportSalesHistoryItem {
   sku_id: number;
@@ -41,71 +45,6 @@ interface ImportResult {
 export class SalesHistoryController {
   constructor(private readonly salesHistoryService: SalesHistoryService) {}
 
-  private getShopRoles(user: AuthenticatedRequest['user'], shopId: number): string[] {
-    const shopRole = user.shopRoles.find((sr) => sr.shopId === shopId);
-    return shopRole?.roles || [];
-  }
-
-  private getTenantRoles(user: AuthenticatedRequest['user'], tenantId: number): string[] {
-    const tenantRole = user.tenantRoles.find((tr) => tr.tenantId === tenantId);
-    return tenantRole?.roles || [];
-  }
-
-  private isTenantAdmin(user: AuthenticatedRequest['user'], tenantId: number): boolean {
-    const tenantRoles = this.getTenantRoles(user, tenantId);
-    return tenantRoles.includes('tenantAdmin');
-  }
-
-  private hasReadAccess(
-    user: AuthenticatedRequest['user'],
-    shopId: number,
-    tenantId: number,
-  ): boolean {
-    if (this.isTenantAdmin(user, tenantId)) {
-      return true;
-    }
-    const shopRoles = this.getShopRoles(user, shopId);
-    return shopRoles.includes('viewer') || shopRoles.includes('editor');
-  }
-
-  private hasWriteAccess(
-    user: AuthenticatedRequest['user'],
-    shopId: number,
-    tenantId: number,
-  ): boolean {
-    if (this.isTenantAdmin(user, tenantId)) {
-      return true;
-    }
-    const shopRoles = this.getShopRoles(user, shopId);
-    return shopRoles.includes('editor');
-  }
-
-  private validateReadAccess(
-    user: AuthenticatedRequest['user'],
-    shopId: number,
-    tenantId: number,
-  ): void {
-    if (!user.tenantIds.includes(tenantId)) {
-      throw new ForbiddenException('Access to this tenant is not allowed');
-    }
-    if (!this.hasReadAccess(user, shopId, tenantId)) {
-      throw new ForbiddenException('Viewer or editor role required for this shop');
-    }
-  }
-
-  private validateWriteAccess(
-    user: AuthenticatedRequest['user'],
-    shopId: number,
-    tenantId: number,
-  ): void {
-    if (!user.tenantIds.includes(tenantId)) {
-      throw new ForbiddenException('Access to this tenant is not allowed');
-    }
-    if (!this.hasWriteAccess(user, shopId, tenantId)) {
-      throw new ForbiddenException('Editor role required for this shop');
-    }
-  }
-
   @Get()
   async findAll(
     @Req() req: AuthenticatedRequest,
@@ -114,7 +53,7 @@ export class SalesHistoryController {
     @Query('period_from') periodFrom?: string,
     @Query('period_to') periodTo?: string,
   ): Promise<SalesHistory[]> {
-    this.validateReadAccess(req.user, shopId, tenantId);
+    validateReadAccess(req.user, shopId, tenantId);
 
     if (periodFrom && !isValidPeriod(periodFrom)) {
       throw new BadRequestException('period_from must be in YYYY-MM format');
@@ -133,7 +72,7 @@ export class SalesHistoryController {
     @Query('tenant_id', ParseIntPipe) tenantId: number,
     @Param('id', ParseIntPipe) id: number,
   ): Promise<SalesHistory> {
-    this.validateReadAccess(req.user, shopId, tenantId);
+    validateReadAccess(req.user, shopId, tenantId);
 
     const record = await this.salesHistoryService.findById(id);
     if (!record) {
@@ -156,7 +95,7 @@ export class SalesHistoryController {
     @Query('tenant_id', ParseIntPipe) tenantId: number,
     @Body() dto: Omit<CreateSalesHistoryDto, 'shop_id' | 'tenant_id'>,
   ): Promise<SalesHistory> {
-    this.validateWriteAccess(req.user, shopId, tenantId);
+    validateWriteAccess(req.user, shopId, tenantId);
 
     if (!isValidPeriod(dto.period)) {
       throw new BadRequestException('period must be in YYYY-MM format with valid month (01-12)');
@@ -177,7 +116,7 @@ export class SalesHistoryController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateSalesHistoryDto,
   ): Promise<SalesHistory> {
-    this.validateWriteAccess(req.user, shopId, tenantId);
+    validateWriteAccess(req.user, shopId, tenantId);
 
     const existing = await this.salesHistoryService.findById(id);
     if (!existing) {
@@ -204,7 +143,7 @@ export class SalesHistoryController {
     @Query('tenant_id', ParseIntPipe) tenantId: number,
     @Param('id', ParseIntPipe) id: number,
   ): Promise<void> {
-    this.validateWriteAccess(req.user, shopId, tenantId);
+    validateWriteAccess(req.user, shopId, tenantId);
 
     const existing = await this.salesHistoryService.findById(id);
     if (!existing) {
@@ -227,7 +166,7 @@ export class SalesHistoryController {
     @Query('tenant_id', ParseIntPipe) tenantId: number,
     @Body() items: ImportSalesHistoryItem[],
   ): Promise<ImportResult> {
-    this.validateWriteAccess(req.user, shopId, tenantId);
+    validateWriteAccess(req.user, shopId, tenantId);
 
     if (!Array.isArray(items)) {
       throw new BadRequestException('Body must be an array of sales history items');

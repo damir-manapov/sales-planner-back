@@ -9,14 +9,18 @@ import {
   Query,
   ParseIntPipe,
   NotFoundException,
-  ForbiddenException,
   BadRequestException,
   UseGuards,
   Req,
 } from '@nestjs/common';
 import { parse } from 'csv-parse/sync';
 import { SkusService, CreateSkuDto, UpdateSkuDto, Sku } from './skus.service.js';
-import { AuthGuard, AuthenticatedRequest } from '../auth/index.js';
+import {
+  AuthGuard,
+  AuthenticatedRequest,
+  validateReadAccess,
+  validateWriteAccess,
+} from '../auth/index.js';
 
 interface ImportSkuItem {
   code: string;
@@ -34,82 +38,13 @@ interface ImportResult {
 export class SkusController {
   constructor(private readonly skusService: SkusService) {}
 
-  private getShopRoles(user: AuthenticatedRequest['user'], shopId: number): string[] {
-    const shopRole = user.shopRoles.find((sr) => sr.shopId === shopId);
-    return shopRole?.roles || [];
-  }
-
-  private getTenantRoles(user: AuthenticatedRequest['user'], tenantId: number): string[] {
-    const tenantRole = user.tenantRoles.find((tr) => tr.tenantId === tenantId);
-    return tenantRole?.roles || [];
-  }
-
-  private isTenantAdmin(user: AuthenticatedRequest['user'], tenantId: number): boolean {
-    const tenantRoles = this.getTenantRoles(user, tenantId);
-    return tenantRoles.includes('tenantAdmin');
-  }
-
-  private hasReadAccess(
-    user: AuthenticatedRequest['user'],
-    shopId: number,
-    tenantId: number,
-  ): boolean {
-    // tenantAdmin has full access to all shops in the tenant
-    if (this.isTenantAdmin(user, tenantId)) {
-      return true;
-    }
-    // Otherwise check shop-level roles
-    const shopRoles = this.getShopRoles(user, shopId);
-    return shopRoles.includes('viewer') || shopRoles.includes('editor');
-  }
-
-  private hasWriteAccess(
-    user: AuthenticatedRequest['user'],
-    shopId: number,
-    tenantId: number,
-  ): boolean {
-    // tenantAdmin has full access to all shops in the tenant
-    if (this.isTenantAdmin(user, tenantId)) {
-      return true;
-    }
-    // Otherwise check shop-level roles
-    const shopRoles = this.getShopRoles(user, shopId);
-    return shopRoles.includes('editor');
-  }
-
-  private validateReadAccess(
-    user: AuthenticatedRequest['user'],
-    shopId: number,
-    tenantId: number,
-  ): void {
-    if (!user.tenantIds.includes(tenantId)) {
-      throw new ForbiddenException('Access to this tenant is not allowed');
-    }
-    if (!this.hasReadAccess(user, shopId, tenantId)) {
-      throw new ForbiddenException('Viewer or editor role required for this shop');
-    }
-  }
-
-  private validateWriteAccess(
-    user: AuthenticatedRequest['user'],
-    shopId: number,
-    tenantId: number,
-  ): void {
-    if (!user.tenantIds.includes(tenantId)) {
-      throw new ForbiddenException('Access to this tenant is not allowed');
-    }
-    if (!this.hasWriteAccess(user, shopId, tenantId)) {
-      throw new ForbiddenException('Editor role required for this shop');
-    }
-  }
-
   @Get()
   async findAll(
     @Req() req: AuthenticatedRequest,
     @Query('shop_id', ParseIntPipe) shopId: number,
     @Query('tenant_id', ParseIntPipe) tenantId: number,
   ): Promise<Sku[]> {
-    this.validateReadAccess(req.user, shopId, tenantId);
+    validateReadAccess(req.user, shopId, tenantId);
     return this.skusService.findByShopId(shopId);
   }
 
@@ -120,7 +55,7 @@ export class SkusController {
     @Query('tenant_id', ParseIntPipe) tenantId: number,
     @Param('id', ParseIntPipe) id: number,
   ): Promise<Sku> {
-    this.validateReadAccess(req.user, shopId, tenantId);
+    validateReadAccess(req.user, shopId, tenantId);
 
     const sku = await this.skusService.findById(id);
     if (!sku) {
@@ -141,7 +76,7 @@ export class SkusController {
     @Query('tenant_id', ParseIntPipe) tenantId: number,
     @Body() dto: Omit<CreateSkuDto, 'shop_id' | 'tenant_id'>,
   ): Promise<Sku> {
-    this.validateWriteAccess(req.user, shopId, tenantId);
+    validateWriteAccess(req.user, shopId, tenantId);
     return this.skusService.create({
       ...dto,
       shop_id: shopId,
@@ -157,7 +92,7 @@ export class SkusController {
     @Param('id', ParseIntPipe) id: number,
     @Body() dto: UpdateSkuDto,
   ): Promise<Sku> {
-    this.validateWriteAccess(req.user, shopId, tenantId);
+    validateWriteAccess(req.user, shopId, tenantId);
 
     const existing = await this.skusService.findById(id);
     if (!existing) {
@@ -182,7 +117,7 @@ export class SkusController {
     @Query('tenant_id', ParseIntPipe) tenantId: number,
     @Body() items: ImportSkuItem[],
   ): Promise<ImportResult> {
-    this.validateWriteAccess(req.user, shopId, tenantId);
+    validateWriteAccess(req.user, shopId, tenantId);
 
     if (!Array.isArray(items)) {
       throw new BadRequestException('Body must be an array of SKU items');
@@ -207,7 +142,7 @@ export class SkusController {
     @Query('tenant_id', ParseIntPipe) tenantId: number,
     @Body() body: { content: string },
   ): Promise<ImportResult> {
-    this.validateWriteAccess(req.user, shopId, tenantId);
+    validateWriteAccess(req.user, shopId, tenantId);
 
     if (!body.content || typeof body.content !== 'string') {
       throw new BadRequestException('Body must contain a "content" string field with CSV data');
@@ -251,7 +186,7 @@ export class SkusController {
     @Query('tenant_id', ParseIntPipe) tenantId: number,
     @Param('id', ParseIntPipe) id: number,
   ): Promise<void> {
-    this.validateWriteAccess(req.user, shopId, tenantId);
+    validateWriteAccess(req.user, shopId, tenantId);
 
     const existing = await this.skusService.findById(id);
     if (!existing) {
