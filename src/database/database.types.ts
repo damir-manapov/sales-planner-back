@@ -3,11 +3,12 @@
  * Please do not edit it manually.
  */
 
-import type { ColumnType } from "kysely";
+import type { ColumnType } from 'kysely';
 
-export type Generated<T> = T extends ColumnType<infer S, infer I, infer U>
-  ? ColumnType<S, I | undefined, U>
-  : ColumnType<T, T | undefined, T>;
+export type Generated<T> =
+  T extends ColumnType<infer S, infer I, infer U>
+    ? ColumnType<S, I | undefined, U>
+    : ColumnType<T, T | undefined, T>;
 
 export type Json = JsonValue;
 
@@ -215,15 +216,15 @@ export interface UserShops {
 export interface DB {
   api_keys: ApiKeys;
   marketplaces: Marketplaces;
-  "neon_auth.account": NeonAuthAccount;
-  "neon_auth.invitation": NeonAuthInvitation;
-  "neon_auth.jwks": NeonAuthJwks;
-  "neon_auth.member": NeonAuthMember;
-  "neon_auth.organization": NeonAuthOrganization;
-  "neon_auth.project_config": NeonAuthProjectConfig;
-  "neon_auth.session": NeonAuthSession;
-  "neon_auth.user": NeonAuthUser;
-  "neon_auth.verification": NeonAuthVerification;
+  'neon_auth.account': NeonAuthAccount;
+  'neon_auth.invitation': NeonAuthInvitation;
+  'neon_auth.jwks': NeonAuthJwks;
+  'neon_auth.member': NeonAuthMember;
+  'neon_auth.organization': NeonAuthOrganization;
+  'neon_auth.project_config': NeonAuthProjectConfig;
+  'neon_auth.session': NeonAuthSession;
+  'neon_auth.user': NeonAuthUser;
+  'neon_auth.verification': NeonAuthVerification;
   roles: Roles;
   sales_history: SalesHistory;
   shops: Shops;

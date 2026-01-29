@@ -509,4 +509,94 @@ describe('SKUs (e2e)', () => {
       expect(response.text).toContain('SKU-001');
     });
   });
+
+  describe('Tenant owner access (derived role)', () => {
+    let ownerUserId: number;
+    let ownerApiKey: string;
+    let ownerTenantId: number;
+    let ownerShopId: number;
+
+    beforeAll(async () => {
+      // Create tenant owner user
+      const userRes = await request(app.getHttpServer())
+        .post('/users')
+        .send({ email: `owner-${Date.now()}@example.com`, name: 'Tenant Owner User' });
+      ownerUserId = userRes.body.id;
+
+      // Create API key for owner
+      ownerApiKey = `owner-key-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+      await request(app.getHttpServer())
+        .post('/api-keys')
+        .send({ user_id: ownerUserId, key: ownerApiKey, name: 'Owner Key' });
+
+      // Create a tenant with this user as owner
+      const tenantRes = await request(app.getHttpServer())
+        .post('/tenants')
+        .send({ title: `Owner Tenant ${Date.now()}`, owner_id: ownerUserId });
+      ownerTenantId = tenantRes.body.id;
+
+      // Create a shop in the owned tenant
+      const shopRes = await request(app.getHttpServer())
+        .post('/shops')
+        .send({ title: `Owner Shop ${Date.now()}`, tenant_id: ownerTenantId });
+      ownerShopId = shopRes.body.id;
+
+      // Note: NO explicit role assignment - owner access is derived from tenants.owner_id
+    });
+
+    afterAll(async () => {
+      if (ownerShopId) {
+        await request(app.getHttpServer()).delete(`/shops/${ownerShopId}`);
+      }
+      if (ownerTenantId) {
+        await request(app.getHttpServer()).delete(`/tenants/${ownerTenantId}`);
+      }
+      if (ownerUserId) {
+        await request(app.getHttpServer()).delete(`/users/${ownerUserId}`);
+      }
+    });
+
+    it('GET /skus - tenant owner should have read access without explicit role', async () => {
+      const response = await request(app.getHttpServer())
+        .get(`/skus?shop_id=${ownerShopId}&tenant_id=${ownerTenantId}`)
+        .set('X-API-Key', ownerApiKey);
+
+      expect(response.status).toBe(200);
+      expect(Array.isArray(response.body)).toBe(true);
+    });
+
+    it('POST /skus - tenant owner should have write access without explicit role', async () => {
+      const response = await request(app.getHttpServer())
+        .post(`/skus?shop_id=${ownerShopId}&tenant_id=${ownerTenantId}`)
+        .set('X-API-Key', ownerApiKey)
+        .send({ code: 'OWNER-SKU', title: 'Owner Created SKU' });
+
+      expect(response.status).toBe(201);
+      expect(response.body).toHaveProperty('id');
+
+      // Cleanup
+      await request(app.getHttpServer())
+        .delete(`/skus/${response.body.id}?shop_id=${ownerShopId}&tenant_id=${ownerTenantId}`)
+        .set('X-API-Key', ownerApiKey);
+    });
+
+    it('POST /skus/import/json - tenant owner should be able to import', async () => {
+      const response = await request(app.getHttpServer())
+        .post(`/skus/import/json?shop_id=${ownerShopId}&tenant_id=${ownerTenantId}`)
+        .set('X-API-Key', ownerApiKey)
+        .send([{ code: 'OWNER-IMPORT-1', title: 'Owner Import 1' }]);
+
+      expect(response.status).toBe(201);
+      expect(response.body.created + response.body.updated).toBe(1);
+    });
+
+    it('GET /skus - tenant owner should NOT access other tenants', async () => {
+      // Try to access the main test tenant (ownerUserId is not owner of tenantId)
+      const response = await request(app.getHttpServer())
+        .get(`/skus?shop_id=${shopId}&tenant_id=${tenantId}`)
+        .set('X-API-Key', ownerApiKey);
+
+      expect(response.status).toBe(403);
+    });
+  });
 });

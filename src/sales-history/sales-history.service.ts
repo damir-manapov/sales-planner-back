@@ -139,13 +139,11 @@ export class SalesHistoryService {
         sku_id: dto.sku_id,
         period: periodDate,
         quantity: dto.quantity,
-        amount: dto.amount,
         updated_at: new Date(),
       })
       .onConflict((oc) =>
         oc.columns(['shop_id', 'sku_id', 'period']).doUpdateSet({
           quantity: dto.quantity,
-          amount: dto.amount,
           updated_at: new Date(),
         }),
       )

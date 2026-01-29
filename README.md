@@ -22,25 +22,28 @@ The API implements a hierarchical role-based access control system:
 
 ### Role Types
 
-| Role | Scope | Description |
-|------|-------|-------------|
-| `viewer` | Shop | Read-only access to a specific shop's resources |
-| `editor` | Shop | Read/write access to a specific shop's resources |
-| `tenantAdmin` | Tenant | Full access to all shops within a tenant |
-| `systemAdmin` | Global | Full access to all tenants and shops |
+| Role | Scope | Assignment | Description |
+|------|-------|------------|-------------|
+| `viewer` | Shop | Explicit | Read-only access to a specific shop's resources |
+| `editor` | Shop | Explicit | Read/write access to a specific shop's resources |
+| `tenantAdmin` | Tenant | Explicit | Full access to all shops within a tenant |
+| `tenantOwner` | Tenant | **Derived** | Full access to owned tenant (from `tenants.owner_id`) |
+| `systemAdmin` | Global | Explicit | Full access to all tenants and shops |
 
 ### Role Assignment
 
 - **Shop-level roles** (`viewer`, `editor`): Assigned with `tenant_id` and `shop_id`
 - **Tenant-level roles** (`tenantAdmin`): Assigned with `tenant_id` only (no `shop_id`)
+- **Tenant owner** (`tenantOwner`): **Automatically derived** from `tenants.owner_id` - no explicit assignment needed
 - **System-level roles** (`systemAdmin`): No tenant or shop scope
 
 ### Access Control Logic
 
 For protected endpoints (e.g., SKUs):
 1. **System admin**: Full access to everything
-2. **Tenant admin**: Full access to all shops in their tenant
-3. **Shop-level roles**: 
+2. **Tenant owner**: Full access to all shops in tenants they own (derived from `tenants.owner_id`)
+3. **Tenant admin**: Full access to all shops in their tenant
+4. **Shop-level roles**: 
    - `viewer` or `editor`: Read access to the specific shop
    - `editor` only: Write access to the specific shop
 

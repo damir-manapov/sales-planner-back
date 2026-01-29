@@ -4,10 +4,11 @@ import { SalesHistoryExamplesController } from './sales-history-examples.control
 import { SalesHistoryService } from './sales-history.service.js';
 import { ApiKeysModule } from '../api-keys/api-keys.module.js';
 import { UserRolesModule } from '../user-roles/user-roles.module.js';
+import { TenantsModule } from '../tenants/tenants.module.js';
 import { AuthGuard } from '../auth/auth.guard.js';
 
 @Module({
-  imports: [ApiKeysModule, UserRolesModule],
+  imports: [ApiKeysModule, UserRolesModule, TenantsModule],
   controllers: [SalesHistoryExamplesController, SalesHistoryController],
   providers: [SalesHistoryService, AuthGuard],
   exports: [SalesHistoryService],

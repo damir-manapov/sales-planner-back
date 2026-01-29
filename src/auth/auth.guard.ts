@@ -2,6 +2,7 @@ import { Injectable, CanActivate, ExecutionContext, UnauthorizedException } from
 import { Request } from 'express';
 import { ApiKeysService } from '../api-keys/api-keys.service.js';
 import { UserRolesService } from '../user-roles/user-roles.service.js';
+import { TenantsService } from '../tenants/tenants.service.js';
 
 export interface TenantRole {
   tenantId: number;
@@ -16,6 +17,7 @@ export interface ShopRole {
 export interface AuthenticatedUser {
   id: number;
   tenantIds: number[];
+  ownedTenantIds: number[];
   tenantRoles: TenantRole[];
   shopRoles: ShopRole[];
   isSystemAdmin: boolean;
@@ -30,6 +32,7 @@ export class AuthGuard implements CanActivate {
   constructor(
     private readonly apiKeysService: ApiKeysService,
     private readonly userRolesService: UserRolesService,
+    private readonly tenantsService: TenantsService,
   ) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
@@ -93,9 +96,17 @@ export class AuthGuard implements CanActivate {
       roles,
     }));
 
+    // Get tenant IDs where user is the owner (derived tenantOwner role)
+    const ownedTenants = await this.tenantsService.findByOwnerId(validApiKey.user_id);
+    const ownedTenantIds = ownedTenants.map((t) => t.id);
+
+    // Include owned tenants in tenantIds for access check
+    const allTenantIds = [...new Set([...tenantIds, ...ownedTenantIds])];
+
     request.user = {
       id: validApiKey.user_id,
-      tenantIds,
+      tenantIds: allTenantIds,
+      ownedTenantIds,
       tenantRoles,
       shopRoles,
       isSystemAdmin,

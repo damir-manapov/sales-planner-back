@@ -18,8 +18,17 @@ function isTenantAdmin(user: User, tenantId: number): boolean {
   return tenantRoles.includes('tenantAdmin');
 }
 
+function isTenantOwner(user: User, tenantId: number): boolean {
+  return user.ownedTenantIds.includes(tenantId);
+}
+
+/** Check if user has tenant-level access (owner or admin) */
+function hasTenantAccess(user: User, tenantId: number): boolean {
+  return isTenantOwner(user, tenantId) || isTenantAdmin(user, tenantId);
+}
+
 export function hasReadAccess(user: User, shopId: number, tenantId: number): boolean {
-  if (isTenantAdmin(user, tenantId)) {
+  if (hasTenantAccess(user, tenantId)) {
     return true;
   }
   const shopRoles = getShopRoles(user, shopId);
@@ -27,7 +36,7 @@ export function hasReadAccess(user: User, shopId: number, tenantId: number): boo
 }
 
 export function hasWriteAccess(user: User, shopId: number, tenantId: number): boolean {
-  if (isTenantAdmin(user, tenantId)) {
+  if (hasTenantAccess(user, tenantId)) {
     return true;
   }
   const shopRoles = getShopRoles(user, shopId);
