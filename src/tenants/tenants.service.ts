@@ -61,7 +61,9 @@ export class TenantsService {
     await this.db.deleteFrom('tenants').where('id', '=', id).execute();
   }
 
-  async createTenantWithShop(dto: CreateTenantWithShopDto): Promise<TenantWithShopAndApiKey> {
+  async createTenantWithShopAndUser(
+    dto: CreateTenantWithShopDto,
+  ): Promise<TenantWithShopAndApiKey> {
     return this.db.transaction().execute(async (trx) => {
       // Create user
       const user = await trx

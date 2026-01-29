@@ -87,11 +87,11 @@ export class TenantsController {
     @Req() req: AuthenticatedRequest,
     @Body() dto: CreateTenantWithShopDto,
   ): Promise<TenantWithShopAndApiKey> {
-    // Only systemAdmin can create tenant with shop
+    // Only systemAdmin can create tenant with shop and user
     if (!req.user.isSystemAdmin) {
-      throw new ForbiddenException('Only systemAdmin can create tenant with shop');
+      throw new ForbiddenException('Only systemAdmin can create tenant with shop and user');
     }
 
-    return this.tenantsService.createTenantWithShop(dto);
+    return this.tenantsService.createTenantWithShopAndUser(dto);
   }
 }
