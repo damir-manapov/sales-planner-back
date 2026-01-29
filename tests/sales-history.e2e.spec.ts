@@ -334,6 +334,7 @@ describe('Sales History (e2e)', () => {
       expect(response.body).toHaveProperty('created');
       expect(response.body.created).toBeGreaterThanOrEqual(1);
       expect(response.body).toHaveProperty('skus_created');
+      expect(response.body.skus_created).toBeGreaterThanOrEqual(1);
 
       // Verify the data was imported using the export endpoint which includes sku_code
       const exportResponse = await request(app.getHttpServer())
