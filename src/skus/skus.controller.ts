@@ -57,6 +57,18 @@ export class SkusController {
     return this.skusService.exportForShop(ctx.shopId);
   }
 
+  @Get('export/csv')
+  @RequireReadAccess()
+  async exportCsv(
+    @Req() _req: AuthenticatedRequest,
+    @ShopContext() ctx: ShopContextType,
+  ): Promise<{ content: string }> {
+    const items = await this.skusService.exportForShop(ctx.shopId);
+    const header = 'code,title';
+    const rows = items.map((item) => `${item.code},"${item.title.replace(/"/g, '""')}"`);
+    return { content: [header, ...rows].join('\n') };
+  }
+
   @Get(':id')
   @RequireReadAccess()
   async findById(

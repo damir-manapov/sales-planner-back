@@ -306,5 +306,45 @@ describe('Sales History (e2e)', () => {
       const periods = (response.body as Array<{ period: string }>).map((r) => r.period);
       expect(periods.every((p) => p === '2025-07')).toBe(true);
     });
+
+    it('GET /sales-history/export/csv - should export sales history in CSV format', async () => {
+      const response = await request(app.getHttpServer())
+        .get(`/sales-history/export/csv?shop_id=${shopId}&tenant_id=${tenantId}`)
+        .set('X-API-Key', testUserApiKey);
+
+      expect(response.status).toBe(200);
+      expect(response.body).toHaveProperty('content');
+      expect(typeof response.body.content).toBe('string');
+
+      const lines = response.body.content.split('\n');
+      expect(lines[0]).toBe('sku_code,period,quantity');
+      expect(lines.length).toBeGreaterThan(1);
+    });
+
+    it('POST /sales-history/import/csv - should import sales history from CSV', async () => {
+      const skuCode = `CSV-IMPORT-${Date.now()}`;
+      const csvContent = `sku_code,period,quantity\n${skuCode},2025-08,75`;
+
+      const response = await request(app.getHttpServer())
+        .post(`/sales-history/import/csv?shop_id=${shopId}&tenant_id=${tenantId}`)
+        .set('X-API-Key', testUserApiKey)
+        .send({ content: csvContent });
+
+      expect(response.status).toBe(201);
+      expect(response.body).toHaveProperty('created');
+      expect(response.body.created).toBeGreaterThanOrEqual(1);
+      expect(response.body).toHaveProperty('skus_created');
+
+      // Verify the data was imported using the export endpoint which includes sku_code
+      const exportResponse = await request(app.getHttpServer())
+        .get(`/sales-history/export/json?shop_id=${shopId}&tenant_id=${tenantId}&period_from=2025-08&period_to=2025-08`)
+        .set('X-API-Key', testUserApiKey);
+
+      const imported = (exportResponse.body as Array<{ sku_code: string; period: string; quantity: number }>).find(
+        (r) => r.sku_code === skuCode && r.period === '2025-08',
+      );
+      expect(imported).toBeDefined();
+      expect(imported?.quantity).toBe(75);
+    });
   });
 });
