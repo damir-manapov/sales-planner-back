@@ -16,6 +16,7 @@ import { MarketplacesModule } from './marketplaces/index.js';
 import { SkusModule } from './skus/index.js';
 import { SalesHistoryModule } from './sales-history/index.js';
 import { AuthModule } from './auth/index.js';
+import { MeModule } from './me/index.js';
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { AuthModule } from './auth/index.js';
     DatabaseModule,
     AuthModule,
     UsersModule,
+    MeModule,
     RolesModule,
     UserRolesModule,
     TenantsModule,
