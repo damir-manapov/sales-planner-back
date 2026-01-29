@@ -225,6 +225,8 @@ sales-planner-back/
 | `/skus/import/csv` | POST | Import/upsert SKUs from CSV |
 | `/skus/:id` | GET, PUT, DELETE | SKU CRUD (requires `shop_id` and `tenant_id` query params) |
 | `/sales-history` | GET, POST | List/create sales history (requires `shop_id` and `tenant_id` query params) |
+| `/sales-history/examples/json` | GET | Download example JSON file for import (no auth required) |
+| `/sales-history/examples/csv` | GET | Download example CSV file for import (no auth required) |
 | `/sales-history/import` | POST | Import/upsert sales history from JSON array |
 | `/sales-history/:id` | GET, PUT, DELETE | Sales history CRUD (requires `shop_id` and `tenant_id` query params) |
 
@@ -268,10 +270,16 @@ SKU-002,Product 2
 
 ### Sales History Endpoints
 
-All sales history endpoints require `shop_id` and `tenant_id` query parameters for access control.
+All sales history endpoints (except examples) require `shop_id` and `tenant_id` query parameters for access control.
 Period is specified in `YYYY-MM` format (stored as DATE, first of month).
 
 ```bash
+# Download example JSON format
+curl -O http://localhost:3000/sales-history/examples/json
+
+# Download example CSV format
+curl -O http://localhost:3000/sales-history/examples/csv
+
 # List sales history for a shop
 curl -H "x-api-key: $API_KEY" \
   "http://localhost:3000/sales-history?shop_id=1&tenant_id=1"
