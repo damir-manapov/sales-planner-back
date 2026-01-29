@@ -1,4 +1,5 @@
 import { Controller, Get, Header } from '@nestjs/common';
+import { toCsv } from '../lib/index.js';
 
 const EXAMPLE_SKUS = [
   { code: 'SKU-001', title: 'Product 1' },
@@ -19,8 +20,6 @@ export class SkusExamplesController {
   @Header('Content-Type', 'text/csv')
   @Header('Content-Disposition', 'attachment; filename="skus-example.csv"')
   getCsvExample(): string {
-    const header = 'code,title';
-    const rows = EXAMPLE_SKUS.map((sku) => `${sku.code},${sku.title}`);
-    return [header, ...rows].join('\n');
+    return toCsv(EXAMPLE_SKUS, ['code', 'title']);
   }
 }

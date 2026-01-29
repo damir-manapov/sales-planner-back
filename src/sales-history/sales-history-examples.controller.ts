@@ -1,4 +1,5 @@
 import { Controller, Get, Header } from '@nestjs/common';
+import { toCsv } from '../lib/index.js';
 
 const EXAMPLE_SALES_HISTORY = [
   { sku_code: 'SKU-001', period: '2026-01', quantity: 100 },
@@ -19,10 +20,6 @@ export class SalesHistoryExamplesController {
   @Header('Content-Type', 'text/csv')
   @Header('Content-Disposition', 'attachment; filename="sales-history-example.csv"')
   getCsvExample(): string {
-    const header = 'sku_code,period,quantity';
-    const rows = EXAMPLE_SALES_HISTORY.map(
-      (item) => `${item.sku_code},${item.period},${item.quantity}`,
-    );
-    return [header, ...rows].join('\n');
+    return toCsv(EXAMPLE_SALES_HISTORY, ['sku_code', 'period', 'quantity']);
   }
 }
