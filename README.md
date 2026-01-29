@@ -63,7 +63,9 @@ Headers: x-api-key: <your-api-key>
 
 Response includes:
 - User basic info (id, name, email)
-- Roles with scope (including tenant/shop names where applicable)
+- Roles with scope (including tenant/shop titles where applicable)
+  - Explicit roles from `user_roles` table
+  - Derived `tenantOwner` role for tenants where `owner_id` matches the user
 - Tenants the user has access to (with ownership flag)
 
 ### Decorator-Based Access Control

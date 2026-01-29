@@ -111,9 +111,32 @@ export class UsersService {
       shop_title: r.shop_title,
     }));
 
-    // Get all tenants user has access to (through roles)
+    // Get tenants owned by this user to add derived tenantOwner roles
+    const ownedTenantsResult = await this.db
+      .selectFrom('tenants')
+      .select('id')
+      .select('title')
+      .where('owner_id', '=', userId)
+      .execute();
+
+    // Add derived tenantOwner roles for owned tenants
+    for (const ownedTenant of ownedTenantsResult) {
+      roles.push({
+        id: 0, // Synthetic role, no actual user_roles record
+        role_name: 'tenantOwner',
+        tenant_id: ownedTenant.id,
+        tenant_title: ownedTenant.title,
+        shop_id: null,
+        shop_title: null,
+      });
+    }
+
+    // Get all tenants user has access to (through roles or ownership)
     const tenantIds = [
-      ...new Set(roles.filter((r) => r.tenant_id !== null).map((r) => r.tenant_id as number)),
+      ...new Set([
+        ...roles.filter((r) => r.tenant_id !== null).map((r) => r.tenant_id as number),
+        ...ownedTenantsResult.map((t) => t.id),
+      ]),
     ];
 
     // Get tenant details including ownership

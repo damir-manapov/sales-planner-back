@@ -90,13 +90,24 @@ describe('Me (e2e)', () => {
 
     // Check roles
     expect(Array.isArray(response.body.roles)).toBe(true);
-    expect(response.body.roles.length).toBeGreaterThan(0);
-    const role = response.body.roles[0];
-    expect(role).toHaveProperty('role_name', 'editor');
-    expect(role).toHaveProperty('tenant_id', tenantId);
-    expect(role.tenant_title).toBeTruthy();
-    expect(role).toHaveProperty('shop_id', shopId);
-    expect(role.shop_title).toBeTruthy();
+    expect(response.body.roles.length).toBeGreaterThan(1); // Should have editor + tenantOwner
+    
+    // Verify editor role
+    const editorRole = response.body.roles.find((r: { role_name: string }) => r.role_name === 'editor');
+    expect(editorRole).toBeTruthy();
+    expect(editorRole).toHaveProperty('tenant_id', tenantId);
+    expect(editorRole.tenant_title).toBeTruthy();
+    expect(editorRole).toHaveProperty('shop_id', shopId);
+    expect(editorRole.shop_title).toBeTruthy();
+
+    // Verify derived tenantOwner role
+    const ownerRole = response.body.roles.find((r: { role_name: string }) => r.role_name === 'tenantOwner');
+    expect(ownerRole).toBeTruthy();
+    expect(ownerRole).toHaveProperty('role_name', 'tenantOwner');
+    expect(ownerRole).toHaveProperty('tenant_id', tenantId);
+    expect(ownerRole.tenant_title).toBeTruthy();
+    expect(ownerRole).toHaveProperty('shop_id', null);
+    expect(ownerRole).toHaveProperty('shop_title', null);
 
     // Check tenants
     expect(Array.isArray(response.body.tenants)).toBe(true);
