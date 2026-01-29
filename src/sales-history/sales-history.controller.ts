@@ -18,8 +18,8 @@ import {
   CreateSalesHistoryDto,
   UpdateSalesHistoryDto,
   SalesHistory,
-  isValidPeriod,
 } from './sales-history.service.js';
+import { isValidPeriod } from '../lib/index.js';
 import {
   AuthGuard,
   AuthenticatedRequest,

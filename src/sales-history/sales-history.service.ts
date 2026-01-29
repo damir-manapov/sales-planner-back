@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/index.js';
 import { sql } from 'kysely';
-import { periodToDate, dateToPeriod, isValidPeriod } from '../lib/period.js';
+import { periodToDate, dateToPeriod, isValidPeriod } from '../lib/index.js';
 
 export interface CreateSalesHistoryDto {
   shop_id: number;
@@ -332,5 +332,3 @@ export class SalesHistoryService {
     return rows;
   }
 }
-
-export { isValidPeriod } from '../lib/period.js';
