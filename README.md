@@ -8,11 +8,44 @@ NestJS API for sales planning and management with Kysely + PostgreSQL (Neon).
 - **Tenants** - Multi-tenant support
 - **Shops** - Shop management linked to tenants
 - **User-Shops** - Link users to shops
-- **Roles** - Role-based access control
-- **User-Roles** - Assign roles to users
+- **Roles** - Role-based access control (viewer, editor, tenantAdmin, systemAdmin)
+- **User-Roles** - Assign roles to users (per shop or per tenant)
 - **API Keys** - API keys with optional expiration, linked to users
 - **Marketplaces** - Marketplace management (string IDs)
-- **Bootstrap** - Auto-creates systemAdmin user on startup
+- **SKUs** - SKU management linked to shops (unique code per shop)
+- **Bootstrap** - Auto-creates systemAdmin user and seeds default roles on startup
+
+## Role-Based Access Control
+
+The API implements a hierarchical role-based access control system:
+
+### Role Types
+
+| Role | Scope | Description |
+|------|-------|-------------|
+| `viewer` | Shop | Read-only access to a specific shop's resources |
+| `editor` | Shop | Read/write access to a specific shop's resources |
+| `tenantAdmin` | Tenant | Full access to all shops within a tenant |
+| `systemAdmin` | Global | Full access to all tenants and shops |
+
+### Role Assignment
+
+- **Shop-level roles** (`viewer`, `editor`): Assigned with `tenant_id` and `shop_id`
+- **Tenant-level roles** (`tenantAdmin`): Assigned with `tenant_id` only (no `shop_id`)
+- **System-level roles** (`systemAdmin`): No tenant or shop scope
+
+### Access Control Logic
+
+For protected endpoints (e.g., SKUs):
+1. **System admin**: Full access to everything
+2. **Tenant admin**: Full access to all shops in their tenant
+3. **Shop-level roles**: 
+   - `viewer` or `editor`: Read access to the specific shop
+   - `editor` only: Write access to the specific shop
+
+### Authentication
+
+All protected endpoints require an API key in the `x-api-key` header. The API key is linked to a user, and the user's roles determine access permissions.
 
 ## Prerequisites
 
@@ -144,6 +177,7 @@ sales-planner-back/
 │   ├── user-roles/             # User-Role associations
 │   ├── api-keys/               # API keys management
 │   ├── marketplaces/           # Marketplaces CRUD
+│   ├── skus/                   # SKUs CRUD
 │   └── bootstrap/              # System admin & seed data initialization
 ├── data/
 │   └── common/                 # Seed data (JSON files)
@@ -184,6 +218,50 @@ sales-planner-back/
 | `/api-keys/:id` | GET, PUT, DELETE | API key CRUD |
 | `/marketplaces` | GET, POST | List/create marketplaces |
 | `/marketplaces/:id` | GET, PUT, DELETE | Marketplace CRUD |
+| `/skus` | GET, POST | List/create SKUs (requires `shop_id` and `tenant_id` query params) |
+| `/skus/examples/json` | GET | Download example JSON file for import (no auth required) |
+| `/skus/examples/csv` | GET | Download example CSV file for import (no auth required) |
+| `/skus/import/json` | POST | Import/upsert SKUs from JSON array |
+| `/skus/import/csv` | POST | Import/upsert SKUs from CSV |
+| `/skus/:id` | GET, PUT, DELETE | SKU CRUD (requires `shop_id` and `tenant_id` query params) |
+
+### SKU Endpoints
+
+All SKU endpoints (except examples) require `shop_id` and `tenant_id` query parameters for access control:
+
+```bash
+# Download example JSON format
+curl -O http://localhost:3000/skus/examples/json
+
+# Download example CSV format
+curl -O http://localhost:3000/skus/examples/csv
+
+# List SKUs for a shop
+curl -H "x-api-key: $API_KEY" \
+  "http://localhost:3000/skus?shop_id=1&tenant_id=1"
+
+# Create a SKU
+curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
+  "http://localhost:3000/skus?shop_id=1&tenant_id=1" \
+  -d '{"code": "SKU-001", "title": "Product 1"}'
+
+# Import SKUs from JSON (upserts by code)
+curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
+  "http://localhost:3000/skus/import/json?shop_id=1&tenant_id=1" \
+  -d '[{"code": "SKU-001", "title": "Product 1"}, {"code": "SKU-002", "title": "Product 2"}]'
+
+# Import SKUs from CSV (upserts by code)
+curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
+  "http://localhost:3000/skus/import/csv?shop_id=1&tenant_id=1" \
+  -d '{"content": "code,title\nSKU-001,Product 1\nSKU-002,Product 2"}'
+```
+
+CSV format for import:
+```csv
+code,title
+SKU-001,Product 1
+SKU-002,Product 2
+```
 
 ## Deployment
 

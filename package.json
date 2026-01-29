@@ -32,6 +32,7 @@
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.12",
     "@nestjs/platform-express": "^11.1.12",
+    "csv-parse": "^6.1.0",
     "express": "^5.2.1",
     "kysely": "^0.28.10",
     "pg": "^8.17.2",
@@ -58,7 +59,7 @@
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "unplugin-swc": "^1.5.9",
-    "vercel": "^50.9.2",
+    "vercel": "^50.9.3",
     "vitest": "^4.0.18"
   },
   "engines": {
@@ -68,7 +69,8 @@
     "overrides": {
       "tar": ">=7.5.4",
       "undici": ">=6.23.0",
-      "lodash": ">=4.17.23"
+      "lodash": ">=4.17.23",
+      "diff": ">=4.0.4"
     },
     "onlyBuiltDependencies": [
       "@nestjs/core",

@@ -38,6 +38,7 @@ export interface UserRolesTable {
   user_id: number;
   role_id: number;
   tenant_id: number | null;
+  shop_id: number | null;
   created_at: ColumnType<Date, never, never>;
 }
 
@@ -71,6 +72,16 @@ export interface MarketplacesTable {
   updated_at: Timestamp;
 }
 
+export interface SkusTable {
+  id: Generated<number>;
+  code: string;
+  title: string;
+  shop_id: number;
+  tenant_id: number;
+  created_at: ColumnType<Date, never, never>;
+  updated_at: Timestamp;
+}
+
 export interface Database {
   users: UsersTable;
   api_keys: ApiKeysTable;
@@ -80,4 +91,5 @@ export interface Database {
   shops: ShopsTable;
   user_shops: UserShopsTable;
   marketplaces: MarketplacesTable;
+  skus: SkusTable;
 }

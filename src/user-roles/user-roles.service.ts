@@ -61,4 +61,15 @@ export class UserRolesService {
       .where('role_id', '=', roleId)
       .execute();
   }
+
+  async findByUserIdWithRoleNames(
+    userId: number,
+  ): Promise<Array<{ tenant_id: number | null; shop_id: number | null; role_name: string }>> {
+    return this.db
+      .selectFrom('user_roles')
+      .innerJoin('roles', 'roles.id', 'user_roles.role_id')
+      .select(['user_roles.tenant_id', 'user_roles.shop_id', 'roles.name as role_name'])
+      .where('user_roles.user_id', '=', userId)
+      .execute();
+  }
 }

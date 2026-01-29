@@ -20,7 +20,12 @@ fi
 echo "outdated: OK"
 
 echo "=== Checking vulnerabilities ==="
-pnpm audit --audit-level=moderate
+AUDIT_OUTPUT=$(pnpm audit 2>&1 || true)
+echo "$AUDIT_OUTPUT"
+if echo "$AUDIT_OUTPUT" | grep -q "[0-9] vulnerabilities found"; then
+  echo "ERROR: Vulnerabilities detected"
+  exit 1
+fi
 echo "audit: OK"
 
 echo "=== Health check passed ==="

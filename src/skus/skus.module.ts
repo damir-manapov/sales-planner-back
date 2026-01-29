@@ -1,0 +1,15 @@
+import { Module } from '@nestjs/common';
+import { SkusController } from './skus.controller.js';
+import { SkusExamplesController } from './skus-examples.controller.js';
+import { SkusService } from './skus.service.js';
+import { ApiKeysModule } from '../api-keys/api-keys.module.js';
+import { UserRolesModule } from '../user-roles/user-roles.module.js';
+import { AuthGuard } from '../auth/auth.guard.js';
+
+@Module({
+  imports: [ApiKeysModule, UserRolesModule],
+  controllers: [SkusController, SkusExamplesController],
+  providers: [SkusService, AuthGuard],
+  exports: [SkusService],
+})
+export class SkusModule {}

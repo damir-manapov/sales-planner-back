@@ -22,8 +22,38 @@ export class BootstrapService implements OnModuleInit {
   ) {}
 
   async onModuleInit(): Promise<void> {
+    await this.seedRoles();
     await this.ensureSystemAdmin();
     await this.seedMarketplaces();
+  }
+
+  private async seedRoles(): Promise<void> {
+    const roles = [
+      { name: 'viewer', description: 'Read-only access to a shop' },
+      { name: 'editor', description: 'Can create and edit content in a shop' },
+      { name: 'tenantAdmin', description: 'Full access to all shops in a tenant' },
+    ];
+
+    for (const role of roles) {
+      const existing = await this.rolesService.findByName(role.name);
+      if (!existing) {
+        try {
+          this.logger.log(`Creating role: ${role.name}`);
+          await this.rolesService.create(role);
+        } catch (error) {
+          // Ignore duplicate key errors (race condition in parallel tests)
+          if (
+            error instanceof Error &&
+            error.message.includes('duplicate key value violates unique constraint')
+          ) {
+            this.logger.debug(`Role ${role.name} already exists (created by another process)`);
+          } else {
+            throw error;
+          }
+        }
+      }
+    }
+    this.logger.log('Roles seeding complete');
   }
 
   private async ensureSystemAdmin(): Promise<void> {

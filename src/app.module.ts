@@ -13,6 +13,8 @@ import { UserShopsModule } from './user-shops/index.js';
 import { ApiKeysModule } from './api-keys/index.js';
 import { BootstrapModule } from './bootstrap/index.js';
 import { MarketplacesModule } from './marketplaces/index.js';
+import { SkusModule } from './skus/index.js';
+import { AuthModule } from './auth/index.js';
 
 @Module({
   imports: [
@@ -22,6 +24,7 @@ import { MarketplacesModule } from './marketplaces/index.js';
       load: [databaseConfig],
     }),
     DatabaseModule,
+    AuthModule,
     UsersModule,
     RolesModule,
     UserRolesModule,
@@ -31,6 +34,7 @@ import { MarketplacesModule } from './marketplaces/index.js';
     ApiKeysModule,
     BootstrapModule,
     MarketplacesModule,
+    SkusModule,
   ],
   controllers: [AppController],
   providers: [AppService],
