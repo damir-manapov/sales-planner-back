@@ -264,7 +264,7 @@ sales-planner-back/
 | `/users` | GET, POST | List/create users |
 | `/users/:id` | GET, PUT, DELETE | User CRUD |
 | `/tenants` | GET, POST | List/create tenants |
-| `/tenants/with-shop` | POST | Create user, tenant, and shop (systemAdmin only, returns generated API key) |
+| `/tenants/with-shop-and-user` | POST | Create user, tenant, and shop (systemAdmin only, returns generated API key) |
 | `/tenants/:id` | GET, PUT, DELETE | Tenant CRUD |
 | `/shops` | GET, POST | List/create shops |
 | `/shops/:id` | GET, PUT, DELETE | Shop CRUD |
@@ -311,9 +311,9 @@ curl -H "x-api-key: $API_KEY" "http://localhost:3000/tenants"
 # Get tenant by ID
 curl -H "x-api-key: $API_KEY" "http://localhost:3000/tenants/1"
 
-# Create tenant with shop (systemAdmin only) - returns API key of owner
+# Create tenant with shop and user (systemAdmin only) - returns API key of owner
 curl -X POST -H "x-api-key: $SYSTEM_ADMIN_API_KEY" -H "Content-Type: application/json" \
-  "http://localhost:3000/tenants/with-shop" \
+  "http://localhost:3000/tenants/with-shop-and-user" \
   -d '{
     "tenantTitle": "New Company",
     "shopTitle": "Main Store",
@@ -332,7 +332,7 @@ curl -X POST -H "x-api-key: $SYSTEM_ADMIN_API_KEY" -H "Content-Type: application
 
 The `created_by` field tracks which user created each tenant and cannot be manually set - it's always derived from the authenticated user.
 
-**Create Tenant with Shop** (`POST /tenants/with-shop`):
+**Create Tenant with Shop and User** (`POST /tenants/with-shop-and-user`):
 - Only `systemAdmin` can use this endpoint
 - Creates user, tenant, and shop in one transaction
 - Generates API key for the new user

@@ -82,7 +82,7 @@ export class TenantsController {
     await this.tenantsService.delete(id);
   }
 
-  @Post('with-shop')
+  @Post('with-shop-and-user')
   async createWithShop(
     @Req() req: AuthenticatedRequest,
     @Body() dto: CreateTenantWithShopDto,

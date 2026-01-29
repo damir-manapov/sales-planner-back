@@ -243,9 +243,9 @@ describe('Tenants (e2e)', () => {
         .set('X-API-Key', user2ApiKey);
 
   describe('Create tenant with shop', () => {
-    it('POST /tenants/with-shop - should return 403 for non-systemAdmin', async () => {
+    it('POST /tenants/with-shop-and-user - should return 403 for non-systemAdmin', async () => {
       const response = await request(app.getHttpServer())
-        .post('/tenants/with-shop')
+        .post('/tenants/with-shop-and-user')
         .set('X-API-Key', testUserApiKey)
         .send({
           tenantTitle: 'Test Company',
@@ -257,7 +257,7 @@ describe('Tenants (e2e)', () => {
       expect(response.status).toBe(403);
     });
 
-    it('POST /tenants/with-shop - should create user, tenant, and shop for systemAdmin', async () => {
+    it('POST /tenants/with-shop-and-user - should create user, tenant, and shop for systemAdmin', async () => {
       const requestData = {
         tenantTitle: `E2E Test Company ${Date.now()}`,
         shopTitle: 'Main Store',
@@ -266,7 +266,7 @@ describe('Tenants (e2e)', () => {
       };
 
       const response = await request(app.getHttpServer())
-        .post('/tenants/with-shop')
+        .post('/tenants/with-shop-and-user')
         .set('X-API-Key', systemAdminApiKey)
         .send(requestData);
 
