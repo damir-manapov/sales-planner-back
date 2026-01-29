@@ -104,7 +104,6 @@ describe('Sales History (e2e)', () => {
         sku_id: skuId,
         period: '2026-01',
         quantity: 100,
-        amount: '1500.50',
       };
 
       const response = await request(app.getHttpServer())
@@ -131,7 +130,6 @@ describe('Sales History (e2e)', () => {
           sku_id: skuId,
           period: '2026-13', // invalid month
           quantity: 50,
-          amount: '500.00',
         });
 
       expect(response.status).toBe(400);
@@ -145,7 +143,6 @@ describe('Sales History (e2e)', () => {
           sku_id: skuId,
           period: '2026-1', // missing leading zero
           quantity: 50,
-          amount: '500.00',
         });
 
       expect(response.status).toBe(400);
@@ -188,11 +185,10 @@ describe('Sales History (e2e)', () => {
       const response = await request(app.getHttpServer())
         .put(`/sales-history/${salesHistoryId}?shop_id=${shopId}&tenant_id=${tenantId}`)
         .set('X-API-Key', testUserApiKey)
-        .send({ quantity: 150, amount: '2000.00' });
+        .send({ quantity: 150 });
 
       expect(response.status).toBe(200);
       expect(response.body.quantity).toBe(150);
-      expect(response.body.amount).toBe('2000.00');
     });
 
     it('DELETE /sales-history/:id - should delete record', async () => {
@@ -208,8 +204,8 @@ describe('Sales History (e2e)', () => {
   describe('Bulk import', () => {
     it('POST /sales-history/import - should import multiple records', async () => {
       const items = [
-        { sku_code: skuCode, period: '2025-11', quantity: 80, amount: '1200.00' },
-        { sku_code: skuCode, period: '2025-12', quantity: 90, amount: '1350.00' },
+        { sku_code: skuCode, period: '2025-11', quantity: 80 },
+        { sku_code: skuCode, period: '2025-12', quantity: 90 },
       ];
 
       const response = await request(app.getHttpServer())
@@ -224,7 +220,7 @@ describe('Sales History (e2e)', () => {
     });
 
     it('POST /sales-history/import - should upsert existing records', async () => {
-      const items = [{ sku_code: skuCode, period: '2025-11', quantity: 100, amount: '1500.00' }];
+      const items = [{ sku_code: skuCode, period: '2025-11', quantity: 100 }];
 
       const response = await request(app.getHttpServer())
         .post(`/sales-history/import?shop_id=${shopId}&tenant_id=${tenantId}`)
@@ -238,7 +234,7 @@ describe('Sales History (e2e)', () => {
 
     it('POST /sales-history/import - should auto-create missing SKUs', async () => {
       const newSkuCode = `AUTO-SKU-${Date.now()}`;
-      const items = [{ sku_code: newSkuCode, period: '2025-05', quantity: 50, amount: '500.00' }];
+      const items = [{ sku_code: newSkuCode, period: '2025-05', quantity: 50 }];
 
       const response = await request(app.getHttpServer())
         .post(`/sales-history/import?shop_id=${shopId}&tenant_id=${tenantId}`)
@@ -272,7 +268,7 @@ describe('Sales History (e2e)', () => {
       await request(app.getHttpServer())
         .post(`/sales-history/import?shop_id=${shopId}&tenant_id=${tenantId}`)
         .set('X-API-Key', testUserApiKey)
-        .send([{ sku_code: exportSkuCode, period: '2025-07', quantity: 100, amount: '1500.00' }]);
+        .send([{ sku_code: exportSkuCode, period: '2025-07', quantity: 100 }]);
 
       // Export
       const response = await request(app.getHttpServer())
@@ -286,7 +282,6 @@ describe('Sales History (e2e)', () => {
         sku_code: string;
         period: string;
         quantity: number;
-        amount: string;
       }>;
       const item = exported.find((r) => r.sku_code === exportSkuCode && r.period === '2025-07');
       expect(item).toBeDefined();
@@ -294,7 +289,6 @@ describe('Sales History (e2e)', () => {
         sku_code: exportSkuCode,
         period: '2025-07',
         quantity: 100,
-        amount: '1500.00',
       });
     });
 

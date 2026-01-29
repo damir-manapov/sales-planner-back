@@ -300,12 +300,12 @@ curl -H "x-api-key: $API_KEY" \
 # Create a sales history record
 curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
   "http://localhost:3000/sales-history?shop_id=1&tenant_id=1" \
-  -d '{"sku_id": 1, "period": "2026-01", "quantity": 100, "amount": "1500.50"}'
+  -d '{"sku_id": 1, "period": "2026-01", "quantity": 100}'
 
 # Import sales history (upserts by sku_code + period, auto-creates missing SKUs)
 curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
   "http://localhost:3000/sales-history/import?shop_id=1&tenant_id=1" \
-  -d '[{"sku_code": "SKU-001", "period": "2026-01", "quantity": 100, "amount": "1500.50"}]'
+  -d '[{"sku_code": "SKU-001", "period": "2026-01", "quantity": 100}]'
 
 # Export sales history (same format as import)
 curl -H "x-api-key: $API_KEY" \
@@ -319,8 +319,8 @@ curl -H "x-api-key: $API_KEY" \
 Sales history import JSON format (uses `sku_code` for user convenience):
 ```json
 [
-  {"sku_code": "SKU-001", "period": "2026-01", "quantity": 100, "amount": "1500.50"},
-  {"sku_code": "SKU-002", "period": "2026-01", "quantity": 50, "amount": "750.00"}
+  {"sku_code": "SKU-001", "period": "2026-01", "quantity": 100},
+  {"sku_code": "SKU-002", "period": "2026-01", "quantity": 50}
 ]
 ```
 

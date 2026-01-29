@@ -31,7 +31,6 @@ interface ImportSalesHistoryItem {
   sku_code: string;
   period: string; // "YYYY-MM"
   quantity: number;
-  amount: string;
 }
 
 interface ImportResult {
@@ -73,7 +72,7 @@ export class SalesHistoryController {
     @Query('tenant_id', ParseIntPipe) tenantId: number,
     @Query('period_from') periodFrom?: string,
     @Query('period_to') periodTo?: string,
-  ): Promise<Array<{ sku_code: string; period: string; quantity: number; amount: string }>> {
+  ): Promise<Array<{ sku_code: string; period: string; quantity: number }>> {
     validateReadAccess(req.user, shopId, tenantId);
 
     if (periodFrom && !isValidPeriod(periodFrom)) {

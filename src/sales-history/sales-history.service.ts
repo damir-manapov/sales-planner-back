@@ -9,12 +9,10 @@ export interface CreateSalesHistoryDto {
   sku_id: number;
   period: string; // "YYYY-MM" format, stored as first of month
   quantity: number;
-  amount: string; // decimal as string
 }
 
 export interface UpdateSalesHistoryDto {
   quantity?: number;
-  amount?: string;
   // Note: shop_id, tenant_id, sku_id, period are not updatable
 }
 
@@ -25,7 +23,6 @@ export interface SalesHistory {
   sku_id: number;
   period: string; // "YYYY-MM" format
   quantity: number;
-  amount: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -41,7 +38,6 @@ export class SalesHistoryService {
     sku_id: number;
     period: Date;
     quantity: number;
-    amount: string;
     created_at: Date;
     updated_at: Date;
   }): SalesHistory {
@@ -111,7 +107,6 @@ export class SalesHistoryService {
         sku_id: dto.sku_id,
         period: periodToDate(dto.period),
         quantity: dto.quantity,
-        amount: dto.amount,
         updated_at: new Date(),
       })
       .returningAll()
@@ -161,7 +156,7 @@ export class SalesHistoryService {
   }
 
   async bulkUpsert(
-    items: Array<{ sku_code: string; period: string; quantity: number; amount: string }>,
+    items: Array<{ sku_code: string; period: string; quantity: number }>,
     shopId: number,
     tenantId: number,
   ): Promise<{ created: number; updated: number; skus_created: number; errors: string[] }> {
@@ -176,7 +171,6 @@ export class SalesHistoryService {
       sku_code: string;
       period: string;
       quantity: number;
-      amount: string;
     }> = [];
 
     items.forEach((item, i) => {
@@ -238,7 +232,6 @@ export class SalesHistoryService {
       period: string;
       periodDate: Date;
       quantity: number;
-      amount: string;
     }> = [];
 
     validatedItems.forEach((item) => {
@@ -282,14 +275,12 @@ export class SalesHistoryService {
           sku_id: item.sku_id,
           period: item.periodDate,
           quantity: item.quantity,
-          amount: item.amount,
           updated_at: new Date(),
         })),
       )
       .onConflict((oc) =>
         oc.columns(['shop_id', 'sku_id', 'period']).doUpdateSet({
           quantity: (eb) => eb.ref('excluded.quantity'),
-          amount: (eb) => eb.ref('excluded.amount'),
           updated_at: new Date(),
         }),
       )
@@ -305,7 +296,7 @@ export class SalesHistoryService {
     shopId: number,
     periodFrom?: string,
     periodTo?: string,
-  ): Promise<Array<{ sku_code: string; period: string; quantity: number; amount: string }>> {
+  ): Promise<Array<{ sku_code: string; period: string; quantity: number }>> {
     let query = this.db
       .selectFrom('sales_history')
       .innerJoin('skus', 'skus.id', 'sales_history.sku_id')
@@ -313,7 +304,6 @@ export class SalesHistoryService {
         'skus.code as sku_code',
         sql<string>`to_char(sales_history.period, 'YYYY-MM')`.as('period'),
         'sales_history.quantity',
-        'sales_history.amount',
       ])
       .where('sales_history.shop_id', '=', shopId);
 
