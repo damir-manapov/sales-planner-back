@@ -13,7 +13,13 @@ CREATE TABLE IF NOT EXISTS sales_history (
   UNIQUE(shop_id, sku_id, year, month)
 );
 
-CREATE INDEX idx_sales_history_shop_id ON sales_history(shop_id);
-CREATE INDEX idx_sales_history_tenant_id ON sales_history(tenant_id);
-CREATE INDEX idx_sales_history_sku_id ON sales_history(sku_id);
-CREATE INDEX idx_sales_history_year_month ON sales_history(year, month);
+CREATE INDEX IF NOT EXISTS idx_sales_history_shop_id ON sales_history(shop_id);
+CREATE INDEX IF NOT EXISTS idx_sales_history_tenant_id ON sales_history(tenant_id);
+CREATE INDEX IF NOT EXISTS idx_sales_history_sku_id ON sales_history(sku_id);
+
+-- Create index on year/month if columns exist (they may have been replaced by period column)
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_name = 'sales_history' AND column_name = 'year') THEN
+    CREATE INDEX IF NOT EXISTS idx_sales_history_year_month ON sales_history(year, month);
+  END IF;
+END $$;

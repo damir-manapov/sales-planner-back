@@ -1,5 +1,5 @@
 -- Create marketplaces table
-CREATE TABLE marketplaces (
+CREATE TABLE IF NOT EXISTS marketplaces (
   id VARCHAR(255) PRIMARY KEY,
   title VARCHAR(255) NOT NULL,
   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
@@ -7,4 +7,4 @@ CREATE TABLE marketplaces (
 );
 
 -- Index for title search
-CREATE INDEX idx_marketplaces_title ON marketplaces(title);
+CREATE INDEX IF NOT EXISTS idx_marketplaces_title ON marketplaces(title);

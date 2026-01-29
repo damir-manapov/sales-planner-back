@@ -1,5 +1,5 @@
 -- Create SKUs table
-CREATE TABLE skus (
+CREATE TABLE IF NOT EXISTS skus (
   id SERIAL PRIMARY KEY,
   code VARCHAR(255) NOT NULL,
   title VARCHAR(255) NOT NULL,
@@ -10,4 +10,4 @@ CREATE TABLE skus (
 );
 
 -- Index for shop lookups
-CREATE INDEX idx_skus_shop_id ON skus(shop_id);
+CREATE INDEX IF NOT EXISTS idx_skus_shop_id ON skus(shop_id);

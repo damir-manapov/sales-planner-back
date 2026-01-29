@@ -5,7 +5,7 @@ NestJS API for sales planning and management with Kysely + PostgreSQL (Neon).
 ## Features
 
 - **Users** - User management
-- **Tenants** - Multi-tenant support
+- **Tenants** - Multi-tenant support with audit trail (tracks who created each tenant)
 - **Shops** - Shop management linked to tenants
 - **User-Shops** - Link users to shops
 - **Roles** - Role-based access control (viewer, editor, tenantAdmin, systemAdmin)
@@ -293,6 +293,25 @@ sales-planner-back/
 | `/sales-history/import` | POST | Import/upsert sales history from JSON array (auto-creates missing SKUs) |
 | `/sales-history/import/csv` | POST | Import/upsert sales history from CSV (auto-creates missing SKUs) |
 | `/sales-history/:id` | GET, PUT, DELETE | Sales history CRUD (requires `shop_id` and `tenant_id` query params) |
+
+### Tenant Management
+
+Tenant endpoints require authentication. When creating a tenant, the `created_by` field is automatically set to the authenticated user's ID:
+
+```bash
+# Create a tenant (created_by is set automatically to authenticated user)
+curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
+  "http://localhost:3000/tenants" \
+  -d '{"title": "My Tenant"}'
+
+# List all tenants
+curl -H "x-api-key: $API_KEY" "http://localhost:3000/tenants"
+
+# Get tenant by ID
+curl -H "x-api-key: $API_KEY" "http://localhost:3000/tenants/1"
+```
+
+The `created_by` field tracks which user created each tenant and cannot be manually set - it's always derived from the authenticated user.
 
 ### SKU Endpoints
 

@@ -182,6 +182,7 @@ export interface Skus {
 
 export interface Tenants {
   created_at: Generated<Timestamp>;
+  created_by: number;
   id: Generated<number>;
   owner_id: number | null;
   title: string;
