@@ -202,7 +202,7 @@ export interface Users {
   default_shop_id: number | null;
   email: string;
   id: Generated<number>;
-  name: string | null;
+  name: string;
   updated_at: Generated<Timestamp>;
 }
 
