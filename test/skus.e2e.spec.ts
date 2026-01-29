@@ -38,8 +38,8 @@ describe('SKUs (e2e)', () => {
       .send({ email: `sku-test-${Date.now()}@example.com`, name: 'SKU Test User' });
     testUserId = userRes.body.id;
 
-    // Create API key for test user
-    testUserApiKey = `test-key-${Date.now()}`;
+    // Create API key for test user (random suffix prevents collision in parallel tests)
+    testUserApiKey = `test-key-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
     await request(app.getHttpServer())
       .post('/api-keys')
       .send({ user_id: testUserId, key: testUserApiKey, name: 'Test Key' });
