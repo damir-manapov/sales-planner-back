@@ -235,5 +235,29 @@ describe('Sales History (e2e)', () => {
       expect(response.body.created).toBe(0);
       expect(response.body.updated).toBe(1);
     });
+
+    it('POST /sales-history/import - should auto-create missing SKUs', async () => {
+      const newSkuCode = `AUTO-SKU-${Date.now()}`;
+      const items = [{ sku_code: newSkuCode, period: '2025-05', quantity: 50, amount: '500.00' }];
+
+      const response = await request(app.getHttpServer())
+        .post(`/sales-history/import?shop_id=${shopId}&tenant_id=${tenantId}`)
+        .set('X-API-Key', testUserApiKey)
+        .send(items);
+
+      expect(response.status).toBe(201);
+      expect(response.body.created).toBe(1);
+      expect(response.body.skus_created).toBe(1);
+      expect(response.body.errors).toEqual([]);
+
+      // Verify SKU was actually created
+      const skusResponse = await request(app.getHttpServer())
+        .get(`/skus?shop_id=${shopId}&tenant_id=${tenantId}`)
+        .set('X-API-Key', testUserApiKey);
+
+      const createdSku = skusResponse.body.find((s: { code: string }) => s.code === newSkuCode);
+      expect(createdSku).toBeDefined();
+      expect(createdSku.title).toBe(newSkuCode); // Title defaults to code
+    });
   });
 });

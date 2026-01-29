@@ -187,9 +187,9 @@ export class SalesHistoryService {
     items: Array<{ sku_code: string; period: string; quantity: number; amount: string }>,
     shopId: number,
     tenantId: number,
-  ): Promise<{ created: number; updated: number; errors: string[] }> {
+  ): Promise<{ created: number; updated: number; skus_created: number; errors: string[] }> {
     if (items.length === 0) {
-      return { created: 0, updated: 0, errors: [] };
+      return { created: 0, updated: 0, skus_created: 0, errors: [] };
     }
 
     const errors: string[] = [];
@@ -217,21 +217,44 @@ export class SalesHistoryService {
     });
 
     if (validatedItems.length === 0) {
-      return { created: 0, updated: 0, errors };
+      return { created: 0, updated: 0, skus_created: 0, errors };
     }
 
     // Resolve SKU codes to IDs
     const skuCodes = [...new Set(validatedItems.map((i) => i.sku_code))];
-    const skus = await this.db
+    let skus = await this.db
       .selectFrom('skus')
       .select(['id', 'code'])
       .where('shop_id', '=', shopId)
       .where('code', 'in', skuCodes)
       .execute();
 
+    // Auto-create missing SKUs
+    const existingCodes = new Set(skus.map((s) => s.code));
+    const missingCodes = skuCodes.filter((code) => !existingCodes.has(code));
+
+    if (missingCodes.length > 0) {
+      const newSkus = await this.db
+        .insertInto('skus')
+        .values(
+          missingCodes.map((code) => ({
+            code,
+            title: code, // Use code as title for auto-created SKUs
+            shop_id: shopId,
+            tenant_id: tenantId,
+            updated_at: new Date(),
+          })),
+        )
+        .returning(['id', 'code'])
+        .execute();
+
+      skus = [...skus, ...newSkus];
+    }
+
+    const skusCreated = missingCodes.length;
     const skuCodeToId = new Map(skus.map((s) => [s.code, s.id]));
 
-    // Map items to include sku_id, tracking errors for missing SKUs
+    // Map items to include sku_id
     const validItems: Array<{
       sku_id: number;
       sku_code: string;
@@ -241,21 +264,19 @@ export class SalesHistoryService {
       amount: string;
     }> = [];
 
-    validatedItems.forEach((item, i) => {
+    validatedItems.forEach((item) => {
       const skuId = skuCodeToId.get(item.sku_code);
-      if (!skuId) {
-        errors.push(`Invalid item at index ${i}: SKU code "${item.sku_code}" not found in shop`);
-        return;
+      if (skuId) {
+        validItems.push({
+          ...item,
+          sku_id: skuId,
+          periodDate: periodToDate(item.period),
+        });
       }
-      validItems.push({
-        ...item,
-        sku_id: skuId,
-        periodDate: periodToDate(item.period),
-      });
     });
 
     if (validItems.length === 0) {
-      return { created: 0, updated: 0, errors };
+      return { created: 0, updated: 0, skus_created: skusCreated, errors };
     }
 
     // Get existing records for counting
@@ -300,7 +321,7 @@ export class SalesHistoryService {
     const created = validItems.filter((i) => !existingKeys.has(`${i.sku_id}-${i.period}`)).length;
     const updated = validItems.filter((i) => existingKeys.has(`${i.sku_id}-${i.period}`)).length;
 
-    return { created, updated, errors };
+    return { created, updated, skus_created: skusCreated, errors };
   }
 }
 

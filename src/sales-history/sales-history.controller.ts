@@ -37,6 +37,7 @@ interface ImportSalesHistoryItem {
 interface ImportResult {
   created: number;
   updated: number;
+  skus_created: number;
   errors: string[];
 }
 
