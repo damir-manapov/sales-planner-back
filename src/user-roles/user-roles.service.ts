@@ -1,10 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service.js';
-import { UserRolesTable } from '../database/database.types.js';
+import { UserRoles } from '../database/database.types.js';
 import { Insertable, Selectable } from 'kysely';
 
-export type UserRole = Selectable<UserRolesTable>;
-export type CreateUserRoleDto = Insertable<UserRolesTable>;
+export type UserRole = Selectable<UserRoles>;
+export type CreateUserRoleDto = Insertable<UserRoles>;
 
 @Injectable()
 export class UserRolesService {

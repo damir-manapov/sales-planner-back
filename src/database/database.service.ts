@@ -2,10 +2,10 @@ import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { Kysely, PostgresDialect } from 'kysely';
 import pg from 'pg';
-import { Database } from './database.types.js';
+import { DB } from './database.types.js';
 
 @Injectable()
-export class DatabaseService extends Kysely<Database> implements OnModuleDestroy {
+export class DatabaseService extends Kysely<DB> implements OnModuleDestroy {
   constructor(configService: ConfigService) {
     const url = configService.get<string>('database.url');
     const host = configService.get<string>('database.host');

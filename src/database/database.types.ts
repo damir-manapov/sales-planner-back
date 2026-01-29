@@ -234,16 +234,3 @@ export interface DB {
   user_shops: UserShops;
   users: Users;
 }
-
-// Backward compatibility aliases
-export type Database = DB;
-export type UsersTable = Users;
-export type ApiKeysTable = ApiKeys;
-export type RolesTable = Roles;
-export type UserRolesTable = UserRoles;
-export type TenantsTable = Tenants;
-export type ShopsTable = Shops;
-export type UserShopsTable = UserShops;
-export type MarketplacesTable = Marketplaces;
-export type SkusTable = Skus;
-export type SalesHistoryTable = SalesHistory;
