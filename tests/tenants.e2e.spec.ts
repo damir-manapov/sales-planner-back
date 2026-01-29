@@ -8,6 +8,8 @@ describe('Tenants (e2e)', () => {
   let app: INestApplication;
   let testUserId: number;
   let testUserApiKey: string;
+  let systemAdminUserId: number;
+  let systemAdminApiKey: string;
   let createdTenantId: number;
 
   beforeAll(async () => {
@@ -29,6 +31,34 @@ describe('Tenants (e2e)', () => {
     await request(app.getHttpServer())
       .post('/api-keys')
       .send({ user_id: testUserId, key: testUserApiKey, name: 'Test Key' });
+
+    // Create system admin user
+    const adminRes = await request(app.getHttpServer())
+      .post('/users')
+      .send({ email: `admin-test-${Date.now()}@example.com`, name: 'System Admin' });
+    systemAdminUserId = adminRes.body.id;
+
+    // Create API key for system admin
+    systemAdminApiKey = `admin-key-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+    await request(app.getHttpServer())
+      .post('/api-keys')
+      .send({ user_id: systemAdminUserId, key: systemAdminApiKey, name: 'Admin Key' });
+
+    // Get or create systemAdmin role
+    const rolesRes = await request(app.getHttpServer()).get('/roles');
+    let systemAdminRoleId = rolesRes.body.find((r: { name: string }) => r.name === 'systemAdmin')
+      ?.id;
+    if (!systemAdminRoleId) {
+      const roleRes = await request(app.getHttpServer())
+        .post('/roles')
+        .send({ name: 'systemAdmin', description: 'System Administrator' });
+      systemAdminRoleId = roleRes.body.id;
+    }
+
+    // Assign systemAdmin role (no tenant_id, no shop_id = global)
+    await request(app.getHttpServer())
+      .post('/user-roles')
+      .send({ user_id: systemAdminUserId, role_id: systemAdminRoleId });
   });
 
   afterAll(async () => {
@@ -40,6 +70,9 @@ describe('Tenants (e2e)', () => {
     }
     if (testUserId) {
       await request(app.getHttpServer()).delete(`/users/${testUserId}`);
+    }
+    if (systemAdminUserId) {
+      await request(app.getHttpServer()).delete(`/users/${systemAdminUserId}`);
     }
     await app.close();
   });
@@ -208,6 +241,72 @@ describe('Tenants (e2e)', () => {
       await request(app.getHttpServer())
         .delete(`/tenants/${tenant2Res.body.id}`)
         .set('X-API-Key', user2ApiKey);
+
+  describe('Create tenant with shop', () => {
+    it('POST /tenants/with-shop - should return 403 for non-systemAdmin', async () => {
+      const response = await request(app.getHttpServer())
+        .post('/tenants/with-shop')
+        .set('X-API-Key', testUserApiKey)
+        .send({
+          tenantTitle: 'Test Company',
+          shopTitle: 'Test Shop',
+          userEmail: `owner-${Date.now()}@test.com`,
+          userName: 'Test Owner',
+        });
+
+      expect(response.status).toBe(403);
+    });
+
+    it('POST /tenants/with-shop - should create user, tenant, and shop for systemAdmin', async () => {
+      const requestData = {
+        tenantTitle: `E2E Test Company ${Date.now()}`,
+        shopTitle: 'Main Store',
+        userEmail: `e2e-owner-${Date.now()}@test.com`,
+        userName: 'E2E Test Owner',
+      };
+
+      const response = await request(app.getHttpServer())
+        .post('/tenants/with-shop')
+        .set('X-API-Key', systemAdminApiKey)
+        .send(requestData);
+
+      expect(response.status).toBe(201);
+      expect(response.body).toHaveProperty('tenant');
+      expect(response.body).toHaveProperty('shop');
+      expect(response.body).toHaveProperty('user');
+      expect(response.body).toHaveProperty('apiKey');
+
+      // Verify tenant
+      expect(response.body.tenant.title).toBe(requestData.tenantTitle);
+      expect(response.body.tenant.owner_id).toBe(response.body.user.id);
+      expect(response.body.tenant.created_by).toBe(response.body.user.id);
+
+      // Verify shop
+      expect(response.body.shop.title).toBe(requestData.shopTitle);
+      expect(response.body.shop.tenant_id).toBe(response.body.tenant.id);
+
+      // Verify user
+      expect(response.body.user.email).toBe(requestData.userEmail);
+      expect(response.body.user.name).toBe(requestData.userName);
+
+      // Verify API key format
+      expect(response.body.apiKey).toMatch(/^sk_/);
+
+      // Test that the generated API key works
+      const testResponse = await request(app.getHttpServer())
+        .get('/me')
+        .set('X-API-Key', response.body.apiKey);
+
+      expect(testResponse.status).toBe(200);
+      expect(testResponse.body.id).toBe(response.body.user.id);
+
+      // Cleanup
+      await request(app.getHttpServer())
+        .delete(`/tenants/${response.body.tenant.id}`)
+        .set('X-API-Key', systemAdminApiKey);
+      await request(app.getHttpServer()).delete(`/users/${response.body.user.id}`);
+    });
+  });
       await request(app.getHttpServer()).delete(`/users/${user2Id}`);
     });
   });
