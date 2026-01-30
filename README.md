@@ -312,11 +312,11 @@ curl -H "x-api-key: $API_KEY" "http://localhost:3000/tenants"
 curl -H "x-api-key: $API_KEY" "http://localhost:3000/tenants/1"
 
 # Create tenant with shop and user (systemAdmin only) - returns API key of owner
+# Shop automatically takes the same name as the tenant
 curl -X POST -H "x-api-key: $SYSTEM_ADMIN_API_KEY" -H "Content-Type: application/json" \
   "http://localhost:3000/tenants/with-shop-and-user" \
   -d '{
     "tenantTitle": "New Company",
-    "shopTitle": "Main Store",
     "userEmail": "owner@company.com",
     "userName": "Company Owner"
   }'
@@ -324,7 +324,7 @@ curl -X POST -H "x-api-key: $SYSTEM_ADMIN_API_KEY" -H "Content-Type: application
 # Response includes tenant, shop, user, and generated API key:
 # {
 #   "tenant": { "id": 1, "title": "New Company", "owner_id": 123, ... },
-#   "shop": { "id": 1, "title": "Main Store", "tenant_id": 1 },
+#   "shop": { "id": 1, "title": "New Company", "tenant_id": 1 },
 #   "user": { "id": 123, "email": "owner@company.com", "name": "Company Owner" },
 #   "apiKey": "sk_abc123..."
 # }
@@ -335,6 +335,7 @@ The `created_by` field tracks which user created each tenant and cannot be manua
 **Create Tenant with Shop and User** (`POST /tenants/with-shop-and-user`):
 - Only `systemAdmin` can use this endpoint
 - Creates user, tenant, and shop in one transaction
+- Shop automatically uses the same name as the tenant
 - Generates API key for the new user
 - Sets the new user as tenant owner and creator
 - Returns tenant, shop, user, and API key for immediate use
