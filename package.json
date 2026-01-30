@@ -35,7 +35,7 @@
     "csv-parse": "^6.1.0",
     "express": "^5.2.1",
     "kysely": "^0.28.10",
-    "pg": "^8.17.2",
+    "pg": "^8.18.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
     "supertest": "^7.0.0"
@@ -59,7 +59,7 @@
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "unplugin-swc": "^1.5.9",
-    "vercel": "^50.9.4",
+    "vercel": "^50.9.6",
     "vitest": "^4.0.18"
   },
   "engines": {
