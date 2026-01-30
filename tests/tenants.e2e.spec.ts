@@ -261,7 +261,6 @@ describe('Tenants (e2e)', () => {
         .set('X-API-Key', testUserApiKey)
         .send({
           tenantTitle: 'Test Company',
-          shopTitle: 'Test Shop',
           userEmail: `owner-${Date.now()}@test.com`,
           userName: 'Test Owner',
         });
@@ -272,7 +271,6 @@ describe('Tenants (e2e)', () => {
     it('POST /tenants/with-shop-and-user - should create user, tenant, and shop for systemAdmin', async () => {
       const requestData = {
         tenantTitle: `E2E Test Company ${Date.now()}`,
-        shopTitle: 'Main Store',
         userEmail: `e2e-owner-${Date.now()}@test.com`,
         userName: 'E2E Test Owner',
       };
@@ -293,8 +291,8 @@ describe('Tenants (e2e)', () => {
       expect(response.body.tenant.owner_id).toBe(response.body.user.id);
       expect(response.body.tenant.created_by).toBe(response.body.user.id);
 
-      // Verify shop
-      expect(response.body.shop.title).toBe(requestData.shopTitle);
+      // Verify shop - should use tenant title
+      expect(response.body.shop.title).toBe(requestData.tenantTitle);
       expect(response.body.shop.tenant_id).toBe(response.body.tenant.id);
 
       // Verify user
