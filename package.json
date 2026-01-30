@@ -22,6 +22,7 @@
     "test:e2e:watch": "vitest --config vitest.config.e2e.ts",
     "db:generate": "kysely-codegen --out-file src/database/database.types.ts",
     "db:migrate": "tsx scripts/migrate.ts",
+    "script:create-tenant": "bun scripts/create-tenant.ts",
     "compose:up": "docker compose up starter -d",
     "compose:down": "docker compose down",
     "compose:restart": "docker compose restart",
