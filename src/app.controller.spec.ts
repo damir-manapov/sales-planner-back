@@ -22,8 +22,11 @@ describe('AppController', () => {
   });
 
   describe('health', () => {
-    it('should return status ok', () => {
-      expect(appController.getHealth()).toEqual({ status: 'ok' });
+    it('should return status ok with version', () => {
+      const result = appController.getHealth();
+      expect(result.status).toBe('ok');
+      expect(result.version).toBeDefined();
+      expect(typeof result.version).toBe('string');
     });
   });
 });

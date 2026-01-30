@@ -1,5 +1,7 @@
 import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service.js';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 @Controller()
 export class AppController {
@@ -11,7 +13,8 @@ export class AppController {
   }
 
   @Get('health')
-  getHealth(): { status: string } {
-    return { status: 'ok' };
+  getHealth(): { status: string; version: string } {
+    const packageJson = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8'));
+    return { status: 'ok', version: packageJson.version };
   }
 }
