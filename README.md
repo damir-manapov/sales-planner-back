@@ -2,6 +2,18 @@
 
 NestJS API for sales planning and management with Kysely + PostgreSQL (Neon).
 
+## 📚 API Documentation
+
+**Interactive API documentation available via Swagger UI:**
+- **Local**: http://localhost:3000/api
+- **Production**: https://sales-planner-back.vercel.app/api
+
+Swagger UI provides:
+- Complete API endpoint reference
+- Request/response schemas for all endpoints
+- Interactive "Try it out" functionality
+- API key authentication support
+
 ## Features
 
 - **Users** - User management
@@ -16,6 +28,7 @@ NestJS API for sales planning and management with Kysely + PostgreSQL (Neon).
 - **Sales History** - Monthly sales data per SKU (shop-level entity)
 - **Me** - Get current user data with roles and tenants
 - **Bootstrap** - Auto-creates systemAdmin user and seeds default roles on startup
+- **Swagger/OpenAPI** - Interactive API documentation with try-it-out functionality
 
 ## Role-Based Access Control
 
