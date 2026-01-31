@@ -9,6 +9,7 @@ export type CreateTenantDto = Insertable<Tenants>;
 
 export interface CreateTenantWithShopDto {
   tenantTitle: string;
+  shopTitle?: string;
   userEmail: string;
   userName: string;
 }
@@ -102,7 +103,7 @@ export class TenantsService {
       const shop = await trx
         .insertInto('shops')
         .values({
-          title: dto.tenantTitle,
+          title: dto.shopTitle || dto.tenantTitle,
           tenant_id: tenant.id,
         })
         .returningAll()

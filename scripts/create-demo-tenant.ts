@@ -69,7 +69,7 @@ async function createDemoTenant(args: DemoTenantArgs) {
     process.exit(1);
   }
 
-  const tenantTitle = args.tenantTitle || 'Demo Electronics Store';
+  const tenantTitle = args.tenantTitle || 'Demo';
   const tenantSlug = tenantTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   const timestamp = Date.now();
 
@@ -89,6 +89,7 @@ async function createDemoTenant(args: DemoTenantArgs) {
       },
       body: JSON.stringify({
         tenantTitle,
+        shopTitle: 'Electronics',
         userEmail: `demo-${timestamp}@${tenantSlug}.com`,
         userName: `${tenantTitle} Admin`,
       }),
@@ -239,7 +240,7 @@ Usage: bun scripts/create-demo-tenant.ts [options]
 Creates a demo tenant with pre-populated data for testing and demonstrations.
 
 Options:
-  --tenant-title <title>    Custom tenant name (default: "Demo Electronics Store")
+  --tenant-title <title>    Custom tenant name (default: "Demo")
   --api-url <url>           API URL (default: from SALES_PLANNER_API_URL or http://localhost:3000)
   -h, --help                Show this help message
 
