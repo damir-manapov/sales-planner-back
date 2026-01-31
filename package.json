@@ -33,6 +33,7 @@
     "@nestjs/config": "^4.0.2",
     "@nestjs/core": "^11.1.12",
     "@nestjs/platform-express": "^11.1.12",
+    "@nestjs/swagger": "^11.2.5",
     "csv-parse": "^6.1.0",
     "express": "^5.2.1",
     "kysely": "^0.28.10",
