@@ -33,31 +33,31 @@ const DEMO_SKUS = [
 
 const DEMO_SALES_DATA = [
   // Current period (2026-01)
-  { skuCode: 'LAPTOP-001', period: '2026-01', quantity: 12, revenue: 15600 },
-  { skuCode: 'LAPTOP-002', period: '2026-01', quantity: 8, revenue: 19200 },
-  { skuCode: 'PHONE-001', period: '2026-01', quantity: 25, revenue: 27500 },
-  { skuCode: 'PHONE-002', period: '2026-01', quantity: 18, revenue: 16200 },
-  { skuCode: 'TABLET-001', period: '2026-01', quantity: 10, revenue: 11000 },
-  { skuCode: 'MONITOR-001', period: '2026-01', quantity: 15, revenue: 7500 },
-  { skuCode: 'HEADSET-001', period: '2026-01', quantity: 20, revenue: 6000 },
+  { skuCode: 'LAPTOP-001', period: '2026-01', quantity: 12 },
+  { skuCode: 'LAPTOP-002', period: '2026-01', quantity: 8 },
+  { skuCode: 'PHONE-001', period: '2026-01', quantity: 25 },
+  { skuCode: 'PHONE-002', period: '2026-01', quantity: 18 },
+  { skuCode: 'TABLET-001', period: '2026-01', quantity: 10 },
+  { skuCode: 'MONITOR-001', period: '2026-01', quantity: 15 },
+  { skuCode: 'HEADSET-001', period: '2026-01', quantity: 20 },
   
   // Previous period (2025-12)
-  { skuCode: 'LAPTOP-001', period: '2025-12', quantity: 15, revenue: 19500 },
-  { skuCode: 'LAPTOP-002', period: '2025-12', quantity: 10, revenue: 24000 },
-  { skuCode: 'PHONE-001', period: '2025-12', quantity: 30, revenue: 33000 },
-  { skuCode: 'PHONE-002', period: '2025-12', quantity: 22, revenue: 19800 },
-  { skuCode: 'TABLET-001', period: '2025-12', quantity: 12, revenue: 13200 },
-  { skuCode: 'MONITOR-001', period: '2025-12', quantity: 18, revenue: 9000 },
-  { skuCode: 'HEADSET-001', period: '2025-12', quantity: 25, revenue: 7500 },
+  { skuCode: 'LAPTOP-001', period: '2025-12', quantity: 15 },
+  { skuCode: 'LAPTOP-002', period: '2025-12', quantity: 10 },
+  { skuCode: 'PHONE-001', period: '2025-12', quantity: 30 },
+  { skuCode: 'PHONE-002', period: '2025-12', quantity: 22 },
+  { skuCode: 'TABLET-001', period: '2025-12', quantity: 12 },
+  { skuCode: 'MONITOR-001', period: '2025-12', quantity: 18 },
+  { skuCode: 'HEADSET-001', period: '2025-12', quantity: 25 },
   
   // Two periods ago (2025-11)
-  { skuCode: 'LAPTOP-001', period: '2025-11', quantity: 10, revenue: 13000 },
-  { skuCode: 'LAPTOP-002', period: '2025-11', quantity: 7, revenue: 16800 },
-  { skuCode: 'PHONE-001', period: '2025-11', quantity: 20, revenue: 22000 },
-  { skuCode: 'PHONE-002', period: '2025-11', quantity: 15, revenue: 13500 },
-  { skuCode: 'TABLET-001', period: '2025-11', quantity: 8, revenue: 8800 },
-  { skuCode: 'MONITOR-001', period: '2025-11', quantity: 12, revenue: 6000 },
-  { skuCode: 'HEADSET-001', period: '2025-11', quantity: 18, revenue: 5400 },
+  { skuCode: 'LAPTOP-001', period: '2025-11', quantity: 10 },
+  { skuCode: 'LAPTOP-002', period: '2025-11', quantity: 7 },
+  { skuCode: 'PHONE-001', period: '2025-11', quantity: 20 },
+  { skuCode: 'PHONE-002', period: '2025-11', quantity: 15 },
+  { skuCode: 'TABLET-001', period: '2025-11', quantity: 8 },
+  { skuCode: 'MONITOR-001', period: '2025-11', quantity: 12 },
+  { skuCode: 'HEADSET-001', period: '2025-11', quantity: 18 },
 ];
 
 async function createDemoTenant(args: DemoTenantArgs) {
@@ -177,8 +177,7 @@ async function createDemoTenant(args: DemoTenantArgs) {
           body: JSON.stringify({
             sku_id: skuId,
             period: sale.period,
-            quantity_sold: sale.quantity,
-            revenue: sale.revenue,
+            quantity: sale.quantity,
           }),
         },
       );
