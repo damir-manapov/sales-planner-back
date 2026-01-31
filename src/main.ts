@@ -1,15 +1,22 @@
 import { NestFactory } from '@nestjs/core';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module.js';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule);
+
+  // Read version from package.json
+  const packageJson = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8')) as {
+    version: string;
+  };
 
   // Swagger setup
   const config = new DocumentBuilder()
     .setTitle('Sales Planner API')
     .setDescription('NestJS API for sales planning and management')
-    .setVersion('0.0.3')
+    .setVersion(packageJson.version)
     .addApiKey({ type: 'apiKey', name: 'x-api-key', in: 'header' }, 'apiKey')
     .build();
   const document = SwaggerModule.createDocument(app, config);
