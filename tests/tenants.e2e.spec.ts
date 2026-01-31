@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module.js';
+import { cleanupUser } from './test-helpers.js';
 
 describe('Tenants (e2e)', () => {
   let app: INestApplication;
@@ -62,17 +63,12 @@ describe('Tenants (e2e)', () => {
   });
 
   afterAll(async () => {
-    // Cleanup
-    if (createdTenantId) {
-      await request(app.getHttpServer())
-        .delete(`/tenants/${createdTenantId}`)
-        .set('X-API-Key', testUserApiKey);
-    }
+    // Cleanup using helper that handles foreign key constraints
     if (testUserId) {
-      await request(app.getHttpServer()).delete(`/users/${testUserId}`);
+      await cleanupUser(app, testUserId);
     }
     if (systemAdminUserId) {
-      await request(app.getHttpServer()).delete(`/users/${systemAdminUserId}`);
+      await cleanupUser(app, systemAdminUserId);
     }
     await app.close();
   });

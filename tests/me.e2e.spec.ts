@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module.js';
+import { cleanupUser } from './test-helpers.js';
 import { ROLE_NAMES } from '../src/common/constants.js';
 
 describe('Me (e2e)', () => {
@@ -40,15 +41,9 @@ describe('Me (e2e)', () => {
   });
 
   afterAll(async () => {
-    // Cleanup
-    if (shopId) {
-      await request(app.getHttpServer()).delete(`/shops/${shopId}`);
-    }
-    if (tenantId) {
-      await request(app.getHttpServer()).delete(`/tenants/${tenantId}`);
-    }
+    // Cleanup using helper that handles foreign key constraints
     if (userId) {
-      await request(app.getHttpServer()).delete(`/users/${userId}`);
+      await cleanupUser(app, userId);
     }
     await app.close();
   });

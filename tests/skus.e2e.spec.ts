@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module.js';
+import { cleanupUser } from './test-helpers.js';
 
 describe('SKUs (e2e)', () => {
   let app: INestApplication;
@@ -38,20 +39,9 @@ describe('SKUs (e2e)', () => {
   });
 
   afterAll(async () => {
-    // Cleanup
-    if (skuId) {
-      await request(app.getHttpServer())
-        .delete(`/skus/${skuId}?shop_id=${shopId}&tenant_id=${tenantId}`)
-        .set('X-API-Key', testUserApiKey);
-    }
-    if (shopId) {
-      await request(app.getHttpServer()).delete(`/shops/${shopId}`);
-    }
-    if (tenantId) {
-      await request(app.getHttpServer()).delete(`/tenants/${tenantId}`);
-    }
+    // Cleanup using helper that handles foreign key constraints
     if (testUserId) {
-      await request(app.getHttpServer()).delete(`/users/${testUserId}`);
+      await cleanupUser(app, testUserId);
     }
     await app.close();
   });
@@ -481,8 +471,9 @@ describe('SKUs (e2e)', () => {
     });
 
     afterAll(async () => {
+      // Viewer user cleanup
       if (viewerUserId) {
-        await request(app.getHttpServer()).delete(`/users/${viewerUserId}`);
+        await cleanupUser(app, viewerUserId);
       }
     });
 
@@ -574,14 +565,9 @@ describe('SKUs (e2e)', () => {
     });
 
     afterAll(async () => {
-      if (ownerShopId) {
-        await request(app.getHttpServer()).delete(`/shops/${ownerShopId}`);
-      }
-      if (ownerTenantId) {
-        await request(app.getHttpServer()).delete(`/tenants/${ownerTenantId}`);
-      }
+      // Cleanup using helper that handles foreign key constraints
       if (ownerUserId) {
-        await request(app.getHttpServer()).delete(`/users/${ownerUserId}`);
+        await cleanupUser(app, ownerUserId);
       }
     });
 
