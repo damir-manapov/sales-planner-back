@@ -14,7 +14,10 @@ import {
   Req,
   UseInterceptors,
   UploadedFile,
+  Header,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiBody } from '@nestjs/swagger';
 import {
@@ -71,30 +74,15 @@ export class SalesHistoryController {
 
   @Get('export/json')
   @RequireReadAccess()
+  @Header('Content-Type', 'application/json')
+  @Header('Content-Disposition', 'attachment; filename="sales-history.json"')
   async exportJson(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
+    @Res() res: Response,
     @Query('period_from') periodFrom?: string,
     @Query('period_to') periodTo?: string,
-  ): Promise<Array<{ sku_code: string; period: string; quantity: number }>> {
-    if (periodFrom && !isValidPeriod(periodFrom)) {
-      throw new BadRequestException('period_from must be in YYYY-MM format');
-    }
-    if (periodTo && !isValidPeriod(periodTo)) {
-      throw new BadRequestException('period_to must be in YYYY-MM format');
-    }
-
-    return this.salesHistoryService.exportForShop(ctx.shopId, periodFrom, periodTo);
-  }
-
-  @Get('export/csv')
-  @RequireReadAccess()
-  async exportCsv(
-    @Req() _req: AuthenticatedRequest,
-    @ShopContext() ctx: ShopContextType,
-    @Query('period_from') periodFrom?: string,
-    @Query('period_to') periodTo?: string,
-  ): Promise<{ content: string }> {
+  ): Promise<void> {
     if (periodFrom && !isValidPeriod(periodFrom)) {
       throw new BadRequestException('period_from must be in YYYY-MM format');
     }
@@ -103,7 +91,30 @@ export class SalesHistoryController {
     }
 
     const items = await this.salesHistoryService.exportForShop(ctx.shopId, periodFrom, periodTo);
-    return { content: toCsv(items, ['sku_code', 'period', 'quantity']) };
+    res.json(items);
+  }
+
+  @Get('export/csv')
+  @RequireReadAccess()
+  @Header('Content-Type', 'text/csv')
+  @Header('Content-Disposition', 'attachment; filename="sales-history.csv"')
+  async exportCsv(
+    @Req() _req: AuthenticatedRequest,
+    @ShopContext() ctx: ShopContextType,
+    @Res() res: Response,
+    @Query('period_from') periodFrom?: string,
+    @Query('period_to') periodTo?: string,
+  ): Promise<void> {
+    if (periodFrom && !isValidPeriod(periodFrom)) {
+      throw new BadRequestException('period_from must be in YYYY-MM format');
+    }
+    if (periodTo && !isValidPeriod(periodTo)) {
+      throw new BadRequestException('period_to must be in YYYY-MM format');
+    }
+
+    const items = await this.salesHistoryService.exportForShop(ctx.shopId, periodFrom, periodTo);
+    const csvContent = toCsv(items, ['sku_code', 'period', 'quantity']);
+    res.send(csvContent);
   }
 
   @Get(':id')

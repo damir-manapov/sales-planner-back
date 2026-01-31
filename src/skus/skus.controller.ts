@@ -13,7 +13,10 @@ import {
   Req,
   UseInterceptors,
   UploadedFile,
+  Header,
+  Res,
 } from '@nestjs/common';
+import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { SkusService, CreateSkuDto, UpdateSkuDto, Sku } from './skus.service.js';
@@ -54,21 +57,29 @@ export class SkusController {
 
   @Get('export/json')
   @RequireReadAccess()
+  @Header('Content-Type', 'application/json')
+  @Header('Content-Disposition', 'attachment; filename="skus.json"')
   async exportJson(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-  ): Promise<Array<{ code: string; title: string }>> {
-    return this.skusService.exportForShop(ctx.shopId);
+    @Res() res: Response,
+  ): Promise<void> {
+    const items = await this.skusService.exportForShop(ctx.shopId);
+    res.json(items);
   }
 
   @Get('export/csv')
   @RequireReadAccess()
+  @Header('Content-Type', 'text/csv')
+  @Header('Content-Disposition', 'attachment; filename="skus.csv"')
   async exportCsv(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-  ): Promise<{ content: string }> {
+    @Res() res: Response,
+  ): Promise<void> {
     const items = await this.skusService.exportForShop(ctx.shopId);
-    return { content: toCsv(items, ['code', 'title']) };
+    const csvContent = toCsv(items, ['code', 'title']);
+    res.send(csvContent);
   }
 
   @Get(':id')

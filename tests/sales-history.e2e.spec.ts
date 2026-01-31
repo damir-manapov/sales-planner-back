@@ -290,10 +290,10 @@ describe('Sales History (e2e)', () => {
         .set('X-API-Key', testUserApiKey);
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('content');
-      expect(typeof response.body.content).toBe('string');
+      expect(response.text).toBeTruthy();
+      expect(typeof response.text).toBe('string');
 
-      const lines = response.body.content.split('\n');
+      const lines = response.text.split('\n');
       expect(lines[0]).toBe('sku_code,period,quantity');
       expect(lines.length).toBeGreaterThan(1);
     });
@@ -305,7 +305,7 @@ describe('Sales History (e2e)', () => {
       const response = await request(app.getHttpServer())
         .post(`/sales-history/import/csv?shop_id=${shopId}&tenant_id=${tenantId}`)
         .set('X-API-Key', testUserApiKey)
-        .send({ content: csvContent });
+        .attach('file', Buffer.from(csvContent), 'sales-history.csv');
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('created');

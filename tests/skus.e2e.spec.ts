@@ -361,7 +361,7 @@ describe('SKUs (e2e)', () => {
       const response = await request(app.getHttpServer())
         .post(`/skus/import/csv?shop_id=${shopId}&tenant_id=${tenantId}`)
         .set('X-API-Key', testUserApiKey)
-        .send({ content: csvContent });
+        .attach('file', Buffer.from(csvContent), 'skus.csv');
 
       expect(response.status).toBe(201);
       expect(response.body.created).toBe(2);
@@ -434,10 +434,10 @@ describe('SKUs (e2e)', () => {
         .set('X-API-Key', testUserApiKey);
 
       expect(response.status).toBe(200);
-      expect(response.body).toHaveProperty('content');
-      expect(typeof response.body.content).toBe('string');
+      expect(response.text).toBeTruthy();
+      expect(typeof response.text).toBe('string');
 
-      const lines = response.body.content.split('\n');
+      const lines = response.text.split('\n');
       expect(lines[0]).toBe('code,title');
       expect(lines.some(line => line.includes(code1))).toBe(true);
       expect(lines.some(line => line.includes(code2))).toBe(true);
