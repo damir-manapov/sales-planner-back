@@ -8,6 +8,13 @@ interface CreateTenantArgs {
   apiUrl?: string;
 }
 
+interface TenantSetupResult {
+  tenant: { id: number; title: string };
+  shop: { id: number; title: string };
+  user: { id: number; email: string; name: string };
+  apiKey: string;
+}
+
 async function createTenantWithShopAndUser(args: CreateTenantArgs) {
   const apiUrl = args.apiUrl || process.env.SALES_PLANNER_API_URL || 'http://localhost:3000';
   const systemAdminKey = process.env.SALES_PLANNER_SYSTEM_ADMIN_KEY;
@@ -50,7 +57,7 @@ async function createTenantWithShopAndUser(args: CreateTenantArgs) {
       process.exit(1);
     }
 
-    const result = await response.json();
+    const result = (await response.json()) as TenantSetupResult;
 
     console.log('✅ Tenant created successfully!');
     console.log('');
@@ -118,8 +125,10 @@ for (let i = 0; i < args.length; i++) {
 
   switch (arg) {
     case '--tenant-title':
-      parsedArgs.tenantTitle = nextArg;
-      i++;
+      if (nextArg && !nextArg.startsWith('-')) {
+        parsedArgs.tenantTitle = nextArg;
+        i++;
+      }
       break;
     case '--user-email':
       parsedArgs.userEmail = nextArg;

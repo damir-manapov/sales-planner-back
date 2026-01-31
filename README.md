@@ -199,7 +199,6 @@ pnpm test:e2e:watch # Run e2e tests in watch mode
 | `pnpm typecheck` | Check types |
 | `pnpm db:migrate` | Run database migrations |
 | `pnpm db:generate` | Generate Kysely types |
-| `pnpm script:create-tenant` | Create new tenant with shop and user (Bun script) |
 | `pnpm script:create-tenant` | Create new tenant with shop and user (interactive script) |
 
 ### Check scripts
@@ -240,35 +239,46 @@ pnpm script:create-tenant
 **Output:**
 Returns the created tenant, shop, user details, and the generated API key for the new user.
 
-### Automation Scripts
+---
 
-**Create Tenant Script** (`scripts/create-tenant.ts`):
+**Create Demo Tenant Script** (`scripts/create-demo-tenant.ts`):
 
-Automated script for creating a new tenant with shop and user. Requires Bun runtime.
+Creates a fully populated demo tenant with sample products and sales history data. Perfect for testing, demonstrations, and onboarding. Requires Bun runtime.
 
 ```bash
-# Prerequisites: Set environment variables in ~/.profile
+# Prerequisites: Set environment variables
 export SALES_PLANNER_SYSTEM_ADMIN_KEY="your-system-admin-key"
 export SALES_PLANNER_API_URL="https://sales-planner-back.vercel.app"  # Optional, defaults to localhost:3000
 
-# Usage
-bun scripts/create-tenant.ts --tenant-title "Company Name" \
-  [--user-email "admin@company.com"] \
-  [--user-name "Admin Name"] \
-  [--api-url "https://api.example.com"]
+# Usage - creates tenant "Demo" with shop "Electronics"
+bun scripts/create-demo-tenant.ts
 
-# Or via pnpm
-pnpm script:create-tenant
+# Or with custom tenant name
+bun scripts/create-demo-tenant.ts --tenant-title "ACME Demo Corp"
+
+# Or with custom API URL
+bun scripts/create-demo-tenant.ts --api-url "http://localhost:3000"
 ```
 
 **Arguments:**
-- `--tenant-title` (required): Name of the tenant (also used for shop name)
-- `--user-email` (optional): User email (defaults to `admin@{slug}.com`)
-- `--user-name` (optional): User name (defaults to `{Title} Admin`)
+- `--tenant-title` (optional): Custom tenant name (default: "Demo")
 - `--api-url` (optional): API URL (overrides `SALES_PLANNER_API_URL` env var)
+- `-h, --help`: Show help message
+
+**Demo Data Created:**
+- **Tenant**: Named "Demo" (or custom name)
+- **Shop**: Named "Electronics"
+- **Admin User**: Full tenant admin access with generated API key
+- **15 Products**: Laptops, phones, tablets, monitors, and accessories
+  - Dell XPS, MacBook Pro, Lenovo ThinkPad
+  - iPhone, Samsung Galaxy, Google Pixel
+  - iPad Pro, Samsung Tab, monitors, keyboards, mice, headsets, webcams
+- **21 Sales Records**: 3 months of sales history (Nov 2025 - Jan 2026)
+  - Realistic quantities showing sales trends
+  - Ready for forecasting and analytics testing
 
 **Output:**
-Returns the created tenant, shop, user details, and the generated API key for the new user.
+Displays progress with emojis and provides tenant, shop, user details, generated API key, and summary of imported data.
 
 ## Docker Compose
 

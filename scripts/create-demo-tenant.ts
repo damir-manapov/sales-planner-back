@@ -40,7 +40,7 @@ const DEMO_SALES_DATA = [
   { skuCode: 'TABLET-001', period: '2026-01', quantity: 10 },
   { skuCode: 'MONITOR-001', period: '2026-01', quantity: 15 },
   { skuCode: 'HEADSET-001', period: '2026-01', quantity: 20 },
-  
+
   // Previous period (2025-12)
   { skuCode: 'LAPTOP-001', period: '2025-12', quantity: 15 },
   { skuCode: 'LAPTOP-002', period: '2025-12', quantity: 10 },
@@ -49,7 +49,7 @@ const DEMO_SALES_DATA = [
   { skuCode: 'TABLET-001', period: '2025-12', quantity: 12 },
   { skuCode: 'MONITOR-001', period: '2025-12', quantity: 18 },
   { skuCode: 'HEADSET-001', period: '2025-12', quantity: 25 },
-  
+
   // Two periods ago (2025-11)
   { skuCode: 'LAPTOP-001', period: '2025-11', quantity: 10 },
   { skuCode: 'LAPTOP-002', period: '2025-11', quantity: 7 },
@@ -102,7 +102,7 @@ async function createDemoTenant(args: DemoTenantArgs) {
       process.exit(1);
     }
 
-    const setup: TenantSetupResult = await setupResponse.json();
+    const setup = (await setupResponse.json()) as TenantSetupResult;
     console.log(`   ✅ Tenant created: ${setup.tenant.title} (ID: ${setup.tenant.id})`);
     console.log(`   ✅ Shop created: ${setup.shop.title} (ID: ${setup.shop.id})`);
     console.log(`   ✅ Admin user created: ${setup.user.name} (${setup.user.email})`);
@@ -127,7 +127,7 @@ async function createDemoTenant(args: DemoTenantArgs) {
       console.error(`❌ Error importing SKUs: ${skusResponse.status} ${skusResponse.statusText}`);
       console.error(error);
     } else {
-      const skusResult = await skusResponse.json();
+      const skusResult = (await skusResponse.json()) as { created: number };
       console.log(`   ✅ Imported ${skusResult.created} products`);
     }
     console.log('');
@@ -148,7 +148,7 @@ async function createDemoTenant(args: DemoTenantArgs) {
       process.exit(1);
     }
 
-    const skusList: Array<{ id: number; code: string }> = await skusListResponse.json();
+    const skusList = (await skusListResponse.json()) as Array<{ id: number; code: string }>;
     const skuMap = new Map(skusList.map((sku) => [sku.code, sku.id]));
     console.log(`   ✅ Found ${skusList.length} SKUs`);
     console.log('');
@@ -261,7 +261,7 @@ Example:
   process.exit(0);
 }
 
-const tenantTitle = args.find((arg, i) => args[i - 1] === '--tenant-title');
-const apiUrl = args.find((arg, i) => args[i - 1] === '--api-url');
+const tenantTitle = args.find((_arg, i) => args[i - 1] === '--tenant-title');
+const apiUrl = args.find((_arg, i) => args[i - 1] === '--api-url');
 
 createDemoTenant({ tenantTitle, apiUrl });
