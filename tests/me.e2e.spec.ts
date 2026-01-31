@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module.js';
+import { ROLE_NAMES } from '../src/common/constants.js';
 
 describe('Me (e2e)', () => {
   let app: INestApplication;
@@ -11,6 +12,7 @@ describe('Me (e2e)', () => {
   let tenantId: number;
   let shopId: number;
   let userEmail: string;
+  const SYSTEM_ADMIN_KEY = process.env.SYSTEM_ADMIN_KEY!;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -20,38 +22,21 @@ describe('Me (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    // Create test data
+    // Create tenant with shop and user in one call
     userEmail = `testuser-${Date.now()}@example.com`;
-    const userResponse = await request(app.getHttpServer())
-      .post('/users')
-      .send({ name: 'Test User', email: userEmail });
-    userId = userResponse.body.id;
+    const setupRes = await request(app.getHttpServer())
+      .post('/tenants/with-shop-and-user')
+      .set('X-API-Key', SYSTEM_ADMIN_KEY)
+      .send({
+        tenantTitle: `Test Tenant ${Date.now()}`,
+        userEmail: userEmail,
+        userName: 'Test User',
+      });
 
-    const tenantResponse = await request(app.getHttpServer())
-      .post('/tenants')
-      .send({ title: `Test Tenant ${Date.now()}`, owner_id: userId });
-    tenantId = tenantResponse.body.id;
-
-    const shopResponse = await request(app.getHttpServer())
-      .post('/shops')
-      .send({ title: `Test Shop ${Date.now()}`, tenant_id: tenantId });
-    shopId = shopResponse.body.id;
-
-    apiKey = `test-key-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    await request(app.getHttpServer())
-      .post('/api-keys')
-      .send({ user_id: userId, key: apiKey, name: 'Test API Key' });
-
-    // Assign a role
-    const rolesResponse = await request(app.getHttpServer()).get('/roles');
-    const editorRole = rolesResponse.body.find((r: { name: string }) => r.name === 'editor');
-
-    await request(app.getHttpServer()).post('/user-roles').send({
-      user_id: userId,
-      role_id: editorRole.id,
-      tenant_id: tenantId,
-      shop_id: shopId,
-    });
+    userId = setupRes.body.user.id;
+    apiKey = setupRes.body.apiKey;
+    tenantId = setupRes.body.tenant.id;
+    shopId = setupRes.body.shop.id;
   });
 
   afterAll(async () => {
@@ -90,20 +75,19 @@ describe('Me (e2e)', () => {
 
     // Check roles
     expect(Array.isArray(response.body.roles)).toBe(true);
-    expect(response.body.roles.length).toBeGreaterThan(1); // Should have editor + tenantOwner
-    
-    // Verify editor role
-    const editorRole = response.body.roles.find((r: { role_name: string }) => r.role_name === 'editor');
-    expect(editorRole).toBeTruthy();
-    expect(editorRole).toHaveProperty('tenant_id', tenantId);
-    expect(editorRole.tenant_title).toBeTruthy();
-    expect(editorRole).toHaveProperty('shop_id', shopId);
-    expect(editorRole.shop_title).toBeTruthy();
+    expect(response.body.roles.length).toBeGreaterThanOrEqual(1); // Should have at least tenantAdmin role
+
+    // Verify tenantAdmin role (assigned by with-shop-and-user endpoint)
+    const tenantAdminRole = response.body.roles.find((r: { role_name: string }) => r.role_name === ROLE_NAMES.TENANT_ADMIN);
+    expect(tenantAdminRole).toBeTruthy();
+    expect(tenantAdminRole).toHaveProperty('tenant_id', tenantId);
+    expect(tenantAdminRole.tenant_title).toBeTruthy();
+    expect(tenantAdminRole).toHaveProperty('shop_id', null); // Tenant-level role
 
     // Verify derived tenantOwner role
-    const ownerRole = response.body.roles.find((r: { role_name: string }) => r.role_name === 'tenantOwner');
+    const ownerRole = response.body.roles.find((r: { role_name: string }) => r.role_name === ROLE_NAMES.TENANT_OWNER);
     expect(ownerRole).toBeTruthy();
-    expect(ownerRole).toHaveProperty('role_name', 'tenantOwner');
+    expect(ownerRole).toHaveProperty('role_name', ROLE_NAMES.TENANT_OWNER);
     expect(ownerRole).toHaveProperty('tenant_id', tenantId);
     expect(ownerRole.tenant_title).toBeTruthy();
     expect(ownerRole).toHaveProperty('shop_id', null);
@@ -116,5 +100,10 @@ describe('Me (e2e)', () => {
     expect(tenant).toHaveProperty('id', tenantId);
     expect(tenant.title).toBeTruthy();
     expect(tenant).toHaveProperty('is_owner', true);
+
+    // Verify shops are included in tenant (tenant admin sees all shops)
+    expect(Array.isArray(tenant.shops)).toBe(true);
+    expect(tenant.shops.length).toBe(1); // One shop created by with-shop-and-user
+    expect(tenant.shops[0].id).toBe(shopId);
   });
 });

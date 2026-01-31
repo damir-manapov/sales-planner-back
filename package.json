@@ -1,6 +1,6 @@
 {
   "name": "sales-planner-back",
-  "version": "0.0.2",
+  "version": "0.0.3",
   "description": "NestJS API for sales planner",
   "author": "Damir Manapov",
   "license": "MIT",

@@ -66,7 +66,9 @@ Response includes:
 - Roles with scope (including tenant/shop titles where applicable)
   - Explicit roles from `user_roles` table
   - Derived `tenantOwner` role for tenants where `owner_id` matches the user
-- Tenants the user has access to (with ownership flag)
+- Tenants the user has access to (with ownership flag and shops array)
+  - Each tenant includes: `{ id, title, is_owner, shops: [{id, title}] }`
+  - Each tenant includes an array of shops: `{ id, title, is_owner, shops: [{id, title}] }`
 
 ### Decorator-Based Access Control
 
@@ -197,6 +199,8 @@ pnpm test:e2e:watch # Run e2e tests in watch mode
 | `pnpm typecheck` | Check types |
 | `pnpm db:migrate` | Run database migrations |
 | `pnpm db:generate` | Generate Kysely types |
+| `pnpm script:create-tenant` | Create new tenant with shop and user (Bun script) |
+| `pnpm script:create-tenant` | Create new tenant with shop and user (interactive script) |
 
 ### Check scripts
 
@@ -205,6 +209,66 @@ pnpm test:e2e:watch # Run e2e tests in watch mode
 | `./check.sh` | Format, lint, typecheck, and run unit tests |
 | `./health.sh` | Check gitleaks, outdated deps, and vulnerabilities |
 | `./all-checks.sh` | Run both check.sh and health.sh |
+
+### Automation Scripts
+
+**Create Tenant Script** (`scripts/create-tenant.ts`):
+
+Automated script for creating a new tenant with shop and user. Requires Bun runtime.
+
+```bash
+# Prerequisites: Set environment variables in ~/.profile
+export SALES_PLANNER_SYSTEM_ADMIN_KEY="your-system-admin-key"
+export SALES_PLANNER_API_URL="https://sales-planner-back.vercel.app"  # Optional, defaults to localhost:3000
+
+# Usage
+bun scripts/create-tenant.ts --tenant-title "Company Name" \
+  [--user-email "admin@company.com"] \
+  [--user-name "Admin Name"] \
+  [--api-url "https://api.example.com"]
+
+# Or via pnpm
+pnpm script:create-tenant
+```
+
+**Arguments:**
+- `--tenant-title` (required): Name of the tenant (also used for shop name)
+- `--user-email` (optional): User email (defaults to `admin@{slug}.com`)
+- `--user-name` (optional): User name (defaults to `{Title} Admin`)
+- `--api-url` (optional): API URL (overrides `SALES_PLANNER_API_URL` env var)
+
+**Output:**
+Returns the created tenant, shop, user details, and the generated API key for the new user.
+
+### Automation Scripts
+
+**Create Tenant Script** (`scripts/create-tenant.ts`):
+
+Automated script for creating a new tenant with shop and user. Requires Bun runtime.
+
+```bash
+# Prerequisites: Set environment variables in ~/.profile
+export SALES_PLANNER_SYSTEM_ADMIN_KEY="your-system-admin-key"
+export SALES_PLANNER_API_URL="https://sales-planner-back.vercel.app"  # Optional, defaults to localhost:3000
+
+# Usage
+bun scripts/create-tenant.ts --tenant-title "Company Name" \
+  [--user-email "admin@company.com"] \
+  [--user-name "Admin Name"] \
+  [--api-url "https://api.example.com"]
+
+# Or via pnpm
+pnpm script:create-tenant
+```
+
+**Arguments:**
+- `--tenant-title` (required): Name of the tenant (also used for shop name)
+- `--user-email` (optional): User email (defaults to `admin@{slug}.com`)
+- `--user-name` (optional): User name (defaults to `{Title} Admin`)
+- `--api-url` (optional): API URL (overrides `SALES_PLANNER_API_URL` env var)
+
+**Output:**
+Returns the created tenant, shop, user details, and the generated API key for the new user.
 
 ## Docker Compose
 
@@ -261,6 +325,9 @@ sales-planner-back/
 | Endpoint | Methods | Description |
 |----------|---------|-------------|
 | `/` | GET | Health check |
+| `/health` | GET | Health check with version |
+| `/version` | GET | Get API version |
+| `/me` | GET | Get current user with roles and tenants (includes shops) |
 | `/users` | GET, POST | List/create users |
 | `/users/:id` | GET, PUT, DELETE | User CRUD |
 | `/tenants` | GET, POST | List/create tenants |

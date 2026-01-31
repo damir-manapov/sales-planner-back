@@ -17,4 +17,10 @@ export class AppController {
     const packageJson = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8'));
     return { status: 'ok', version: packageJson.version };
   }
+
+  @Get('version')
+  getVersion(): { version: string } {
+    const packageJson = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8'));
+    return { version: packageJson.version };
+  }
 }

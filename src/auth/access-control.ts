@@ -1,5 +1,6 @@
 import { ForbiddenException } from '@nestjs/common';
 import { AuthenticatedRequest } from './auth.guard.js';
+import { ROLE_NAMES } from '../common/constants.js';
 
 type User = AuthenticatedRequest['user'];
 
@@ -15,7 +16,7 @@ function getTenantRoles(user: User, tenantId: number): string[] {
 
 function isTenantAdmin(user: User, tenantId: number): boolean {
   const tenantRoles = getTenantRoles(user, tenantId);
-  return tenantRoles.includes('tenantAdmin');
+  return tenantRoles.includes(ROLE_NAMES.TENANT_ADMIN);
 }
 
 function isTenantOwner(user: User, tenantId: number): boolean {
@@ -32,7 +33,7 @@ export function hasReadAccess(user: User, shopId: number, tenantId: number): boo
     return true;
   }
   const shopRoles = getShopRoles(user, shopId);
-  return shopRoles.includes('viewer') || shopRoles.includes('editor');
+  return shopRoles.includes(ROLE_NAMES.VIEWER) || shopRoles.includes(ROLE_NAMES.EDITOR);
 }
 
 export function hasWriteAccess(user: User, shopId: number, tenantId: number): boolean {
@@ -40,7 +41,7 @@ export function hasWriteAccess(user: User, shopId: number, tenantId: number): bo
     return true;
   }
   const shopRoles = getShopRoles(user, shopId);
-  return shopRoles.includes('editor');
+  return shopRoles.includes(ROLE_NAMES.EDITOR);
 }
 
 export function validateReadAccess(user: User, shopId: number, tenantId: number): void {

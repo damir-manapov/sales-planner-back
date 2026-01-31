@@ -100,28 +100,30 @@ describe('Tenants (e2e)', () => {
   });
 
   describe('CRUD operations', () => {
-    it('POST /tenants - should create tenant with authenticated user as created_by', async () => {
+    it('POST /tenants - should create tenant with system admin and set created_by and owner_id', async () => {
       const newTenant = {
         title: `Test Tenant ${Date.now()}`,
+        owner_id: testUserId,
       };
 
       const response = await request(app.getHttpServer())
         .post('/tenants')
-        .set('X-API-Key', testUserApiKey)
+        .set('X-API-Key', systemAdminApiKey)
         .send(newTenant);
 
       expect(response.status).toBe(201);
       expect(response.body).toHaveProperty('id');
       expect(response.body.title).toBe(newTenant.title);
-      expect(response.body.created_by).toBe(testUserId);
+      expect(response.body.created_by).toBe(systemAdminUserId);
+      expect(response.body.owner_id).toBe(testUserId);
 
       createdTenantId = response.body.id;
     });
 
-    it('POST /tenants - should not allow manually setting created_by', async () => {
+    it('POST /tenants - should not allow non-admin to create tenant', async () => {
       const newTenant = {
-        title: `Test Tenant Manual ${Date.now()}`,
-        created_by: 999999, // Attempt to set manually
+        title: `Test Tenant ${Date.now()}`,
+        owner_id: testUserId,
       };
 
       const response = await request(app.getHttpServer())
@@ -129,15 +131,7 @@ describe('Tenants (e2e)', () => {
         .set('X-API-Key', testUserApiKey)
         .send(newTenant);
 
-      expect(response.status).toBe(201);
-      // Should use authenticated user ID, not the manually provided one
-      expect(response.body.created_by).toBe(testUserId);
-      expect(response.body.created_by).not.toBe(999999);
-
-      // Cleanup
-      await request(app.getHttpServer())
-        .delete(`/tenants/${response.body.id}`)
-        .set('X-API-Key', testUserApiKey);
+      expect(response.status).toBe(403);
     });
 
     it('GET /tenants - should return all tenants', async () => {
@@ -151,7 +145,7 @@ describe('Tenants (e2e)', () => {
 
       const createdTenant = response.body.find((t: { id: number }) => t.id === createdTenantId);
       expect(createdTenant).toBeDefined();
-      expect(createdTenant?.created_by).toBe(testUserId);
+      expect(createdTenant?.created_by).toBe(systemAdminUserId);
     });
 
     it('GET /tenants/:id - should return created tenant', async () => {
@@ -161,7 +155,7 @@ describe('Tenants (e2e)', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.id).toBe(createdTenantId);
-      expect(response.body.created_by).toBe(testUserId);
+      expect(response.body.created_by).toBe(systemAdminUserId);
     });
 
     it('GET /tenants/:id - should return 404 for non-existent tenant', async () => {
@@ -184,7 +178,7 @@ describe('Tenants (e2e)', () => {
 
       expect(response.status).toBe(200);
       expect(response.body.title).toBe(updatedData.title);
-      expect(response.body.created_by).toBe(testUserId); // Should remain unchanged
+      expect(response.body.created_by).toBe(systemAdminUserId); // Should remain unchanged
     });
 
     it('GET /tenants/:id - should return updated tenant', async () => {
@@ -227,21 +221,23 @@ describe('Tenants (e2e)', () => {
         .post('/api-keys')
         .send({ user_id: user2Id, key: user2ApiKey, name: 'Test Key 2' });
 
-      // Create tenant as first user
+      // Create tenant for first user (by system admin)
       const tenant1Res = await request(app.getHttpServer())
         .post('/tenants')
-        .set('X-API-Key', testUserApiKey)
-        .send({ title: `Tenant by User 1 ${Date.now()}` });
+        .set('X-API-Key', systemAdminApiKey)
+        .send({ title: `Tenant by User 1 ${Date.now()}`, owner_id: testUserId });
 
-      // Create tenant as second user
+      // Create tenant for second user (by system admin)
       const tenant2Res = await request(app.getHttpServer())
         .post('/tenants')
-        .set('X-API-Key', user2ApiKey)
-        .send({ title: `Tenant by User 2 ${Date.now()}` });
+        .set('X-API-Key', systemAdminApiKey)
+        .send({ title: `Tenant by User 2 ${Date.now()}`, owner_id: user2Id });
 
-      expect(tenant1Res.body.created_by).toBe(testUserId);
-      expect(tenant2Res.body.created_by).toBe(user2Id);
-      expect(tenant1Res.body.created_by).not.toBe(tenant2Res.body.created_by);
+      expect(tenant1Res.body.created_by).toBe(systemAdminUserId);
+      expect(tenant2Res.body.created_by).toBe(systemAdminUserId);
+      expect(tenant1Res.body.owner_id).toBe(testUserId);
+      expect(tenant2Res.body.owner_id).toBe(user2Id);
+      expect(tenant1Res.body.owner_id).not.toBe(tenant2Res.body.owner_id);
 
       // Cleanup
       await request(app.getHttpServer())
@@ -309,6 +305,25 @@ describe('Tenants (e2e)', () => {
 
       expect(testResponse.status).toBe(200);
       expect(testResponse.body.id).toBe(response.body.user.id);
+
+      // Verify user has tenantAdmin role for the created tenant
+      const hasTenantAdminRole = testResponse.body.roles.some(
+        (r: { role_name: string; tenant_id: number; shop_id: number | null }) =>
+          r.role_name === 'tenantAdmin' &&
+          r.tenant_id === response.body.tenant.id &&
+          r.shop_id === null,
+      );
+      expect(hasTenantAdminRole).toBe(true);
+
+      // Verify user has access to the tenant with the created shop
+      const tenant = testResponse.body.tenants.find(
+        (t: { id: number }) => t.id === response.body.tenant.id,
+      );
+      expect(tenant).toBeDefined();
+      expect(tenant.is_owner).toBe(true);
+      expect(tenant.shops).toHaveLength(1);
+      expect(tenant.shops[0].id).toBe(response.body.shop.id);
+      expect(tenant.shops[0].title).toBe(requestData.tenantTitle);
 
       // Cleanup
       await request(app.getHttpServer())

@@ -29,6 +29,7 @@ describe('AppController (e2e)', () => {
   it('/health (GET)', async () => {
     const response = await request(app.getHttpServer()).get('/health');
     expect(response.status).toBe(200);
-    expect(response.body).toEqual({ status: 'ok' });
+    expect(response.body).toHaveProperty('status', 'ok');
+    expect(response.body).toHaveProperty('version');
   });
 });

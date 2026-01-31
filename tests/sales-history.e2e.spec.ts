@@ -13,6 +13,7 @@ describe('Sales History (e2e)', () => {
   let salesHistoryId: number;
   let testUserId: number;
   let testUserApiKey: string;
+  const SYSTEM_ADMIN_KEY = process.env.SYSTEM_ADMIN_KEY!;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -22,44 +23,20 @@ describe('Sales History (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    // Create test tenant
-    const tenantRes = await request(app.getHttpServer())
-      .post('/tenants')
-      .send({ title: `Test Tenant ${Date.now()}` });
-    tenantId = tenantRes.body.id;
+    // Create tenant with shop and user in one call
+    const setupRes = await request(app.getHttpServer())
+      .post('/tenants/with-shop-and-user')
+      .set('X-API-Key', SYSTEM_ADMIN_KEY)
+      .send({
+        tenantTitle: `Test Tenant ${Date.now()}`,
+        userEmail: `sales-test-${Date.now()}@example.com`,
+        userName: 'Sales Test User',
+      });
 
-    // Create test shop
-    const shopRes = await request(app.getHttpServer())
-      .post('/shops')
-      .send({ title: `Test Shop ${Date.now()}`, tenant_id: tenantId });
-    shopId = shopRes.body.id;
-
-    // Create test user
-    const userRes = await request(app.getHttpServer())
-      .post('/users')
-      .send({ email: `sales-test-${Date.now()}@example.com`, name: 'Sales Test User' });
-    testUserId = userRes.body.id;
-
-    // Create API key for test user (random suffix prevents collision in parallel tests)
-    testUserApiKey = `test-key-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    await request(app.getHttpServer())
-      .post('/api-keys')
-      .send({ user_id: testUserId, key: testUserApiKey, name: 'Test Key' });
-
-    // Get or create an editor role
-    const rolesRes = await request(app.getHttpServer()).get('/roles');
-    let editorRoleId = rolesRes.body.find((r: { name: string }) => r.name === 'editor')?.id;
-    if (!editorRoleId) {
-      const roleRes = await request(app.getHttpServer())
-        .post('/roles')
-        .send({ name: 'editor', description: 'Editor user' });
-      editorRoleId = roleRes.body.id;
-    }
-
-    // Assign user to shop with editor role
-    await request(app.getHttpServer())
-      .post('/user-roles')
-      .send({ user_id: testUserId, role_id: editorRoleId, tenant_id: tenantId, shop_id: shopId });
+    testUserId = setupRes.body.user.id;
+    testUserApiKey = setupRes.body.apiKey;
+    tenantId = setupRes.body.tenant.id;
+    shopId = setupRes.body.shop.id;
 
     // Create a test SKU
     skuCode = `SKU-SALES-${Date.now()}`;

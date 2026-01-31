@@ -7,6 +7,7 @@ import { RolesService } from '../roles/roles.service.js';
 import { UserRolesService } from '../user-roles/user-roles.service.js';
 import { ApiKeysService } from '../api-keys/api-keys.service.js';
 import { MarketplacesService, CreateMarketplaceDto } from '../marketplaces/marketplaces.service.js';
+import { ROLE_NAMES } from '../common/constants.js';
 
 @Injectable()
 export class BootstrapService implements OnModuleInit {
@@ -29,9 +30,9 @@ export class BootstrapService implements OnModuleInit {
 
   private async seedRoles(): Promise<void> {
     const roles = [
-      { name: 'viewer', description: 'Read-only access to a shop' },
-      { name: 'editor', description: 'Can create and edit content in a shop' },
-      { name: 'tenantAdmin', description: 'Full access to all shops in a tenant' },
+      { name: ROLE_NAMES.VIEWER, description: 'Read-only access to a shop' },
+      { name: ROLE_NAMES.EDITOR, description: 'Can create and edit content in a shop' },
+      { name: ROLE_NAMES.TENANT_ADMIN, description: 'Full access to all shops in a tenant' },
     ];
 
     for (const role of roles) {
@@ -65,11 +66,11 @@ export class BootstrapService implements OnModuleInit {
     }
 
     // Check if systemAdmin role exists
-    let systemAdminRole = await this.rolesService.findByName('systemAdmin');
+    let systemAdminRole = await this.rolesService.findByName(ROLE_NAMES.SYSTEM_ADMIN);
     if (!systemAdminRole) {
       this.logger.log('Creating systemAdmin role...');
       systemAdminRole = await this.rolesService.create({
-        name: 'systemAdmin',
+        name: ROLE_NAMES.SYSTEM_ADMIN,
         description: 'System administrator with full access',
       });
     }
@@ -103,7 +104,7 @@ export class BootstrapService implements OnModuleInit {
     }
 
     // Assign systemAdmin role to user
-    const hasRole = await this.userRolesService.hasRole(adminUser.id, 'systemAdmin');
+    const hasRole = await this.userRolesService.hasRole(adminUser.id, ROLE_NAMES.SYSTEM_ADMIN);
     if (!hasRole) {
       this.logger.log('Assigning systemAdmin role to user...');
       await this.userRolesService.create({

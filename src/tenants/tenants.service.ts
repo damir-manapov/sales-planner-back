@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service.js';
 import { Tenants } from '../database/database.types.js';
 import { Insertable, Selectable } from 'kysely';
+import { ROLE_NAMES } from '../common/constants.js';
 
 export type Tenant = Selectable<Tenants>;
 export type CreateTenantDto = Insertable<Tenants>;
@@ -106,6 +107,24 @@ export class TenantsService {
         })
         .returningAll()
         .executeTakeFirstOrThrow();
+
+      // Assign tenantAdmin role to user
+      const tenantAdminRole = await trx
+        .selectFrom('roles')
+        .select('id')
+        .where('name', '=', ROLE_NAMES.TENANT_ADMIN)
+        .executeTakeFirst();
+
+      if (tenantAdminRole) {
+        await trx
+          .insertInto('user_roles')
+          .values({
+            user_id: user.id,
+            role_id: tenantAdminRole.id,
+            tenant_id: tenant.id,
+          })
+          .execute();
+      }
 
       return {
         tenant,

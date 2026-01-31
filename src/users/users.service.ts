@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
-import { DatabaseService } from '../database/index.js';
 import { sql } from 'kysely';
+import { DatabaseService } from '../database/index.js';
+import { ROLE_NAMES } from '../common/constants.js';
 
 export interface CreateUserDto {
   email: string;
@@ -26,10 +27,16 @@ export interface UserRole {
   shop_title: string | null;
 }
 
+export interface ShopInfo {
+  id: number;
+  title: string;
+}
+
 export interface TenantInfo {
   id: number;
   title: string;
   is_owner: boolean;
+  shops: ShopInfo[];
 }
 
 export interface UserWithRolesAndTenants extends User {
@@ -148,10 +155,68 @@ export class UsersService {
       .where('id', 'in', tenantIds.length > 0 ? tenantIds : [-1])
       .execute();
 
+    // Determine which tenants user has full access to (tenantAdmin or owner)
+    const fullAccessTenantIds = new Set<number>();
+    for (const tenant of tenantsResult) {
+      // User is owner
+      if (tenant.owner_id === userId) {
+        fullAccessTenantIds.add(tenant.id);
+        continue;
+      }
+      // User has tenantAdmin role for this tenant
+      const hasTenantAdmin = roles.some(
+        (r) =>
+          r.tenant_id === tenant.id &&
+          r.role_name === ROLE_NAMES.TENANT_ADMIN &&
+          r.shop_id === null,
+      );
+      if (hasTenantAdmin) {
+        fullAccessTenantIds.add(tenant.id);
+      }
+    }
+
+    // Get shop IDs from shop-level roles
+    const shopLevelRoleShopIds = new Set(
+      roles.filter((r) => r.shop_id !== null).map((r) => r.shop_id as number),
+    );
+
+    // Get shops for all tenants
+    const shopsResult = await this.db
+      .selectFrom('shops')
+      .select('id')
+      .select('title')
+      .select('tenant_id')
+      .where('tenant_id', 'in', tenantIds.length > 0 ? tenantIds : [-1])
+      .execute();
+
+    // Group shops by tenant_id, filtering based on user's access level
+    const shopsByTenant = shopsResult.reduce(
+      (acc, shop) => {
+        // Include shop if:
+        // 1. User has full tenant access (owner or tenantAdmin), OR
+        // 2. User has a shop-level role for this specific shop
+        const hasFullTenantAccess = fullAccessTenantIds.has(shop.tenant_id);
+        const hasShopLevelRole = shopLevelRoleShopIds.has(shop.id);
+
+        if (hasFullTenantAccess || hasShopLevelRole) {
+          if (!acc[shop.tenant_id]) {
+            acc[shop.tenant_id] = [];
+          }
+          acc[shop.tenant_id]?.push({
+            id: shop.id,
+            title: shop.title,
+          });
+        }
+        return acc;
+      },
+      {} as Record<number, ShopInfo[]>,
+    );
+
     const tenants: TenantInfo[] = tenantsResult.map((t) => ({
       id: t.id,
       title: t.title,
       is_owner: t.owner_id === userId,
+      shops: shopsByTenant[t.id] || [],
     }));
 
     return {

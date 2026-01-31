@@ -11,7 +11,6 @@ import {
   NotFoundException,
   UseGuards,
   Req,
-  ForbiddenException,
 } from '@nestjs/common';
 import {
   TenantsService,
@@ -20,7 +19,7 @@ import {
   CreateTenantWithShopDto,
   TenantWithShopAndApiKey,
 } from './tenants.service.js';
-import { AuthGuard, AuthenticatedRequest } from '../auth/index.js';
+import { AuthGuard, SystemAdminGuard, AuthenticatedRequest } from '../auth/index.js';
 
 @Controller('tenants')
 @UseGuards(AuthGuard)
@@ -51,6 +50,7 @@ export class TenantsController {
   }
 
   @Post()
+  @UseGuards(SystemAdminGuard)
   async create(
     @Req() req: AuthenticatedRequest,
     @Body() dto: Omit<CreateTenantDto, 'created_by'>,
@@ -83,15 +83,11 @@ export class TenantsController {
   }
 
   @Post('with-shop-and-user')
+  @UseGuards(SystemAdminGuard)
   async createWithShop(
-    @Req() req: AuthenticatedRequest,
+    @Req() _req: AuthenticatedRequest,
     @Body() dto: CreateTenantWithShopDto,
   ): Promise<TenantWithShopAndApiKey> {
-    // Only systemAdmin can create tenant with shop and user
-    if (!req.user.isSystemAdmin) {
-      throw new ForbiddenException('Only systemAdmin can create tenant with shop and user');
-    }
-
     return this.tenantsService.createTenantWithShopAndUser(dto);
   }
 }

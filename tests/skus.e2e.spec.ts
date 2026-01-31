@@ -11,6 +11,7 @@ describe('SKUs (e2e)', () => {
   let skuId: number;
   let testUserId: number;
   let testUserApiKey: string;
+  const SYSTEM_ADMIN_KEY = process.env.SYSTEM_ADMIN_KEY!;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -20,44 +21,20 @@ describe('SKUs (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    // Create test tenant
-    const tenantRes = await request(app.getHttpServer())
-      .post('/tenants')
-      .send({ title: `Test Tenant ${Date.now()}` });
-    tenantId = tenantRes.body.id;
+    // Create tenant with shop and user in one call
+    const setupRes = await request(app.getHttpServer())
+      .post('/tenants/with-shop-and-user')
+      .set('X-API-Key', SYSTEM_ADMIN_KEY)
+      .send({
+        tenantTitle: `Test Tenant ${Date.now()}`,
+        userEmail: `sku-test-${Date.now()}@example.com`,
+        userName: 'SKU Test User',
+      });
 
-    // Create test shop
-    const shopRes = await request(app.getHttpServer())
-      .post('/shops')
-      .send({ title: `Test Shop ${Date.now()}`, tenant_id: tenantId });
-    shopId = shopRes.body.id;
-
-    // Create test user
-    const userRes = await request(app.getHttpServer())
-      .post('/users')
-      .send({ email: `sku-test-${Date.now()}@example.com`, name: 'SKU Test User' });
-    testUserId = userRes.body.id;
-
-    // Create API key for test user (random suffix prevents collision in parallel tests)
-    testUserApiKey = `test-key-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    await request(app.getHttpServer())
-      .post('/api-keys')
-      .send({ user_id: testUserId, key: testUserApiKey, name: 'Test Key' });
-
-    // Get or create an editor role for the user (needed for read and write operations)
-    const rolesRes = await request(app.getHttpServer()).get('/roles');
-    let editorRoleId = rolesRes.body.find((r: { name: string }) => r.name === 'editor')?.id;
-    if (!editorRoleId) {
-      const roleRes = await request(app.getHttpServer())
-        .post('/roles')
-        .send({ name: 'editor', description: 'Editor user' });
-      editorRoleId = roleRes.body.id;
-    }
-
-    // Assign user to shop via user_roles with editor role (shop-level role)
-    await request(app.getHttpServer())
-      .post('/user-roles')
-      .send({ user_id: testUserId, role_id: editorRoleId, tenant_id: tenantId, shop_id: shopId });
+    testUserId = setupRes.body.user.id;
+    testUserApiKey = setupRes.body.apiKey;
+    tenantId = setupRes.body.tenant.id;
+    shopId = setupRes.body.shop.id;
   });
 
   afterAll(async () => {
@@ -174,10 +151,17 @@ describe('SKUs (e2e)', () => {
 
   describe('Tenant-based access control', () => {
     it('GET /skus - should return 403 for wrong tenant', async () => {
-      // Create another tenant
+      // Create another user to own the other tenant
+      const otherUserRes = await request(app.getHttpServer())
+        .post('/users')
+        .send({ email: `other-${Date.now()}@example.com`, name: 'Other User' });
+      const otherUserId = otherUserRes.body.id;
+
+      // Create another tenant with different owner
       const otherTenantRes = await request(app.getHttpServer())
         .post('/tenants')
-        .send({ title: `Other Tenant ${Date.now()}` });
+        .set('X-API-Key', SYSTEM_ADMIN_KEY)
+        .send({ title: `Other Tenant ${Date.now()}`, owner_id: otherUserId });
       const otherTenantId = otherTenantRes.body.id;
 
       // Create shop in other tenant
@@ -191,18 +175,26 @@ describe('SKUs (e2e)', () => {
         .get(`/skus?shop_id=${otherShopId}&tenant_id=${otherTenantId}`)
         .set('X-API-Key', testUserApiKey);
 
-      expect(response.status).toBe(403);
+      expect(response.status).toBe(403); // User has no access to other tenant
 
       // Cleanup
       await request(app.getHttpServer()).delete(`/shops/${otherShopId}`);
       await request(app.getHttpServer()).delete(`/tenants/${otherTenantId}`);
+      await request(app.getHttpServer()).delete(`/users/${otherUserId}`);
     });
 
     it('POST /skus - should return 403 when creating SKU for wrong tenant', async () => {
-      // Create another tenant
+      // Create another user to own the other tenant
+      const otherUserRes = await request(app.getHttpServer())
+        .post('/users')
+        .send({ email: `other2-${Date.now()}@example.com`, name: 'Other User 2' });
+      const otherUserId = otherUserRes.body.id;
+
+      // Create another tenant with different owner
       const otherTenantRes = await request(app.getHttpServer())
         .post('/tenants')
-        .send({ title: `Other Tenant ${Date.now()}` });
+        .set('X-API-Key', SYSTEM_ADMIN_KEY)
+        .send({ title: `Other Tenant ${Date.now()}`, owner_id: otherUserId });
       const otherTenantId = otherTenantRes.body.id;
 
       const response = await request(app.getHttpServer())
@@ -213,17 +205,25 @@ describe('SKUs (e2e)', () => {
           title: 'Should Fail',
         });
 
-      expect(response.status).toBe(403);
+      expect(response.status).toBe(403); // User has no access to other tenant
 
       // Cleanup
       await request(app.getHttpServer()).delete(`/tenants/${otherTenantId}`);
+      await request(app.getHttpServer()).delete(`/users/${otherUserId}`);
     });
 
     it('GET /skus/:id - should return 404 for SKU in wrong tenant', async () => {
-      // Create another tenant
+      // Create another user to own the other tenant
+      const otherUserRes = await request(app.getHttpServer())
+        .post('/users')
+        .send({ email: `other3-${Date.now()}@example.com`, name: 'Other User 3' });
+      const otherUserId = otherUserRes.body.id;
+
+      // Create another tenant with different owner
       const otherTenantRes = await request(app.getHttpServer())
         .post('/tenants')
-        .send({ title: `Other Tenant ${Date.now()}` });
+        .set('X-API-Key', SYSTEM_ADMIN_KEY)
+        .send({ title: `Other Tenant ${Date.now()}`, owner_id: otherUserId });
       const otherTenantId = otherTenantRes.body.id;
 
       // Create a shop in the other tenant
@@ -247,16 +247,17 @@ describe('SKUs (e2e)', () => {
         .post('/user-roles')
         .send({ user_id: testUserId, role_id: tenantAdminRoleId, tenant_id: otherTenantId });
 
-      // Try to access original SKU with other tenant/shop - should return 404 (SKU not in that shop/tenant)
+      // Try to access original SKU with other tenant/shop - should return 404
       const response = await request(app.getHttpServer())
         .get(`/skus/${skuId}?shop_id=${otherShopId}&tenant_id=${otherTenantId}`)
         .set('X-API-Key', testUserApiKey);
 
-      expect(response.status).toBe(404);
+      expect(response.status).toBe(404); // SKU not found in other tenant
 
       // Cleanup
       await request(app.getHttpServer()).delete(`/shops/${otherShopId}`);
       await request(app.getHttpServer()).delete(`/tenants/${otherTenantId}`);
+      await request(app.getHttpServer()).delete(`/users/${otherUserId}`);
     });
   });
 
@@ -556,9 +557,10 @@ describe('SKUs (e2e)', () => {
         .post('/api-keys')
         .send({ user_id: ownerUserId, key: ownerApiKey, name: 'Owner Key' });
 
-      // Create a tenant with this user as owner
+      // Create a tenant with this user as owner (using authentication)
       const tenantRes = await request(app.getHttpServer())
         .post('/tenants')
+        .set('X-API-Key', SYSTEM_ADMIN_KEY)
         .send({ title: `Owner Tenant ${Date.now()}`, owner_id: ownerUserId });
       ownerTenantId = tenantRes.body.id;
 
@@ -623,7 +625,7 @@ describe('SKUs (e2e)', () => {
         .get(`/skus?shop_id=${shopId}&tenant_id=${tenantId}`)
         .set('X-API-Key', ownerApiKey);
 
-      expect(response.status).toBe(403);
+      expect(response.status).toBe(403); // No access to other tenant
     });
   });
 });

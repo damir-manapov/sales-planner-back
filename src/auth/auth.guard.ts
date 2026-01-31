@@ -13,6 +13,7 @@ import { UserRolesService } from '../user-roles/user-roles.service.js';
 import { TenantsService } from '../tenants/tenants.service.js';
 import { ACCESS_LEVEL_KEY, AccessLevel } from './decorators.js';
 import { hasReadAccess, hasWriteAccess } from './access-control.js';
+import { ROLE_NAMES } from '../common/constants.js';
 
 export interface TenantRole {
   tenantId: number;
@@ -65,7 +66,8 @@ export class AuthGuard implements CanActivate {
 
     // Check if user is systemAdmin (no tenant_id and no shop_id means global role)
     const isSystemAdmin = userRolesWithNames.some(
-      (ur) => ur.tenant_id === null && ur.shop_id === null && ur.role_name === 'systemAdmin',
+      (ur) =>
+        ur.tenant_id === null && ur.shop_id === null && ur.role_name === ROLE_NAMES.SYSTEM_ADMIN,
     );
 
     // Get tenant IDs from user roles (tenant-level roles have tenant_id but no shop_id)
