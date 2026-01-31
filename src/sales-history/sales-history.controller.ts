@@ -194,16 +194,60 @@ export class SalesHistoryController {
 
   @Post('import')
   @RequireWriteAccess()
-  async importJson(
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data', 'application/json')
+  @ApiBody({
+    description: 'Upload JSON file or provide JSON array in body',
+    schema: {
+      oneOf: [
+        {
+          type: 'object',
+          properties: {
+            file: {
+              type: 'string',
+              format: 'binary',
+              description: 'JSON file with array of {sku_code, period, quantity} objects',
+            },
+          },
+        },
+        {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              sku_code: { type: 'string' },
+              period: { type: 'string' },
+              quantity: { type: 'number' },
+            },
+          },
+        },
+      ],
+    },
+  })
+  async import(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-    @Body() items: ImportSalesHistoryItem[],
+    @Body() items?: ImportSalesHistoryItem[],
+    @UploadedFile() file?: Express.Multer.File,
   ): Promise<ImportResult> {
-    if (!Array.isArray(items)) {
-      throw new BadRequestException('Body must be an array of sales history items');
+    let data: ImportSalesHistoryItem[];
+
+    if (file) {
+      // File upload
+      const content = file.buffer.toString('utf-8');
+      data = JSON.parse(content) as ImportSalesHistoryItem[];
+    } else if (items) {
+      // JSON body
+      data = items;
+    } else {
+      throw new BadRequestException('Either file or JSON body is required');
     }
 
-    return this.salesHistoryService.bulkUpsert(items, ctx.shopId, ctx.tenantId);
+    if (!Array.isArray(data)) {
+      throw new BadRequestException('Data must be an array of sales history items');
+    }
+
+    return this.salesHistoryService.bulkUpsert(data, ctx.shopId, ctx.tenantId);
   }
 
   @Post('import/csv')

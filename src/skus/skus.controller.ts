@@ -130,16 +130,59 @@ export class SkusController {
 
   @Post('import/json')
   @RequireWriteAccess()
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data', 'application/json')
+  @ApiBody({
+    description: 'Upload JSON file or provide JSON array in body',
+    schema: {
+      oneOf: [
+        {
+          type: 'object',
+          properties: {
+            file: {
+              type: 'string',
+              format: 'binary',
+              description: 'JSON file with array of {code, title} objects',
+            },
+          },
+        },
+        {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              code: { type: 'string' },
+              title: { type: 'string' },
+            },
+          },
+        },
+      ],
+    },
+  })
   async importJson(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-    @Body() items: ImportSkuItem[],
+    @Body() items?: ImportSkuItem[],
+    @UploadedFile() file?: Express.Multer.File,
   ): Promise<ImportResult> {
-    if (!Array.isArray(items)) {
-      throw new BadRequestException('Body must be an array of SKU items');
+    let data: ImportSkuItem[];
+
+    if (file) {
+      // File upload
+      const content = file.buffer.toString('utf-8');
+      data = JSON.parse(content) as ImportSkuItem[];
+    } else if (items) {
+      // JSON body
+      data = items;
+    } else {
+      throw new BadRequestException('Either file or JSON body is required');
     }
 
-    for (const item of items) {
+    if (!Array.isArray(data)) {
+      throw new BadRequestException('Data must be an array of SKU items');
+    }
+
+    for (const item of data) {
       if (!item.code || typeof item.code !== 'string') {
         throw new BadRequestException('Each item must have a "code" string field');
       }
@@ -148,7 +191,7 @@ export class SkusController {
       }
     }
 
-    return this.skusService.bulkUpsert(items, ctx.shopId, ctx.tenantId);
+    return this.skusService.bulkUpsert(data, ctx.shopId, ctx.tenantId);
   }
 
   @Post('import/csv')
