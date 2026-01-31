@@ -25,7 +25,12 @@ Swagger UI provides:
 - **API Keys** - API keys with optional expiration, linked to users
 - **Marketplaces** - Marketplace management (string IDs)
 - **SKUs** - SKU management linked to shops (unique code per shop)
+  - Import/Export: JSON and CSV file upload support
+  - Proper file download headers for exports
 - **Sales History** - Monthly sales data per SKU (shop-level entity)
+  - Import/Export: JSON and CSV file upload support
+  - Auto-creates missing SKUs during import
+  - Proper file download headers for exports
 - **Me** - Get current user data with roles and tenants
 - **Bootstrap** - Auto-creates systemAdmin user and seeds default roles on startup
 - **Swagger/OpenAPI** - Interactive API documentation with try-it-out functionality
@@ -371,18 +376,18 @@ sales-planner-back/
 | `/skus` | GET, POST | List/create SKUs (requires `shop_id` and `tenant_id` query params) |
 | `/skus/examples/json` | GET | Download example JSON file for import (no auth required) |
 | `/skus/examples/csv` | GET | Download example CSV file for import (no auth required) |
-| `/skus/export/json` | GET | Export all SKUs in JSON format |
-| `/skus/export/csv` | GET | Export all SKUs in CSV format |
-| `/skus/import/json` | POST | Import/upsert SKUs from JSON array |
-| `/skus/import/csv` | POST | Import/upsert SKUs from CSV |
+| `/skus/export/json` | GET | Export all SKUs as JSON with file download headers |
+| `/skus/export/csv` | GET | Export all SKUs as CSV with file download headers |
+| `/skus/import/json` | POST | Import/upsert SKUs from JSON file or array |
+| `/skus/import/csv` | POST | Import/upsert SKUs from CSV file |
 | `/skus/:id` | GET, PUT, DELETE | SKU CRUD (requires `shop_id` and `tenant_id` query params) |
 | `/sales-history` | GET, POST | List/create sales history (requires `shop_id` and `tenant_id` query params) |
 | `/sales-history/examples/json` | GET | Download example JSON file for import (no auth required) |
 | `/sales-history/examples/csv` | GET | Download example CSV file for import (no auth required) |
-| `/sales-history/export/json` | GET | Export sales history in JSON format (supports period filters) |
-| `/sales-history/export/csv` | GET | Export sales history in CSV format (supports period filters) |
-| `/sales-history/import` | POST | Import/upsert sales history from JSON array (auto-creates missing SKUs) |
-| `/sales-history/import/csv` | POST | Import/upsert sales history from CSV (auto-creates missing SKUs) |
+| `/sales-history/export/json` | GET | Export sales history as JSON with file download headers (supports period filters) |
+| `/sales-history/export/csv` | GET | Export sales history as CSV with file download headers (supports period filters) |
+| `/sales-history/import` | POST | Import/upsert sales history from JSON file or array (auto-creates missing SKUs) |
+| `/sales-history/import/csv` | POST | Import/upsert sales history from CSV file (auto-creates missing SKUs) |
 | `/sales-history/:id` | GET, PUT, DELETE | Sales history CRUD (requires `shop_id` and `tenant_id` query params) |
 
 ### Tenant Management
@@ -451,22 +456,28 @@ curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
   -d '{"code": "SKU-001", "title": "Product 1"}'
 
 # Import SKUs from JSON (upserts by code)
+# Option 1: Upload a JSON file
+curl -X POST -H "x-api-key: $API_KEY" \
+  "http://localhost:3000/skus/import/json?shop_id=1&tenant_id=1" \
+  -F 'file=@skus.json'
+
+# Option 2: Send JSON directly in body
 curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
   "http://localhost:3000/skus/import/json?shop_id=1&tenant_id=1" \
   -d '[{"code": "SKU-001", "title": "Product 1"}, {"code": "SKU-002", "title": "Product 2"}]'
 
 # Import SKUs from CSV (upserts by code)
-curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
+curl -X POST -H "x-api-key: $API_KEY" \
   "http://localhost:3000/skus/import/csv?shop_id=1&tenant_id=1" \
-  -d '{"content": "code,title\nSKU-001,Product 1\nSKU-002,Product 2"}'
+  -F 'file=@skus.csv'
 
-# Export SKUs as JSON (same format as import)
+# Export SKUs as JSON (downloads as file with proper headers)
 curl -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/skus/export/json?shop_id=1&tenant_id=1"
+  "http://localhost:3000/skus/export/json?shop_id=1&tenant_id=1" -o skus.json
 
-# Export SKUs as CSV
+# Export SKUs as CSV (downloads as file with proper headers)
 curl -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/skus/export/csv?shop_id=1&tenant_id=1"
+  "http://localhost:3000/skus/export/csv?shop_id=1&tenant_id=1" -o skus.csv
 ```
 
 SKU JSON format:
@@ -510,13 +521,28 @@ curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
   -d '{"sku_id": 1, "period": "2026-01", "quantity": 100}'
 
 # Import sales history (upserts by sku_code + period, auto-creates missing SKUs)
+# Option 1: Upload a JSON file
+curl -X POST -H "x-api-key: $API_KEY" \
+  "http://localhost:3000/sales-history/import?shop_id=1&tenant_id=1" \
+  -F 'file=@sales-history.json'
+
+# Option 2: Send JSON directly in body
 curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
   "http://localhost:3000/sales-history/import?shop_id=1&tenant_id=1" \
   -d '[{"sku_code": "SKU-001", "period": "2026-01", "quantity": 100}]'
 
-# Export sales history as JSON (same format as import)
+# Import sales history from CSV
+curl -X POST -H "x-api-key: $API_KEY" \
+  "http://localhost:3000/sales-history/import/csv?shop_id=1&tenant_id=1" \
+  -F 'file=@sales-history.csv'
+
+# Export sales history as JSON (downloads as file with proper headers)
 curl -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/sales-history/export/json?shop_id=1&tenant_id=1"
+  "http://localhost:3000/sales-history/export/json?shop_id=1&tenant_id=1" -o sales-history.json
+
+# Export sales history as CSV (downloads as file with proper headers)
+curl -H "x-api-key: $API_KEY" \
+  "http://localhost:3000/sales-history/export/csv?shop_id=1&tenant_id=1" -o sales-history.csv
 
 # Export sales history as CSV
 curl -H "x-api-key: $API_KEY" \
