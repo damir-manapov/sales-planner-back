@@ -12,7 +12,11 @@ import {
   BadRequestException,
   UseGuards,
   Req,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiConsumes, ApiBody } from '@nestjs/swagger';
 import {
   SalesHistoryService,
   CreateSalesHistoryDto,
@@ -204,12 +208,30 @@ export class SalesHistoryController {
 
   @Post('import/csv')
   @RequireWriteAccess()
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'CSV file with columns: sku_code, period, quantity',
+        },
+      },
+    },
+  })
   async importCsv(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-    @Body() body: { content: string },
+    @UploadedFile() file: Express.Multer.File,
   ): Promise<ImportResult> {
-    const records = fromCsv<{ sku_code: string; period: string; quantity: string }>(body.content, [
+    if (!file) {
+      throw new BadRequestException('File is required');
+    }
+    const content = file.buffer.toString('utf-8');
+    const records = fromCsv<{ sku_code: string; period: string; quantity: string }>(content, [
       'sku_code',
       'period',
       'quantity',

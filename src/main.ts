@@ -27,9 +27,7 @@ async function bootstrap(): Promise<void> {
     customCss: '.swagger-ui .topbar { display: none }',
     customfavIcon: 'https://nestjs.com/favicon.ico',
     customSiteTitle: 'Sales Planner API',
-    customCssUrl: [
-      'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.11.0/swagger-ui.css',
-    ],
+    customCssUrl: ['https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.11.0/swagger-ui.css'],
     customJs: [
       'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.11.0/swagger-ui-bundle.js',
       'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js',

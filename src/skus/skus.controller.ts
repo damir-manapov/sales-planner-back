@@ -11,7 +11,11 @@ import {
   BadRequestException,
   UseGuards,
   Req,
+  UseInterceptors,
+  UploadedFile,
 } from '@nestjs/common';
+import { FileInterceptor } from '@nestjs/platform-express';
+import { ApiConsumes, ApiBody } from '@nestjs/swagger';
 import { SkusService, CreateSkuDto, UpdateSkuDto, Sku } from './skus.service.js';
 import { toCsv, fromCsv } from '../lib/index.js';
 import {
@@ -149,12 +153,30 @@ export class SkusController {
 
   @Post('import/csv')
   @RequireWriteAccess()
+  @UseInterceptors(FileInterceptor('file'))
+  @ApiConsumes('multipart/form-data')
+  @ApiBody({
+    schema: {
+      type: 'object',
+      properties: {
+        file: {
+          type: 'string',
+          format: 'binary',
+          description: 'CSV file with columns: code, title',
+        },
+      },
+    },
+  })
   async importCsv(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-    @Body() body: { content: string },
+    @UploadedFile() file: Express.Multer.File,
   ): Promise<ImportResult> {
-    const records = fromCsv<{ code: string; title: string }>(body.content, ['code', 'title']);
+    if (!file) {
+      throw new BadRequestException('File is required');
+    }
+    const content = file.buffer.toString('utf-8');
+    const records = fromCsv<{ code: string; title: string }>(content, ['code', 'title']);
     const items: ImportSkuItem[] = records.map((record) => ({
       code: record.code,
       title: record.title,
