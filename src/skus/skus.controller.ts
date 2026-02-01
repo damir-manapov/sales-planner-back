@@ -19,8 +19,17 @@ import {
 import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiBody } from '@nestjs/swagger';
-import { SkusService, CreateSkuDto, UpdateSkuDto, Sku } from './skus.service.js';
+import { SkusService, type Sku } from './skus.service.js';
+import {
+  CreateSkuSchema,
+  UpdateSkuSchema,
+  ImportSkuItemSchema,
+  type CreateSkuDto,
+  type UpdateSkuDto,
+  type ImportSkuItem,
+} from './skus.schema.js';
 import { toCsv, fromCsv } from '../lib/index.js';
+import { ZodValidationPipe, parseAndValidateImport } from '../common/index.js';
 import {
   AuthGuard,
   AuthenticatedRequest,
@@ -29,11 +38,6 @@ import {
   ShopContext,
   type ShopContextType,
 } from '../auth/index.js';
-
-interface ImportSkuItem {
-  code: string;
-  title: string;
-}
 
 interface ImportResult {
   created: number;
@@ -106,7 +110,8 @@ export class SkusController {
   async create(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-    @Body() dto: Omit<CreateSkuDto, 'shop_id' | 'tenant_id'>,
+    @Body(new ZodValidationPipe(CreateSkuSchema.omit({ shop_id: true, tenant_id: true })))
+    dto: Omit<CreateSkuDto, 'shop_id' | 'tenant_id'>,
   ): Promise<Sku> {
     return this.skusService.create({
       ...dto,
@@ -121,7 +126,7 @@ export class SkusController {
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateSkuDto,
+    @Body(new ZodValidationPipe(UpdateSkuSchema)) dto: UpdateSkuDto,
   ): Promise<Sku> {
     const existing = await this.skusService.findById(id);
     if (!existing) {
@@ -176,33 +181,8 @@ export class SkusController {
     @Body() items?: ImportSkuItem[],
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<ImportResult> {
-    let data: ImportSkuItem[];
-
-    if (file) {
-      // File upload
-      const content = file.buffer.toString('utf-8');
-      data = JSON.parse(content) as ImportSkuItem[];
-    } else if (items) {
-      // JSON body
-      data = items;
-    } else {
-      throw new BadRequestException('Either file or JSON body is required');
-    }
-
-    if (!Array.isArray(data)) {
-      throw new BadRequestException('Data must be an array of SKU items');
-    }
-
-    for (const item of data) {
-      if (!item.code || typeof item.code !== 'string') {
-        throw new BadRequestException('Each item must have a "code" string field');
-      }
-      if (!item.title || typeof item.title !== 'string') {
-        throw new BadRequestException('Each item must have a "title" string field');
-      }
-    }
-
-    return this.skusService.bulkUpsert(data, ctx.shopId, ctx.tenantId);
+    const validatedData = parseAndValidateImport(file, items, ImportSkuItemSchema);
+    return this.skusService.bulkUpsert(validatedData, ctx.shopId, ctx.tenantId);
   }
 
   @Post('import/csv')

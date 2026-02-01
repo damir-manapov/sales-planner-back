@@ -11,7 +11,7 @@ gitleaks git --verbose
 echo "gitleaks: OK"
 
 echo "=== Checking outdated dependencies ==="
-OUTDATED=$(pnpm outdated --format json 2>/dev/null || true)
+OUTDATED=$(pnpm outdated --format json 2>&1 | grep -v "WARN" || true)
 if [ -n "$OUTDATED" ] && [ "$OUTDATED" != "{}" ] && [ "$OUTDATED" != "[]" ]; then
   echo "ERROR: Outdated dependencies found:"
   pnpm outdated

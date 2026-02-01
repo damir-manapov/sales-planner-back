@@ -20,13 +20,18 @@ import {
 import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiConsumes, ApiBody } from '@nestjs/swagger';
+import { SalesHistoryService, type SalesHistory } from './sales-history.service.js';
 import {
-  SalesHistoryService,
-  CreateSalesHistoryDto,
-  UpdateSalesHistoryDto,
-  SalesHistory,
-} from './sales-history.service.js';
-import { isValidPeriod, toCsv, fromCsv } from '../lib/index.js';
+  PeriodQuerySchema,
+  CreateSalesHistorySchema,
+  UpdateSalesHistorySchema,
+  ImportSalesHistoryItemSchema,
+  type CreateSalesHistoryDto,
+  type UpdateSalesHistoryDto,
+  type ImportSalesHistoryItem,
+} from './sales-history.schema.js';
+import { toCsv, fromCsv } from '../lib/index.js';
+import { ZodValidationPipe, parseAndValidateImport } from '../common/index.js';
 import {
   AuthGuard,
   AuthenticatedRequest,
@@ -35,12 +40,6 @@ import {
   ShopContext,
   type ShopContextType,
 } from '../auth/index.js';
-
-interface ImportSalesHistoryItem {
-  sku_code: string;
-  period: string; // "YYYY-MM"
-  quantity: number;
-}
 
 interface ImportResult {
   created: number;
@@ -62,13 +61,8 @@ export class SalesHistoryController {
     @Query('period_from') periodFrom?: string,
     @Query('period_to') periodTo?: string,
   ): Promise<SalesHistory[]> {
-    if (periodFrom && !isValidPeriod(periodFrom)) {
-      throw new BadRequestException('period_from must be in YYYY-MM format');
-    }
-    if (periodTo && !isValidPeriod(periodTo)) {
-      throw new BadRequestException('period_to must be in YYYY-MM format');
-    }
-
+    // Validate query params
+    PeriodQuerySchema.parse({ period_from: periodFrom, period_to: periodTo });
     return this.salesHistoryService.findByShopAndPeriod(ctx.shopId, periodFrom, periodTo);
   }
 
@@ -83,13 +77,8 @@ export class SalesHistoryController {
     @Query('period_from') periodFrom?: string,
     @Query('period_to') periodTo?: string,
   ): Promise<void> {
-    if (periodFrom && !isValidPeriod(periodFrom)) {
-      throw new BadRequestException('period_from must be in YYYY-MM format');
-    }
-    if (periodTo && !isValidPeriod(periodTo)) {
-      throw new BadRequestException('period_to must be in YYYY-MM format');
-    }
-
+    // Validate query params
+    PeriodQuerySchema.parse({ period_from: periodFrom, period_to: periodTo });
     const items = await this.salesHistoryService.exportForShop(ctx.shopId, periodFrom, periodTo);
     res.json(items);
   }
@@ -105,13 +94,8 @@ export class SalesHistoryController {
     @Query('period_from') periodFrom?: string,
     @Query('period_to') periodTo?: string,
   ): Promise<void> {
-    if (periodFrom && !isValidPeriod(periodFrom)) {
-      throw new BadRequestException('period_from must be in YYYY-MM format');
-    }
-    if (periodTo && !isValidPeriod(periodTo)) {
-      throw new BadRequestException('period_to must be in YYYY-MM format');
-    }
-
+    // Validate query params
+    PeriodQuerySchema.parse({ period_from: periodFrom, period_to: periodTo });
     const items = await this.salesHistoryService.exportForShop(ctx.shopId, periodFrom, periodTo);
     const csvContent = toCsv(items, ['sku_code', 'period', 'quantity']);
     res.send(csvContent);
@@ -143,12 +127,9 @@ export class SalesHistoryController {
   async create(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-    @Body() dto: Omit<CreateSalesHistoryDto, 'shop_id' | 'tenant_id'>,
+    @Body(new ZodValidationPipe(CreateSalesHistorySchema.omit({ shop_id: true, tenant_id: true })))
+    dto: Omit<CreateSalesHistoryDto, 'shop_id' | 'tenant_id'>,
   ): Promise<SalesHistory> {
-    if (!isValidPeriod(dto.period)) {
-      throw new BadRequestException('period must be in YYYY-MM format with valid month (01-12)');
-    }
-
     return this.salesHistoryService.create({
       ...dto,
       shop_id: ctx.shopId,
@@ -162,7 +143,7 @@ export class SalesHistoryController {
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: UpdateSalesHistoryDto,
+    @Body(new ZodValidationPipe(UpdateSalesHistorySchema)) dto: UpdateSalesHistoryDto,
   ): Promise<SalesHistory> {
     const existing = await this.salesHistoryService.findById(id);
     if (!existing) {
@@ -241,24 +222,8 @@ export class SalesHistoryController {
     @Body() items?: ImportSalesHistoryItem[],
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<ImportResult> {
-    let data: ImportSalesHistoryItem[];
-
-    if (file) {
-      // File upload
-      const content = file.buffer.toString('utf-8');
-      data = JSON.parse(content) as ImportSalesHistoryItem[];
-    } else if (items) {
-      // JSON body
-      data = items;
-    } else {
-      throw new BadRequestException('Either file or JSON body is required');
-    }
-
-    if (!Array.isArray(data)) {
-      throw new BadRequestException('Data must be an array of sales history items');
-    }
-
-    return this.salesHistoryService.bulkUpsert(data, ctx.shopId, ctx.tenantId);
+    const validatedData = parseAndValidateImport(file, items, ImportSalesHistoryItemSchema);
+    return this.salesHistoryService.bulkUpsert(validatedData, ctx.shopId, ctx.tenantId);
   }
 
   @Post('import/csv')
@@ -292,18 +257,23 @@ export class SalesHistoryController {
       'quantity',
     ]);
 
-    const items: ImportSalesHistoryItem[] = records.map((record) => {
+    // Validate and transform each record with Zod
+    const validatedData = records.map((record, index) => {
       const quantity = Number.parseFloat(record.quantity);
       if (Number.isNaN(quantity)) {
-        throw new BadRequestException(`Invalid quantity value: ${record.quantity}`);
+        throw new BadRequestException(`Invalid quantity at row ${index + 1}: ${record.quantity}`);
       }
-      return {
-        sku_code: record.sku_code,
-        period: record.period,
-        quantity,
-      };
+      try {
+        return ImportSalesHistoryItemSchema.parse({
+          sku_code: record.sku_code,
+          period: record.period,
+          quantity,
+        });
+      } catch (error) {
+        throw new BadRequestException(`Invalid data at row ${index + 1}: ${error}`);
+      }
     });
 
-    return this.salesHistoryService.bulkUpsert(items, ctx.shopId, ctx.tenantId);
+    return this.salesHistoryService.bulkUpsert(validatedData, ctx.shopId, ctx.tenantId);
   }
 }

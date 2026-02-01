@@ -2,19 +2,11 @@ import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/index.js';
 import { sql } from 'kysely';
 import { periodToDate, dateToPeriod, isValidPeriod } from '../lib/index.js';
-
-export interface CreateSalesHistoryDto {
-  shop_id: number;
-  tenant_id: number;
-  sku_id: number;
-  period: string; // "YYYY-MM" format, stored as first of month
-  quantity: number;
-}
-
-export interface UpdateSalesHistoryDto {
-  quantity?: number;
-  // Note: shop_id, tenant_id, sku_id, period are not updatable
-}
+import type {
+  CreateSalesHistoryDto,
+  UpdateSalesHistoryDto,
+  ImportSalesHistoryItem,
+} from './sales-history.schema.js';
 
 export interface SalesHistory {
   id: number;
@@ -154,7 +146,7 @@ export class SalesHistoryService {
   }
 
   async bulkUpsert(
-    items: Array<{ sku_code: string; period: string; quantity: number }>,
+    items: ImportSalesHistoryItem[],
     shopId: number,
     tenantId: number,
   ): Promise<{ created: number; updated: number; skus_created: number; errors: string[] }> {

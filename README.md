@@ -34,6 +34,7 @@ Swagger UI provides:
 - **Me** - Get current user data with roles and tenants
 - **Bootstrap** - Auto-creates systemAdmin user and seeds default roles on startup
 - **Swagger/OpenAPI** - Interactive API documentation with try-it-out functionality
+- **Request Validation** - Zod-based schema validation for all endpoints
 
 ## Role-Based Access Control
 

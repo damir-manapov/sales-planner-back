@@ -1,19 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/index.js';
-
-export interface CreateSkuDto {
-  code: string;
-  title: string;
-  shop_id: number;
-  tenant_id: number;
-}
-
-export interface UpdateSkuDto {
-  code?: string;
-  title?: string;
-  // Note: shop_id and tenant_id are intentionally not updatable
-  // Once a SKU is created in a shop/tenant, it stays there
-}
+import type { CreateSkuDto, UpdateSkuDto, ImportSkuItem } from './skus.schema.js';
 
 export interface Sku {
   id: number;
@@ -84,7 +71,7 @@ export class SkusService {
   }
 
   async bulkUpsert(
-    items: Array<{ code: string; title: string }>,
+    items: ImportSkuItem[],
     shopId: number,
     tenantId: number,
   ): Promise<{ created: number; updated: number; errors: string[] }> {
