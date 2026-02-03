@@ -7,6 +7,7 @@ export default defineConfig({
     root: './',
     include: ['tests/**/*.e2e.spec.ts', 'tests/**/*.e2e.test.ts'],
     testTimeout: 30000,
+    hookTimeout: 30000,
   },
   plugins: [swc.vite()],
 });

@@ -13,12 +13,8 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { UsersService, CreateUserDto, User } from './users.service.js';
-import {
-  AuthGuard,
-  AuthenticatedRequest,
-  hasTenantAccess,
-  validateTenantAdminAccess,
-} from '../auth/index.js';
+import { AuthGuard, AuthenticatedRequest } from '../auth/auth.guard.js';
+import { hasTenantAccess, validateTenantAdminAccess } from '../auth/access-control.js';
 import { UserRolesService } from '../user-roles/user-roles.service.js';
 
 @Controller('users')

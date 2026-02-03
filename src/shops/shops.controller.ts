@@ -14,13 +14,12 @@ import {
   ForbiddenException,
 } from '@nestjs/common';
 import { ShopsService, CreateShopDto, Shop } from './shops.service.js';
+import { AuthGuard, AuthenticatedRequest } from '../auth/auth.guard.js';
 import {
-  AuthGuard,
-  AuthenticatedRequest,
   validateWriteAccess,
   validateTenantAdminAccess,
   hasTenantAccess,
-} from '../auth/index.js';
+} from '../auth/access-control.js';
 
 @Controller('shops')
 @UseGuards(AuthGuard)

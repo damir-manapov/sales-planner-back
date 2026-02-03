@@ -11,7 +11,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { RolesService, CreateRoleDto, Role } from './roles.service.js';
-import { AuthGuard, SystemAdminGuard } from '../auth/index.js';
+import { AuthGuard } from '../auth/auth.guard.js';
+import { SystemAdminGuard } from '../auth/system-admin.guard.js';
 
 @Controller('roles')
 @UseGuards(AuthGuard, SystemAdminGuard)

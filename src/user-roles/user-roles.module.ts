@@ -6,7 +6,7 @@ import { TenantsModule } from '../tenants/tenants.module.js';
 import { AuthGuard } from '../auth/auth.guard.js';
 
 @Module({
-  imports: [forwardRef(() => ApiKeysModule), TenantsModule],
+  imports: [forwardRef(() => ApiKeysModule), forwardRef(() => TenantsModule)],
   controllers: [UserRolesController],
   providers: [UserRolesService, AuthGuard],
   exports: [UserRolesService],

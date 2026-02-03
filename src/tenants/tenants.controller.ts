@@ -19,7 +19,8 @@ import {
   CreateTenantWithShopDto,
   TenantWithShopAndApiKey,
 } from './tenants.service.js';
-import { AuthGuard, SystemAdminGuard, AuthenticatedRequest } from '../auth/index.js';
+import { AuthGuard, AuthenticatedRequest } from '../auth/auth.guard.js';
+import { SystemAdminGuard } from '../auth/system-admin.guard.js';
 
 @Controller('tenants')
 @UseGuards(AuthGuard)

@@ -11,7 +11,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiKeysService } from './api-keys.service';
-import { AuthGuard, SystemAdminGuard } from '../auth/index.js';
+import { AuthGuard } from '../auth/auth.guard.js';
+import { SystemAdminGuard } from '../auth/system-admin.guard.js';
 
 @Controller('api-keys')
 @UseGuards(AuthGuard, SystemAdminGuard)

@@ -32,14 +32,13 @@ import {
 } from './sales-history.schema.js';
 import { toCsv, fromCsv } from '../lib/index.js';
 import { ZodValidationPipe, parseAndValidateImport } from '../common/index.js';
+import { AuthGuard, AuthenticatedRequest } from '../auth/auth.guard.js';
 import {
-  AuthGuard,
-  AuthenticatedRequest,
   RequireReadAccess,
   RequireWriteAccess,
   ShopContext,
-  type ShopContextType,
-} from '../auth/index.js';
+  type ShopContext as ShopContextType,
+} from '../auth/decorators.js';
 
 interface ImportResult {
   created: number;

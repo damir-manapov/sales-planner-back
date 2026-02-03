@@ -15,7 +15,8 @@ import {
   UpdateMarketplaceDto,
   Marketplace,
 } from './marketplaces.service.js';
-import { AuthGuard, SystemAdminGuard } from '../auth/index.js';
+import { AuthGuard } from '../auth/auth.guard.js';
+import { SystemAdminGuard } from '../auth/system-admin.guard.js';
 
 @Controller('marketplaces')
 @UseGuards(AuthGuard, SystemAdminGuard)

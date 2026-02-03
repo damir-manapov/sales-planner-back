@@ -7,7 +7,7 @@ import { AuthGuard } from '../auth/auth.guard.js';
 import { SystemAdminGuard } from '../auth/system-admin.guard.js';
 
 @Module({
-  imports: [forwardRef(() => UserRolesModule), TenantsModule],
+  imports: [forwardRef(() => UserRolesModule), forwardRef(() => TenantsModule)],
   controllers: [ApiKeysController],
   providers: [ApiKeysService, AuthGuard, SystemAdminGuard],
   exports: [ApiKeysService],
