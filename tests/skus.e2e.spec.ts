@@ -148,63 +148,45 @@ describe('SKUs (e2e)', () => {
 
   describe('Tenant-based access control', () => {
     it('GET /skus - should return 403 for wrong tenant', async () => {
-      // Create another user to own the other tenant
-      const otherUserRes = await request(app.getHttpServer())
-        .post('/users')
-        .set('X-API-Key', SYSTEM_ADMIN_KEY)
-        .send({ email: `other-${Date.now()}@example.com`, name: 'Other User' });
-      const otherUserId = otherUserRes.body.id;
-
-      // Create another tenant with different owner
-      const otherTenantRes = await request(app.getHttpServer())
-        .post('/tenants')
-        .set('X-API-Key', SYSTEM_ADMIN_KEY)
-        .send({ title: `Other Tenant ${Date.now()}`, owner_id: otherUserId });
-      const otherTenantId = otherTenantRes.body.id;
-
-      // Create shop in other tenant
-      const otherShopRes = await request(app.getHttpServer())
-        .post('/shops')
-        .set('X-API-Key', SYSTEM_ADMIN_KEY)
-        .send({ title: `Other Shop ${Date.now()}`, tenant_id: otherTenantId });
-      const otherShopId = otherShopRes.body.id;
+      // Create another user with tenant and shop using helpers
+      const otherUser = await createUserWithApiKey(
+        app,
+        `other-${Date.now()}@example.com`,
+        'Other User',
+      );
+      const otherTenant = await createTenantWithOwner(
+        app,
+        `Other Tenant ${Date.now()}`,
+        otherUser.userId,
+      );
+      const otherShop = await createShop(app, `Other Shop ${Date.now()}`, otherTenant.tenantId);
 
       // Try to access other tenant's shop - should be forbidden
       const response = await request(app.getHttpServer())
-        .get(`/skus?shop_id=${otherShopId}&tenant_id=${otherTenantId}`)
+        .get(`/skus?shop_id=${otherShop.shopId}&tenant_id=${otherTenant.tenantId}`)
         .set('X-API-Key', testUserApiKey);
 
       expect(response.status).toBe(403); // User has no access to other tenant
 
       // Cleanup
-      await request(app.getHttpServer())
-        .delete(`/shops/${otherShopId}`)
-        .set('X-API-Key', SYSTEM_ADMIN_KEY);
-      await request(app.getHttpServer())
-        .delete(`/tenants/${otherTenantId}`)
-        .set('X-API-Key', SYSTEM_ADMIN_KEY);
-      await request(app.getHttpServer())
-        .delete(`/users/${otherUserId}`)
-        .set('X-API-Key', SYSTEM_ADMIN_KEY);
+      await cleanupUser(app, otherUser.userId);
     });
 
     it('POST /skus - should return 403 when creating SKU for wrong tenant', async () => {
-      // Create another user to own the other tenant
-      const otherUserRes = await request(app.getHttpServer())
-        .post('/users')
-        .set('X-API-Key', SYSTEM_ADMIN_KEY)
-        .send({ email: `other2-${Date.now()}@example.com`, name: 'Other User 2' });
-      const otherUserId = otherUserRes.body.id;
-
-      // Create another tenant with different owner
-      const otherTenantRes = await request(app.getHttpServer())
-        .post('/tenants')
-        .set('X-API-Key', SYSTEM_ADMIN_KEY)
-        .send({ title: `Other Tenant ${Date.now()}`, owner_id: otherUserId });
-      const otherTenantId = otherTenantRes.body.id;
+      // Create another user with tenant using helpers
+      const otherUser = await createUserWithApiKey(
+        app,
+        `other2-${Date.now()}@example.com`,
+        'Other User 2',
+      );
+      const otherTenant = await createTenantWithOwner(
+        app,
+        `Other Tenant ${Date.now()}`,
+        otherUser.userId,
+      );
 
       const response = await request(app.getHttpServer())
-        .post(`/skus?shop_id=${shopId}&tenant_id=${otherTenantId}`)
+        .post(`/skus?shop_id=${shopId}&tenant_id=${otherTenant.tenantId}`)
         .set('X-API-Key', testUserApiKey)
         .send({
           code: 'FORBIDDEN-SKU',
@@ -214,72 +196,36 @@ describe('SKUs (e2e)', () => {
       expect(response.status).toBe(403); // User has no access to other tenant
 
       // Cleanup
-      await request(app.getHttpServer())
-        .delete(`/tenants/${otherTenantId}`)
-        .set('X-API-Key', SYSTEM_ADMIN_KEY);
-      await request(app.getHttpServer())
-        .delete(`/users/${otherUserId}`)
-        .set('X-API-Key', SYSTEM_ADMIN_KEY);
+      await cleanupUser(app, otherUser.userId);
     });
 
     it('GET /skus/:id - should return 404 for SKU in wrong tenant', async () => {
-      // Create another user to own the other tenant
-      const otherUserRes = await request(app.getHttpServer())
-        .post('/users')
-        .set('X-API-Key', SYSTEM_ADMIN_KEY)
-        .send({ email: `other3-${Date.now()}@example.com`, name: 'Other User 3' });
-      const otherUserId = otherUserRes.body.id;
+      // Create another user with tenant and shop using helpers
+      const otherUser = await createUserWithApiKey(
+        app,
+        `other3-${Date.now()}@example.com`,
+        'Other User 3',
+      );
+      const otherTenant = await createTenantWithOwner(
+        app,
+        `Other Tenant ${Date.now()}`,
+        otherUser.userId,
+      );
+      const otherShop = await createShop(app, `Other Shop ${Date.now()}`, otherTenant.tenantId);
 
-      // Create another tenant with different owner
-      const otherTenantRes = await request(app.getHttpServer())
-        .post('/tenants')
-        .set('X-API-Key', SYSTEM_ADMIN_KEY)
-        .send({ title: `Other Tenant ${Date.now()}`, owner_id: otherUserId });
-      const otherTenantId = otherTenantRes.body.id;
-
-      // Create a shop in the other tenant
-      const otherShopRes = await request(app.getHttpServer())
-        .post('/shops')
-        .set('X-API-Key', SYSTEM_ADMIN_KEY)
-        .send({ title: `Other Shop ${Date.now()}`, tenant_id: otherTenantId });
-      const otherShopId = otherShopRes.body.id;
-
-      // Give user tenantAdmin role for other tenant (tenant-level role)
-      const rolesRes = await request(app.getHttpServer())
-        .get('/roles')
-        .set('X-API-Key', SYSTEM_ADMIN_KEY);
-      let tenantAdminRoleId = rolesRes.body.find(
-        (r: { name: string }) => r.name === 'tenantAdmin',
-      )?.id;
-      if (!tenantAdminRoleId) {
-        const roleRes = await request(app.getHttpServer())
-          .post('/roles')
-          .set('X-API-Key', SYSTEM_ADMIN_KEY)
-          .send({ name: 'tenantAdmin', description: 'Tenant Admin' });
-        tenantAdminRoleId = roleRes.body.id;
-      }
-      await request(app.getHttpServer())
-        .post('/user-roles')
-        .set('X-API-Key', SYSTEM_ADMIN_KEY)
-        .send({ user_id: testUserId, role_id: tenantAdminRoleId, tenant_id: otherTenantId });
+      // Give user tenantAdmin role for other tenant
+      const tenantAdminRoleId = await getOrCreateRole(app, 'tenantAdmin', 'Tenant Admin');
+      await assignRole(app, testUserId, tenantAdminRoleId, { tenantId: otherTenant.tenantId });
 
       // Try to access original SKU with other tenant/shop - should return 404
       const response = await request(app.getHttpServer())
-        .get(`/skus/${skuId}?shop_id=${otherShopId}&tenant_id=${otherTenantId}`)
+        .get(`/skus/${skuId}?shop_id=${otherShop.shopId}&tenant_id=${otherTenant.tenantId}`)
         .set('X-API-Key', testUserApiKey);
 
       expect(response.status).toBe(404); // SKU not found in other tenant
 
       // Cleanup
-      await request(app.getHttpServer())
-        .delete(`/shops/${otherShopId}`)
-        .set('X-API-Key', SYSTEM_ADMIN_KEY);
-      await request(app.getHttpServer())
-        .delete(`/tenants/${otherTenantId}`)
-        .set('X-API-Key', SYSTEM_ADMIN_KEY);
-      await request(app.getHttpServer())
-        .delete(`/users/${otherUserId}`)
-        .set('X-API-Key', SYSTEM_ADMIN_KEY);
+      await cleanupUser(app, otherUser.userId);
     });
   });
 
