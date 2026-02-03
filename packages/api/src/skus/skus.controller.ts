@@ -18,7 +18,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes } from '@nestjs/swagger';
-import type { Response } from 'express';
+import type { Response as ExpressResponse } from 'express';
 import { AuthenticatedRequest, AuthGuard } from '../auth/auth.guard.js';
 import {
   RequireReadAccess,
@@ -65,7 +65,7 @@ export class SkusController {
   async exportJson(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-    @Res() res: Response,
+    @Res() res: ExpressResponse,
   ): Promise<void> {
     const items = await this.skusService.exportForShop(ctx.shopId);
     res.json(items);
@@ -78,7 +78,7 @@ export class SkusController {
   async exportCsv(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-    @Res() res: Response,
+    @Res() res: ExpressResponse,
   ): Promise<void> {
     const items = await this.skusService.exportForShop(ctx.shopId);
     const csvContent = toCsv(items, ['code', 'title']);

@@ -19,7 +19,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes } from '@nestjs/swagger';
-import type { Response } from 'express';
+import type { Response as ExpressResponse } from 'express';
 import { AuthenticatedRequest, AuthGuard } from '../auth/auth.guard.js';
 import {
   RequireReadAccess,
@@ -72,7 +72,7 @@ export class SalesHistoryController {
   async exportJson(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-    @Res() res: Response,
+    @Res() res: ExpressResponse,
     @Query('period_from') periodFrom?: string,
     @Query('period_to') periodTo?: string,
   ): Promise<void> {
@@ -89,7 +89,7 @@ export class SalesHistoryController {
   async exportCsv(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-    @Res() res: Response,
+    @Res() res: ExpressResponse,
     @Query('period_from') periodFrom?: string,
     @Query('period_to') periodTo?: string,
   ): Promise<void> {

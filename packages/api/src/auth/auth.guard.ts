@@ -7,7 +7,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import type { Request } from 'express';
+import type { Request as ExpressRequest } from 'express';
 import { ApiKeysService } from '../api-keys/api-keys.service.js';
 import { ROLE_NAMES } from '../common/constants.js';
 import { TenantsService } from '../tenants/tenants.service.js';
@@ -34,7 +34,7 @@ export interface AuthenticatedUser {
   isSystemAdmin: boolean;
 }
 
-export interface AuthenticatedRequest extends Request {
+export interface AuthenticatedRequest extends ExpressRequest {
   user: AuthenticatedUser;
 }
 
@@ -151,7 +151,7 @@ export class AuthGuard implements CanActivate {
     return true;
   }
 
-  private extractApiKey(request: Request): string | null {
+  private extractApiKey(request: ExpressRequest): string | null {
     const authHeader = request.headers.authorization;
     if (authHeader?.startsWith('Bearer ')) {
       return authHeader.slice(7);
