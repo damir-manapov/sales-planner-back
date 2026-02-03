@@ -1,13 +1,16 @@
 #!/bin/bash
 set -e
 
+# Get the repo root (two levels up from packages/api)
+REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+
 echo "=== Checking gitleaks ==="
 if ! command -v gitleaks &> /dev/null; then
   echo "ERROR: gitleaks is not installed"
   echo "Install from: https://github.com/gitleaks/gitleaks/releases"
   exit 1
 fi
-gitleaks git --verbose
+cd "$REPO_ROOT" && gitleaks git --verbose
 echo "gitleaks: OK"
 
 echo "=== Checking outdated dependencies ==="
