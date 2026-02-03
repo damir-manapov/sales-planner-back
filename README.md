@@ -387,7 +387,7 @@ sales-planner-back/
 | `/sales-history/examples/csv` | GET | Download example CSV file for import (no auth required) |
 | `/sales-history/export/json` | GET | Export sales history as JSON with file download headers (supports period filters) |
 | `/sales-history/export/csv` | GET | Export sales history as CSV with file download headers (supports period filters) |
-| `/sales-history/import` | POST | Import/upsert sales history from JSON file or array (auto-creates missing SKUs) |
+| `/sales-history/import/json` | POST | Import/upsert sales history from JSON file or array (auto-creates missing SKUs) |
 | `/sales-history/import/csv` | POST | Import/upsert sales history from CSV file (auto-creates missing SKUs) |
 | `/sales-history/:id` | GET, PUT, DELETE | Sales history CRUD (requires `shop_id` and `tenant_id` query params) |
 
@@ -524,12 +524,12 @@ curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
 # Import sales history (upserts by sku_code + period, auto-creates missing SKUs)
 # Option 1: Upload a JSON file
 curl -X POST -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/sales-history/import?shop_id=1&tenant_id=1" \
+  "http://localhost:3000/sales-history/import/json?shop_id=1&tenant_id=1" \
   -F 'file=@sales-history.json'
 
 # Option 2: Send JSON directly in body
 curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
-  "http://localhost:3000/sales-history/import?shop_id=1&tenant_id=1" \
+  "http://localhost:3000/sales-history/import/json?shop_id=1&tenant_id=1" \
   -d '[{"sku_code": "SKU-001", "period": "2026-01", "quantity": 100}]'
 
 # Import sales history from CSV
