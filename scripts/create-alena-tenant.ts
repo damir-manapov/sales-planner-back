@@ -76,7 +76,7 @@ async function createAlenaTenant(args: AlenaTenantArgs) {
   const tenantTitle = 'Alena Flowers';
   const shopTitle = 'Цветочный магазин';
 
-  console.log('🌸 Creating Alena\'s tenant...');
+  console.log("🌸 Creating Alena's tenant...");
   console.log(`   Tenant: ${tenantTitle}`);
   console.log(`   Shop: ${shopTitle}`);
   console.log(`   API URL: ${apiUrl}`);
@@ -202,7 +202,7 @@ async function createAlenaTenant(args: AlenaTenantArgs) {
     console.log('');
 
     // Success summary
-    console.log('🎉 Alena\'s tenant created successfully!');
+    console.log("🎉 Alena's tenant created successfully!");
     console.log('');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('📋 Access Details:');
@@ -228,7 +228,7 @@ async function createAlenaTenant(args: AlenaTenantArgs) {
 
     return setup;
   } catch (error) {
-    console.error('❌ Error creating Alena\'s tenant:', error);
+    console.error("❌ Error creating Alena's tenant:", error);
     process.exit(1);
   }
 }

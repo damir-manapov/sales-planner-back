@@ -9,10 +9,14 @@ import {
   Query,
   ParseIntPipe,
   NotFoundException,
+  UseGuards,
+  Req,
 } from '@nestjs/common';
 import { ShopsService, CreateShopDto, Shop } from './shops.service.js';
+import { AuthGuard, AuthenticatedRequest, validateWriteAccess } from '../auth/index.js';
 
 @Controller('shops')
+@UseGuards(AuthGuard)
 export class ShopsController {
   constructor(private readonly shopsService: ShopsService) {}
 
@@ -53,5 +57,21 @@ export class ShopsController {
   @Delete(':id')
   async delete(@Param('id', ParseIntPipe) id: number): Promise<void> {
     await this.shopsService.delete(id);
+  }
+
+  @Delete(':id/data')
+  async deleteData(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<{ skusDeleted: number; salesHistoryDeleted: number }> {
+    const shop = await this.shopsService.findById(id);
+    if (!shop) {
+      throw new NotFoundException(`Shop with id ${id} not found`);
+    }
+
+    // Validate user has write access to this shop
+    validateWriteAccess(req.user, id, shop.tenant_id);
+
+    return this.shopsService.deleteData(id);
   }
 }

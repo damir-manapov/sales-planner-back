@@ -121,6 +121,14 @@ export class SalesHistoryService {
     await this.db.deleteFrom('sales_history').where('id', '=', id).execute();
   }
 
+  async deleteByShopId(shopId: number): Promise<number> {
+    const result = await this.db
+      .deleteFrom('sales_history')
+      .where('shop_id', '=', shopId)
+      .executeTakeFirst();
+    return Number(result.numDeletedRows);
+  }
+
   async upsert(dto: CreateSalesHistoryDto): Promise<SalesHistory> {
     const periodDate = periodToDate(dto.period);
     const result = await this.db

@@ -70,6 +70,14 @@ export class SkusService {
     await this.db.deleteFrom('skus').where('id', '=', id).execute();
   }
 
+  async deleteByShopId(shopId: number): Promise<number> {
+    const result = await this.db
+      .deleteFrom('skus')
+      .where('shop_id', '=', shopId)
+      .executeTakeFirst();
+    return Number(result.numDeletedRows);
+  }
+
   async bulkUpsert(
     items: ImportSkuItem[],
     shopId: number,

@@ -2,13 +2,19 @@ import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/database.service.js';
 import { Shops } from '../database/database.types.js';
 import { Insertable, Selectable } from 'kysely';
+import { SkusService } from '../skus/skus.service.js';
+import { SalesHistoryService } from '../sales-history/sales-history.service.js';
 
 export type Shop = Selectable<Shops>;
 export type CreateShopDto = Insertable<Shops>;
 
 @Injectable()
 export class ShopsService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly skusService: SkusService,
+    private readonly salesHistoryService: SalesHistoryService,
+  ) {}
 
   async findAll(): Promise<Shop[]> {
     return this.db.selectFrom('shops').selectAll().execute();
@@ -37,5 +43,15 @@ export class ShopsService {
 
   async delete(id: number): Promise<void> {
     await this.db.deleteFrom('shops').where('id', '=', id).execute();
+  }
+
+  async deleteData(id: number): Promise<{ skusDeleted: number; salesHistoryDeleted: number }> {
+    // Delete sales history first (references SKUs)
+    const salesHistoryDeleted = await this.salesHistoryService.deleteByShopId(id);
+
+    // Delete SKUs
+    const skusDeleted = await this.skusService.deleteByShopId(id);
+
+    return { skusDeleted, salesHistoryDeleted };
   }
 }
