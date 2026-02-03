@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
+import { Insertable, Selectable } from 'kysely';
 import { DatabaseService } from '../database/database.service.js';
 import { UserShops } from '../database/database.types.js';
-import { Insertable, Selectable } from 'kysely';
 
 export type UserShop = Selectable<UserShops>;
 export type CreateUserShopDto = Insertable<UserShops>;

@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { sql } from 'kysely';
-import { DatabaseService } from '../database/index.js';
 import { ROLE_NAMES } from '../common/constants.js';
+import { DatabaseService } from '../database/index.js';
 
 export interface CreateUserDto {
   email: string;

@@ -1,13 +1,13 @@
-import { Injectable, OnModuleInit, Logger } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { UsersService } from '../users/users.service.js';
+import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
+import { ApiKeysService } from '../api-keys/api-keys.service.js';
+import { ROLE_NAMES } from '../common/constants.js';
+import { CreateMarketplaceDto, MarketplacesService } from '../marketplaces/marketplaces.service.js';
 import { RolesService } from '../roles/roles.service.js';
 import { UserRolesService } from '../user-roles/user-roles.service.js';
-import { ApiKeysService } from '../api-keys/api-keys.service.js';
-import { MarketplacesService, CreateMarketplaceDto } from '../marketplaces/marketplaces.service.js';
-import { ROLE_NAMES } from '../common/constants.js';
+import { UsersService } from '../users/users.service.js';
 
 @Injectable()
 export class BootstrapService implements OnModuleInit {

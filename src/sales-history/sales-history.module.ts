@@ -1,11 +1,11 @@
 import { Module } from '@nestjs/common';
-import { SalesHistoryController } from './sales-history.controller.js';
-import { SalesHistoryExamplesController } from './sales-history-examples.controller.js';
-import { SalesHistoryService } from './sales-history.service.js';
 import { ApiKeysModule } from '../api-keys/api-keys.module.js';
-import { UserRolesModule } from '../user-roles/user-roles.module.js';
-import { TenantsModule } from '../tenants/tenants.module.js';
 import { AuthGuard } from '../auth/auth.guard.js';
+import { TenantsModule } from '../tenants/tenants.module.js';
+import { UserRolesModule } from '../user-roles/user-roles.module.js';
+import { SalesHistoryController } from './sales-history.controller.js';
+import { SalesHistoryService } from './sales-history.service.js';
+import { SalesHistoryExamplesController } from './sales-history-examples.controller.js';
 
 @Module({
   imports: [ApiKeysModule, UserRolesModule, TenantsModule],

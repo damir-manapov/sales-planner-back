@@ -1,21 +1,21 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Delete,
   Body,
-  Param,
-  Query,
-  ParseIntPipe,
-  NotFoundException,
-  UseGuards,
-  Req,
+  Controller,
+  Delete,
   ForbiddenException,
+  Get,
+  NotFoundException,
+  Param,
+  ParseIntPipe,
+  Post,
+  Query,
+  Req,
+  UseGuards,
 } from '@nestjs/common';
-import { UsersService, CreateUserDto, User } from './users.service.js';
-import { AuthGuard, AuthenticatedRequest } from '../auth/auth.guard.js';
 import { hasTenantAccess, validateTenantAdminAccess } from '../auth/access-control.js';
+import { AuthenticatedRequest, AuthGuard } from '../auth/auth.guard.js';
 import { UserRolesService } from '../user-roles/user-roles.service.js';
+import { CreateUserDto, User, UsersService } from './users.service.js';
 
 @Controller('users')
 @UseGuards(AuthGuard)

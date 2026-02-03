@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { CreateSkuSchema, UpdateSkuSchema, ImportSkuItemSchema } from './skus.schema.js';
+import { describe, expect, it } from 'vitest';
+import { CreateSkuSchema, ImportSkuItemSchema, UpdateSkuSchema } from './skus.schema.js';
 
 describe('SKU Schemas', () => {
   describe('CreateSkuSchema', () => {

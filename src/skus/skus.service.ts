@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { DatabaseService } from '../database/index.js';
-import type { CreateSkuDto, UpdateSkuDto, ImportSkuItem } from './skus.schema.js';
+import type { CreateSkuDto, ImportSkuItem, UpdateSkuDto } from './skus.schema.js';
 
 export interface Sku {
   id: number;

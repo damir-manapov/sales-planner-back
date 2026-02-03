@@ -1,5 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { describe, it, expect, beforeEach } from 'vitest';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { AppService } from './app.service.js';
 
 describe('AppService', () => {

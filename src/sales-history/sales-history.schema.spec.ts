@@ -1,9 +1,9 @@
-import { describe, it, expect } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
-  PeriodQuerySchema,
   CreateSalesHistorySchema,
-  UpdateSalesHistorySchema,
   ImportSalesHistoryItemSchema,
+  PeriodQuerySchema,
+  UpdateSalesHistorySchema,
 } from './sales-history.schema.js';
 
 describe('Sales History Schemas', () => {

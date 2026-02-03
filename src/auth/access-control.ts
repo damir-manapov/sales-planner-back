@@ -1,6 +1,6 @@
 import { ForbiddenException } from '@nestjs/common';
-import { AuthenticatedRequest } from './auth.guard.js';
 import { ROLE_NAMES } from '../common/constants.js';
+import { AuthenticatedRequest } from './auth.guard.js';
 
 type User = AuthenticatedRequest['user'];
 

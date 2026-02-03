@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { DatabaseService } from '../database/database.service.js';
-import { Tenants } from '../database/database.types.js';
 import { Insertable, Selectable } from 'kysely';
 import { ROLE_NAMES } from '../common/constants.js';
+import { DatabaseService } from '../database/database.service.js';
+import { Tenants } from '../database/database.types.js';
 
 export type Tenant = Selectable<Tenants>;
 export type CreateTenantDto = Insertable<Tenants>;

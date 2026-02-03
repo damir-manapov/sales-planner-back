@@ -1,18 +1,18 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
   Body,
+  Controller,
+  Delete,
+  Get,
+  NotFoundException,
   Param,
   ParseIntPipe,
-  NotFoundException,
+  Post,
+  Put,
   UseGuards,
 } from '@nestjs/common';
-import { RolesService, CreateRoleDto, Role } from './roles.service.js';
 import { AuthGuard } from '../auth/auth.guard.js';
 import { SystemAdminGuard } from '../auth/system-admin.guard.js';
+import { CreateRoleDto, Role, RolesService } from './roles.service.js';
 
 @Controller('roles')
 @UseGuards(AuthGuard, SystemAdminGuard)

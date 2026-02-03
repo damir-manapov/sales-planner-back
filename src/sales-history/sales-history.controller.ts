@@ -1,44 +1,44 @@
 import {
+  BadRequestException,
+  Body,
   Controller,
+  Delete,
   Get,
+  Header,
+  NotFoundException,
+  Param,
+  ParseIntPipe,
   Post,
   Put,
-  Delete,
-  Body,
-  Param,
   Query,
-  ParseIntPipe,
-  NotFoundException,
-  BadRequestException,
-  UseGuards,
   Req,
-  UseInterceptors,
-  UploadedFile,
-  Header,
   Res,
+  UploadedFile,
+  UseGuards,
+  UseInterceptors,
 } from '@nestjs/common';
-import { Response } from 'express';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiConsumes, ApiBody } from '@nestjs/swagger';
-import { SalesHistoryService, type SalesHistory } from './sales-history.service.js';
-import {
-  PeriodQuerySchema,
-  CreateSalesHistorySchema,
-  UpdateSalesHistorySchema,
-  ImportSalesHistoryItemSchema,
-  type CreateSalesHistoryDto,
-  type UpdateSalesHistoryDto,
-  type ImportSalesHistoryItem,
-} from './sales-history.schema.js';
-import { toCsv, fromCsv } from '../lib/index.js';
-import { ZodValidationPipe, parseAndValidateImport } from '../common/index.js';
-import { AuthGuard, AuthenticatedRequest } from '../auth/auth.guard.js';
+import { ApiBody, ApiConsumes } from '@nestjs/swagger';
+import { Response } from 'express';
+import { AuthenticatedRequest, AuthGuard } from '../auth/auth.guard.js';
 import {
   RequireReadAccess,
   RequireWriteAccess,
   ShopContext,
   type ShopContext as ShopContextType,
 } from '../auth/decorators.js';
+import { parseAndValidateImport, ZodValidationPipe } from '../common/index.js';
+import { fromCsv, toCsv } from '../lib/index.js';
+import {
+  type CreateSalesHistoryDto,
+  CreateSalesHistorySchema,
+  type ImportSalesHistoryItem,
+  ImportSalesHistoryItemSchema,
+  PeriodQuerySchema,
+  type UpdateSalesHistoryDto,
+  UpdateSalesHistorySchema,
+} from './sales-history.schema.js';
+import { type SalesHistory, SalesHistoryService } from './sales-history.service.js';
 
 interface ImportResult {
   created: number;

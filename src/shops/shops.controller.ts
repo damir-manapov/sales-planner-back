@@ -1,25 +1,25 @@
 import {
+  Body,
   Controller,
+  Delete,
+  ForbiddenException,
   Get,
+  NotFoundException,
+  Param,
+  ParseIntPipe,
   Post,
   Put,
-  Delete,
-  Body,
-  Param,
   Query,
-  ParseIntPipe,
-  NotFoundException,
-  UseGuards,
   Req,
-  ForbiddenException,
+  UseGuards,
 } from '@nestjs/common';
-import { ShopsService, CreateShopDto, Shop } from './shops.service.js';
-import { AuthGuard, AuthenticatedRequest } from '../auth/auth.guard.js';
 import {
-  validateWriteAccess,
-  validateTenantAdminAccess,
   hasTenantAccess,
+  validateTenantAdminAccess,
+  validateWriteAccess,
 } from '../auth/access-control.js';
+import { AuthenticatedRequest, AuthGuard } from '../auth/auth.guard.js';
+import { CreateShopDto, Shop, ShopsService } from './shops.service.js';
 
 @Controller('shops')
 @UseGuards(AuthGuard)

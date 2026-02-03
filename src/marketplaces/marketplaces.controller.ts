@@ -1,22 +1,22 @@
 import {
+  Body,
   Controller,
+  Delete,
   Get,
+  NotFoundException,
+  Param,
   Post,
   Put,
-  Delete,
-  Body,
-  Param,
-  NotFoundException,
   UseGuards,
 } from '@nestjs/common';
-import {
-  MarketplacesService,
-  CreateMarketplaceDto,
-  UpdateMarketplaceDto,
-  Marketplace,
-} from './marketplaces.service.js';
 import { AuthGuard } from '../auth/auth.guard.js';
 import { SystemAdminGuard } from '../auth/system-admin.guard.js';
+import {
+  CreateMarketplaceDto,
+  Marketplace,
+  MarketplacesService,
+  UpdateMarketplaceDto,
+} from './marketplaces.service.js';
 
 @Controller('marketplaces')
 @UseGuards(AuthGuard, SystemAdminGuard)

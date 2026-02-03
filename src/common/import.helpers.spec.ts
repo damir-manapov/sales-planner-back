@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
 import { BadRequestException } from '@nestjs/common';
-import { parseImportData, validateArray, parseAndValidateImport } from './import.helpers.js';
+import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
+import { parseAndValidateImport, parseImportData, validateArray } from './import.helpers.js';
 
 describe('import.helpers', () => {
   const TestSchema = z.object({

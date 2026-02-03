@@ -1,11 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { DatabaseService } from '../database/index.js';
 import { sql } from 'kysely';
-import { periodToDate, dateToPeriod, isValidPeriod } from '../lib/index.js';
+import { DatabaseService } from '../database/index.js';
+import { dateToPeriod, isValidPeriod, periodToDate } from '../lib/index.js';
 import type {
   CreateSalesHistoryDto,
-  UpdateSalesHistoryDto,
   ImportSalesHistoryItem,
+  UpdateSalesHistoryDto,
 } from './sales-history.schema.js';
 
 export interface SalesHistory {

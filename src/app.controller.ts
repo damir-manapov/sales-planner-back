@@ -1,7 +1,7 @@
-import { Controller, Get } from '@nestjs/common';
-import { AppService } from './app.service.js';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { Controller, Get } from '@nestjs/common';
+import { AppService } from './app.service.js';
 
 @Controller()
 export class AppController {

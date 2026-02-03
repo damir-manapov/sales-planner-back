@@ -1,7 +1,7 @@
-import { describe, it, expect } from 'vitest';
-import { BadRequestException, type ArgumentMetadata } from '@nestjs/common';
-import { ZodValidationPipe } from './zod-validation.pipe.js';
+import { type ArgumentMetadata, BadRequestException } from '@nestjs/common';
+import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
+import { ZodValidationPipe } from './zod-validation.pipe.js';
 
 describe('ZodValidationPipe', () => {
   const TestSchema = z.object({

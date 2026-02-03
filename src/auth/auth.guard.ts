@@ -1,19 +1,19 @@
 import {
-  Injectable,
+  BadRequestException,
   CanActivate,
   ExecutionContext,
-  UnauthorizedException,
   ForbiddenException,
-  BadRequestException,
+  Injectable,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Request } from 'express';
 import { ApiKeysService } from '../api-keys/api-keys.service.js';
-import { UserRolesService } from '../user-roles/user-roles.service.js';
-import { TenantsService } from '../tenants/tenants.service.js';
-import { ACCESS_LEVEL_KEY, AccessLevel } from './decorators.js';
-import { hasReadAccess, hasWriteAccess } from './access-control.js';
 import { ROLE_NAMES } from '../common/constants.js';
+import { TenantsService } from '../tenants/tenants.service.js';
+import { UserRolesService } from '../user-roles/user-roles.service.js';
+import { hasReadAccess, hasWriteAccess } from './access-control.js';
+import { ACCESS_LEVEL_KEY, AccessLevel } from './decorators.js';
 
 export interface TenantRole {
   tenantId: number;

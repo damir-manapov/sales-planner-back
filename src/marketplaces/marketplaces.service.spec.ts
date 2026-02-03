@@ -1,6 +1,6 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { MarketplacesService } from './marketplaces.service.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DatabaseService } from '../database/index.js';
+import { MarketplacesService } from './marketplaces.service.js';
 
 describe('MarketplacesService', () => {
   let service: MarketplacesService;

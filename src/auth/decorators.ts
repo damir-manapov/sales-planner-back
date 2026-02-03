@@ -1,4 +1,4 @@
-import { SetMetadata, createParamDecorator, ExecutionContext } from '@nestjs/common';
+import { createParamDecorator, ExecutionContext, SetMetadata } from '@nestjs/common';
 import { AuthenticatedRequest } from './auth.guard.js';
 
 export const ACCESS_LEVEL_KEY = 'accessLevel';

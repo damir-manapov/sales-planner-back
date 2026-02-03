@@ -1,18 +1,18 @@
 import {
-  Controller,
-  Get,
-  Post,
-  Put,
-  Delete,
   Body,
+  Controller,
+  Delete,
+  Get,
   Param,
   ParseIntPipe,
+  Post,
+  Put,
   Query,
   UseGuards,
 } from '@nestjs/common';
-import { ApiKeysService } from './api-keys.service';
 import { AuthGuard } from '../auth/auth.guard.js';
 import { SystemAdminGuard } from '../auth/system-admin.guard.js';
+import { ApiKeysService } from './api-keys.service';
 
 @Controller('api-keys')
 @UseGuards(AuthGuard, SystemAdminGuard)

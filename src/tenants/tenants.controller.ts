@@ -1,26 +1,26 @@
 import {
+  Body,
   Controller,
+  Delete,
   Get,
+  NotFoundException,
+  Param,
+  ParseIntPipe,
   Post,
   Put,
-  Delete,
-  Body,
-  Param,
   Query,
-  ParseIntPipe,
-  NotFoundException,
-  UseGuards,
   Req,
+  UseGuards,
 } from '@nestjs/common';
+import { AuthenticatedRequest, AuthGuard } from '../auth/auth.guard.js';
+import { SystemAdminGuard } from '../auth/system-admin.guard.js';
 import {
-  TenantsService,
   CreateTenantDto,
-  Tenant,
   CreateTenantWithShopDto,
+  Tenant,
+  TenantsService,
   TenantWithShopAndApiKey,
 } from './tenants.service.js';
-import { AuthGuard, AuthenticatedRequest } from '../auth/auth.guard.js';
-import { SystemAdminGuard } from '../auth/system-admin.guard.js';
 
 @Controller('tenants')
 @UseGuards(AuthGuard)
