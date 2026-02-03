@@ -68,7 +68,7 @@ export class SkusController {
     @Res() res: ExpressResponse,
   ): Promise<void> {
     const items = await this.skusService.exportForShop(ctx.shopId);
-    res.json(items);
+    (res as unknown as { json: (body: unknown) => void }).json(items);
   }
 
   @Get('export/csv')
@@ -82,7 +82,7 @@ export class SkusController {
   ): Promise<void> {
     const items = await this.skusService.exportForShop(ctx.shopId);
     const csvContent = toCsv(items, ['code', 'title']);
-    res.send(csvContent);
+    (res as unknown as { send: (body: string) => void }).send(csvContent);
   }
 
   @Get(':id')

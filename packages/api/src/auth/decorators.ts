@@ -20,8 +20,9 @@ export interface ShopContext {
 export const ShopContext = createParamDecorator(
   (_data: unknown, ctx: ExecutionContext): ShopContext => {
     const request = ctx.switchToHttp().getRequest<AuthenticatedRequest>();
-    const shopId = Number.parseInt(request.query.shop_id as string, 10);
-    const tenantId = Number.parseInt(request.query.tenant_id as string, 10);
+    const query = request.query as Record<string, string | undefined>;
+    const shopId = Number.parseInt(query.shop_id ?? '', 10);
+    const tenantId = Number.parseInt(query.tenant_id ?? '', 10);
 
     if (Number.isNaN(shopId) || Number.isNaN(tenantId)) {
       throw new Error('shop_id and tenant_id are required as query parameters');

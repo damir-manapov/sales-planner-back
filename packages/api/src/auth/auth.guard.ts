@@ -128,8 +128,9 @@ export class AuthGuard implements CanActivate {
     // Check access level if metadata is set
     const accessLevel = this.reflector.get<AccessLevel>(ACCESS_LEVEL_KEY, context.getHandler());
     if (accessLevel && accessLevel !== AccessLevel.NONE) {
-      const shopId = Number.parseInt(request.query.shop_id as string, 10);
-      const tenantId = Number.parseInt(request.query.tenant_id as string, 10);
+      const query = request.query as Record<string, string | undefined>;
+      const shopId = Number.parseInt(query.shop_id ?? '', 10);
+      const tenantId = Number.parseInt(query.tenant_id ?? '', 10);
 
       if (Number.isNaN(shopId) || Number.isNaN(tenantId)) {
         throw new BadRequestException('shop_id and tenant_id are required');
@@ -152,10 +153,11 @@ export class AuthGuard implements CanActivate {
   }
 
   private extractApiKey(request: ExpressRequest): string | null {
-    const authHeader = request.headers.authorization;
+    const headers = request.headers as Record<string, string | string[] | undefined>;
+    const authHeader = headers.authorization as string | undefined;
     if (authHeader?.startsWith('Bearer ')) {
       return authHeader.slice(7);
     }
-    return (request.headers['x-api-key'] as string | undefined) ?? null;
+    return (headers['x-api-key'] as string | undefined) ?? null;
   }
 }

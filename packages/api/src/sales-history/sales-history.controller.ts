@@ -79,7 +79,7 @@ export class SalesHistoryController {
     // Validate query params
     PeriodQuerySchema.parse({ period_from: periodFrom, period_to: periodTo });
     const items = await this.salesHistoryService.exportForShop(ctx.shopId, periodFrom, periodTo);
-    res.json(items);
+    (res as unknown as { json: (body: unknown) => void }).json(items);
   }
 
   @Get('export/csv')
@@ -97,7 +97,7 @@ export class SalesHistoryController {
     PeriodQuerySchema.parse({ period_from: periodFrom, period_to: periodTo });
     const items = await this.salesHistoryService.exportForShop(ctx.shopId, periodFrom, periodTo);
     const csvContent = toCsv(items, ['sku_code', 'period', 'quantity']);
-    res.send(csvContent);
+    (res as unknown as { send: (body: string) => void }).send(csvContent);
   }
 
   @Get(':id')
