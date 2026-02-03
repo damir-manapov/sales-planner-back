@@ -7,7 +7,6 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import type { Request as ExpressRequest } from 'express';
 import { ApiKeysService } from '../api-keys/api-keys.service.js';
 import { ROLE_NAMES } from '../common/constants.js';
 import { TenantsService } from '../tenants/tenants.service.js';
@@ -34,8 +33,10 @@ export interface AuthenticatedUser {
   isSystemAdmin: boolean;
 }
 
-export interface AuthenticatedRequest extends ExpressRequest {
+export interface AuthenticatedRequest {
   user: AuthenticatedUser;
+  query: Record<string, string | string[] | undefined>;
+  headers: Record<string, string | string[] | undefined>;
 }
 
 @Injectable()
@@ -152,12 +153,11 @@ export class AuthGuard implements CanActivate {
     return true;
   }
 
-  private extractApiKey(request: ExpressRequest): string | null {
-    const headers = request.headers as Record<string, string | string[] | undefined>;
-    const authHeader = headers.authorization as string | undefined;
+  private extractApiKey(request: AuthenticatedRequest): string | null {
+    const authHeader = request.headers.authorization as string | undefined;
     if (authHeader?.startsWith('Bearer ')) {
       return authHeader.slice(7);
     }
-    return (headers['x-api-key'] as string | undefined) ?? null;
+    return (request.headers['x-api-key'] as string | undefined) ?? null;
   }
 }
