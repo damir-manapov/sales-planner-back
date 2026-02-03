@@ -304,12 +304,14 @@ describe('Sales History (e2e)', () => {
 
       // Verify the data was imported using the export endpoint which includes sku_code
       const exportResponse = await request(app.getHttpServer())
-        .get(`/sales-history/export/json?shop_id=${shopId}&tenant_id=${tenantId}&period_from=2025-08&period_to=2025-08`)
+        .get(
+          `/sales-history/export/json?shop_id=${shopId}&tenant_id=${tenantId}&period_from=2025-08&period_to=2025-08`,
+        )
         .set('X-API-Key', testUserApiKey);
 
-      const imported = (exportResponse.body as Array<{ sku_code: string; period: string; quantity: number }>).find(
-        (r) => r.sku_code === skuCode && r.period === '2025-08',
-      );
+      const imported = (
+        exportResponse.body as Array<{ sku_code: string; period: string; quantity: number }>
+      ).find((r) => r.sku_code === skuCode && r.period === '2025-08');
       expect(imported).toBeDefined();
       expect(imported?.quantity).toBe(75);
     });

@@ -407,8 +407,8 @@ describe('SKUs (e2e)', () => {
 
       const lines = response.text.split('\n');
       expect(lines[0]).toBe('code,title');
-      expect(lines.some(line => line.includes(code1))).toBe(true);
-      expect(lines.some(line => line.includes(code2))).toBe(true);
+      expect(lines.some((line) => line.includes(code1))).toBe(true);
+      expect(lines.some((line) => line.includes(code2))).toBe(true);
     });
   });
 
@@ -507,11 +507,7 @@ describe('SKUs (e2e)', () => {
       ownerApiKey = owner.apiKey;
 
       // Create a tenant with this user as owner
-      const tenant = await createTenantWithOwner(
-        app,
-        `Owner Tenant ${Date.now()}`,
-        ownerUserId,
-      );
+      const tenant = await createTenantWithOwner(app, `Owner Tenant ${Date.now()}`, ownerUserId);
       ownerTenantId = tenant.tenantId;
 
       // Create a shop in the owned tenant

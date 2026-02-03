@@ -72,14 +72,18 @@ describe('Me (e2e)', () => {
     expect(response.body.roles.length).toBeGreaterThanOrEqual(1); // Should have at least tenantAdmin role
 
     // Verify tenantAdmin role (assigned by with-shop-and-user endpoint)
-    const tenantAdminRole = response.body.roles.find((r: { role_name: string }) => r.role_name === ROLE_NAMES.TENANT_ADMIN);
+    const tenantAdminRole = response.body.roles.find(
+      (r: { role_name: string }) => r.role_name === ROLE_NAMES.TENANT_ADMIN,
+    );
     expect(tenantAdminRole).toBeTruthy();
     expect(tenantAdminRole).toHaveProperty('tenant_id', tenantId);
     expect(tenantAdminRole.tenant_title).toBeTruthy();
     expect(tenantAdminRole).toHaveProperty('shop_id', null); // Tenant-level role
 
     // Verify derived tenantOwner role
-    const ownerRole = response.body.roles.find((r: { role_name: string }) => r.role_name === ROLE_NAMES.TENANT_OWNER);
+    const ownerRole = response.body.roles.find(
+      (r: { role_name: string }) => r.role_name === ROLE_NAMES.TENANT_OWNER,
+    );
     expect(ownerRole).toBeTruthy();
     expect(ownerRole).toHaveProperty('role_name', ROLE_NAMES.TENANT_OWNER);
     expect(ownerRole).toHaveProperty('tenant_id', tenantId);

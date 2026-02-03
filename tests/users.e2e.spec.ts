@@ -9,7 +9,6 @@ describe('Users (e2e)', () => {
   let app: INestApplication;
   let createdUserId: number;
   let testUserId: number;
-  let tenantId: number;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -30,7 +29,6 @@ describe('Users (e2e)', () => {
       });
 
     testUserId = setupRes.body.user.id;
-    tenantId = setupRes.body.tenant.id;
   });
 
   afterAll(async () => {

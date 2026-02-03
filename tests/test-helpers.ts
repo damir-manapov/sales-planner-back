@@ -1,20 +1,20 @@
 import { type INestApplication } from '@nestjs/common';
 import { Kysely } from 'kysely';
 import request from 'supertest';
-import type { Database } from '../src/db/index.js';
+import type { DB } from '../src/database/database.types.js';
 import { DatabaseService } from '../src/database/database.service.js';
 
 /**
  * System admin key for test authentication
  */
-export const SYSTEM_ADMIN_KEY = process.env.SYSTEM_ADMIN_KEY!;
+export const SYSTEM_ADMIN_KEY = process.env.SYSTEM_ADMIN_KEY ?? '';
 
 /**
  * Test cleanup helpers that directly manipulate the database
  * to avoid foreign key constraint violations during cleanup
  */
 
-export async function getDb(app: INestApplication): Promise<Kysely<Database>> {
+export async function getDb(app: INestApplication): Promise<Kysely<DB>> {
   return app.get(DatabaseService);
 }
 
@@ -55,7 +55,11 @@ export async function cleanupShopsForTenant(
   tenantId: number,
 ): Promise<void> {
   const db = await getDb(app);
-  const shops = await db.selectFrom('shops').select('id').where('tenant_id', '=', tenantId).execute();
+  const shops = await db
+    .selectFrom('shops')
+    .select('id')
+    .where('tenant_id', '=', tenantId)
+    .execute();
 
   for (const shop of shops) {
     await cleanupShop(app, shop.id);
@@ -249,13 +253,10 @@ export async function assignRole(
   roleId: number,
   options?: { tenantId?: number; shopId?: number },
 ): Promise<void> {
-  await request(app.getHttpServer())
-    .post('/user-roles')
-    .set('X-API-Key', SYSTEM_ADMIN_KEY)
-    .send({
-      user_id: userId,
-      role_id: roleId,
-      tenant_id: options?.tenantId,
-      shop_id: options?.shopId,
-    });
+  await request(app.getHttpServer()).post('/user-roles').set('X-API-Key', SYSTEM_ADMIN_KEY).send({
+    user_id: userId,
+    role_id: roleId,
+    tenant_id: options?.tenantId,
+    shop_id: options?.shopId,
+  });
 }

@@ -181,7 +181,6 @@ describe('Shops E2E', () => {
   describe('Cross-tenant access control', () => {
     let otherUserId: number;
     let otherUserApiKey: string;
-    let otherTenantId: number;
 
     beforeAll(async () => {
       // Create another user with their own tenant
@@ -193,12 +192,7 @@ describe('Shops E2E', () => {
       otherUserId = otherUser.userId;
       otherUserApiKey = otherUser.apiKey;
 
-      const otherTenant = await createTenantWithOwner(
-        app,
-        `Other Tenant ${Date.now()}`,
-        otherUserId,
-      );
-      otherTenantId = otherTenant.tenantId;
+      await createTenantWithOwner(app, `Other Tenant ${Date.now()}`, otherUserId);
     });
 
     afterAll(async () => {
