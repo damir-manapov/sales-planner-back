@@ -168,14 +168,14 @@ describe('Sales History (e2e)', () => {
   });
 
   describe('Bulk import', () => {
-    it('POST /sales-history/import - should import multiple records', async () => {
+    it('POST /sales-history/import/json - should import multiple records', async () => {
       const items = [
         { sku_code: skuCode, period: '2025-11', quantity: 80 },
         { sku_code: skuCode, period: '2025-12', quantity: 90 },
       ];
 
       const response = await request(app.getHttpServer())
-        .post(`/sales-history/import?shop_id=${shopId}&tenant_id=${tenantId}`)
+        .post(`/sales-history/import/json?shop_id=${shopId}&tenant_id=${tenantId}`)
         .set('X-API-Key', testUserApiKey)
         .send(items);
 
@@ -185,11 +185,11 @@ describe('Sales History (e2e)', () => {
       expect(response.body.errors).toEqual([]);
     });
 
-    it('POST /sales-history/import - should upsert existing records', async () => {
+    it('POST /sales-history/import/json - should upsert existing records', async () => {
       const items = [{ sku_code: skuCode, period: '2025-11', quantity: 100 }];
 
       const response = await request(app.getHttpServer())
-        .post(`/sales-history/import?shop_id=${shopId}&tenant_id=${tenantId}`)
+        .post(`/sales-history/import/json?shop_id=${shopId}&tenant_id=${tenantId}`)
         .set('X-API-Key', testUserApiKey)
         .send(items);
 
@@ -198,12 +198,12 @@ describe('Sales History (e2e)', () => {
       expect(response.body.updated).toBe(1);
     });
 
-    it('POST /sales-history/import - should auto-create missing SKUs', async () => {
+    it('POST /sales-history/import/json - should auto-create missing SKUs', async () => {
       const newSkuCode = `AUTO-SKU-${Date.now()}`;
       const items = [{ sku_code: newSkuCode, period: '2025-05', quantity: 50 }];
 
       const response = await request(app.getHttpServer())
-        .post(`/sales-history/import?shop_id=${shopId}&tenant_id=${tenantId}`)
+        .post(`/sales-history/import/json?shop_id=${shopId}&tenant_id=${tenantId}`)
         .set('X-API-Key', testUserApiKey)
         .send(items);
 
@@ -232,7 +232,7 @@ describe('Sales History (e2e)', () => {
 
       // Import sales history
       await request(app.getHttpServer())
-        .post(`/sales-history/import?shop_id=${shopId}&tenant_id=${tenantId}`)
+        .post(`/sales-history/import/json?shop_id=${shopId}&tenant_id=${tenantId}`)
         .set('X-API-Key', testUserApiKey)
         .send([{ sku_code: exportSkuCode, period: '2025-07', quantity: 100 }]);
 

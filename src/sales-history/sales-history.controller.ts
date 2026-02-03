@@ -183,7 +183,7 @@ export class SalesHistoryController {
     await this.salesHistoryService.delete(id);
   }
 
-  @Post('import')
+  @Post('import/json')
   @RequireWriteAccess()
   @UseInterceptors(FileInterceptor('file'))
   @ApiConsumes('multipart/form-data', 'application/json')
