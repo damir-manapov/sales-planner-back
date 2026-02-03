@@ -63,7 +63,7 @@ The API implements a hierarchical role-based access control system:
 1. **System admin**: Full access to everything
 2. **Tenant owner**: Full access to all shops in tenants they own (derived from `tenants.owner_id`)
 3. **Tenant admin**: Full access to all shops in their tenant
-4. **Shop-level roles**: 
+4. **Shop-level roles**:
    - `viewer` or `editor`: Read access to the specific shop
    - `editor` only: Write access to the specific shop
 
