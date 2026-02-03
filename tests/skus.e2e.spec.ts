@@ -3,7 +3,15 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module.js';
-import { cleanupUser } from './test-helpers.js';
+import {
+  cleanupUser,
+  createUserWithApiKey,
+  createTenantWithOwner,
+  createShop,
+  getOrCreateRole,
+  assignRole,
+  SYSTEM_ADMIN_KEY,
+} from './test-helpers.js';
 
 describe('SKUs (e2e)', () => {
   let app: INestApplication;
@@ -12,7 +20,6 @@ describe('SKUs (e2e)', () => {
   let skuId: number;
   let testUserId: number;
   let testUserApiKey: string;
-  const SYSTEM_ADMIN_KEY = process.env.SYSTEM_ADMIN_KEY!;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -464,43 +471,18 @@ describe('SKUs (e2e)', () => {
     let viewerApiKey: string;
 
     beforeAll(async () => {
-      // Create a viewer user
-      const userRes = await request(app.getHttpServer())
-        .post('/users')
-        .set('X-API-Key', SYSTEM_ADMIN_KEY)
-        .send({ email: `viewer-${Date.now()}@example.com`, name: 'Viewer User' });
-      viewerUserId = userRes.body.id;
+      // Create a viewer user using helper
+      const viewer = await createUserWithApiKey(
+        app,
+        `viewer-${Date.now()}@example.com`,
+        'Viewer User',
+      );
+      viewerUserId = viewer.userId;
+      viewerApiKey = viewer.apiKey;
 
-      // Create API key for viewer user
-      viewerApiKey = `viewer-key-${Date.now()}`;
-      await request(app.getHttpServer())
-        .post('/api-keys')
-        .set('X-API-Key', SYSTEM_ADMIN_KEY)
-        .send({ user_id: viewerUserId, key: viewerApiKey, name: 'Viewer Key' });
-
-      // Get or create viewer role
-      const rolesRes = await request(app.getHttpServer())
-        .get('/roles')
-        .set('X-API-Key', SYSTEM_ADMIN_KEY);
-      let viewerRoleId = rolesRes.body.find((r: { name: string }) => r.name === 'viewer')?.id;
-      if (!viewerRoleId) {
-        const roleRes = await request(app.getHttpServer())
-          .post('/roles')
-          .set('X-API-Key', SYSTEM_ADMIN_KEY)
-          .send({ name: 'viewer', description: 'Viewer user' });
-        viewerRoleId = roleRes.body.id;
-      }
-
-      // Assign viewer role for the shop
-      await request(app.getHttpServer())
-        .post('/user-roles')
-        .set('X-API-Key', SYSTEM_ADMIN_KEY)
-        .send({
-          user_id: viewerUserId,
-          role_id: viewerRoleId,
-          tenant_id: tenantId,
-          shop_id: shopId,
-        });
+      // Get or create viewer role and assign it
+      const viewerRoleId = await getOrCreateRole(app, 'viewer', 'Viewer user');
+      await assignRole(app, viewerUserId, viewerRoleId, { tenantId, shopId });
     });
 
     afterAll(async () => {
@@ -569,33 +551,26 @@ describe('SKUs (e2e)', () => {
     let ownerShopId: number;
 
     beforeAll(async () => {
-      // Create tenant owner user
-      const userRes = await request(app.getHttpServer())
-        .post('/users')
-        .set('X-API-Key', SYSTEM_ADMIN_KEY)
-        .send({ email: `owner-${Date.now()}@example.com`, name: 'Tenant Owner User' });
-      ownerUserId = userRes.body.id;
+      // Create tenant owner user using helper
+      const owner = await createUserWithApiKey(
+        app,
+        `owner-${Date.now()}@example.com`,
+        'Tenant Owner User',
+      );
+      ownerUserId = owner.userId;
+      ownerApiKey = owner.apiKey;
 
-      // Create API key for owner
-      ownerApiKey = `owner-key-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      await request(app.getHttpServer())
-        .post('/api-keys')
-        .set('X-API-Key', SYSTEM_ADMIN_KEY)
-        .send({ user_id: ownerUserId, key: ownerApiKey, name: 'Owner Key' });
-
-      // Create a tenant with this user as owner (using authentication)
-      const tenantRes = await request(app.getHttpServer())
-        .post('/tenants')
-        .set('X-API-Key', SYSTEM_ADMIN_KEY)
-        .send({ title: `Owner Tenant ${Date.now()}`, owner_id: ownerUserId });
-      ownerTenantId = tenantRes.body.id;
+      // Create a tenant with this user as owner
+      const tenant = await createTenantWithOwner(
+        app,
+        `Owner Tenant ${Date.now()}`,
+        ownerUserId,
+      );
+      ownerTenantId = tenant.tenantId;
 
       // Create a shop in the owned tenant
-      const shopRes = await request(app.getHttpServer())
-        .post('/shops')
-        .set('X-API-Key', SYSTEM_ADMIN_KEY)
-        .send({ title: `Owner Shop ${Date.now()}`, tenant_id: ownerTenantId });
-      ownerShopId = shopRes.body.id;
+      const shop = await createShop(app, `Owner Shop ${Date.now()}`, ownerTenantId);
+      ownerShopId = shop.shopId;
 
       // Note: NO explicit role assignment - owner access is derived from tenants.owner_id
     });

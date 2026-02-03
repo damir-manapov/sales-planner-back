@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module.js';
-import { cleanupUser } from './test-helpers.js';
+import { cleanupUser, SYSTEM_ADMIN_KEY } from './test-helpers.js';
 import { ROLE_NAMES } from '../src/common/constants.js';
 
 describe('Me (e2e)', () => {
@@ -13,7 +13,6 @@ describe('Me (e2e)', () => {
   let tenantId: number;
   let shopId: number;
   let userEmail: string;
-  const SYSTEM_ADMIN_KEY = process.env.SYSTEM_ADMIN_KEY!;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({

@@ -3,7 +3,13 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module.js';
-import { cleanupUser } from './test-helpers.js';
+import {
+  cleanupUser,
+  createUserWithApiKey,
+  getOrCreateRole,
+  assignRole,
+  SYSTEM_ADMIN_KEY,
+} from './test-helpers.js';
 
 describe('Tenants (e2e)', () => {
   let app: INestApplication;
@@ -12,7 +18,6 @@ describe('Tenants (e2e)', () => {
   let systemAdminUserId: number;
   let systemAdminApiKey: string;
   let createdTenantId: number;
-  const SYSTEM_ADMIN_KEY = process.env.SYSTEM_ADMIN_KEY!;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -22,53 +27,27 @@ describe('Tenants (e2e)', () => {
     app = moduleFixture.createNestApplication();
     await app.init();
 
-    // Create test user using system admin key
-    const userRes = await request(app.getHttpServer())
-      .post('/users')
-      .set('X-API-Key', SYSTEM_ADMIN_KEY)
-      .send({ email: `tenant-test-${Date.now()}@example.com`, name: 'Tenant Test User' });
-    testUserId = userRes.body.id;
+    // Create test user with API key
+    const testUser = await createUserWithApiKey(
+      app,
+      `tenant-test-${Date.now()}@example.com`,
+      'Tenant Test User',
+    );
+    testUserId = testUser.userId;
+    testUserApiKey = testUser.apiKey;
 
-    // Create API key for test user
-    testUserApiKey = `test-key-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    await request(app.getHttpServer())
-      .post('/api-keys')
-      .set('X-API-Key', SYSTEM_ADMIN_KEY)
-      .send({ user_id: testUserId, key: testUserApiKey, name: 'Test Key' });
+    // Create system admin user with API key
+    const adminUser = await createUserWithApiKey(
+      app,
+      `admin-test-${Date.now()}@example.com`,
+      'System Admin',
+    );
+    systemAdminUserId = adminUser.userId;
+    systemAdminApiKey = adminUser.apiKey;
 
-    // Create system admin user
-    const adminRes = await request(app.getHttpServer())
-      .post('/users')
-      .set('X-API-Key', SYSTEM_ADMIN_KEY)
-      .send({ email: `admin-test-${Date.now()}@example.com`, name: 'System Admin' });
-    systemAdminUserId = adminRes.body.id;
-
-    // Create API key for system admin
-    systemAdminApiKey = `admin-key-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-    await request(app.getHttpServer())
-      .post('/api-keys')
-      .set('X-API-Key', SYSTEM_ADMIN_KEY)
-      .send({ user_id: systemAdminUserId, key: systemAdminApiKey, name: 'Admin Key' });
-
-    // Get or create systemAdmin role
-    const rolesRes = await request(app.getHttpServer())
-      .get('/roles')
-      .set('X-API-Key', SYSTEM_ADMIN_KEY);
-    let systemAdminRoleId = rolesRes.body.find((r: { name: string }) => r.name === 'systemAdmin')
-      ?.id;
-    if (!systemAdminRoleId) {
-      const roleRes = await request(app.getHttpServer())
-        .post('/roles')
-        .set('X-API-Key', SYSTEM_ADMIN_KEY)
-        .send({ name: 'systemAdmin', description: 'System Administrator' });
-      systemAdminRoleId = roleRes.body.id;
-    }
-
-    // Assign systemAdmin role (no tenant_id, no shop_id = global)
-    await request(app.getHttpServer())
-      .post('/user-roles')
-      .set('X-API-Key', SYSTEM_ADMIN_KEY)
-      .send({ user_id: systemAdminUserId, role_id: systemAdminRoleId });
+    // Get or create systemAdmin role and assign it
+    const systemAdminRoleId = await getOrCreateRole(app, 'systemAdmin', 'System Administrator');
+    await assignRole(app, systemAdminUserId, systemAdminRoleId);
   });
 
   afterAll(async () => {
@@ -215,18 +194,12 @@ describe('Tenants (e2e)', () => {
 
   describe('created_by tracking', () => {
     it('should track different users creating different tenants', async () => {
-      // Create second user
-      const user2Res = await request(app.getHttpServer())
-        .post('/users')
-        .set('X-API-Key', SYSTEM_ADMIN_KEY)
-        .send({ email: `tenant-test2-${Date.now()}@example.com`, name: 'Tenant Test User 2' });
-      const user2Id = user2Res.body.id;
-
-      const user2ApiKey = `test-key2-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-      await request(app.getHttpServer())
-        .post('/api-keys')
-        .set('X-API-Key', SYSTEM_ADMIN_KEY)
-        .send({ user_id: user2Id, key: user2ApiKey, name: 'Test Key 2' });
+      // Create second user using helper
+      const user2 = await createUserWithApiKey(
+        app,
+        `tenant-test2-${Date.now()}@example.com`,
+        'Tenant Test User 2',
+      );
 
       // Create tenant for first user (by system admin)
       const tenant1Res = await request(app.getHttpServer())
@@ -238,23 +211,19 @@ describe('Tenants (e2e)', () => {
       const tenant2Res = await request(app.getHttpServer())
         .post('/tenants')
         .set('X-API-Key', systemAdminApiKey)
-        .send({ title: `Tenant by User 2 ${Date.now()}`, owner_id: user2Id });
+        .send({ title: `Tenant by User 2 ${Date.now()}`, owner_id: user2.userId });
 
       expect(tenant1Res.body.created_by).toBe(systemAdminUserId);
       expect(tenant2Res.body.created_by).toBe(systemAdminUserId);
       expect(tenant1Res.body.owner_id).toBe(testUserId);
-      expect(tenant2Res.body.owner_id).toBe(user2Id);
+      expect(tenant2Res.body.owner_id).toBe(user2.userId);
       expect(tenant1Res.body.owner_id).not.toBe(tenant2Res.body.owner_id);
 
-      // Cleanup
+      // Cleanup using helper
+      await cleanupUser(app, user2.userId);
+      // tenant1 will be cleaned up when testUserId is cleaned in afterAll
       await request(app.getHttpServer())
         .delete(`/tenants/${tenant1Res.body.id}`)
-        .set('X-API-Key', SYSTEM_ADMIN_KEY);
-      await request(app.getHttpServer())
-        .delete(`/tenants/${tenant2Res.body.id}`)
-        .set('X-API-Key', SYSTEM_ADMIN_KEY);
-      await request(app.getHttpServer())
-        .delete(`/users/${user2Id}`)
         .set('X-API-Key', SYSTEM_ADMIN_KEY);
     });
   });
@@ -338,7 +307,9 @@ describe('Tenants (e2e)', () => {
       await request(app.getHttpServer())
         .delete(`/tenants/${response.body.tenant.id}`)
         .set('X-API-Key', systemAdminApiKey);
-      await request(app.getHttpServer()).delete(`/users/${response.body.user.id}`);
+      await request(app.getHttpServer())
+        .delete(`/users/${response.body.user.id}`)
+        .set('X-API-Key', SYSTEM_ADMIN_KEY);
     });
   });
 });

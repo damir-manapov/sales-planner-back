@@ -1,7 +1,13 @@
 import { type INestApplication } from '@nestjs/common';
 import { Kysely } from 'kysely';
+import request from 'supertest';
 import type { Database } from '../src/db/index.js';
 import { DatabaseService } from '../src/database/database.service.js';
+
+/**
+ * System admin key for test authentication
+ */
+export const SYSTEM_ADMIN_KEY = process.env.SYSTEM_ADMIN_KEY!;
 
 /**
  * Test cleanup helpers that directly manipulate the database
@@ -140,4 +146,116 @@ export async function cleanupTestData(
       await cleanupUser(app, userId);
     }
   }
+}
+
+/**
+ * Test setup helpers that use API calls for creating test data
+ */
+
+export interface UserWithApiKey {
+  userId: number;
+  apiKey: string;
+  email: string;
+  name: string;
+}
+
+/**
+ * Create a user with an API key for testing
+ */
+export async function createUserWithApiKey(
+  app: INestApplication,
+  email: string,
+  name: string,
+): Promise<UserWithApiKey> {
+  const userRes = await request(app.getHttpServer())
+    .post('/users')
+    .set('X-API-Key', SYSTEM_ADMIN_KEY)
+    .send({ email, name });
+
+  const userId = userRes.body.id;
+  const apiKey = `test-key-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
+
+  await request(app.getHttpServer())
+    .post('/api-keys')
+    .set('X-API-Key', SYSTEM_ADMIN_KEY)
+    .send({ user_id: userId, key: apiKey, name: `${name} Key` });
+
+  return { userId, apiKey, email, name };
+}
+
+/**
+ * Create a tenant with a specific owner
+ */
+export async function createTenantWithOwner(
+  app: INestApplication,
+  title: string,
+  ownerId: number,
+): Promise<{ tenantId: number; title: string }> {
+  const res = await request(app.getHttpServer())
+    .post('/tenants')
+    .set('X-API-Key', SYSTEM_ADMIN_KEY)
+    .send({ title, owner_id: ownerId });
+
+  return { tenantId: res.body.id, title: res.body.title };
+}
+
+/**
+ * Create a shop in a tenant
+ */
+export async function createShop(
+  app: INestApplication,
+  title: string,
+  tenantId: number,
+): Promise<{ shopId: number; title: string }> {
+  const res = await request(app.getHttpServer())
+    .post('/shops')
+    .set('X-API-Key', SYSTEM_ADMIN_KEY)
+    .send({ title, tenant_id: tenantId });
+
+  return { shopId: res.body.id, title: res.body.title };
+}
+
+/**
+ * Get or create a role by name
+ */
+export async function getOrCreateRole(
+  app: INestApplication,
+  name: string,
+  description: string,
+): Promise<number> {
+  const rolesRes = await request(app.getHttpServer())
+    .get('/roles')
+    .set('X-API-Key', SYSTEM_ADMIN_KEY);
+
+  let roleId = rolesRes.body.find((r: { name: string }) => r.name === name)?.id;
+
+  if (!roleId) {
+    const roleRes = await request(app.getHttpServer())
+      .post('/roles')
+      .set('X-API-Key', SYSTEM_ADMIN_KEY)
+      .send({ name, description });
+    roleId = roleRes.body.id;
+  }
+
+  return roleId;
+}
+
+/**
+ * Assign a role to a user
+ */
+export async function assignRole(
+  app: INestApplication,
+  userId: number,
+  roleId: number,
+  options?: { tenantId?: number; shopId?: number },
+): Promise<void> {
+  await request(app.getHttpServer())
+    .post('/user-roles')
+    .set('X-API-Key', SYSTEM_ADMIN_KEY)
+    .send({
+      user_id: userId,
+      role_id: roleId,
+      tenant_id: options?.tenantId,
+      shop_id: options?.shopId,
+    });
 }

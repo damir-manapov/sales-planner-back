@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module.js';
-import { cleanupUser } from './test-helpers.js';
+import { cleanupUser, SYSTEM_ADMIN_KEY } from './test-helpers.js';
 
 describe('Sales History (e2e)', () => {
   let app: INestApplication;
@@ -14,7 +14,6 @@ describe('Sales History (e2e)', () => {
   let salesHistoryId: number;
   let testUserId: number;
   let testUserApiKey: string;
-  const SYSTEM_ADMIN_KEY = process.env.SYSTEM_ADMIN_KEY!;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
