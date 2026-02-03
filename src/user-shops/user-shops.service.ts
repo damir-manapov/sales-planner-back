@@ -22,6 +22,15 @@ export class UserShopsService {
     return this.db.selectFrom('user_shops').selectAll().where('shop_id', '=', shopId).execute();
   }
 
+  async findByTenantId(tenantId: number): Promise<UserShop[]> {
+    return this.db
+      .selectFrom('user_shops')
+      .selectAll('user_shops')
+      .innerJoin('shops', 'shops.id', 'user_shops.shop_id')
+      .where('shops.tenant_id', '=', tenantId)
+      .execute();
+  }
+
   async findById(id: number): Promise<UserShop | undefined> {
     return this.db.selectFrom('user_shops').selectAll().where('id', '=', id).executeTakeFirst();
   }

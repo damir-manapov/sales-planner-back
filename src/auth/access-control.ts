@@ -14,18 +14,33 @@ function getTenantRoles(user: User, tenantId: number): string[] {
   return tenantRole?.roles || [];
 }
 
-function isTenantAdmin(user: User, tenantId: number): boolean {
+export function isTenantAdmin(user: User, tenantId: number): boolean {
   const tenantRoles = getTenantRoles(user, tenantId);
   return tenantRoles.includes(ROLE_NAMES.TENANT_ADMIN);
 }
 
-function isTenantOwner(user: User, tenantId: number): boolean {
+export function isTenantOwner(user: User, tenantId: number): boolean {
   return user.ownedTenantIds.includes(tenantId);
 }
 
 /** Check if user has tenant-level access (owner or admin) */
-function hasTenantAccess(user: User, tenantId: number): boolean {
+export function hasTenantAccess(user: User, tenantId: number): boolean {
   return isTenantOwner(user, tenantId) || isTenantAdmin(user, tenantId);
+}
+
+/** Check if user is system admin or has tenant access */
+export function hasAdminAccess(user: User, tenantId?: number): boolean {
+  if (user.isSystemAdmin) return true;
+  if (tenantId) return hasTenantAccess(user, tenantId);
+  return false;
+}
+
+/** Validate that user has admin access to the tenant */
+export function validateTenantAdminAccess(user: User, tenantId: number): void {
+  if (user.isSystemAdmin) return;
+  if (!hasTenantAccess(user, tenantId)) {
+    throw new ForbiddenException('Tenant owner or admin access required');
+  }
 }
 
 export function hasReadAccess(user: User, shopId: number, tenantId: number): boolean {

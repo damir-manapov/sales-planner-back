@@ -6,6 +6,11 @@ export {
   hasWriteAccess,
   validateReadAccess,
   validateWriteAccess,
+  hasTenantAccess,
+  hasAdminAccess,
+  validateTenantAdminAccess,
+  isTenantAdmin,
+  isTenantOwner,
 } from './access-control.js';
 export {
   RequireReadAccess,

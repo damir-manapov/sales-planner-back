@@ -8,10 +8,13 @@ import {
   Param,
   ParseIntPipe,
   Query,
+  UseGuards,
 } from '@nestjs/common';
 import { ApiKeysService } from './api-keys.service';
+import { AuthGuard, SystemAdminGuard } from '../auth/index.js';
 
 @Controller('api-keys')
+@UseGuards(AuthGuard, SystemAdminGuard)
 export class ApiKeysController {
   constructor(private readonly apiKeysService: ApiKeysService) {}
 

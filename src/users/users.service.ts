@@ -87,6 +87,17 @@ export class UsersService {
     await this.db.deleteFrom('users').where('id', '=', id).execute();
   }
 
+  async findByTenantId(tenantId: number): Promise<User[]> {
+    // Users who have any role in this tenant (either tenant-level or shop-level)
+    return this.db
+      .selectFrom('users')
+      .selectAll('users')
+      .innerJoin('user_roles', 'user_roles.user_id', 'users.id')
+      .where('user_roles.tenant_id', '=', tenantId)
+      .groupBy('users.id')
+      .execute();
+  }
+
   async getUserWithRolesAndTenants(userId: number): Promise<UserWithRolesAndTenants | null> {
     // Get user
     const user = await this.findById(userId);

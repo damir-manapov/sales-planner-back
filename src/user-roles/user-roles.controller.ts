@@ -8,47 +8,120 @@ import {
   Query,
   ParseIntPipe,
   NotFoundException,
+  UseGuards,
+  Req,
+  ForbiddenException,
 } from '@nestjs/common';
 import { UserRolesService, CreateUserRoleDto, UserRole } from './user-roles.service.js';
+import {
+  AuthGuard,
+  AuthenticatedRequest,
+  hasTenantAccess,
+  validateTenantAdminAccess,
+} from '../auth/index.js';
 
 @Controller('user-roles')
+@UseGuards(AuthGuard)
 export class UserRolesController {
   constructor(private readonly userRolesService: UserRolesService) {}
 
   @Get()
   async findAll(
+    @Req() req: AuthenticatedRequest,
     @Query('userId') userId?: string,
     @Query('roleId') roleId?: string,
     @Query('tenantId') tenantId?: string,
   ): Promise<UserRole[]> {
-    if (tenantId) {
-      return this.userRolesService.findByTenantId(Number(tenantId));
+    // System admins can see all
+    if (req.user.isSystemAdmin) {
+      if (tenantId) {
+        return this.userRolesService.findByTenantId(Number(tenantId));
+      }
+      if (userId) {
+        return this.userRolesService.findByUserId(Number(userId));
+      }
+      if (roleId) {
+        return this.userRolesService.findByRoleId(Number(roleId));
+      }
+      return this.userRolesService.findAll();
     }
+
+    // Tenant admins must specify a tenant
+    if (!tenantId) {
+      throw new ForbiddenException('tenantId query parameter is required');
+    }
+
+    const tid = Number(tenantId);
+    if (!hasTenantAccess(req.user, tid)) {
+      throw new ForbiddenException('Access to this tenant is not allowed');
+    }
+
+    let roles = await this.userRolesService.findByTenantId(tid);
+
+    // Filter by additional params if provided
     if (userId) {
-      return this.userRolesService.findByUserId(Number(userId));
+      roles = roles.filter((r) => r.user_id === Number(userId));
     }
     if (roleId) {
-      return this.userRolesService.findByRoleId(Number(roleId));
+      roles = roles.filter((r) => r.role_id === Number(roleId));
     }
-    return this.userRolesService.findAll();
+
+    return roles;
   }
 
   @Get(':id')
-  async findById(@Param('id', ParseIntPipe) id: number): Promise<UserRole> {
+  async findById(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<UserRole> {
     const userRole = await this.userRolesService.findById(id);
     if (!userRole) {
       throw new NotFoundException(`UserRole with id ${id} not found`);
     }
+
+    // Validate access
+    if (!req.user.isSystemAdmin) {
+      if (!userRole.tenant_id || !hasTenantAccess(req.user, userRole.tenant_id)) {
+        throw new ForbiddenException('Access to this user role is not allowed');
+      }
+    }
+
     return userRole;
   }
 
   @Post()
-  async create(@Body() dto: CreateUserRoleDto): Promise<UserRole> {
+  async create(
+    @Req() req: AuthenticatedRequest,
+    @Body() dto: CreateUserRoleDto,
+  ): Promise<UserRole> {
+    // Validate user can assign roles in this tenant
+    if (!req.user.isSystemAdmin) {
+      if (!dto.tenant_id) {
+        throw new ForbiddenException('tenant_id is required');
+      }
+      validateTenantAdminAccess(req.user, dto.tenant_id);
+    }
+
     return this.userRolesService.create(dto);
   }
 
   @Delete(':id')
-  async delete(@Param('id', ParseIntPipe) id: number): Promise<void> {
+  async delete(
+    @Req() req: AuthenticatedRequest,
+    @Param('id', ParseIntPipe) id: number,
+  ): Promise<void> {
+    const userRole = await this.userRolesService.findById(id);
+    if (!userRole) {
+      throw new NotFoundException(`UserRole with id ${id} not found`);
+    }
+
+    // Validate access
+    if (!req.user.isSystemAdmin) {
+      if (!userRole.tenant_id || !hasTenantAccess(req.user, userRole.tenant_id)) {
+        throw new ForbiddenException('Cannot delete user role from another tenant');
+      }
+    }
+
     await this.userRolesService.delete(id);
   }
 }

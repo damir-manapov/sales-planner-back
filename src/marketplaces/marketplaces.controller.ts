@@ -1,12 +1,24 @@
-import { Controller, Get, Post, Put, Delete, Body, Param, NotFoundException } from '@nestjs/common';
+import {
+  Controller,
+  Get,
+  Post,
+  Put,
+  Delete,
+  Body,
+  Param,
+  NotFoundException,
+  UseGuards,
+} from '@nestjs/common';
 import {
   MarketplacesService,
   CreateMarketplaceDto,
   UpdateMarketplaceDto,
   Marketplace,
 } from './marketplaces.service.js';
+import { AuthGuard, SystemAdminGuard } from '../auth/index.js';
 
 @Controller('marketplaces')
+@UseGuards(AuthGuard, SystemAdminGuard)
 export class MarketplacesController {
   constructor(private readonly marketplacesService: MarketplacesService) {}
 

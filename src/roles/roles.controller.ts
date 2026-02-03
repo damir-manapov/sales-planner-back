@@ -8,10 +8,13 @@ import {
   Param,
   ParseIntPipe,
   NotFoundException,
+  UseGuards,
 } from '@nestjs/common';
 import { RolesService, CreateRoleDto, Role } from './roles.service.js';
+import { AuthGuard, SystemAdminGuard } from '../auth/index.js';
 
 @Controller('roles')
+@UseGuards(AuthGuard, SystemAdminGuard)
 export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
