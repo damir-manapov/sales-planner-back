@@ -1,5 +1,14 @@
 import type {
   ApiKey,
+  Marketplace,
+  Role,
+  SalesHistory,
+  Shop,
+  Sku,
+  Tenant,
+  User,
+} from './entities.js';
+import type {
   CreateApiKeyDto,
   CreateRoleDto,
   CreateSalesHistoryDto,
@@ -9,26 +18,20 @@ import type {
   CreateTenantWithShopDto,
   CreateUserDto,
   CreateUserRoleDto,
-  DeleteDataResult,
-  ImportResult,
   ImportSalesHistoryItem,
   ImportSkuItem,
-  Marketplace,
-  PeriodQuery,
-  Role,
-  SalesHistory,
-  SalesHistoryExportItem,
-  Shop,
-  ShopContextParams,
-  Sku,
-  SkuExportItem,
-  Tenant,
-  TenantWithShopAndApiKey,
   UpdateSalesHistoryDto,
   UpdateSkuDto,
-  User,
+} from './dto.js';
+import type {
+  DeleteDataResult,
+  ImportResult,
+  SalesHistoryExportItem,
+  SkuExportItem,
+  TenantWithShopAndApiKey,
   UserWithRolesAndTenants,
-} from './types.js';
+} from './responses.js';
+import type { PeriodQuery, ShopContextParams } from './query.js';
 
 export interface ClientConfig {
   baseUrl: string;
