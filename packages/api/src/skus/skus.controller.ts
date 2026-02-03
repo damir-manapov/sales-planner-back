@@ -18,7 +18,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes } from '@nestjs/swagger';
-import { Response } from 'express';
+import type { Response } from 'express';
 import { AuthenticatedRequest, AuthGuard } from '../auth/auth.guard.js';
 import {
   RequireReadAccess,

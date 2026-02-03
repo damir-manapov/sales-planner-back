@@ -7,7 +7,7 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { Request } from 'express';
+import type { Request } from 'express';
 import { ApiKeysService } from '../api-keys/api-keys.service.js';
 import { ROLE_NAMES } from '../common/constants.js';
 import { TenantsService } from '../tenants/tenants.service.js';
