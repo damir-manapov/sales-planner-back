@@ -59,13 +59,21 @@ The API implements a hierarchical role-based access control system:
 
 ### Access Control Logic
 
-For protected endpoints (e.g., SKUs):
+**Shop-level resources** (SKUs, Sales History):
 1. **System admin**: Full access to everything
 2. **Tenant owner**: Full access to all shops in tenants they own (derived from `tenants.owner_id`)
 3. **Tenant admin**: Full access to all shops in their tenant
 4. **Shop-level roles**: 
    - `viewer` or `editor`: Read access to the specific shop
    - `editor` only: Write access to the specific shop
+
+**Tenant-level resources** (Shops, Users, User-Roles, User-Shops):
+1. **System admin**: Full access to all tenants
+2. **Tenant owner/admin**: Can manage shops, users, and role assignments within their tenant
+   - Create/update/delete shops in their tenant
+   - View/create/delete users that belong to their tenant
+   - Assign/revoke roles for users within their tenant
+   - Manage user-shop associations within their tenant
 
 ### Authentication
 
