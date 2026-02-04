@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import 'dotenv/config';
-import { SalesPlannerClient } from '@sales-planner/http-client';
+import { createSlug, initAdminClient, printSuccessSummary } from './tenant-setup-helpers.js';
 
 interface CreateTenantArgs {
   tenantTitle: string;
@@ -10,18 +10,10 @@ interface CreateTenantArgs {
 }
 
 async function createTenantWithShopAndUser(args: CreateTenantArgs) {
-  const apiUrl = args.apiUrl || process.env.SALES_PLANNER_API_URL || 'http://localhost:3000';
-  const systemAdminKey = process.env.SYSTEM_ADMIN_KEY;
-
-  if (!systemAdminKey) {
-    console.error('Error: SYSTEM_ADMIN_KEY environment variable is required');
-    process.exit(1);
-  }
-
-  const client = new SalesPlannerClient({ baseUrl: apiUrl, apiKey: systemAdminKey });
+  const { client, apiUrl } = initAdminClient(args.apiUrl);
 
   // Derive user details from tenant title if not provided
-  const tenantSlug = args.tenantTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+  const tenantSlug = createSlug(args.tenantTitle);
   const userEmail = args.userEmail || `admin@${tenantSlug}.com`;
   const userName = args.userName || `${args.tenantTitle} Admin`;
 
@@ -37,16 +29,7 @@ async function createTenantWithShopAndUser(args: CreateTenantArgs) {
       userName,
     });
 
-    console.log('✅ Tenant created successfully!');
-    console.log('');
-    console.log('Tenant:', result.tenant);
-    console.log('Shop:', result.shop);
-    console.log('User:', result.user);
-    console.log('');
-    console.log('🔑 API Key:', result.apiKey);
-    console.log('');
-    console.log('Save this API key - it will not be shown again!');
-
+    printSuccessSummary(result);
     return result;
   } catch (error) {
     console.error('Error creating tenant:', error);

@@ -49,9 +49,3 @@ export function parseCsvImport<T extends Record<string, string>>(
 
   return fromCsv<T>(csvContent, requiredColumns);
 }
-
-export interface ImportResult {
-  created: number;
-  updated: number;
-  errors: string[];
-}

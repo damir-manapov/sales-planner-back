@@ -32,6 +32,7 @@ import {
   sendJsonExport,
   ZodValidationPipe,
 } from '../common/index.js';
+import type { ImportResult } from '@sales-planner/shared';
 import { fromCsv, normalizeId } from '../lib/index.js';
 import {
   type CreateSalesHistoryRequest,
@@ -43,14 +44,6 @@ import {
   UpdateSalesHistorySchema,
 } from './sales-history.schema.js';
 import { type SalesHistory, SalesHistoryService } from './sales-history.service.js';
-
-interface ImportResult {
-  created: number;
-  updated: number;
-  skus_created: number;
-  marketplaces_created: number;
-  errors: string[];
-}
 
 @Controller('sales-history')
 @UseGuards(AuthGuard)

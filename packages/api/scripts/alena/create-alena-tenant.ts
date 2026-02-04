@@ -3,16 +3,10 @@ import 'dotenv/config';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { SalesPlannerClient } from '@sales-planner/http-client';
+import { getOrCreateTenant, initAdminClient, printSuccessSummary } from '../tenant-setup-helpers.js';
 
 interface AlenaTenantArgs {
   apiUrl?: string;
-}
-
-interface TenantSetup {
-  tenant: { id: number; title: string };
-  shop: { id: number; title: string };
-  user: { id: number; email: string; name: string };
-  apiKey: string;
 }
 
 const __dirname = import.meta.dirname;
@@ -20,15 +14,7 @@ const SKUS_CSV = readFileSync(join(__dirname, 'skus.csv'), 'utf-8');
 const SALES_HISTORY_CSV = readFileSync(join(__dirname, 'sales-history.csv'), 'utf-8');
 
 async function createAlenaTenant(args: AlenaTenantArgs) {
-  const apiUrl = args.apiUrl || process.env.SALES_PLANNER_API_URL || 'http://localhost:3000';
-  const systemAdminKey = process.env.SYSTEM_ADMIN_KEY;
-
-  if (!systemAdminKey) {
-    console.error('❌ Error: SYSTEM_ADMIN_KEY environment variable is required');
-    process.exit(1);
-  }
-
-  const adminClient = new SalesPlannerClient({ baseUrl: apiUrl, apiKey: systemAdminKey });
+  const { client: adminClient, apiUrl } = initAdminClient(args.apiUrl);
 
   const tenantTitle = 'Alena Flowers';
   const shopTitle = 'Цветочный магазин';
@@ -42,59 +28,12 @@ async function createAlenaTenant(args: AlenaTenantArgs) {
   console.log('');
 
   try {
-    // Step 1: Check if user already exists
-    console.log('🔍 Step 1: Checking if tenant already exists...');
-    const users = await adminClient.getUsers();
-    const existingUser = users.find((u) => u.email === userEmail);
-
-    let setup: TenantSetup;
-
-    if (existingUser) {
-      console.log(`   ℹ️  User ${userEmail} already exists (ID: ${existingUser.id})`);
-
-      // Get user's API key
-      const apiKeys = await adminClient.getApiKeys(existingUser.id);
-      const firstApiKey = apiKeys[0];
-      if (!firstApiKey) {
-        console.error('❌ User has no API key');
-        process.exit(1);
-      }
-
-      // Get user's tenants via /me
-      const userClient = new SalesPlannerClient({ baseUrl: apiUrl, apiKey: firstApiKey.key });
-      const me = await userClient.getMe();
-
-      const existingTenant = me.tenants.find((t) => t.title === tenantTitle);
-      const existingShop = existingTenant?.shops[0];
-      if (!existingTenant || !existingShop) {
-        console.error('❌ User exists but tenant/shop not found');
-        process.exit(1);
-      }
-
-      setup = {
-        tenant: { id: existingTenant.id, title: existingTenant.title },
-        shop: { id: existingShop.id, title: existingShop.title },
-        user: { id: existingUser.id, email: existingUser.email, name: existingUser.name },
-        apiKey: firstApiKey.key,
-      };
-
-      console.log(`   ✅ Tenant exists: ${setup.tenant.title} (ID: ${setup.tenant.id})`);
-      console.log(`   ✅ Shop exists: ${setup.shop.title} (ID: ${setup.shop.id})`);
-      console.log('');
-    } else {
-      // Create new tenant, shop, and user
-      console.log('   📦 Creating new tenant, shop, and admin user...');
-      setup = await adminClient.createTenantWithShopAndUser({
-        tenantTitle,
-        shopTitle,
-        userEmail,
-        userName,
-      });
-      console.log(`   ✅ Tenant created: ${setup.tenant.title} (ID: ${setup.tenant.id})`);
-      console.log(`   ✅ Shop created: ${setup.shop.title} (ID: ${setup.shop.id})`);
-      console.log(`   ✅ Admin user created: ${setup.user.name} (${setup.user.email})`);
-      console.log('');
-    }
+    // Step 1: Get or create tenant
+    const setup = await getOrCreateTenant(
+      adminClient,
+      { tenantTitle, shopTitle, userEmail, userName },
+      apiUrl,
+    );
 
     // Create client with user's API key for data operations
     const userClient = new SalesPlannerClient({ baseUrl: apiUrl, apiKey: setup.apiKey });
@@ -122,29 +61,11 @@ async function createAlenaTenant(args: AlenaTenantArgs) {
     console.log('');
 
     // Success summary
-    console.log("🎉 Alena's tenant setup complete!");
-    console.log('');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('📋 Access Details:');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('');
-    console.log(`  Tenant:    ${setup.tenant.title} (ID: ${setup.tenant.id})`);
-    console.log(`  Shop:      ${setup.shop.title} (ID: ${setup.shop.id})`);
-    console.log(`  Admin:     ${setup.user.name}`);
-    console.log(`  Email:     ${setup.user.email}`);
-    console.log('');
-    console.log(`  🔑 API Key: ${setup.apiKey}`);
-    console.log('');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('🌸 Shop Data:');
-    console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-    console.log('');
-    console.log(`  • ${skusResult.created} products (flowers and gifts)`);
-    console.log(`  • ${salesResult.created} sales history records across 3 periods`);
-    console.log(`  • Periods: 2025-11, 2025-12, 2026-01`);
-    console.log('');
-    console.log('💡 Save the API key - it will not be shown again!');
-    console.log('');
+    printSuccessSummary(setup, [
+      `${skusResult.created} products (flowers and gifts)`,
+      `${salesResult.created} sales history records across 3 periods`,
+      'Periods: 2025-11, 2025-12, 2026-01',
+    ]);
 
     return setup;
   } catch (error) {
