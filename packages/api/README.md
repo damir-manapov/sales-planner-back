@@ -220,8 +220,8 @@ To run e2e tests against a local PostgreSQL database:
 # 1. Start local PostgreSQL
 pnpm compose:up
 
-# 2. Run migrations
-pnpm db:migrate
+# 2. Run migrations on local DB
+pnpm db:migrate:local
 
 # 3. Run e2e tests with local DB
 pnpm test:e2e:local
