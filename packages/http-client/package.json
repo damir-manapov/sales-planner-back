@@ -1,0 +1,31 @@
+{
+  "name": "@sales-planner/http-client",
+  "version": "0.1.0",
+  "description": "HTTP client for Sales Planner API",
+  "author": "Damir Manapov",
+  "license": "MIT",
+  "keywords": ["sales-planner", "api-client", "http-client", "typescript"],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@sales-planner/shared": "^0.2.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.3"
+  }
+}
