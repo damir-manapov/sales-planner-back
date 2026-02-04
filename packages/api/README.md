@@ -204,12 +204,30 @@ pnpm start:prod
 ## Testing
 
 ```bash
-pnpm test           # Run unit tests
-pnpm test:watch     # Run unit tests in watch mode
-pnpm test:cov       # Run unit tests with coverage
-pnpm test:e2e       # Run e2e tests
-pnpm test:e2e:watch # Run e2e tests in watch mode
+pnpm test             # Run unit tests
+pnpm test:watch       # Run unit tests in watch mode
+pnpm test:cov         # Run unit tests with coverage
+pnpm test:e2e         # Run e2e tests (uses Neon DB from .env.local)
+pnpm test:e2e:local   # Run e2e tests with local PostgreSQL (docker-compose)
+pnpm test:e2e:watch   # Run e2e tests in watch mode
 ```
+
+### Local E2E Testing with Docker
+
+To run e2e tests against a local PostgreSQL database:
+
+```bash
+# 1. Start local PostgreSQL
+pnpm compose:up
+
+# 2. Run migrations
+pnpm db:migrate
+
+# 3. Run e2e tests with local DB
+pnpm test:e2e:local
+```
+
+The local setup uses `.env.test.local` with `DATABASE_URL=postgresql://postgres:postgres@localhost:5432/sales_planner`.
 
 ## Scripts
 
