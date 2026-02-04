@@ -1,0 +1,28 @@
+[
+  { "sku_code": "FLOWER-001", "period": "2026-01", "quantity": 45 },
+  { "sku_code": "FLOWER-002", "period": "2026-01", "quantity": 28 },
+  { "sku_code": "FLOWER-003", "period": "2026-01", "quantity": 35 },
+  { "sku_code": "FLOWER-004", "period": "2026-01", "quantity": 20 },
+  { "sku_code": "FLOWER-005", "period": "2026-01", "quantity": 15 },
+  { "sku_code": "GIFT-001", "period": "2026-01", "quantity": 12 },
+  { "sku_code": "GIFT-002", "period": "2026-01", "quantity": 25 },
+
+  { "sku_code": "FLOWER-001", "period": "2025-12", "quantity": 85 },
+  { "sku_code": "FLOWER-002", "period": "2025-12", "quantity": 60 },
+  { "sku_code": "FLOWER-003", "period": "2025-12", "quantity": 50 },
+  { "sku_code": "FLOWER-004", "period": "2025-12", "quantity": 40 },
+  { "sku_code": "FLOWER-005", "period": "2025-12", "quantity": 35 },
+  { "sku_code": "FLOWER-008", "period": "2025-12", "quantity": 20 },
+  { "sku_code": "GIFT-001", "period": "2025-12", "quantity": 30 },
+  { "sku_code": "GIFT-002", "period": "2025-12", "quantity": 55 },
+  { "sku_code": "GIFT-003", "period": "2025-12", "quantity": 100 },
+  { "sku_code": "GIFT-004", "period": "2025-12", "quantity": 45 },
+
+  { "sku_code": "FLOWER-001", "period": "2025-11", "quantity": 38 },
+  { "sku_code": "FLOWER-002", "period": "2025-11", "quantity": 22 },
+  { "sku_code": "FLOWER-003", "period": "2025-11", "quantity": 25 },
+  { "sku_code": "FLOWER-004", "period": "2025-11", "quantity": 18 },
+  { "sku_code": "FLOWER-005", "period": "2025-11", "quantity": 12 },
+  { "sku_code": "GIFT-001", "period": "2025-11", "quantity": 8 },
+  { "sku_code": "GIFT-002", "period": "2025-11", "quantity": 15 }
+]

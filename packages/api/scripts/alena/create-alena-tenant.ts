@@ -1,6 +1,9 @@
 #!/usr/bin/env bun
 import 'dotenv/config';
 import { SalesPlannerClient } from '@sales-planner/http-client';
+import type { ImportSalesHistoryItem, ImportSkuItem } from '@sales-planner/shared';
+import skusData from './skus.json';
+import salesHistoryData from './sales-history.json';
 
 interface AlenaTenantArgs {
   apiUrl?: string;
@@ -13,57 +16,8 @@ interface TenantSetup {
   apiKey: string;
 }
 
-const ALENA_SKUS = [
-  // Flowers
-  { code: 'FLOWER-001', title: 'Розы красные (букет 11 шт)' },
-  { code: 'FLOWER-002', title: 'Розы белые (букет 11 шт)' },
-  { code: 'FLOWER-003', title: 'Тюльпаны микс (букет 15 шт)' },
-  { code: 'FLOWER-004', title: 'Хризантемы кустовые' },
-  { code: 'FLOWER-005', title: 'Лилии (букет 5 шт)' },
-  { code: 'FLOWER-006', title: 'Герберы (букет 9 шт)' },
-  { code: 'FLOWER-007', title: 'Орхидея в горшке' },
-  { code: 'FLOWER-008', title: 'Пионы (букет 7 шт)' },
-  { code: 'FLOWER-009', title: 'Гортензия (букет 3 шт)' },
-  { code: 'FLOWER-010', title: 'Альстромерия микс' },
-  // Gifts
-  { code: 'GIFT-001', title: 'Плюшевый мишка 40см' },
-  { code: 'GIFT-002', title: 'Коробка конфет Ferrero Rocher' },
-  { code: 'GIFT-003', title: 'Открытка с поздравлением' },
-  { code: 'GIFT-004', title: 'Воздушные шары (набор)' },
-  { code: 'GIFT-005', title: 'Подарочная корзина' },
-];
-
-const ALENA_SALES_DATA = [
-  // Current period (2026-01)
-  { sku_code: 'FLOWER-001', period: '2026-01', quantity: 45 },
-  { sku_code: 'FLOWER-002', period: '2026-01', quantity: 28 },
-  { sku_code: 'FLOWER-003', period: '2026-01', quantity: 35 },
-  { sku_code: 'FLOWER-004', period: '2026-01', quantity: 20 },
-  { sku_code: 'FLOWER-005', period: '2026-01', quantity: 15 },
-  { sku_code: 'GIFT-001', period: '2026-01', quantity: 12 },
-  { sku_code: 'GIFT-002', period: '2026-01', quantity: 25 },
-
-  // Previous period (2025-12) - holiday season
-  { sku_code: 'FLOWER-001', period: '2025-12', quantity: 85 },
-  { sku_code: 'FLOWER-002', period: '2025-12', quantity: 60 },
-  { sku_code: 'FLOWER-003', period: '2025-12', quantity: 50 },
-  { sku_code: 'FLOWER-004', period: '2025-12', quantity: 40 },
-  { sku_code: 'FLOWER-005', period: '2025-12', quantity: 35 },
-  { sku_code: 'FLOWER-008', period: '2025-12', quantity: 20 },
-  { sku_code: 'GIFT-001', period: '2025-12', quantity: 30 },
-  { sku_code: 'GIFT-002', period: '2025-12', quantity: 55 },
-  { sku_code: 'GIFT-003', period: '2025-12', quantity: 100 },
-  { sku_code: 'GIFT-004', period: '2025-12', quantity: 45 },
-
-  // Two periods ago (2025-11)
-  { sku_code: 'FLOWER-001', period: '2025-11', quantity: 38 },
-  { sku_code: 'FLOWER-002', period: '2025-11', quantity: 22 },
-  { sku_code: 'FLOWER-003', period: '2025-11', quantity: 25 },
-  { sku_code: 'FLOWER-004', period: '2025-11', quantity: 18 },
-  { sku_code: 'FLOWER-005', period: '2025-11', quantity: 12 },
-  { sku_code: 'GIFT-001', period: '2025-11', quantity: 8 },
-  { sku_code: 'GIFT-002', period: '2025-11', quantity: 15 },
-];
+const ALENA_SKUS: ImportSkuItem[] = skusData;
+const ALENA_SALES_DATA: ImportSalesHistoryItem[] = salesHistoryData;
 
 async function createAlenaTenant(args: AlenaTenantArgs) {
   const apiUrl = args.apiUrl || process.env.SALES_PLANNER_API_URL || 'http://localhost:3000';
