@@ -1,5 +1,15 @@
 # @sales-planner/shared
 
+## 0.2.0
+
+### Minor Changes
+
+- Add CSV import/export methods for SKUs and Sales History
+- Add example endpoint methods (`getSkusExampleJson`, `getSalesHistoryExampleCsv`, etc.)
+- Add `updateRole` method
+- Add marketplace CRUD methods (`createMarketplace`, `updateMarketplace`, `deleteMarketplace`)
+- Add `CreateMarketplaceDto` type
+
 ## 0.1.0
 
 ### Minor Changes
