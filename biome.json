@@ -1,5 +1,5 @@
 {
-  "$schema": "https://biomejs.dev/schemas/2.3.13/schema.json",
+  "$schema": "https://biomejs.dev/schemas/2.3.14/schema.json",
   "linter": {
     "enabled": true,
     "rules": {
@@ -34,6 +34,6 @@
     }
   },
   "files": {
-    "includes": ["src/**/*.ts", "tests/**/*.ts", "scripts/**/*.ts", "*.config.ts"]
+    "includes": ["packages/**/*.ts", "scripts/**/*.sh"]
   }
 }

@@ -239,7 +239,9 @@ export class SalesPlannerClient {
     return this.request('POST', '/tenants', { body: dto });
   }
 
-  async createTenantWithShopAndUser(dto: CreateTenantWithShopDto): Promise<TenantWithShopAndApiKey> {
+  async createTenantWithShopAndUser(
+    dto: CreateTenantWithShopDto,
+  ): Promise<TenantWithShopAndApiKey> {
     return this.request('POST', '/tenants/with-shop-and-user', { body: dto });
   }
 
@@ -291,7 +293,10 @@ export class SalesPlannerClient {
     return this.request('GET', `/skus/${id}`, { params: ctx });
   }
 
-  async createSku(dto: Omit<CreateSkuDto, 'shop_id' | 'tenant_id'>, ctx: ShopContextParams): Promise<Sku> {
+  async createSku(
+    dto: Omit<CreateSkuDto, 'shop_id' | 'tenant_id'>,
+    ctx: ShopContextParams,
+  ): Promise<Sku> {
     return this.request('POST', '/skus', { body: dto, params: ctx });
   }
 

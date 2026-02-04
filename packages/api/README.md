@@ -275,13 +275,17 @@ The local setup uses `.env.test.local` with `DATABASE_URL=postgresql://postgres:
 | `pnpm db:generate` | Generate Kysely types |
 | `pnpm script:create-tenant` | Create new tenant with shop and user (interactive script) |
 
-### Check scripts
+### Check scripts (project root)
 
 | Script | Description |
 |--------|-------------|
-| `./check.sh` | Format, lint, typecheck, and run unit tests |
-| `./health.sh` | Check gitleaks, outdated deps, and vulnerabilities |
-| `./all-checks.sh` | Run both check.sh and health.sh |
+| `./scripts/check.sh` | Format, lint, build, and run unit tests |
+| `./scripts/health.sh` | Check gitleaks, outdated deps, and vulnerabilities |
+| `./scripts/all-checks.sh` | Run both check.sh and health.sh |
+
+Or use root `package.json` commands:
+- `pnpm check` - runs `./scripts/check.sh`
+- `pnpm all-checks` - runs `./scripts/all-checks.sh`
 
 ### Automation Scripts
 

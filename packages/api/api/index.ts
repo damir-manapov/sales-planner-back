@@ -15,9 +15,9 @@ export default async function handler(req: express.Request, res: express.Respons
     app.enableCors();
 
     // Read version from package.json
-    const packageJson = JSON.parse(
-      readFileSync(join(process.cwd(), 'package.json'), 'utf-8'),
-    ) as { version: string };
+    const packageJson = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8')) as {
+      version: string;
+    };
 
     // Swagger setup
     const config = new DocumentBuilder()
@@ -34,9 +34,7 @@ export default async function handler(req: express.Request, res: express.Respons
       customCss: '.swagger-ui .topbar { display: none }',
       customfavIcon: 'https://nestjs.com/favicon.ico',
       customSiteTitle: 'Sales Planner API',
-      customCssUrl: [
-        'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.11.0/swagger-ui.css',
-      ],
+      customCssUrl: ['https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.11.0/swagger-ui.css'],
       customJs: [
         'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.11.0/swagger-ui-bundle.js',
         'https://cdn.jsdelivr.net/npm/swagger-ui-dist@5.11.0/swagger-ui-standalone-preset.js',

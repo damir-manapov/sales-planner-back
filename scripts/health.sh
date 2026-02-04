@@ -1,8 +1,8 @@
 #!/bin/bash
 set -e
 
-# Get the repo root (two levels up from packages/api)
-REPO_ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 
 echo "=== Checking gitleaks ==="
 if ! command -v gitleaks &> /dev/null; then
@@ -14,6 +14,7 @@ cd "$REPO_ROOT" && gitleaks git --verbose
 echo "gitleaks: OK"
 
 echo "=== Checking outdated dependencies ==="
+cd "$REPO_ROOT"
 OUTDATED=$(pnpm outdated --format json 2>&1 | grep -v "WARN" || true)
 if [ -n "$OUTDATED" ] && [ "$OUTDATED" != "{}" ] && [ "$OUTDATED" != "[]" ]; then
   echo "ERROR: Outdated dependencies found:"
