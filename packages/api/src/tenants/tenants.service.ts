@@ -1,19 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import type { Insertable } from 'kysely';
 import type { Tenant } from '@sales-planner/shared';
 import { ROLE_NAMES } from '../common/constants.js';
 import { DatabaseService } from '../database/database.service.js';
-import type { Tenants } from '../database/database.types.js';
+import type { CreateTenantDto, CreateTenantWithShopDto, UpdateTenantDto } from './tenants.schema.js';
 
 export type { Tenant };
-export type CreateTenantDto = Insertable<Tenants>;
-
-export interface CreateTenantWithShopDto {
-  tenantTitle: string;
-  shopTitle?: string;
-  userEmail: string;
-  userName: string;
-}
+export type { CreateTenantDto, CreateTenantWithShopDto, UpdateTenantDto };
 
 export interface TenantWithShopAndApiKey {
   tenant: Tenant;

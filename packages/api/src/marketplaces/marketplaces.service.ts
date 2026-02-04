@@ -1,17 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import type { Marketplace } from '@sales-planner/shared';
 import { DatabaseService } from '../database/index.js';
+import type { CreateMarketplaceDto, UpdateMarketplaceDto } from './marketplaces.schema.js';
 
 export type { Marketplace };
-
-export interface CreateMarketplaceDto {
-  id: string;
-  title: string;
-}
-
-export interface UpdateMarketplaceDto {
-  title?: string;
-}
+export type { CreateMarketplaceDto, UpdateMarketplaceDto };
 
 @Injectable()
 export class MarketplacesService {

@@ -3,14 +3,10 @@ import { sql } from 'kysely';
 import type { User } from '@sales-planner/shared';
 import { ROLE_NAMES } from '../common/constants.js';
 import { DatabaseService } from '../database/index.js';
+import type { CreateUserDto, UpdateUserDto } from './users.schema.js';
 
 export type { User };
-
-export interface CreateUserDto {
-  email: string;
-  name: string;
-  default_shop_id?: number;
-}
+export type { CreateUserDto, UpdateUserDto };
 
 export interface UserRole {
   id: number;

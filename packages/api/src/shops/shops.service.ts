@@ -1,13 +1,12 @@
 import { Injectable } from '@nestjs/common';
-import type { Insertable } from 'kysely';
 import type { Shop } from '@sales-planner/shared';
 import { DatabaseService } from '../database/database.service.js';
-import type { Shops } from '../database/database.types.js';
 import { SalesHistoryService } from '../sales-history/sales-history.service.js';
 import { SkusService } from '../skus/skus.service.js';
+import type { CreateShopDto, UpdateShopDto } from './shops.schema.js';
 
 export type { Shop };
-export type CreateShopDto = Insertable<Shops>;
+export type { CreateShopDto, UpdateShopDto };
 
 @Injectable()
 export class ShopsService {
