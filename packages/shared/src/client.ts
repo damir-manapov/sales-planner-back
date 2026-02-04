@@ -10,6 +10,7 @@ import type {
 } from './entities.js';
 import type {
   CreateApiKeyDto,
+  CreateMarketplaceDto,
   CreateRoleDto,
   CreateSalesHistoryDto,
   CreateShopDto,
@@ -81,6 +82,71 @@ export class SalesPlannerClient {
 
     if (response.status === 204) {
       return undefined as T;
+    }
+
+    return response.json();
+  }
+
+  private async requestText(
+    method: string,
+    path: string,
+    options?: {
+      params?: Record<string, string | number | undefined>;
+    },
+  ): Promise<string> {
+    const url = new URL(this.baseUrl + path);
+
+    if (options?.params) {
+      for (const [key, value] of Object.entries(options.params)) {
+        if (value !== undefined) {
+          url.searchParams.set(key, String(value));
+        }
+      }
+    }
+
+    const response = await fetch(url.toString(), {
+      method,
+      headers: {
+        'X-API-Key': this.apiKey,
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: response.statusText }));
+      throw new ApiError(response.status, error.message || 'Request failed');
+    }
+
+    return response.text();
+  }
+
+  private async uploadCsv<T>(
+    path: string,
+    csvContent: string,
+    params: Record<string, string | number | undefined>,
+  ): Promise<T> {
+    const url = new URL(this.baseUrl + path);
+
+    for (const [key, value] of Object.entries(params)) {
+      if (value !== undefined) {
+        url.searchParams.set(key, String(value));
+      }
+    }
+
+    const formData = new FormData();
+    const blob = new Blob([csvContent], { type: 'text/csv' });
+    formData.append('file', blob, 'upload.csv');
+
+    const response = await fetch(url.toString(), {
+      method: 'POST',
+      headers: {
+        'X-API-Key': this.apiKey,
+      },
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: response.statusText }));
+      throw new ApiError(response.status, error.message || 'Request failed');
     }
 
     return response.json();
@@ -198,8 +264,16 @@ export class SalesPlannerClient {
     return this.request('POST', '/skus/import/json', { body: items, params: ctx });
   }
 
+  async importSkusCsv(csvContent: string, ctx: ShopContextParams): Promise<ImportResult> {
+    return this.uploadCsv('/skus/import/csv', csvContent, ctx);
+  }
+
   async exportSkusJson(ctx: ShopContextParams): Promise<SkuExportItem[]> {
     return this.request('GET', '/skus/export/json', { params: ctx });
+  }
+
+  async exportSkusCsv(ctx: ShopContextParams): Promise<string> {
+    return this.requestText('GET', '/skus/export/csv', { params: ctx });
   }
 
   // ============================================================
@@ -240,11 +314,19 @@ export class SalesPlannerClient {
     return this.request('POST', '/sales-history/import/json', { body: items, params: ctx });
   }
 
+  async importSalesHistoryCsv(csvContent: string, ctx: ShopContextParams): Promise<ImportResult> {
+    return this.uploadCsv('/sales-history/import/csv', csvContent, ctx);
+  }
+
   async exportSalesHistoryJson(
     ctx: ShopContextParams,
     query?: PeriodQuery,
   ): Promise<SalesHistoryExportItem[]> {
     return this.request('GET', '/sales-history/export/json', { params: { ...ctx, ...query } });
+  }
+
+  async exportSalesHistoryCsv(ctx: ShopContextParams, query?: PeriodQuery): Promise<string> {
+    return this.requestText('GET', '/sales-history/export/csv', { params: { ...ctx, ...query } });
   }
 
   // ============================================================
@@ -261,6 +343,10 @@ export class SalesPlannerClient {
 
   async createRole(dto: CreateRoleDto): Promise<Role> {
     return this.request('POST', '/roles', { body: dto });
+  }
+
+  async updateRole(id: number, dto: Partial<CreateRoleDto>): Promise<Role> {
+    return this.request('PUT', `/roles/${id}`, { body: dto });
   }
 
   async deleteRole(id: number): Promise<void> {
@@ -305,6 +391,18 @@ export class SalesPlannerClient {
 
   async getMarketplace(id: string): Promise<Marketplace> {
     return this.request('GET', `/marketplaces/${id}`);
+  }
+
+  async createMarketplace(dto: CreateMarketplaceDto): Promise<Marketplace> {
+    return this.request('POST', '/marketplaces', { body: dto });
+  }
+
+  async updateMarketplace(id: string, dto: Partial<CreateMarketplaceDto>): Promise<Marketplace> {
+    return this.request('PUT', `/marketplaces/${id}`, { body: dto });
+  }
+
+  async deleteMarketplace(id: string): Promise<void> {
+    return this.request('DELETE', `/marketplaces/${id}`);
   }
 }
 

@@ -78,3 +78,8 @@ export interface CreateUserRoleDto {
   tenant_id?: number;
   shop_id?: number;
 }
+
+export interface CreateMarketplaceDto {
+  id: string;
+  title: string;
+}
