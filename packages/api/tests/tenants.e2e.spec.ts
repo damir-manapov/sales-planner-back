@@ -38,10 +38,9 @@ describe('Tenants (e2e)', () => {
       name: 'Tenant Test User',
     });
     testUserId = testUser.id;
-    const testUserKey = `test-key-${Date.now()}`;
-    await systemClient.createApiKey({ user_id: testUserId, key: testUserKey, name: 'Test Key' });
+    const testUserApiKey = await systemClient.createApiKey({ user_id: testUserId, name: 'Test Key' });
 
-    userClient = new SalesPlannerClient({ baseUrl, apiKey: testUserKey });
+    userClient = new SalesPlannerClient({ baseUrl, apiKey: testUserApiKey.key });
 
     // Create system admin user
     const adminUser = await systemClient.createUser({
@@ -49,10 +48,8 @@ describe('Tenants (e2e)', () => {
       name: 'System Admin',
     });
     systemAdminUserId = adminUser.id;
-    const adminKey = `admin-key-${Date.now()}`;
-    await systemClient.createApiKey({
+    const adminApiKey = await systemClient.createApiKey({
       user_id: systemAdminUserId,
-      key: adminKey,
       name: 'Admin Key',
     });
 
@@ -64,7 +61,7 @@ describe('Tenants (e2e)', () => {
     }
 
     // Create adminClient that uses the created admin's API key
-    adminClient = new SalesPlannerClient({ baseUrl, apiKey: adminKey });
+    adminClient = new SalesPlannerClient({ baseUrl, apiKey: adminApiKey.key });
   });
 
   afterAll(async () => {

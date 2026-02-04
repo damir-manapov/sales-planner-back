@@ -117,10 +117,8 @@ describe('Shops E2E', () => {
         name: 'Tenant Admin User',
       });
       tenantAdminUserId = adminUser.id;
-      const adminKey = `admin-key-${Date.now()}`;
-      await systemClient.createApiKey({
+      const adminApiKey = await systemClient.createApiKey({
         user_id: tenantAdminUserId,
-        key: adminKey,
         name: 'Admin Key',
       });
 
@@ -135,7 +133,7 @@ describe('Shops E2E', () => {
         });
       }
 
-      tenantAdminClient = new SalesPlannerClient({ baseUrl, apiKey: adminKey });
+      tenantAdminClient = new SalesPlannerClient({ baseUrl, apiKey: adminApiKey.key });
     });
 
     afterAll(async () => {

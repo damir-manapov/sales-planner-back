@@ -328,14 +328,12 @@ describe('SKUs (e2e)', () => {
         name: 'Viewer User',
       });
       viewerUserId = viewerUser.id;
-      const viewerKey = `viewer-key-${Date.now()}`;
-      await systemClient.createApiKey({
+      const viewerApiKey = await systemClient.createApiKey({
         user_id: viewerUserId,
-        key: viewerKey,
         name: 'Viewer Key',
       });
 
-      viewerClient = new SalesPlannerClient({ baseUrl, apiKey: viewerKey });
+      viewerClient = new SalesPlannerClient({ baseUrl, apiKey: viewerApiKey.key });
 
       // Assign viewer role
       const roles = await systemClient.getRoles();
