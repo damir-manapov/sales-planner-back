@@ -9,7 +9,10 @@
     "lint": "pnpm -r lint",
     "typecheck": "pnpm -r typecheck",
     "check": "cd packages/api && ./check.sh",
-    "all-checks": "cd packages/api && ./all-checks.sh"
+    "all-checks": "cd packages/api && ./all-checks.sh",
+    "changeset": "changeset",
+    "version": "changeset version",
+    "release": "pnpm build && changeset publish"
   },
   "engines": {
     "node": ">=20.0.0"
@@ -28,5 +31,8 @@
       "@swc/core",
       "esbuild"
     ]
+  },
+  "devDependencies": {
+    "@changesets/cli": "^2.29.8"
   }
 }
