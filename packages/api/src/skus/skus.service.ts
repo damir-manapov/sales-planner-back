@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { Sku, SkuExportItem } from '@sales-planner/shared';
 import { DatabaseService } from '../database/index.js';
+import { normalizeSkuCode } from '../lib/index.js';
 import type { CreateSkuDto, ImportSkuItem, UpdateSkuDto } from './skus.schema.js';
 
 export type { Sku };
@@ -89,7 +90,13 @@ export class SkusService {
         errors.push(`Invalid item "${identifier}": code and title are required`);
         return;
       }
-      validItems.push(item);
+
+      // Normalize the SKU code
+      const normalizedCode = normalizeSkuCode(item.code);
+      validItems.push({
+        ...item,
+        code: normalizedCode,
+      });
     });
 
     if (validItems.length === 0) {
@@ -151,7 +158,8 @@ export class SkusService {
       return { codeToId: new Map(), created: 0 };
     }
 
-    const uniqueCodes = [...new Set(codes)];
+    const normalizedCodes = codes.map((code) => normalizeSkuCode(code));
+    const uniqueCodes = [...new Set(normalizedCodes)];
 
     let skus = await this.db
       .selectFrom('skus')

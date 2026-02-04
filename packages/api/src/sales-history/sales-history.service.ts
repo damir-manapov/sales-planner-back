@@ -4,7 +4,13 @@ import { sql } from 'kysely';
 import type { SalesHistory, SalesHistoryExportItem } from '@sales-planner/shared';
 import type { SalesHistory as SalesHistoryTable } from '../database/database.types.js';
 import { DatabaseService } from '../database/index.js';
-import { dateToPeriod, isValidPeriod, periodToDate } from '../lib/index.js';
+import {
+  dateToPeriod,
+  isValidPeriod,
+  periodToDate,
+  normalizeCode,
+  normalizeSkuCode,
+} from '../lib/index.js';
 import { MarketplacesService } from '../marketplaces/marketplaces.service.js';
 import { SkusService } from '../skus/skus.service.js';
 import type {
@@ -197,25 +203,26 @@ export class SalesHistoryService {
     }
 
     // Find or create SKUs by code
-    const skuCodes = validatedItems.map((i) => i.sku_code);
+    const skuCodes = validatedItems.map((i) => normalizeSkuCode(i.sku_code));
     const { codeToId: skuCodeToId, created: skusCreated } =
       await this.skusService.findOrCreateByCode(skuCodes, shopId, tenantId);
 
     // Ensure all marketplaces exist (auto-creates missing ones)
-    const marketplaceIds = validatedItems.map((i) => i.marketplace);
+    const marketplaceIds = validatedItems.map((i) => normalizeCode(i.marketplace));
     const marketplacesCreated = await this.marketplacesService.ensureExist(marketplaceIds);
 
     // Map items to include sku_id
     const validItems: PreparedSalesHistoryItem[] = [];
 
     validatedItems.forEach((item) => {
-      const skuId = skuCodeToId.get(item.sku_code);
+      const normalizedSkuCode = normalizeSkuCode(item.sku_code);
+      const skuId = skuCodeToId.get(normalizedSkuCode);
       if (skuId) {
         validItems.push({
           ...item,
           sku_id: skuId,
           periodDate: periodToDate(item.period),
-          marketplace_id: item.marketplace,
+          marketplace_id: normalizeCode(item.marketplace),
         });
       }
     });

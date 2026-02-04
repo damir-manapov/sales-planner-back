@@ -4,6 +4,7 @@ import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module.js';
 import { SalesPlannerClient, ApiError } from '@sales-planner/http-client';
 import { cleanupUser, SYSTEM_ADMIN_KEY } from './test-helpers.js';
+import { normalizeCode, normalizeSkuCode } from '../src/lib/normalize-code.js';
 
 describe('Sales History (e2e)', () => {
   let app: INestApplication;
@@ -189,6 +190,7 @@ describe('Sales History (e2e)', () => {
 
     it('POST /sales-history/import/json - should auto-create missing SKUs', async () => {
       const newSkuCode = `AUTO-SKU-${Date.now()}`;
+      const normalizedSkuCode = normalizeSkuCode(newSkuCode);
 
       const result = await client.importSalesHistoryJson(
         [{ sku_code: newSkuCode, period: '2025-05', quantity: 50, marketplace: 'WB' }],
@@ -201,13 +203,14 @@ describe('Sales History (e2e)', () => {
 
       // Verify SKU was actually created
       const skus = await client.getSkus(ctx());
-      const createdSku = skus.find((s) => s.code === newSkuCode);
+      const createdSku = skus.find((s) => s.code === normalizedSkuCode);
       expect(createdSku).toBeDefined();
-      expect(createdSku?.title).toBe(newSkuCode); // Title defaults to code
+      expect(createdSku?.title).toBe(normalizedSkuCode); // Title defaults to code
     });
 
     it('POST /sales-history/import/json - should auto-create missing marketplaces', async () => {
       const uniqueMarketplace = `MP-${Date.now()}`;
+      const normalizedMarketplace = normalizeCode(uniqueMarketplace);
 
       const result = await client.importSalesHistoryJson(
         [{ sku_code: skuCode, period: '2025-06', quantity: 30, marketplace: uniqueMarketplace }],
@@ -220,14 +223,15 @@ describe('Sales History (e2e)', () => {
 
       // Verify marketplace was actually created
       const marketplaces = await client.getMarketplaces();
-      const createdMp = marketplaces.find((m) => m.id === uniqueMarketplace);
+      const createdMp = marketplaces.find((m) => m.id === normalizedMarketplace);
       expect(createdMp).toBeDefined();
-      expect(createdMp?.title).toBe(uniqueMarketplace); // Title defaults to id
+      expect(createdMp?.title).toBe(normalizedMarketplace); // Title defaults to id
     });
 
     it('GET /sales-history/export/json - should export sales history in import format', async () => {
       // Create SKU and sales history data
       const exportSkuCode = `EXPORT-SH-${Date.now()}`;
+      const normalizedExportSkuCode = normalizeSkuCode(exportSkuCode);
       await client.importSkusJson([{ code: exportSkuCode, title: 'Export Test SKU' }], ctx());
 
       // Import sales history
@@ -241,13 +245,15 @@ describe('Sales History (e2e)', () => {
 
       expect(Array.isArray(exported)).toBe(true);
 
-      const item = exported.find((r) => r.sku_code === exportSkuCode && r.period === '2025-07');
+      const item = exported.find(
+        (r) => r.sku_code === normalizedExportSkuCode && r.period === '2025-07',
+      );
       expect(item).toBeDefined();
       expect(item).toEqual({
-        sku_code: exportSkuCode,
+        sku_code: normalizedExportSkuCode,
         period: '2025-07',
         quantity: 100,
-        marketplace: 'OZON',
+        marketplace: normalizeCode('OZON'),
       });
     });
 
@@ -277,6 +283,7 @@ describe('Sales History (e2e)', () => {
 
     it('POST /sales-history/import/csv - should import sales history from CSV', async () => {
       const skuCode = `CSV-IMPORT-${Date.now()}`;
+      const normalizedSkuCode = normalizeSkuCode(skuCode);
       const csvContent = `sku_code,period,quantity,marketplace\n${skuCode},2025-08,75,WB`;
 
       const result = await client.importSalesHistoryCsv(csvContent, ctx());
@@ -292,10 +299,12 @@ describe('Sales History (e2e)', () => {
         period_to: '2025-08',
       });
 
-      const imported = exported.find((r) => r.sku_code === skuCode && r.period === '2025-08');
+      const imported = exported.find(
+        (r) => r.sku_code === normalizedSkuCode && r.period === '2025-08',
+      );
       expect(imported).toBeDefined();
       expect(imported?.quantity).toBe(75);
-      expect(imported?.marketplace).toBe('WB');
+      expect(imported?.marketplace).toBe(normalizeCode('WB'));
     });
   });
 

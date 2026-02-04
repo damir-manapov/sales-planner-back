@@ -4,6 +4,7 @@ import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module.js';
 import { SalesPlannerClient, ApiError } from '@sales-planner/http-client';
 import { cleanupUser, SYSTEM_ADMIN_KEY } from './test-helpers.js';
+import { normalizeSkuCode } from '../src/lib/normalize-code.js';
 
 describe('SKUs (e2e)', () => {
   let app: INestApplication;
@@ -228,8 +229,8 @@ describe('SKUs (e2e)', () => {
 
       const skus = await client.getSkus(ctx());
       const codes = skus.map((s) => s.code);
-      expect(codes).toContain(code1);
-      expect(codes).toContain(code2);
+      expect(codes).toContain(normalizeSkuCode(code1));
+      expect(codes).toContain(normalizeSkuCode(code2));
     });
 
     it('importSkusJson - should upsert existing SKUs', async () => {
@@ -254,8 +255,8 @@ describe('SKUs (e2e)', () => {
 
       const skus = await client.getSkus(ctx());
       const codes = skus.map((s) => s.code);
-      expect(codes).toContain(code1);
-      expect(codes).toContain(code2);
+      expect(codes).toContain(normalizeSkuCode(code1));
+      expect(codes).toContain(normalizeSkuCode(code2));
     });
 
     it('exportSkusJson - should export SKUs in import format', async () => {
@@ -274,11 +275,11 @@ describe('SKUs (e2e)', () => {
 
       expect(Array.isArray(exported)).toBe(true);
       const exportedCodes = exported.map((s) => s.code);
-      expect(exportedCodes).toContain(code1);
-      expect(exportedCodes).toContain(code2);
+      expect(exportedCodes).toContain(normalizeSkuCode(code1));
+      expect(exportedCodes).toContain(normalizeSkuCode(code2));
 
-      const item = exported.find((s) => s.code === code1);
-      expect(item).toEqual({ code: code1, title: 'Export Test SKU 1' });
+      const item = exported.find((s) => s.code === normalizeSkuCode(code1));
+      expect(item).toEqual({ code: normalizeSkuCode(code1), title: 'Export Test SKU 1' });
     });
 
     it('exportSkusCsv - should export SKUs in CSV format', async () => {
@@ -298,8 +299,8 @@ describe('SKUs (e2e)', () => {
       expect(typeof csv).toBe('string');
       const lines = csv.split('\n');
       expect(lines[0]).toBe('code,title');
-      expect(lines.some((line) => line.includes(code1))).toBe(true);
-      expect(lines.some((line) => line.includes(code2))).toBe(true);
+      expect(lines.some((line) => line.includes(normalizeSkuCode(code1)))).toBe(true);
+      expect(lines.some((line) => line.includes(normalizeSkuCode(code2)))).toBe(true);
     });
   });
 
