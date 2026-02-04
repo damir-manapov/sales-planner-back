@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { Shop } from '@sales-planner/shared';
+import type { DeleteDataResult, Shop } from '@sales-planner/shared';
 import { DatabaseService } from '../database/database.service.js';
 import { SalesHistoryService } from '../sales-history/sales-history.service.js';
 import { SkusService } from '../skus/skus.service.js';
@@ -45,7 +45,7 @@ export class ShopsService {
     await this.db.deleteFrom('shops').where('id', '=', id).execute();
   }
 
-  async deleteData(id: number): Promise<{ skusDeleted: number; salesHistoryDeleted: number }> {
+  async deleteData(id: number): Promise<DeleteDataResult> {
     // Delete sales history first (references SKUs)
     const salesHistoryDeleted = await this.salesHistoryService.deleteByShopId(id);
 

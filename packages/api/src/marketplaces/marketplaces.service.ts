@@ -44,4 +44,40 @@ export class MarketplacesService {
   async delete(id: string): Promise<void> {
     await this.db.deleteFrom('marketplaces').where('id', '=', id).execute();
   }
+
+  /**
+   * Ensures all given marketplace IDs exist, auto-creating missing ones.
+   * Returns the count of newly created marketplaces.
+   */
+  async ensureExist(ids: string[]): Promise<number> {
+    if (ids.length === 0) {
+      return 0;
+    }
+
+    const uniqueIds = [...new Set(ids)];
+
+    const existing = await this.db
+      .selectFrom('marketplaces')
+      .select('id')
+      .where('id', 'in', uniqueIds)
+      .execute();
+
+    const existingIds = new Set(existing.map((m) => m.id));
+    const missingIds = uniqueIds.filter((id) => !existingIds.has(id));
+
+    if (missingIds.length > 0) {
+      await this.db
+        .insertInto('marketplaces')
+        .values(
+          missingIds.map((id) => ({
+            id,
+            title: id,
+            updated_at: new Date(),
+          })),
+        )
+        .execute();
+    }
+
+    return missingIds.length;
+  }
 }

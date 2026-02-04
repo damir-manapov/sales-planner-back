@@ -23,13 +23,14 @@ Swagger UI provides:
 - **Roles** - Role-based access control (viewer, editor, tenantAdmin, systemAdmin)
 - **User-Roles** - Assign roles to users (per shop or per tenant)
 - **API Keys** - API keys with optional expiration, linked to users
-- **Marketplaces** - Marketplace management (string IDs)
+- **Marketplaces** - Marketplace management (string IDs, read access for all users, write access for system admins only)
 - **SKUs** - SKU management linked to shops (unique code per shop)
   - Import/Export: JSON and CSV file upload support
   - Proper file download headers for exports
-- **Sales History** - Monthly sales data per SKU (shop-level entity)
-  - Import/Export: JSON and CSV file upload support
-  - Auto-creates missing SKUs during import
+- **Sales History** - Monthly sales data per SKU (shop-level entity with marketplace)
+  - Import/Export: JSON and CSV file upload support with marketplace column
+  - Auto-creates missing SKUs and marketplaces during import
+  - Marketplace field is required
   - Proper file download headers for exports
 - **Me** - Get current user data with roles and tenants
 - **Bootstrap** - Auto-creates systemAdmin user and seeds default roles on startup

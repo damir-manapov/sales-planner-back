@@ -1,7 +1,8 @@
 import { Controller, Get, Header } from '@nestjs/common';
+import type { SkuExportItem } from '@sales-planner/shared';
 import { toCsv } from '../lib/index.js';
 
-const EXAMPLE_SKUS = [
+const EXAMPLE_SKUS: SkuExportItem[] = [
   { code: 'SKU-001', title: 'Product 1' },
   { code: 'SKU-002', title: 'Product 2' },
   { code: 'SKU-003', title: 'Product 3' },
@@ -12,7 +13,7 @@ export class SkusExamplesController {
   @Get('json')
   @Header('Content-Type', 'application/json')
   @Header('Content-Disposition', 'attachment; filename="skus-example.json"')
-  getJsonExample(): { code: string; title: string }[] {
+  getJsonExample(): SkuExportItem[] {
     return EXAMPLE_SKUS;
   }
 

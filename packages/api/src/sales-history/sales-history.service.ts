@@ -1,8 +1,12 @@
 import { Injectable } from '@nestjs/common';
+import type { Selectable } from 'kysely';
 import { sql } from 'kysely';
 import type { SalesHistory, SalesHistoryExportItem } from '@sales-planner/shared';
+import type { SalesHistory as SalesHistoryTable } from '../database/database.types.js';
 import { DatabaseService } from '../database/index.js';
 import { dateToPeriod, isValidPeriod, periodToDate } from '../lib/index.js';
+import { MarketplacesService } from '../marketplaces/marketplaces.service.js';
+import { SkusService } from '../skus/skus.service.js';
 import type {
   CreateSalesHistoryDto,
   ImportSalesHistoryItem,
@@ -10,6 +14,8 @@ import type {
 } from './sales-history.schema.js';
 
 export type { SalesHistory };
+
+type SalesHistoryRow = Selectable<SalesHistoryTable>;
 
 interface PreparedSalesHistoryItem extends ImportSalesHistoryItem {
   sku_id: number;
@@ -19,19 +25,13 @@ interface PreparedSalesHistoryItem extends ImportSalesHistoryItem {
 
 @Injectable()
 export class SalesHistoryService {
-  constructor(private readonly db: DatabaseService) {}
+  constructor(
+    private readonly db: DatabaseService,
+    private readonly skusService: SkusService,
+    private readonly marketplacesService: MarketplacesService,
+  ) {}
 
-  private mapRow(row: {
-    id: number;
-    shop_id: number;
-    tenant_id: number;
-    sku_id: number;
-    period: Date;
-    quantity: number;
-    marketplace_id: string | null;
-    created_at: Date;
-    updated_at: Date;
-  }): SalesHistory {
+  private mapRow(row: SalesHistoryRow): SalesHistory {
     return {
       ...row,
       period: dateToPeriod(row.period),
@@ -139,10 +139,11 @@ export class SalesHistoryService {
         sku_id: dto.sku_id,
         period: periodDate,
         quantity: dto.quantity,
+        marketplace_id: dto.marketplace_id,
         updated_at: new Date(),
       })
       .onConflict((oc) =>
-        oc.columns(['shop_id', 'sku_id', 'period']).doUpdateSet({
+        oc.columns(['shop_id', 'sku_id', 'period', 'marketplace_id']).doUpdateSet({
           quantity: dto.quantity,
           updated_at: new Date(),
         }),
@@ -195,63 +196,14 @@ export class SalesHistoryService {
       return { created: 0, updated: 0, skus_created: 0, marketplaces_created: 0, errors };
     }
 
-    // Resolve SKU codes to IDs
-    const skuCodes = [...new Set(validatedItems.map((i) => i.sku_code))];
-    let skus = await this.db
-      .selectFrom('skus')
-      .select(['id', 'code'])
-      .where('shop_id', '=', shopId)
-      .where('code', 'in', skuCodes)
-      .execute();
+    // Find or create SKUs by code
+    const skuCodes = validatedItems.map((i) => i.sku_code);
+    const { codeToId: skuCodeToId, created: skusCreated } =
+      await this.skusService.findOrCreateByCode(skuCodes, shopId, tenantId);
 
-    // Auto-create missing SKUs
-    const existingCodes = new Set(skus.map((s) => s.code));
-    const missingCodes = skuCodes.filter((code) => !existingCodes.has(code));
-
-    if (missingCodes.length > 0) {
-      const newSkus = await this.db
-        .insertInto('skus')
-        .values(
-          missingCodes.map((code) => ({
-            code,
-            title: code, // Use code as title for auto-created SKUs
-            shop_id: shopId,
-            tenant_id: tenantId,
-            updated_at: new Date(),
-          })),
-        )
-        .returning(['id', 'code'])
-        .execute();
-
-      skus = [...skus, ...newSkus];
-    }
-
-    const skusCreated = missingCodes.length;
-    const skuCodeToId = new Map(skus.map((s) => [s.code, s.id]));
-
-    // Auto-create missing marketplaces
-    const marketplaceIds = [...new Set(validatedItems.map((i) => i.marketplace))];
-    const existingMarketplaces = await this.db
-      .selectFrom('marketplaces')
-      .select('id')
-      .where('id', 'in', marketplaceIds)
-      .execute();
-
-    const existingMarketplaceIds = new Set(existingMarketplaces.map((m) => m.id));
-    const missingMarketplaceIds = marketplaceIds.filter((id) => !existingMarketplaceIds.has(id));
-
-    if (missingMarketplaceIds.length > 0) {
-      await this.db
-        .insertInto('marketplaces')
-        .values(
-          missingMarketplaceIds.map((id) => ({
-            id,
-            title: id, // Use id as title for auto-created marketplaces
-            updated_at: new Date(),
-          })),
-        )
-        .execute();
-    }
+    // Ensure all marketplaces exist (auto-creates missing ones)
+    const marketplaceIds = validatedItems.map((i) => i.marketplace);
+    const marketplacesCreated = await this.marketplacesService.ensureExist(marketplaceIds);
 
     // Map items to include sku_id
     const validItems: PreparedSalesHistoryItem[] = [];
@@ -267,8 +219,6 @@ export class SalesHistoryService {
         });
       }
     });
-
-    const marketplacesCreated = missingMarketplaceIds.length;
 
     if (validItems.length === 0) {
       return {
@@ -370,7 +320,7 @@ export class SalesHistoryService {
       sku_code: r.sku_code,
       period: r.period,
       quantity: r.quantity,
-      marketplace: r.marketplace_id || '',
+      marketplace: r.marketplace_id,
     }));
   }
 }

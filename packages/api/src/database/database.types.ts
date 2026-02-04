@@ -10,18 +10,6 @@ export type Generated<T> =
     ? ColumnType<S, I | undefined, U>
     : ColumnType<T, T | undefined, T>;
 
-export type Json = JsonValue;
-
-export type JsonArray = JsonValue[];
-
-export type JsonObject = {
-  [x: string]: JsonValue | undefined;
-};
-
-export type JsonPrimitive = boolean | number | string | null;
-
-export type JsonValue = JsonArray | JsonObject | JsonPrimitive;
-
 export type Timestamp = ColumnType<Date, Date | string, Date | string>;
 
 export interface ApiKeys {
@@ -42,107 +30,6 @@ export interface Marketplaces {
   updated_at: Generated<Timestamp>;
 }
 
-export interface NeonAuthAccount {
-  accessToken: string | null;
-  accessTokenExpiresAt: Timestamp | null;
-  accountId: string;
-  createdAt: Generated<Timestamp>;
-  id: Generated<string>;
-  idToken: string | null;
-  password: string | null;
-  providerId: string;
-  refreshToken: string | null;
-  refreshTokenExpiresAt: Timestamp | null;
-  scope: string | null;
-  updatedAt: Timestamp;
-  userId: string;
-}
-
-export interface NeonAuthInvitation {
-  createdAt: Generated<Timestamp>;
-  email: string;
-  expiresAt: Timestamp;
-  id: Generated<string>;
-  inviterId: string;
-  organizationId: string;
-  role: string | null;
-  status: string;
-}
-
-export interface NeonAuthJwks {
-  createdAt: Timestamp;
-  expiresAt: Timestamp | null;
-  id: Generated<string>;
-  privateKey: string;
-  publicKey: string;
-}
-
-export interface NeonAuthMember {
-  createdAt: Timestamp;
-  id: Generated<string>;
-  organizationId: string;
-  role: string;
-  userId: string;
-}
-
-export interface NeonAuthOrganization {
-  createdAt: Timestamp;
-  id: Generated<string>;
-  logo: string | null;
-  metadata: string | null;
-  name: string;
-  slug: string;
-}
-
-export interface NeonAuthProjectConfig {
-  allow_localhost: boolean;
-  created_at: Generated<Timestamp>;
-  email_and_password: Json | null;
-  email_provider: Json | null;
-  endpoint_id: string;
-  id: Generated<string>;
-  name: string;
-  social_providers: Json;
-  trusted_origins: Json;
-  updated_at: Generated<Timestamp>;
-}
-
-export interface NeonAuthSession {
-  activeOrganizationId: string | null;
-  createdAt: Generated<Timestamp>;
-  expiresAt: Timestamp;
-  id: Generated<string>;
-  impersonatedBy: string | null;
-  ipAddress: string | null;
-  token: string;
-  updatedAt: Timestamp;
-  userAgent: string | null;
-  userId: string;
-}
-
-export interface NeonAuthUser {
-  banExpires: Timestamp | null;
-  banned: boolean | null;
-  banReason: string | null;
-  createdAt: Generated<Timestamp>;
-  email: string;
-  emailVerified: boolean;
-  id: Generated<string>;
-  image: string | null;
-  name: string;
-  role: string | null;
-  updatedAt: Generated<Timestamp>;
-}
-
-export interface NeonAuthVerification {
-  createdAt: Generated<Timestamp>;
-  expiresAt: Timestamp;
-  id: Generated<string>;
-  identifier: string;
-  updatedAt: Generated<Timestamp>;
-  value: string;
-}
-
 export interface Roles {
   created_at: Generated<Timestamp>;
   description: string | null;
@@ -154,7 +41,7 @@ export interface Roles {
 export interface SalesHistory {
   created_at: Generated<Timestamp>;
   id: Generated<number>;
-  marketplace_id: string | null;
+  marketplace_id: string;
   period: Timestamp;
   quantity: Generated<number>;
   shop_id: number;
@@ -218,15 +105,6 @@ export interface UserShops {
 export interface DB {
   api_keys: ApiKeys;
   marketplaces: Marketplaces;
-  'neon_auth.account': NeonAuthAccount;
-  'neon_auth.invitation': NeonAuthInvitation;
-  'neon_auth.jwks': NeonAuthJwks;
-  'neon_auth.member': NeonAuthMember;
-  'neon_auth.organization': NeonAuthOrganization;
-  'neon_auth.project_config': NeonAuthProjectConfig;
-  'neon_auth.session': NeonAuthSession;
-  'neon_auth.user': NeonAuthUser;
-  'neon_auth.verification': NeonAuthVerification;
   roles: Roles;
   sales_history: SalesHistory;
   shops: Shops;

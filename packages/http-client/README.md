@@ -29,9 +29,9 @@ const shops = await client.getShops();
 // Get SKUs for a shop
 const skus = await client.getSkus({ shop_id: 1, tenant_id: 1 });
 
-// Import sales history
+// Import sales history (marketplace field required)
 const result = await client.importSalesHistoryJson([
-  { sku_code: 'SKU-001', period: '2026-01', quantity: 100 }
+  { sku_code: 'SKU-001', period: '2026-01', quantity: 100, marketplace: 'WB' }
 ], { shop_id: 1, tenant_id: 1 });
 ```
 
@@ -41,38 +41,44 @@ const result = await client.importSalesHistoryJson([
 - `getMe()` - Get current user with roles and tenants
 
 ### Users
-- `getUsers()`, `getUser(id)`, `createUser(dto)`, `deleteUser(id)`
+- `getUsers()`, `getUser(id)` - System admin or tenant admin (filtered by their tenants)
+- `createUser(dto)`, `deleteUser(id)` - Tenant admin or higher
 
 ### Tenants
-- `getTenants()`, `getTenant(id)`, `createTenant(dto)`, `updateTenant(id, dto)`, `deleteTenant(id)`
-- `createTenantWithShopAndUser(dto)` - Create tenant with shop and user in one call
+- `getTenants()`, `getTenant(id)` - All authenticated users
+- `createTenant(dto)` - System admin only
+- `updateTenant(id, dto)`, `deleteTenant(id)` - Authenticated users (validation happens server-side)
+- `createTenantWithShopAndUser(dto)` - System admin only
 
 ### Shops
-- `getShops(tenantId?)`, `getShop(id)`, `createShop(dto)`, `updateShop(id, dto)`, `deleteShop(id)`
+- `getShops(tenantId?)`, `getShop(id)`, `createShop(dto)`, `updateShop(id, dto)`, `deleteShop(id)` - Requires tenant access
 - `deleteShopData(id)` - Delete all data (SKUs, sales history) for a shop
 
 ### SKUs
-- `getSkus(ctx)`, `getSku(id, ctx)`, `createSku(dto, ctx)`, `updateSku(id, dto, ctx)`, `deleteSku(id, ctx)`
-- `importSkusJson(items, ctx)`, `importSkusCsv(csvContent, ctx)`
-- `exportSkusJson(ctx)`, `exportSkusCsv(ctx)`
-- `getSkusExampleJson()`, `getSkusExampleCsv()` - Get import format examples
+- `getSkus(ctx)`, `getSku(id, ctx)` - Requires read access (viewer or higher)
+- `createSku(dto, ctx)`, `updateSku(id, dto, ctx)`, `deleteSku(id, ctx)` - Requires write access (editor or higher)
+- `importSkusJson(items, ctx)`, `importSkusCsv(csvContent, ctx)` - Requires write access
+- `exportSkusJson(ctx)`, `exportSkusCsv(ctx)` - Requires read access
+- `getSkusExampleJson()`, `getSkusExampleCsv()` - Get import format examples (no auth required)
 
 ### Sales History
-- `getSalesHistory(ctx, query?)`, `getSalesHistoryItem(id, ctx)`
-- `createSalesHistory(dto, ctx)`, `updateSalesHistory(id, dto, ctx)`, `deleteSalesHistory(id, ctx)`
-- `importSalesHistoryJson(items, ctx)`, `importSalesHistoryCsv(csvContent, ctx)`
-- `exportSalesHistoryJson(ctx, query?)`, `exportSalesHistoryCsv(ctx, query?)`
-- `getSalesHistoryExampleJson()`, `getSalesHistoryExampleCsv()` - Get import format examples
+- `getSalesHistory(ctx, query?)`, `getSalesHistoryItem(id, ctx)` - Requires read access (viewer or higher)
+- `createSalesHistory(dto, ctx)`, `updateSalesHistory(id, dto, ctx)`, `deleteSalesHistory(id, ctx)` - Requires write access (editor or higher)
+- `importSalesHistoryJson(items, ctx)`, `importSalesHistoryCsv(csvContent, ctx)` - Requires write access
+- `exportSalesHistoryJson(ctx, query?)`, `exportSalesHistoryCsv(ctx, query?)` - Requires read access
+- `getSalesHistoryExampleJson()`, `getSalesHistoryExampleCsv()` - Get import format examples (no auth required)
 
 ### Roles & User Roles
-- `getRoles()`, `getRole(id)`, `createRole(dto)`, `updateRole(id, dto)`, `deleteRole(id)`
-- `createUserRole(dto)`, `deleteUserRole(id)`
+- `getRoles()`, `getRole(id)` - System admin only
+- `createRole(dto)`, `updateRole(id, dto)`, `deleteRole(id)` - System admin only
+- `createUserRole(dto)`, `deleteUserRole(id)` - Tenant admin or higher for their tenant
 
 ### API Keys
-- `getApiKeys()`, `createApiKey(dto)`, `deleteApiKey(id)`
+- `getApiKeys()`, `createApiKey(dto)`, `deleteApiKey(id)` - System admin only
 
 ### Marketplaces
-- `getMarketplaces()`, `getMarketplace(id)`, `createMarketplace(dto)`, `updateMarketplace(id, dto)`, `deleteMarketplace(id)`
+- `getMarketplaces()`, `getMarketplace(id)` - All authenticated users
+- `createMarketplace(dto)`, `updateMarketplace(id, dto)`, `deleteMarketplace(id)` - System admin only
 
 ## Error Handling
 

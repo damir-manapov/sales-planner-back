@@ -13,6 +13,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import type { DeleteDataResult } from '@sales-planner/shared';
 import {
   hasTenantAccess,
   validateTenantAdminAccess,
@@ -130,7 +131,7 @@ export class ShopsController {
   async deleteData(
     @Req() req: AuthenticatedRequest,
     @Param('id', ParseIntPipe) id: number,
-  ): Promise<{ skusDeleted: number; salesHistoryDeleted: number }> {
+  ): Promise<DeleteDataResult> {
     const shop = await this.shopsService.findById(id);
     if (!shop) {
       throw new NotFoundException(`Shop with id ${id} not found`);

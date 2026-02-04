@@ -138,6 +138,55 @@ export class SkusService {
     return { created, updated, errors };
   }
 
+  /**
+   * Finds SKUs by code or creates missing ones.
+   * Returns a map of code -> id and the count of newly created SKUs.
+   */
+  async findOrCreateByCode(
+    codes: string[],
+    shopId: number,
+    tenantId: number,
+  ): Promise<{ codeToId: Map<string, number>; created: number }> {
+    if (codes.length === 0) {
+      return { codeToId: new Map(), created: 0 };
+    }
+
+    const uniqueCodes = [...new Set(codes)];
+
+    let skus = await this.db
+      .selectFrom('skus')
+      .select(['id', 'code'])
+      .where('shop_id', '=', shopId)
+      .where('code', 'in', uniqueCodes)
+      .execute();
+
+    const existingCodes = new Set(skus.map((s) => s.code));
+    const missingCodes = uniqueCodes.filter((code) => !existingCodes.has(code));
+
+    if (missingCodes.length > 0) {
+      const newSkus = await this.db
+        .insertInto('skus')
+        .values(
+          missingCodes.map((code) => ({
+            code,
+            title: code,
+            shop_id: shopId,
+            tenant_id: tenantId,
+            updated_at: new Date(),
+          })),
+        )
+        .returning(['id', 'code'])
+        .execute();
+
+      skus = [...skus, ...newSkus];
+    }
+
+    return {
+      codeToId: new Map(skus.map((s) => [s.code, s.id])),
+      created: missingCodes.length,
+    };
+  }
+
   async exportForShop(shopId: number): Promise<SkuExportItem[]> {
     const skus = await this.db
       .selectFrom('skus')
