@@ -154,6 +154,7 @@ export interface Roles {
 export interface SalesHistory {
   created_at: Generated<Timestamp>;
   id: Generated<number>;
+  marketplace_id: string | null;
   period: Timestamp;
   quantity: Generated<number>;
   shop_id: number;

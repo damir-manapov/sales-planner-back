@@ -7,6 +7,12 @@ import type { CreateUserRoleDto } from './user-roles.schema.js';
 export type UserRole = Selectable<UserRoles>;
 export type { CreateUserRoleDto };
 
+interface UserRoleWithName {
+  tenant_id: number | null;
+  shop_id: number | null;
+  role_name: string;
+}
+
 @Injectable()
 export class UserRolesService {
   constructor(private readonly db: DatabaseService) {}
@@ -63,9 +69,7 @@ export class UserRolesService {
       .execute();
   }
 
-  async findByUserIdWithRoleNames(
-    userId: number,
-  ): Promise<Array<{ tenant_id: number | null; shop_id: number | null; role_name: string }>> {
+  async findByUserIdWithRoleNames(userId: number): Promise<UserRoleWithName[]> {
     return this.db
       .selectFrom('user_roles')
       .innerJoin('roles', 'roles.id', 'user_roles.role_id')

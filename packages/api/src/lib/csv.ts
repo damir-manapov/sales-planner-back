@@ -4,11 +4,8 @@ import { parse } from 'csv-parse/sync';
 /**
  * Converts an array of objects to CSV string format
  */
-export function toCsv<T extends Record<string, unknown>>(
-  items: T[],
-  columns: Array<keyof T>,
-): string {
-  const header = columns.join(',');
+export function toCsv<T extends object>(items: T[], columns: Array<keyof T>): string {
+  const header = columns.map(String).join(',');
   const rows = items.map((item) => {
     return columns
       .map((col) => {

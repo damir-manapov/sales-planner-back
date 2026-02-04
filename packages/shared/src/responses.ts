@@ -61,6 +61,7 @@ export interface SalesHistoryExportItem {
   sku_code: string;
   period: string;
   quantity: number;
+  marketplace?: string;
 }
 
 export interface SkuExportItem {

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { Sku } from '@sales-planner/shared';
+import type { Sku, SkuExportItem } from '@sales-planner/shared';
 import { DatabaseService } from '../database/index.js';
 import type { CreateSkuDto, ImportSkuItem, UpdateSkuDto } from './skus.schema.js';
 
@@ -81,7 +81,7 @@ export class SkusService {
     }
 
     const errors: string[] = [];
-    const validItems: Array<{ code: string; title: string }> = [];
+    const validItems: ImportSkuItem[] = [];
 
     items.forEach((item, i) => {
       if (!item.code || !item.title) {
@@ -138,7 +138,7 @@ export class SkusService {
     return { created, updated, errors };
   }
 
-  async exportForShop(shopId: number): Promise<Array<{ code: string; title: string }>> {
+  async exportForShop(shopId: number): Promise<SkuExportItem[]> {
     const skus = await this.db
       .selectFrom('skus')
       .select(['code', 'title'])
