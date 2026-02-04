@@ -1,5 +1,13 @@
 # @sales-planner/http-client
 
+## 0.4.2
+
+### Patch Changes
+
+- Add SKU and marketplace code normalization with Cyrillic transliteration support. SKU codes preserve case and separators, while marketplace IDs are converted to camelCase. Both functions remove spaces and handle Cyrillic-to-Latin transliteration.
+- Updated dependencies
+  - @sales-planner/shared@0.4.3
+
 ## 0.4.1
 
 ### Patch Changes
