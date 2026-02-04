@@ -56,6 +56,7 @@ export interface ImportResult {
 export interface DeleteDataResult {
   skusDeleted: number;
   salesHistoryDeleted: number;
+  marketplacesDeleted: number;
 }
 
 export interface SalesHistoryExportItem {

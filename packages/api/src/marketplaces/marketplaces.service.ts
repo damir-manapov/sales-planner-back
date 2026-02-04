@@ -36,15 +36,6 @@ export class MarketplacesService {
       .executeTakeFirst();
   }
 
-  async findByIdAndShop(id: string, shopId: number): Promise<Marketplace | undefined> {
-    return this.db
-      .selectFrom('marketplaces')
-      .selectAll()
-      .where('id', '=', id)
-      .where('shop_id', '=', shopId)
-      .executeTakeFirst();
-  }
-
   async create(dto: CreateMarketplaceDto): Promise<Marketplace> {
     try {
       const result = await this.db

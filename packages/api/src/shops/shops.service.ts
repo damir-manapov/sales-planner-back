@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { DeleteDataResult, Shop } from '@sales-planner/shared';
 import { DatabaseService } from '../database/database.service.js';
+import { MarketplacesService } from '../marketplaces/marketplaces.service.js';
 import { SalesHistoryService } from '../sales-history/sales-history.service.js';
 import { SkusService } from '../skus/skus.service.js';
 import type { CreateShopDto, UpdateShopDto } from './shops.schema.js';
@@ -14,6 +15,7 @@ export class ShopsService {
     private readonly db: DatabaseService,
     private readonly skusService: SkusService,
     private readonly salesHistoryService: SalesHistoryService,
+    private readonly marketplacesService: MarketplacesService,
   ) {}
 
   async findAll(): Promise<Shop[]> {
@@ -46,12 +48,15 @@ export class ShopsService {
   }
 
   async deleteData(id: number): Promise<DeleteDataResult> {
-    // Delete sales history first (references SKUs)
+    // Delete sales history first (references SKUs and marketplaces)
     const salesHistoryDeleted = await this.salesHistoryService.deleteByShopId(id);
 
     // Delete SKUs
     const skusDeleted = await this.skusService.deleteByShopId(id);
 
-    return { skusDeleted, salesHistoryDeleted };
+    // Delete marketplaces
+    const marketplacesDeleted = await this.marketplacesService.deleteByShopId(id);
+
+    return { skusDeleted, salesHistoryDeleted, marketplacesDeleted };
   }
 }

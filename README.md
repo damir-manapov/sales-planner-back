@@ -33,7 +33,8 @@ pnpm dev
 | `pnpm dev` | Start API in development mode |
 | `pnpm build` | Build all packages |
 | `pnpm test` | Run unit tests |
-| `pnpm test:e2e` | Run e2e tests |
+| `pnpm test:e2e` | Run e2e tests (cloud DB) |
+| `pnpm test:e2e:local` | Run e2e tests (local DB) |
 | `pnpm lint` | Lint all packages (biome) |
 | `pnpm format` | Format all packages (biome) |
 | `pnpm typecheck` | Type check all packages |
