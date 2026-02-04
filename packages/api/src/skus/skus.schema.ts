@@ -1,4 +1,12 @@
 import { z } from 'zod';
+import type {
+  CreateSkuDto as SharedCreateSkuDto,
+  UpdateSkuDto as SharedUpdateSkuDto,
+  ImportSkuItem as SharedImportSkuItem,
+} from '@sales-planner/shared';
+
+// Type compatibility helper - fails at compile time if types don't match
+type AssertCompatible<T, U extends T> = U;
 
 // Zod schemas
 export const CreateSkuSchema = z.object({
@@ -21,6 +29,6 @@ export const ImportSkuItemSchema = z.object({
 });
 
 // Infer TypeScript types from schemas
-export type CreateSkuDto = z.infer<typeof CreateSkuSchema>;
-export type UpdateSkuDto = z.infer<typeof UpdateSkuSchema>;
-export type ImportSkuItem = z.infer<typeof ImportSkuItemSchema>;
+export type CreateSkuDto = AssertCompatible<SharedCreateSkuDto, z.infer<typeof CreateSkuSchema>>;
+export type UpdateSkuDto = AssertCompatible<SharedUpdateSkuDto, z.infer<typeof UpdateSkuSchema>>;
+export type ImportSkuItem = AssertCompatible<SharedImportSkuItem, z.infer<typeof ImportSkuItemSchema>>;

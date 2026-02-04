@@ -1,4 +1,13 @@
 import { z } from 'zod';
+import type {
+  CreateSalesHistoryDto as SharedCreateSalesHistoryDto,
+  UpdateSalesHistoryDto as SharedUpdateSalesHistoryDto,
+  ImportSalesHistoryItem as SharedImportSalesHistoryItem,
+  PeriodQuery as SharedPeriodQuery,
+} from '@sales-planner/shared';
+
+// Type compatibility helper - fails at compile time if types don't match
+type AssertCompatible<T, U extends T> = U;
 
 // Zod schemas
 const periodRegex = /^\d{4}-(0[1-9]|1[0-2])$/;
@@ -27,8 +36,8 @@ export const ImportSalesHistoryItemSchema = z.object({
   quantity: z.number().int().nonnegative(),
 });
 
-// Infer TypeScript types from schemas
-export type PeriodQuery = z.infer<typeof PeriodQuerySchema>;
-export type CreateSalesHistoryDto = z.infer<typeof CreateSalesHistorySchema>;
-export type UpdateSalesHistoryDto = z.infer<typeof UpdateSalesHistorySchema>;
-export type ImportSalesHistoryItem = z.infer<typeof ImportSalesHistoryItemSchema>;
+// Infer TypeScript types from schemas with compatibility checks
+export type PeriodQuery = AssertCompatible<SharedPeriodQuery, z.infer<typeof PeriodQuerySchema>>;
+export type CreateSalesHistoryDto = AssertCompatible<SharedCreateSalesHistoryDto, z.infer<typeof CreateSalesHistorySchema>>;
+export type UpdateSalesHistoryDto = AssertCompatible<SharedUpdateSalesHistoryDto, z.infer<typeof UpdateSalesHistorySchema>>;
+export type ImportSalesHistoryItem = AssertCompatible<SharedImportSalesHistoryItem, z.infer<typeof ImportSalesHistoryItemSchema>>;
