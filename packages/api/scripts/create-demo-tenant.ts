@@ -90,25 +90,27 @@ async function createDemoTenant(args: DemoTenantArgs) {
 
     // Create client with user's API key for data operations
     const userClient = new SalesPlannerClient({ baseUrl: apiUrl, apiKey: setup.apiKey });
-    const ctx = { shop_id: setup.shop.id, tenant_id: setup.tenant.id };
 
-    // Step 2: Import SKUs (uses upsert - safe to run multiple times)
-    console.log(`📊 Step 2: Importing ${DEMO_SKUS.length} demo products...`);
-    const skusResult = await userClient.importSkusJson(DEMO_SKUS, ctx);
-    if (skusResult.created > 0) {
-      console.log(`   ✅ Created ${skusResult.created} new products`);
-    }
-    if (skusResult.updated > 0) {
-      console.log(`   ✅ Updated ${skusResult.updated} existing products`);
-    }
+    // Step 2: Clear existing shop data
+    console.log('🧹 Step 2: Clearing existing shop data...');
+    const deleteResult = await userClient.deleteShopData(setup.shop.id);
+    console.log(
+      `   ✅ Deleted ${deleteResult.skusDeleted} SKUs and ${deleteResult.salesHistoryDeleted} sales records`,
+    );
     console.log('');
 
-    // Step 3: Import sales history (uses upsert - safe to run multiple times)
-    console.log(`📈 Step 3: Importing ${DEMO_SALES_DATA.length} sales history records...`);
+    const ctx = { shop_id: setup.shop.id, tenant_id: setup.tenant.id };
+
+    // Step 3: Import SKUs
+    console.log(`📊 Step 3: Importing ${DEMO_SKUS.length} demo products...`);
+    const skusResult = await userClient.importSkusJson(DEMO_SKUS, ctx);
+    console.log(`   ✅ Created ${skusResult.created} products`);
+    console.log('');
+
+    // Step 4: Import sales history
+    console.log(`📈 Step 4: Importing ${DEMO_SALES_DATA.length} sales history records...`);
     const salesResult = await userClient.importSalesHistoryJson(DEMO_SALES_DATA, ctx);
-    console.log(
-      `   ✅ Imported sales history: ${salesResult.created} created, ${salesResult.updated} updated`,
-    );
+    console.log(`   ✅ Created ${salesResult.created} sales records`);
     console.log('');
 
     // Success summary
