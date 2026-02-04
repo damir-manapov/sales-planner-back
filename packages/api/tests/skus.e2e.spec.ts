@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import request from 'supertest';
 import { AppModule } from '../src/app.module.js';
+import { SalesPlannerClient, ApiError } from '@sales-planner/http-client';
 import {
   cleanupUser,
   createUserWithApiKey,
@@ -15,11 +16,16 @@ import {
 
 describe('SKUs (e2e)', () => {
   let app: INestApplication;
+  let baseUrl: string;
+  let client: SalesPlannerClient;
+  let systemClient: SalesPlannerClient;
   let tenantId: number;
   let shopId: number;
   let skuId: number;
   let testUserId: number;
   let testUserApiKey: string;
+
+  const ctx = () => ({ shop_id: shopId, tenant_id: tenantId });
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -28,25 +34,35 @@ describe('SKUs (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
+    await app.listen(0);
+
+    const url = await app.getUrl();
+    baseUrl = url.replace('[::1]', 'localhost');
+
+    systemClient = new SalesPlannerClient({
+      baseUrl,
+      apiKey: SYSTEM_ADMIN_KEY,
+    });
 
     // Create tenant with shop and user in one call
-    const setupRes = await request(app.getHttpServer())
-      .post('/tenants/with-shop-and-user')
-      .set('X-API-Key', SYSTEM_ADMIN_KEY)
-      .send({
-        tenantTitle: `Test Tenant ${Date.now()}`,
-        userEmail: `sku-test-${Date.now()}@example.com`,
-        userName: 'SKU Test User',
-      });
+    const setup = await systemClient.createTenantWithShopAndUser({
+      tenantTitle: `Test Tenant ${Date.now()}`,
+      userEmail: `sku-test-${Date.now()}@example.com`,
+      userName: 'SKU Test User',
+    });
 
-    testUserId = setupRes.body.user.id;
-    testUserApiKey = setupRes.body.apiKey;
-    tenantId = setupRes.body.tenant.id;
-    shopId = setupRes.body.shop.id;
+    testUserId = setup.user.id;
+    testUserApiKey = setup.apiKey;
+    tenantId = setup.tenant.id;
+    shopId = setup.shop.id;
+
+    client = new SalesPlannerClient({
+      baseUrl,
+      apiKey: testUserApiKey,
+    });
   });
 
   afterAll(async () => {
-    // Cleanup using helper that handles foreign key constraints
     if (testUserId) {
       await cleanupUser(app, testUserId);
     }
@@ -54,101 +70,77 @@ describe('SKUs (e2e)', () => {
   });
 
   describe('Authentication', () => {
-    it('GET /skus - should return 401 without API key', async () => {
-      const response = await request(app.getHttpServer()).get(
-        `/skus?shop_id=${shopId}&tenant_id=${tenantId}`,
-      );
-      expect(response.status).toBe(401);
+    it('should return 401 without API key', async () => {
+      const noAuthClient = new SalesPlannerClient({
+        baseUrl,
+        apiKey: '',
+      });
+
+      try {
+        await noAuthClient.getSkus(ctx());
+        expect.fail('Should have thrown ApiError');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(401);
+      }
     });
 
-    it('GET /skus - should return 401 with invalid API key', async () => {
-      const response = await request(app.getHttpServer())
-        .get(`/skus?shop_id=${shopId}&tenant_id=${tenantId}`)
-        .set('X-API-Key', 'invalid-key');
-      expect(response.status).toBe(401);
+    it('should return 401 with invalid API key', async () => {
+      const badClient = new SalesPlannerClient({
+        baseUrl,
+        apiKey: 'invalid-key',
+      });
+
+      try {
+        await badClient.getSkus(ctx());
+        expect.fail('Should have thrown ApiError');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(401);
+      }
     });
   });
 
   describe('CRUD operations', () => {
-    it('POST /skus - should create SKU', async () => {
+    it('createSku - should create SKU', async () => {
       const newSku = {
         code: `SKU-${Date.now()}`,
         title: 'Test SKU',
       };
 
-      const response = await request(app.getHttpServer())
-        .post(`/skus?shop_id=${shopId}&tenant_id=${tenantId}`)
-        .set('X-API-Key', testUserApiKey)
-        .send(newSku);
+      const sku = await client.createSku(newSku, ctx());
 
-      expect(response.status).toBe(201);
-      expect(response.body).toHaveProperty('id');
-      expect(response.body.code).toBe(newSku.code);
-      expect(response.body.title).toBe(newSku.title);
-      expect(response.body.shop_id).toBe(shopId);
-      expect(response.body.tenant_id).toBe(tenantId);
+      expect(sku).toHaveProperty('id');
+      expect(sku.code).toBe(newSku.code);
+      expect(sku.title).toBe(newSku.title);
+      expect(sku.shop_id).toBe(shopId);
+      expect(sku.tenant_id).toBe(tenantId);
 
-      skuId = response.body.id;
+      skuId = sku.id;
     });
 
-    it('GET /skus - should return SKUs for shop and tenant', async () => {
-      const response = await request(app.getHttpServer())
-        .get(`/skus?shop_id=${shopId}&tenant_id=${tenantId}`)
-        .set('X-API-Key', testUserApiKey);
+    it('getSkus - should return SKUs for shop and tenant', async () => {
+      const skus = await client.getSkus(ctx());
 
-      expect(response.status).toBe(200);
-      expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body.length).toBeGreaterThan(0);
+      expect(Array.isArray(skus)).toBe(true);
+      expect(skus.length).toBeGreaterThan(0);
     });
 
-    it('GET /skus - should require shop_id and tenant_id', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/skus')
-        .set('X-API-Key', testUserApiKey);
+    it('getSku - should return SKU by id', async () => {
+      const sku = await client.getSku(skuId, ctx());
 
-      expect(response.status).toBe(400);
+      expect(sku.id).toBe(skuId);
     });
 
-    it('GET /skus/:id - should return SKU by id', async () => {
-      const response = await request(app.getHttpServer())
-        .get(`/skus/${skuId}?shop_id=${shopId}&tenant_id=${tenantId}`)
-        .set('X-API-Key', testUserApiKey);
+    it('updateSku - should update SKU', async () => {
+      const sku = await client.updateSku(skuId, { title: 'Updated SKU Title' }, ctx());
 
-      expect(response.status).toBe(200);
-      expect(response.body.id).toBe(skuId);
-    });
-
-    it('GET /skus/:id - should require shop_id and tenant_id', async () => {
-      const response = await request(app.getHttpServer())
-        .get(`/skus/${skuId}`)
-        .set('X-API-Key', testUserApiKey);
-
-      expect(response.status).toBe(400);
-    });
-
-    it('PUT /skus/:id - should update SKU', async () => {
-      const response = await request(app.getHttpServer())
-        .put(`/skus/${skuId}?shop_id=${shopId}&tenant_id=${tenantId}`)
-        .set('X-API-Key', testUserApiKey)
-        .send({ title: 'Updated SKU Title' });
-
-      expect(response.status).toBe(200);
-      expect(response.body.title).toBe('Updated SKU Title');
-    });
-
-    it('PUT /skus/:id - should require shop_id and tenant_id', async () => {
-      const response = await request(app.getHttpServer())
-        .put(`/skus/${skuId}`)
-        .set('X-API-Key', testUserApiKey)
-        .send({ title: 'Should Fail' });
-
-      expect(response.status).toBe(400);
+      expect(sku.title).toBe('Updated SKU Title');
     });
   });
 
   describe('Tenant-based access control', () => {
-    it('GET /skus - should return 403 for wrong tenant', async () => {
-      // Create another user with tenant and shop using helpers
+    it('should return 403 for wrong tenant', async () => {
       const otherUser = await createUserWithApiKey(
         app,
         `other-${Date.now()}@example.com`,
@@ -161,19 +153,18 @@ describe('SKUs (e2e)', () => {
       );
       const otherShop = await createShop(app, `Other Shop ${Date.now()}`, otherTenant.tenantId);
 
-      // Try to access other tenant's shop - should be forbidden
-      const response = await request(app.getHttpServer())
-        .get(`/skus?shop_id=${otherShop.shopId}&tenant_id=${otherTenant.tenantId}`)
-        .set('X-API-Key', testUserApiKey);
+      try {
+        await client.getSkus({ shop_id: otherShop.shopId, tenant_id: otherTenant.tenantId });
+        expect.fail('Should have thrown ApiError');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(403);
+      }
 
-      expect(response.status).toBe(403); // User has no access to other tenant
-
-      // Cleanup
       await cleanupUser(app, otherUser.userId);
     });
 
-    it('POST /skus - should return 403 when creating SKU for wrong tenant', async () => {
-      // Create another user with tenant using helpers
+    it('should return 403 when creating SKU for wrong tenant', async () => {
       const otherUser = await createUserWithApiKey(
         app,
         `other2-${Date.now()}@example.com`,
@@ -185,22 +176,21 @@ describe('SKUs (e2e)', () => {
         otherUser.userId,
       );
 
-      const response = await request(app.getHttpServer())
-        .post(`/skus?shop_id=${shopId}&tenant_id=${otherTenant.tenantId}`)
-        .set('X-API-Key', testUserApiKey)
-        .send({
-          code: 'FORBIDDEN-SKU',
-          title: 'Should Fail',
-        });
+      try {
+        await client.createSku(
+          { code: 'FORBIDDEN-SKU', title: 'Should Fail' },
+          { shop_id: shopId, tenant_id: otherTenant.tenantId },
+        );
+        expect.fail('Should have thrown ApiError');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(403);
+      }
 
-      expect(response.status).toBe(403); // User has no access to other tenant
-
-      // Cleanup
       await cleanupUser(app, otherUser.userId);
     });
 
-    it('GET /skus/:id - should return 404 for SKU in wrong tenant', async () => {
-      // Create another user with tenant and shop using helpers
+    it('should return 404 for SKU in wrong tenant', async () => {
       const otherUser = await createUserWithApiKey(
         app,
         `other3-${Date.now()}@example.com`,
@@ -213,67 +203,39 @@ describe('SKUs (e2e)', () => {
       );
       const otherShop = await createShop(app, `Other Shop ${Date.now()}`, otherTenant.tenantId);
 
-      // Give user tenantAdmin role for other tenant
       const tenantAdminRoleId = await getOrCreateRole(app, 'tenantAdmin', 'Tenant Admin');
       await assignRole(app, testUserId, tenantAdminRoleId, { tenantId: otherTenant.tenantId });
 
-      // Try to access original SKU with other tenant/shop - should return 404
-      const response = await request(app.getHttpServer())
-        .get(`/skus/${skuId}?shop_id=${otherShop.shopId}&tenant_id=${otherTenant.tenantId}`)
-        .set('X-API-Key', testUserApiKey);
+      try {
+        await client.getSku(skuId, { shop_id: otherShop.shopId, tenant_id: otherTenant.tenantId });
+        expect.fail('Should have thrown ApiError');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(404);
+      }
 
-      expect(response.status).toBe(404); // SKU not found in other tenant
-
-      // Cleanup
       await cleanupUser(app, otherUser.userId);
     });
   });
 
-  describe('Cleanup', () => {
-    it('DELETE /skus/:id - should delete SKU', async () => {
-      const response = await request(app.getHttpServer())
-        .delete(`/skus/${skuId}?shop_id=${shopId}&tenant_id=${tenantId}`)
-        .set('X-API-Key', testUserApiKey);
+  describe('Delete operations', () => {
+    it('deleteSku - should delete SKU', async () => {
+      await client.deleteSku(skuId, ctx());
 
-      expect(response.status).toBe(200);
-      skuId = 0; // Mark as deleted for afterAll
+      try {
+        await client.getSku(skuId, ctx());
+        expect.fail('Should have thrown ApiError');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(404);
+      }
 
-      // Verify deleted
-      const getResponse = await request(app.getHttpServer())
-        .get(`/skus/${skuId}?shop_id=${shopId}&tenant_id=${tenantId}`)
-        .set('X-API-Key', testUserApiKey);
-      expect(getResponse.status).toBe(404);
-    });
-
-    it('DELETE /skus/:id - should require shop_id and tenant_id', async () => {
-      // Create a new SKU to test delete validation
-      const newSku = {
-        code: `SKU-DELETE-${Date.now()}`,
-        title: 'Delete Test SKU',
-      };
-
-      const createRes = await request(app.getHttpServer())
-        .post(`/skus?shop_id=${shopId}&tenant_id=${tenantId}`)
-        .set('X-API-Key', testUserApiKey)
-        .send(newSku);
-
-      const testSkuId = createRes.body.id;
-
-      const response = await request(app.getHttpServer())
-        .delete(`/skus/${testSkuId}`)
-        .set('X-API-Key', testUserApiKey);
-
-      expect(response.status).toBe(400);
-
-      // Cleanup the created SKU
-      await request(app.getHttpServer())
-        .delete(`/skus/${testSkuId}?shop_id=${shopId}&tenant_id=${tenantId}`)
-        .set('X-API-Key', testUserApiKey);
+      skuId = 0;
     });
   });
 
   describe('Import endpoints', () => {
-    it('POST /skus/import/json - should import SKUs from JSON', async () => {
+    it('importSkusJson - should import SKUs from JSON', async () => {
       const code1 = `IMPORT-JSON-1-${Date.now()}`;
       const code2 = `IMPORT-JSON-2-${Date.now()}`;
       const items = [
@@ -281,131 +243,84 @@ describe('SKUs (e2e)', () => {
         { code: code2, title: 'Import JSON SKU 2' },
       ];
 
-      const response = await request(app.getHttpServer())
-        .post(`/skus/import/json?shop_id=${shopId}&tenant_id=${tenantId}`)
-        .set('X-API-Key', testUserApiKey)
-        .send(items);
+      const result = await client.importSkusJson(items, ctx());
 
-      expect(response.status).toBe(201);
-      expect(response.body.created).toBe(2);
-      expect(response.body.updated).toBe(0);
-      expect(response.body.errors).toEqual([]);
+      expect(result.created).toBe(2);
+      expect(result.updated).toBe(0);
+      expect(result.errors).toEqual([]);
 
-      // Verify SKUs were created
-      const listResponse = await request(app.getHttpServer())
-        .get(`/skus?shop_id=${shopId}&tenant_id=${tenantId}`)
-        .set('X-API-Key', testUserApiKey);
-
-      const codes = listResponse.body.map((s: { code: string }) => s.code);
+      const skus = await client.getSkus(ctx());
+      const codes = skus.map((s) => s.code);
       expect(codes).toContain(code1);
       expect(codes).toContain(code2);
     });
 
-    it('POST /skus/import/json - should upsert existing SKUs', async () => {
+    it('importSkusJson - should upsert existing SKUs', async () => {
       const code = `UPSERT-JSON-${Date.now()}`;
 
-      // First import
-      await request(app.getHttpServer())
-        .post(`/skus/import/json?shop_id=${shopId}&tenant_id=${tenantId}`)
-        .set('X-API-Key', testUserApiKey)
-        .send([{ code, title: 'Original Title' }]);
+      await client.importSkusJson([{ code, title: 'Original Title' }], ctx());
 
-      // Second import with same code (upsert)
-      const response = await request(app.getHttpServer())
-        .post(`/skus/import/json?shop_id=${shopId}&tenant_id=${tenantId}`)
-        .set('X-API-Key', testUserApiKey)
-        .send([{ code, title: 'Updated Title' }]);
+      const result = await client.importSkusJson([{ code, title: 'Updated Title' }], ctx());
 
-      expect(response.status).toBe(201);
-      expect(response.body.created).toBe(0);
-      expect(response.body.updated).toBe(1);
+      expect(result.created).toBe(0);
+      expect(result.updated).toBe(1);
     });
 
-    it('POST /skus/import/csv - should import SKUs from CSV', async () => {
+    it('importSkusCsv - should import SKUs from CSV', async () => {
       const code1 = `IMPORT-CSV-1-${Date.now()}`;
       const code2 = `IMPORT-CSV-2-${Date.now()}`;
       const csvContent = `code,title\n${code1},Import CSV SKU 1\n${code2},Import CSV SKU 2`;
 
-      const response = await request(app.getHttpServer())
-        .post(`/skus/import/csv?shop_id=${shopId}&tenant_id=${tenantId}`)
-        .set('X-API-Key', testUserApiKey)
-        .attach('file', Buffer.from(csvContent), 'skus.csv');
+      const result = await client.importSkusCsv(csvContent, ctx());
 
-      expect(response.status).toBe(201);
-      expect(response.body.created).toBe(2);
-      expect(response.body.updated).toBe(0);
+      expect(result.created).toBe(2);
+      expect(result.updated).toBe(0);
 
-      // Verify SKUs were created
-      const listResponse = await request(app.getHttpServer())
-        .get(`/skus?shop_id=${shopId}&tenant_id=${tenantId}`)
-        .set('X-API-Key', testUserApiKey);
-
-      const codes = listResponse.body.map((s: { code: string }) => s.code);
+      const skus = await client.getSkus(ctx());
+      const codes = skus.map((s) => s.code);
       expect(codes).toContain(code1);
       expect(codes).toContain(code2);
     });
 
-    it('POST /skus/import/csv - should return 400 for invalid CSV', async () => {
-      const response = await request(app.getHttpServer())
-        .post(`/skus/import/csv?shop_id=${shopId}&tenant_id=${tenantId}`)
-        .set('X-API-Key', testUserApiKey)
-        .send({ content: 'invalid,csv\nno,code,column' });
-
-      expect(response.status).toBe(400);
-    });
-
-    it('GET /skus/export/json - should export SKUs in import format', async () => {
-      // First create some SKUs to export
+    it('exportSkusJson - should export SKUs in import format', async () => {
       const code1 = `EXPORT-SKU-1-${Date.now()}`;
       const code2 = `EXPORT-SKU-2-${Date.now()}`;
 
-      await request(app.getHttpServer())
-        .post(`/skus/import/json?shop_id=${shopId}&tenant_id=${tenantId}`)
-        .set('X-API-Key', testUserApiKey)
-        .send([
+      await client.importSkusJson(
+        [
           { code: code1, title: 'Export Test SKU 1' },
           { code: code2, title: 'Export Test SKU 2' },
-        ]);
+        ],
+        ctx(),
+      );
 
-      const response = await request(app.getHttpServer())
-        .get(`/skus/export/json?shop_id=${shopId}&tenant_id=${tenantId}`)
-        .set('X-API-Key', testUserApiKey);
+      const exported = await client.exportSkusJson(ctx());
 
-      expect(response.status).toBe(200);
-      expect(Array.isArray(response.body)).toBe(true);
-
-      const exported = response.body as Array<{ code: string; title: string }>;
+      expect(Array.isArray(exported)).toBe(true);
       const exportedCodes = exported.map((s) => s.code);
       expect(exportedCodes).toContain(code1);
       expect(exportedCodes).toContain(code2);
 
-      // Verify format matches import format (only code and title)
       const item = exported.find((s) => s.code === code1);
       expect(item).toEqual({ code: code1, title: 'Export Test SKU 1' });
     });
 
-    it('GET /skus/export/csv - should export SKUs in CSV format', async () => {
-      // First create some SKUs to export
+    it('exportSkusCsv - should export SKUs in CSV format', async () => {
       const code1 = `CSV-EXPORT-SKU-1-${Date.now()}`;
       const code2 = `CSV-EXPORT-SKU-2-${Date.now()}`;
 
-      await request(app.getHttpServer())
-        .post(`/skus/import/json?shop_id=${shopId}&tenant_id=${tenantId}`)
-        .set('X-API-Key', testUserApiKey)
-        .send([
+      await client.importSkusJson(
+        [
           { code: code1, title: 'CSV Export Test 1' },
           { code: code2, title: 'CSV Export Test 2' },
-        ]);
+        ],
+        ctx(),
+      );
 
-      const response = await request(app.getHttpServer())
-        .get(`/skus/export/csv?shop_id=${shopId}&tenant_id=${tenantId}`)
-        .set('X-API-Key', testUserApiKey);
+      const csv = await client.exportSkusCsv(ctx());
 
-      expect(response.status).toBe(200);
-      expect(response.text).toBeTruthy();
-      expect(typeof response.text).toBe('string');
-
-      const lines = response.text.split('\n');
+      expect(typeof csv).toBe('string');
+      const lines = csv.split('\n');
       expect(lines[0]).toBe('code,title');
       expect(lines.some((line) => line.includes(code1))).toBe(true);
       expect(lines.some((line) => line.includes(code2))).toBe(true);
@@ -414,157 +329,145 @@ describe('SKUs (e2e)', () => {
 
   describe('Viewer role access', () => {
     let viewerUserId: number;
-    let viewerApiKey: string;
+    let viewerClient: SalesPlannerClient;
 
     beforeAll(async () => {
-      // Create a viewer user using helper
       const viewer = await createUserWithApiKey(
         app,
         `viewer-${Date.now()}@example.com`,
         'Viewer User',
       );
       viewerUserId = viewer.userId;
-      viewerApiKey = viewer.apiKey;
 
-      // Get or create viewer role and assign it
+      viewerClient = new SalesPlannerClient({
+        baseUrl,
+        apiKey: viewer.apiKey,
+      });
+
       const viewerRoleId = await getOrCreateRole(app, 'viewer', 'Viewer user');
       await assignRole(app, viewerUserId, viewerRoleId, { tenantId, shopId });
     });
 
     afterAll(async () => {
-      // Viewer user cleanup
       if (viewerUserId) {
         await cleanupUser(app, viewerUserId);
       }
     });
 
-    it('GET /skus - viewer should be able to list SKUs', async () => {
-      const response = await request(app.getHttpServer())
-        .get(`/skus?shop_id=${shopId}&tenant_id=${tenantId}`)
-        .set('X-API-Key', viewerApiKey);
+    it('viewer should be able to list SKUs', async () => {
+      const skus = await viewerClient.getSkus(ctx());
 
-      expect(response.status).toBe(200);
-      expect(Array.isArray(response.body)).toBe(true);
+      expect(Array.isArray(skus)).toBe(true);
     });
 
-    it('POST /skus - viewer should not be able to create SKUs', async () => {
-      const response = await request(app.getHttpServer())
-        .post(`/skus?shop_id=${shopId}&tenant_id=${tenantId}`)
-        .set('X-API-Key', viewerApiKey)
-        .send({ code: 'VIEWER-CREATE', title: 'Should Fail' });
-
-      expect(response.status).toBe(403);
+    it('viewer should not be able to create SKUs', async () => {
+      try {
+        await viewerClient.createSku({ code: 'VIEWER-CREATE', title: 'Should Fail' }, ctx());
+        expect.fail('Should have thrown ApiError');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(403);
+      }
     });
 
-    it('POST /skus/import/json - viewer should not be able to import', async () => {
-      const response = await request(app.getHttpServer())
-        .post(`/skus/import/json?shop_id=${shopId}&tenant_id=${tenantId}`)
-        .set('X-API-Key', viewerApiKey)
-        .send([{ code: 'VIEWER-IMPORT', title: 'Should Fail' }]);
-
-      expect(response.status).toBe(403);
+    it('viewer should not be able to import', async () => {
+      try {
+        await viewerClient.importSkusJson([{ code: 'VIEWER-IMPORT', title: 'Should Fail' }], ctx());
+        expect.fail('Should have thrown ApiError');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(403);
+      }
     });
   });
 
   describe('Example downloads', () => {
-    it('GET /skus/examples/json - should return JSON example without auth', async () => {
-      const response = await request(app.getHttpServer()).get('/skus/examples/json');
+    it('getSkusExampleJson - should return JSON example', async () => {
+      const example = await client.getSkusExampleJson();
 
-      expect(response.status).toBe(200);
-      expect(response.headers['content-type']).toContain('application/json');
-      expect(response.headers['content-disposition']).toContain('skus-example.json');
-      expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body.length).toBeGreaterThan(0);
-      expect(response.body[0]).toHaveProperty('code');
-      expect(response.body[0]).toHaveProperty('title');
+      expect(Array.isArray(example)).toBe(true);
+      expect(example.length).toBeGreaterThan(0);
+      expect(example[0]).toHaveProperty('code');
+      expect(example[0]).toHaveProperty('title');
     });
 
-    it('GET /skus/examples/csv - should return CSV example without auth', async () => {
-      const response = await request(app.getHttpServer()).get('/skus/examples/csv');
+    it('getSkusExampleCsv - should return CSV example', async () => {
+      const csv = await client.getSkusExampleCsv();
 
-      expect(response.status).toBe(200);
-      expect(response.headers['content-type']).toContain('text/csv');
-      expect(response.headers['content-disposition']).toContain('skus-example.csv');
-      expect(response.text).toContain('code,title');
-      expect(response.text).toContain('SKU-001');
+      expect(typeof csv).toBe('string');
+      expect(csv).toContain('code,title');
+      expect(csv).toContain('SKU-001');
     });
   });
 
   describe('Tenant owner access (derived role)', () => {
     let ownerUserId: number;
-    let ownerApiKey: string;
+    let ownerClient: SalesPlannerClient;
     let ownerTenantId: number;
     let ownerShopId: number;
 
+    const ownerCtx = () => ({ shop_id: ownerShopId, tenant_id: ownerTenantId });
+
     beforeAll(async () => {
-      // Create tenant owner user using helper
       const owner = await createUserWithApiKey(
         app,
         `owner-${Date.now()}@example.com`,
         'Tenant Owner User',
       );
       ownerUserId = owner.userId;
-      ownerApiKey = owner.apiKey;
 
-      // Create a tenant with this user as owner
+      ownerClient = new SalesPlannerClient({
+        baseUrl,
+        apiKey: owner.apiKey,
+      });
+
       const tenant = await createTenantWithOwner(app, `Owner Tenant ${Date.now()}`, ownerUserId);
       ownerTenantId = tenant.tenantId;
 
-      // Create a shop in the owned tenant
       const shop = await createShop(app, `Owner Shop ${Date.now()}`, ownerTenantId);
       ownerShopId = shop.shopId;
-
-      // Note: NO explicit role assignment - owner access is derived from tenants.owner_id
     });
 
     afterAll(async () => {
-      // Cleanup using helper that handles foreign key constraints
       if (ownerUserId) {
         await cleanupUser(app, ownerUserId);
       }
     });
 
-    it('GET /skus - tenant owner should have read access without explicit role', async () => {
-      const response = await request(app.getHttpServer())
-        .get(`/skus?shop_id=${ownerShopId}&tenant_id=${ownerTenantId}`)
-        .set('X-API-Key', ownerApiKey);
+    it('tenant owner should have read access without explicit role', async () => {
+      const skus = await ownerClient.getSkus(ownerCtx());
 
-      expect(response.status).toBe(200);
-      expect(Array.isArray(response.body)).toBe(true);
+      expect(Array.isArray(skus)).toBe(true);
     });
 
-    it('POST /skus - tenant owner should have write access without explicit role', async () => {
-      const response = await request(app.getHttpServer())
-        .post(`/skus?shop_id=${ownerShopId}&tenant_id=${ownerTenantId}`)
-        .set('X-API-Key', ownerApiKey)
-        .send({ code: 'OWNER-SKU', title: 'Owner Created SKU' });
+    it('tenant owner should have write access without explicit role', async () => {
+      const sku = await ownerClient.createSku(
+        { code: 'OWNER-SKU', title: 'Owner Created SKU' },
+        ownerCtx(),
+      );
 
-      expect(response.status).toBe(201);
-      expect(response.body).toHaveProperty('id');
+      expect(sku).toHaveProperty('id');
 
-      // Cleanup
-      await request(app.getHttpServer())
-        .delete(`/skus/${response.body.id}?shop_id=${ownerShopId}&tenant_id=${ownerTenantId}`)
-        .set('X-API-Key', ownerApiKey);
+      await ownerClient.deleteSku(sku.id, ownerCtx());
     });
 
-    it('POST /skus/import/json - tenant owner should be able to import', async () => {
-      const response = await request(app.getHttpServer())
-        .post(`/skus/import/json?shop_id=${ownerShopId}&tenant_id=${ownerTenantId}`)
-        .set('X-API-Key', ownerApiKey)
-        .send([{ code: 'OWNER-IMPORT-1', title: 'Owner Import 1' }]);
+    it('tenant owner should be able to import', async () => {
+      const result = await ownerClient.importSkusJson(
+        [{ code: 'OWNER-IMPORT-1', title: 'Owner Import 1' }],
+        ownerCtx(),
+      );
 
-      expect(response.status).toBe(201);
-      expect(response.body.created + response.body.updated).toBe(1);
+      expect(result.created + result.updated).toBe(1);
     });
 
-    it('GET /skus - tenant owner should NOT access other tenants', async () => {
-      // Try to access the main test tenant (ownerUserId is not owner of tenantId)
-      const response = await request(app.getHttpServer())
-        .get(`/skus?shop_id=${shopId}&tenant_id=${tenantId}`)
-        .set('X-API-Key', ownerApiKey);
-
-      expect(response.status).toBe(403); // No access to other tenant
+    it('tenant owner should NOT access other tenants', async () => {
+      try {
+        await ownerClient.getSkus(ctx());
+        expect.fail('Should have thrown ApiError');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(403);
+      }
     });
   });
 });
