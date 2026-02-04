@@ -1,17 +1,17 @@
 import { z } from 'zod';
 import type { CreateShopDto as SharedCreateShopDto } from '@sales-planner/shared';
+import { AssertCompatible, zodSchemas } from '../common/schema.utils.js';
 
-// Type compatibility helper - fails at compile time if types don't match
-type AssertCompatible<T, U extends T> = U;
+const { title, id } = zodSchemas;
 
 // Zod schemas
 export const CreateShopSchema = z.object({
-  title: z.string().min(1).max(255),
-  tenant_id: z.number().int().positive(),
+  title: title(),
+  tenant_id: id(),
 });
 
 export const UpdateShopSchema = z.object({
-  title: z.string().min(1).max(255).optional(),
+  title: title().optional(),
 });
 
 // Infer TypeScript types from schemas with compatibility checks

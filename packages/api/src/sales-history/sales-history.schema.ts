@@ -5,35 +5,33 @@ import type {
   ImportSalesHistoryItem as SharedImportSalesHistoryItem,
   PeriodQuery as SharedPeriodQuery,
 } from '@sales-planner/shared';
+import { AssertCompatible, zodSchemas } from '../common/schema.utils.js';
 
-// Type compatibility helper - fails at compile time if types don't match
-type AssertCompatible<T, U extends T> = U;
+const { id, quantity, period, code } = zodSchemas;
 
 // Zod schemas
-const periodRegex = /^\d{4}-(0[1-9]|1[0-2])$/;
-
 export const PeriodQuerySchema = z.object({
-  period_from: z.string().regex(periodRegex, 'Must be in YYYY-MM format').optional(),
-  period_to: z.string().regex(periodRegex, 'Must be in YYYY-MM format').optional(),
+  period_from: period().optional(),
+  period_to: period().optional(),
 });
 
 export const CreateSalesHistorySchema = z.object({
-  shop_id: z.number().int().positive(),
-  tenant_id: z.number().int().positive(),
-  sku_id: z.number().int().positive(),
-  period: z.string().regex(periodRegex, 'Period must be in YYYY-MM format'),
-  quantity: z.number().int().nonnegative(),
+  shop_id: id(),
+  tenant_id: id(),
+  sku_id: id(),
+  period: period(),
+  quantity: quantity(),
 });
 
 export const UpdateSalesHistorySchema = z.object({
-  quantity: z.number().int().nonnegative().optional(),
+  quantity: quantity().optional(),
   // Note: shop_id, tenant_id, sku_id, period are not updatable
 });
 
 export const ImportSalesHistoryItemSchema = z.object({
-  sku_code: z.string().min(1).max(100),
-  period: z.string().regex(periodRegex, 'Period must be in YYYY-MM format'),
-  quantity: z.number().int().nonnegative(),
+  sku_code: code(),
+  period: period(),
+  quantity: quantity(),
 });
 
 // Infer TypeScript types from schemas with compatibility checks

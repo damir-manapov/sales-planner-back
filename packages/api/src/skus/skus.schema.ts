@@ -4,28 +4,28 @@ import type {
   UpdateSkuDto as SharedUpdateSkuDto,
   ImportSkuItem as SharedImportSkuItem,
 } from '@sales-planner/shared';
+import { AssertCompatible, zodSchemas } from '../common/schema.utils.js';
 
-// Type compatibility helper - fails at compile time if types don't match
-type AssertCompatible<T, U extends T> = U;
+const { code, title, id } = zodSchemas;
 
 // Zod schemas
 export const CreateSkuSchema = z.object({
-  code: z.string().min(1).max(100),
-  title: z.string().min(1).max(255),
-  shop_id: z.number().int().positive(),
-  tenant_id: z.number().int().positive(),
+  code: code(),
+  title: title(),
+  shop_id: id(),
+  tenant_id: id(),
 });
 
 export const UpdateSkuSchema = z.object({
-  code: z.string().min(1).max(100).optional(),
-  title: z.string().min(1).max(255).optional(),
+  code: code().optional(),
+  title: title().optional(),
   // Note: shop_id and tenant_id are intentionally not updatable
   // Once a SKU is created in a shop/tenant, it stays there
 });
 
 export const ImportSkuItemSchema = z.object({
-  code: z.string().min(1).max(100),
-  title: z.string().min(1).max(255),
+  code: code(),
+  title: title(),
 });
 
 // Infer TypeScript types from schemas

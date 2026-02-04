@@ -1,19 +1,19 @@
 import { z } from 'zod';
 import type { CreateApiKeyDto as SharedCreateApiKeyDto } from '@sales-planner/shared';
+import { AssertCompatible, zodSchemas } from '../common/schema.utils.js';
 
-// Type compatibility helper - fails at compile time if types don't match
-type AssertCompatible<T, U extends T> = U;
+const { id, name } = zodSchemas;
 
 // Zod schemas
 export const CreateApiKeySchema = z.object({
-  user_id: z.number().int().positive(),
-  key: z.string().min(1).max(255).optional(),
-  name: z.string().min(1).max(255).optional(),
+  user_id: id(),
+  key: name().optional(), // key uses same constraints as name (1-255)
+  name: name().optional(),
   expires_at: z.string().datetime().optional(),
 });
 
 export const UpdateApiKeySchema = z.object({
-  name: z.string().min(1).max(255).nullable().optional(),
+  name: name().nullable().optional(),
   expires_at: z.string().datetime().nullable().optional(),
 });
 

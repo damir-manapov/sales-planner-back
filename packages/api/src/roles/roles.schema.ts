@@ -1,18 +1,18 @@
 import { z } from 'zod';
 import type { CreateRoleDto as SharedCreateRoleDto } from '@sales-planner/shared';
+import { AssertCompatible, zodSchemas } from '../common/schema.utils.js';
 
-// Type compatibility helper - fails at compile time if types don't match
-type AssertCompatible<T, U extends T> = U;
+const { code, description } = zodSchemas;
 
 // Zod schemas
 export const CreateRoleSchema = z.object({
-  name: z.string().min(1).max(100),
-  description: z.string().max(500).optional(),
+  name: code(), // role names are short codes (1-100 chars)
+  description: description().optional(),
 });
 
 export const UpdateRoleSchema = z.object({
-  name: z.string().min(1).max(100).optional(),
-  description: z.string().max(500).nullable().optional(),
+  name: code().optional(),
+  description: description().nullable().optional(),
 });
 
 // Infer TypeScript types from schemas with compatibility checks
