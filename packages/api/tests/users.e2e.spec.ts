@@ -1,16 +1,15 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import { ApiError, SalesPlannerClient } from '@sales-planner/http-client';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
-import { SalesPlannerClient, ApiError } from '@sales-planner/http-client';
-import { cleanupUser, SYSTEM_ADMIN_KEY } from './test-helpers.js';
+import { TestContext } from './test-context.js';
 
 describe('Users (e2e)', () => {
   let app: INestApplication;
   let baseUrl: string;
-  let systemClient: SalesPlannerClient;
+  let ctx: TestContext;
   let createdUserId: number;
-  let testUserId: number;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -24,31 +23,20 @@ describe('Users (e2e)', () => {
     const url = await app.getUrl();
     baseUrl = url.replace('[::1]', 'localhost');
 
-    systemClient = new SalesPlannerClient({
-      baseUrl,
-      apiKey: SYSTEM_ADMIN_KEY,
-    });
-
-    // Create tenant with shop and user (for tenant admin role)
-    const setup = await systemClient.createTenantWithShopAndUser({
+    ctx = await TestContext.create(app, baseUrl, {
       tenantTitle: `Test Tenant ${Date.now()}`,
       userEmail: `users-test-${Date.now()}@example.com`,
       userName: 'Users Test User',
     });
-
-    testUserId = setup.user.id;
   });
 
   afterAll(async () => {
-    // Cleanup
-    if (testUserId) {
-      await cleanupUser(app, testUserId);
-    }
+    if (ctx) await ctx.dispose();
     await app.close();
   });
 
   it('GET /users - should return users with system admin', async () => {
-    const users = await systemClient.getUsers();
+    const users = await ctx.getSystemClient().getUsers();
     expect(Array.isArray(users)).toBe(true);
   });
 
@@ -58,7 +46,7 @@ describe('Users (e2e)', () => {
       name: 'Test User',
     };
 
-    const user = await systemClient.createUser(newUser);
+    const user = await ctx.getSystemClient().createUser(newUser);
 
     expect(user).toHaveProperty('id');
     expect(user.email).toBe(newUser.email);
@@ -68,14 +56,14 @@ describe('Users (e2e)', () => {
   });
 
   it('GET /users/:id - should return created user with system admin', async () => {
-    const user = await systemClient.getUser(createdUserId);
+    const user = await ctx.getSystemClient().getUser(createdUserId);
 
     expect(user.id).toBe(createdUserId);
   });
 
   it('GET /users/:id - should return 404 for non-existent user', async () => {
     try {
-      await systemClient.getUser(999999);
+      await ctx.getSystemClient().getUser(999999);
       expect.fail('Should have thrown');
     } catch (error) {
       expect(error).toBeInstanceOf(ApiError);
@@ -84,11 +72,11 @@ describe('Users (e2e)', () => {
   });
 
   it('DELETE /users/:id - should delete created user with system admin', async () => {
-    await systemClient.deleteUser(createdUserId);
+    await ctx.getSystemClient().deleteUser(createdUserId);
 
     // Verify user is deleted
     try {
-      await systemClient.getUser(createdUserId);
+      await ctx.getSystemClient().getUser(createdUserId);
       expect.fail('Should have thrown');
     } catch (error) {
       expect(error).toBeInstanceOf(ApiError);
@@ -98,13 +86,13 @@ describe('Users (e2e)', () => {
 
   it('POST /users - should return 409 on duplicate email', async () => {
     const duplicateEmail = `duplicate-${Date.now()}@example.com`;
-    await systemClient.createUser({
+    await ctx.getSystemClient().createUser({
       email: duplicateEmail,
       name: 'First User',
     });
 
     try {
-      await systemClient.createUser({
+      await ctx.getSystemClient().createUser({
         email: duplicateEmail,
         name: 'Duplicate User',
       });

@@ -14,10 +14,10 @@ import { AuthGuard } from '../auth/auth.guard.js';
 import { SystemAdminGuard } from '../auth/system-admin.guard.js';
 import { ZodValidationPipe } from '../common/index.js';
 import {
-  CreateApiKeySchema,
-  UpdateApiKeySchema,
   type CreateApiKeyRequest,
+  CreateApiKeySchema,
   type UpdateApiKeyRequest,
+  UpdateApiKeySchema,
 } from './api-keys.schema.js';
 import { ApiKeysService } from './api-keys.service';
 

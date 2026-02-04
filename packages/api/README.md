@@ -289,6 +289,67 @@ pnpm test:e2e:local   # Run e2e tests with local PostgreSQL (docker-compose)
 pnpm test:e2e:watch   # Run e2e tests in watch mode
 ```
 
+### E2E Test Infrastructure
+
+All e2e tests use the `TestContext` pattern for consistent test setup and automatic cleanup:
+
+**Basic Usage:**
+```typescript
+import { TestContext } from './test-context.js';
+
+describe('My Feature (e2e)', () => {
+  let app: INestApplication;
+  let baseUrl: string;
+  let ctx: TestContext;
+
+  beforeAll(async () => {
+    // Standard app setup
+    const moduleFixture = await Test.createTestingModule({
+      imports: [AppModule],
+    }).compile();
+    app = moduleFixture.createNestApplication();
+    await app.init();
+    await app.listen(0);
+    const url = await app.getUrl();
+    baseUrl = url.replace('[::1]', 'localhost');
+
+    // TestContext creates tenant, shop, user, and client
+    ctx = await TestContext.create(app, baseUrl, {
+      tenantTitle: 'Test Tenant',
+      userEmail: 'test@example.com',
+      userName: 'Test User',
+    });
+  });
+
+  afterAll(async () => {
+    if (ctx) await ctx.dispose(); // Automatic cleanup
+    await app.close();
+  });
+
+  it('should work with test context', async () => {
+    // Access authenticated client
+    const result = await ctx.client.getSkus(ctx.shopContext);
+    expect(Array.isArray(result)).toBe(true);
+  });
+});
+```
+
+**TestContext API:**
+- `ctx.client` - Authenticated SalesPlannerClient for the test user
+- `ctx.shopContext` - `{ shop_id, tenant_id }` object for API calls
+- `ctx.tenant` - Created tenant object
+- `ctx.shop` - Created shop object
+- `ctx.user` - Created user object
+- `ctx.getSystemClient()` - Get system admin client for privileged operations
+- `ctx.createUser(email, name)` - Create additional users in the same tenant
+- `ctx.dispose()` - Clean up all created resources (automatic)
+
+**Benefits:**
+- ~40-60% reduction in test boilerplate
+- Automatic cleanup of all test data
+- Consistent patterns across all test files
+- Type-safe client access
+
 ### Local E2E Testing with Docker
 
 To run e2e tests against a local PostgreSQL database:

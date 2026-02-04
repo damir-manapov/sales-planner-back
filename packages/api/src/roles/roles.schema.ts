@@ -1,10 +1,10 @@
-import { z } from 'zod';
 import type {
-  CreateRoleRequest as SharedCreateRoleRequest,
   CreateRoleDto as SharedCreateRoleDto,
-  UpdateRoleRequest as SharedUpdateRoleRequest,
+  CreateRoleRequest as SharedCreateRoleRequest,
   UpdateRoleDto as SharedUpdateRoleDto,
+  UpdateRoleRequest as SharedUpdateRoleRequest,
 } from '@sales-planner/shared';
+import { z } from 'zod';
 import { AssertCompatible, zodSchemas } from '../common/schema.utils.js';
 
 const { code, description } = zodSchemas;

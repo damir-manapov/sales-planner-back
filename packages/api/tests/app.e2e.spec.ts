@@ -1,7 +1,7 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { SalesPlannerClient } from '@sales-planner/http-client';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 
 describe('AppController (e2e)', () => {

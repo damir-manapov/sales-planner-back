@@ -4,6 +4,7 @@ import { DuplicateResourceException, isUniqueViolation } from '../common/index.j
 import { DatabaseService } from '../database/index.js';
 import { normalizeSkuCode } from '../lib/index.js';
 import type { CreateSkuDto, ImportSkuItem, UpdateSkuDto } from './skus.schema.js';
+import { ImportSkuItemSchema } from './skus.schema.js';
 
 export type { Sku };
 
@@ -93,16 +94,19 @@ export class SkusService {
     const validItems: ImportSkuItem[] = [];
 
     items.forEach((item, i) => {
-      if (!item.code || !item.title) {
-        const identifier = item.code || `index ${i}`;
-        errors.push(`Invalid item "${identifier}": code and title are required`);
+      const result = ImportSkuItemSchema.safeParse(item);
+      if (!result.success) {
+        const identifier =
+          typeof item === 'object' && item && 'code' in item ? item.code : `index ${i}`;
+        const errorMessages = result.error.issues.map((issue) => issue.message).join(', ');
+        errors.push(`Invalid item "${identifier}": ${errorMessages}`);
         return;
       }
 
       // Normalize the SKU code
-      const normalizedCode = normalizeSkuCode(item.code);
+      const normalizedCode = normalizeSkuCode(result.data.code);
       validItems.push({
-        ...item,
+        ...result.data,
         code: normalizedCode,
       });
     });

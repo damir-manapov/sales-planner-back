@@ -1,19 +1,15 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import { ApiError, SalesPlannerClient } from '@sales-planner/http-client';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
-import { SalesPlannerClient, ApiError } from '@sales-planner/http-client';
-import { cleanupUser, SYSTEM_ADMIN_KEY } from './test-helpers.js';
 import { ROLE_NAMES } from '../src/common/constants.js';
+import { TestContext } from './test-context.js';
 
 describe('Me (e2e)', () => {
   let app: INestApplication;
   let baseUrl: string;
-  let client: SalesPlannerClient;
-  let systemClient: SalesPlannerClient;
-  let userId: number;
-  let tenantId: number;
-  let shopId: number;
+  let ctx: TestContext;
   let userEmail: string;
 
   beforeAll(async () => {
@@ -28,33 +24,16 @@ describe('Me (e2e)', () => {
     const url = await app.getUrl();
     baseUrl = url.replace('[::1]', 'localhost');
 
-    systemClient = new SalesPlannerClient({
-      baseUrl,
-      apiKey: SYSTEM_ADMIN_KEY,
-    });
-
-    // Create tenant with shop and user in one call
     userEmail = `testuser-${Date.now()}@example.com`;
-    const setup = await systemClient.createTenantWithShopAndUser({
-      tenantTitle: `Test Tenant ${Date.now()}`,
+    ctx = await TestContext.create(app, baseUrl, {
       userEmail,
       userName: 'Test User',
-    });
-
-    userId = setup.user.id;
-    tenantId = setup.tenant.id;
-    shopId = setup.shop.id;
-
-    client = new SalesPlannerClient({
-      baseUrl,
-      apiKey: setup.apiKey,
     });
   });
 
   afterAll(async () => {
-    // Cleanup using helper that handles foreign key constraints
-    if (userId) {
-      await cleanupUser(app, userId);
+    if (ctx) {
+      await ctx.dispose();
     }
     await app.close();
   });
@@ -84,9 +63,9 @@ describe('Me (e2e)', () => {
   });
 
   it('GET /me - should return current user with roles and tenants', async () => {
-    const me = await client.getMe();
+    const me = await ctx.client.getMe();
 
-    expect(me).toHaveProperty('id', userId);
+    expect(me).toHaveProperty('id', ctx.user.id);
     expect(me).toHaveProperty('name', 'Test User');
     expect(me).toHaveProperty('email', userEmail);
     expect(me).toHaveProperty('roles');
@@ -99,7 +78,7 @@ describe('Me (e2e)', () => {
     // Verify tenantAdmin role (assigned by with-shop-and-user endpoint)
     const tenantAdminRole = me.roles.find((r) => r.role_name === ROLE_NAMES.TENANT_ADMIN);
     expect(tenantAdminRole).toBeTruthy();
-    expect(tenantAdminRole).toHaveProperty('tenant_id', tenantId);
+    expect(tenantAdminRole).toHaveProperty('tenant_id', ctx.tenant.id);
     expect(tenantAdminRole?.tenant_title).toBeTruthy();
     expect(tenantAdminRole).toHaveProperty('shop_id', null); // Tenant-level role
 
@@ -107,7 +86,7 @@ describe('Me (e2e)', () => {
     const ownerRole = me.roles.find((r) => r.role_name === ROLE_NAMES.TENANT_OWNER);
     expect(ownerRole).toBeTruthy();
     expect(ownerRole).toHaveProperty('role_name', ROLE_NAMES.TENANT_OWNER);
-    expect(ownerRole).toHaveProperty('tenant_id', tenantId);
+    expect(ownerRole).toHaveProperty('tenant_id', ctx.tenant.id);
     expect(ownerRole?.tenant_title).toBeTruthy();
     expect(ownerRole).toHaveProperty('shop_id', null);
     expect(ownerRole).toHaveProperty('shop_title', null);
@@ -117,13 +96,13 @@ describe('Me (e2e)', () => {
     expect(me.tenants.length).toBeGreaterThan(0);
     const tenant = me.tenants[0];
     expect(tenant).toBeDefined();
-    expect(tenant).toHaveProperty('id', tenantId);
+    expect(tenant).toHaveProperty('id', ctx.tenant.id);
     expect(tenant?.title).toBeTruthy();
     expect(tenant).toHaveProperty('is_owner', true);
 
     // Verify shops are included in tenant (tenant admin sees all shops)
     expect(Array.isArray(tenant?.shops)).toBe(true);
     expect(tenant?.shops?.length).toBe(1); // One shop created by with-shop-and-user
-    expect(tenant?.shops?.[0]?.id).toBe(shopId);
+    expect(tenant?.shops?.[0]?.id).toBe(ctx.shop.id);
   });
 });

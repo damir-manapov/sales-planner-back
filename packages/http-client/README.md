@@ -1,51 +1,120 @@
 # @sales-planner/http-client
 
-Type-safe HTTP client for the Sales Planner API.
+TypeScript HTTP client for the Sales Planner API with full type safety.
 
 ## Installation
 
 ```bash
-npm install @sales-planner/http-client
-# or
 pnpm add @sales-planner/http-client
 ```
 
 ## Usage
+
+### Quick Start
 
 ```typescript
 import { SalesPlannerClient } from '@sales-planner/http-client';
 
 const client = new SalesPlannerClient({
   baseUrl: 'https://sales-planner-back.vercel.app',
-  apiKey: 'your-api-key'
+  getAuthToken: () => 'your-api-key',
 });
 
-// Get current user
-const me = await client.getMe();
+// Check if API is healthy
+const health = await client.getHealth();
+console.log(health); // { status: 'ok', version: '1.0.0' }
+```
 
-// Get shops
-const shops = await client.getShops();
+### API Styles
 
-// Get SKUs for a shop
-const skus = await client.getSkus({ shop_id: 1, tenant_id: 1 });
+The client supports two complementary API styles:
 
-// Create API key (key is auto-generated)
-const apiKey = await client.createApiKey({
-  user_id: 1,
-  name: 'Production Key',
-  expires_at: '2026-12-31T23:59:59Z'
-});
+#### 1. **Namespaced API** (Recommended)
 
-// Import sales history (marketplace field required)
-const result = await client.importSalesHistoryJson([
-  { sku_code: 'SKU-001', period: '2026-01', quantity: 100, marketplace: 'WB' }
-], { shop_id: 1, tenant_id: 1 });
+Access resources through domain-specific sub-clients:
+
+```typescript
+// Users
+const users = await client.users.getUsers();
+const user = await client.users.getUser(1);
+
+// Tenants & Shops
+const tenants = await client.tenants.getTenants();
+const shops = await client.shops.getShops(tenantId);
+
+// SKUs with import/export
+const skus = await client.skus.getSkus({ tenantId, shopId });
+await client.skus.importSkusJson(items, { tenantId, shopId });
+const csv = await client.skus.exportSkusCsv({ tenantId, shopId });
+
+// Sales History
+const history = await client.salesHistory.getSalesHistory(
+  { tenantId, shopId },
+  { start: '2024-01', end: '2024-12' }
+);
+
+// Marketplaces
+const marketplaces = await client.marketplaces.getMarketplaces({ tenantId });
+```
+
+**Benefits:**
+- Clear domain separation
+- IDE autocomplete by domain
+- Easier to discover related methods
+
+#### 2. **Flat API** (Backward Compatible)
+
+Access all methods directly on the client:
+
+```typescript
+// Backward compatible with existing code
+const users = await client.getUsers();
+const user = await client.getUser(1);
+const skus = await client.getSkus({ tenantId, shopId });
+```
+
+## Import/Export Pattern
+
+Resources that support bulk operations (SKUs, Sales History, Marketplaces) follow a consistent pattern:
+
+```typescript
+// Import from JSON
+const result = await client.skus.importSkusJson(
+  [
+    { code: 'SKU-001', title: 'Product 1' },
+    { code: 'SKU-002', title: 'Product 2' },
+  ],
+  { tenantId, shopId }
+);
+// Returns: { inserted: 2, updated: 0, errors: [] }
+
+// Import from CSV file
+const csvContent = await fs.readFile('skus.csv', 'utf-8');
+const result = await client.skus.importSkusCsv(csvContent, { tenantId, shopId });
+
+// Export to CSV
+const csv = await client.skus.exportSkusCsv({ tenantId, shopId });
+
+// Get example templates
+const exampleCsv = await client.skus.getSkusExampleCsv();
 ```
 
 ## Error Handling
 
-The API returns standard HTTP status codes:
-- `409 Conflict` - Duplicate resource (e.g., duplicate email, SKU code, sales period)
+```typescript
+import { ApiError } from '@sales-planner/http-client';
+
+try {
+  await client.users.getUser(999);
+} catch (error) {
+  if (error instanceof ApiError) {
+    console.error(`API Error ${error.status}: ${error.message}`);
+  }
+}
+```
+
+Common HTTP status codes:
+- `409 Conflict` - Duplicate resource (email, SKU code, sales period)
 - `404 Not Found` - Resource not found
 - `403 Forbidden` - Insufficient permissions
 - `400 Bad Request` - Validation error

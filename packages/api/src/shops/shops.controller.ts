@@ -22,10 +22,10 @@ import {
 import { AuthenticatedRequest, AuthGuard } from '../auth/auth.guard.js';
 import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
 import {
-  CreateShopSchema,
-  UpdateShopSchema,
   type CreateShopRequest,
+  CreateShopSchema,
   type UpdateShopRequest,
+  UpdateShopSchema,
 } from './shops.schema.js';
 import { type Shop, ShopsService } from './shops.service.js';
 

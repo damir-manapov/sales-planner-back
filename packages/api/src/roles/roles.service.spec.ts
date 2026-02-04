@@ -1,6 +1,6 @@
-import { describe, it, expect, beforeEach, vi } from 'vitest';
-import { RolesService } from './roles.service.js';
+import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DatabaseService } from '../database/index.js';
+import { RolesService } from './roles.service.js';
 
 describe('RolesService', () => {
   let service: RolesService;

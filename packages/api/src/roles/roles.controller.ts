@@ -14,10 +14,10 @@ import { AuthGuard } from '../auth/auth.guard.js';
 import { SystemAdminGuard } from '../auth/system-admin.guard.js';
 import { ZodValidationPipe } from '../common/index.js';
 import {
-  CreateRoleSchema,
-  UpdateRoleSchema,
   type CreateRoleRequest,
+  CreateRoleSchema,
   type UpdateRoleRequest,
+  UpdateRoleSchema,
 } from './roles.schema.js';
 import { type Role, RolesService } from './roles.service.js';
 

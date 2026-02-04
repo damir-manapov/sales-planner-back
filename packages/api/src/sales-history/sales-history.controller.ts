@@ -28,7 +28,7 @@ import {
   type ShopContext as ShopContextType,
 } from '../auth/decorators.js';
 import { parseAndValidateImport, ZodValidationPipe } from '../common/index.js';
-import { fromCsv, toCsv } from '../lib/index.js';
+import { fromCsv, normalizeId, toCsv } from '../lib/index.js';
 import {
   type CreateSalesHistoryRequest,
   CreateSalesHistorySchema,
@@ -132,6 +132,7 @@ export class SalesHistoryController {
   ): Promise<SalesHistory> {
     return this.salesHistoryService.create({
       ...dto,
+      marketplace_id: normalizeId(dto.marketplace_id),
       shop_id: ctx.shopId,
       tenant_id: ctx.tenantId,
     });

@@ -1,8 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { sql } from 'kysely';
 import type { User } from '@sales-planner/shared';
-import { DuplicateResourceException, isUniqueViolation } from '../common/index.js';
+import { sql } from 'kysely';
 import { ROLE_NAMES } from '../common/constants.js';
+import { DuplicateResourceException, isUniqueViolation } from '../common/index.js';
 import { DatabaseService } from '../database/index.js';
 import type { CreateUserDto, UpdateUserDto } from './users.schema.js';
 

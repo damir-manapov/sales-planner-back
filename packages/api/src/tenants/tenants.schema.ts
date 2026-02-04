@@ -1,11 +1,11 @@
-import { z } from 'zod';
 import type {
-  CreateTenantRequest as SharedCreateTenantRequest,
   CreateTenantDto as SharedCreateTenantDto,
-  UpdateTenantRequest as SharedUpdateTenantRequest,
-  UpdateTenantDto as SharedUpdateTenantDto,
+  CreateTenantRequest as SharedCreateTenantRequest,
   CreateTenantWithShopDto as SharedCreateTenantWithShopDto,
+  UpdateTenantDto as SharedUpdateTenantDto,
+  UpdateTenantRequest as SharedUpdateTenantRequest,
 } from '@sales-planner/shared';
+import { z } from 'zod';
 import { AssertCompatible, zodSchemas } from '../common/schema.utils.js';
 
 const { title, email, name, id } = zodSchemas;

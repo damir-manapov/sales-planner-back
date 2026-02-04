@@ -1,10 +1,10 @@
-import { z } from 'zod';
 import type {
-  CreateApiKeyRequest as SharedCreateApiKeyRequest,
   CreateApiKeyDto as SharedCreateApiKeyDto,
-  UpdateApiKeyRequest as SharedUpdateApiKeyRequest,
+  CreateApiKeyRequest as SharedCreateApiKeyRequest,
   UpdateApiKeyDto as SharedUpdateApiKeyDto,
+  UpdateApiKeyRequest as SharedUpdateApiKeyRequest,
 } from '@sales-planner/shared';
+import { z } from 'zod';
 import { AssertCompatible, zodSchemas } from '../common/schema.utils.js';
 
 const { id, name } = zodSchemas;

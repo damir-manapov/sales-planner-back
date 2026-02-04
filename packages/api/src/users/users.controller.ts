@@ -16,7 +16,7 @@ import { hasTenantAccess, validateTenantAdminAccess } from '../auth/access-contr
 import { AuthenticatedRequest, AuthGuard } from '../auth/auth.guard.js';
 import { ZodValidationPipe } from '../common/index.js';
 import { UserRolesService } from '../user-roles/user-roles.service.js';
-import { CreateUserSchema, type CreateUserRequest } from './users.schema.js';
+import { type CreateUserRequest, CreateUserSchema } from './users.schema.js';
 import { type User, UsersService } from './users.service.js';
 
 @Controller('users')

@@ -1,5 +1,16 @@
 # @sales-planner/shared
 
+## 0.5.1
+
+### Patch Changes
+
+- - Split shared/dto.ts into modular structure by entity
+  - Split http-client into domain-specific client classes
+  - Add ImportExportBaseClient for import/export functionality
+  - Rename normalizeCode to normalizeId
+  - Add Zod validation to bulkUpsert methods
+  - Update marketplace examples to use camelCase IDs
+
 ## 0.5.0
 
 ### Minor Changes

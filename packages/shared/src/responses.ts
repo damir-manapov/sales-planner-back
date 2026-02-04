@@ -70,3 +70,8 @@ export interface SkuExportItem {
   code: string;
   title: string;
 }
+
+export interface MarketplaceExportItem {
+  id: string;
+  title: string;
+}

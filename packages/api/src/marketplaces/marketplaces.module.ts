@@ -6,10 +6,11 @@ import { TenantsModule } from '../tenants/tenants.module.js';
 import { UserRolesModule } from '../user-roles/user-roles.module.js';
 import { MarketplacesController } from './marketplaces.controller.js';
 import { MarketplacesService } from './marketplaces.service.js';
+import { MarketplacesExamplesController } from './marketplaces-examples.controller.js';
 
 @Module({
   imports: [ApiKeysModule, UserRolesModule, TenantsModule],
-  controllers: [MarketplacesController],
+  controllers: [MarketplacesController, MarketplacesExamplesController],
   providers: [MarketplacesService, AuthGuard, SystemAdminGuard],
   exports: [MarketplacesService],
 })

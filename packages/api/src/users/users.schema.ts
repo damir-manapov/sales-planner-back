@@ -1,10 +1,10 @@
-import { z } from 'zod';
 import type {
-  CreateUserRequest as SharedCreateUserRequest,
   CreateUserDto as SharedCreateUserDto,
-  UpdateUserRequest as SharedUpdateUserRequest,
+  CreateUserRequest as SharedCreateUserRequest,
   UpdateUserDto as SharedUpdateUserDto,
+  UpdateUserRequest as SharedUpdateUserRequest,
 } from '@sales-planner/shared';
+import { z } from 'zod';
 import { AssertCompatible, zodSchemas } from '../common/schema.utils.js';
 
 const { email, name, id } = zodSchemas;

@@ -1,25 +1,18 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import { ApiError, SalesPlannerClient } from '@sales-planner/http-client';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
-import { SalesPlannerClient, ApiError } from '@sales-planner/http-client';
-import { cleanupUser, SYSTEM_ADMIN_KEY } from './test-helpers.js';
-import { normalizeCode, normalizeSkuCode } from '../src/lib/normalize-code.js';
+import { normalizeId, normalizeSkuCode } from '../src/lib/normalize-code.js';
+import { TestContext } from './test-context.js';
 
 describe('Sales History (e2e)', () => {
   let app: INestApplication;
   let baseUrl: string;
-  let systemClient: SalesPlannerClient;
-  let client: SalesPlannerClient;
-
-  let tenantId: number;
-  let shopId: number;
+  let ctx: TestContext;
   let skuId: number;
   let skuCode: string;
   let salesHistoryId: number;
-  let testUserId: number;
-
-  const ctx = () => ({ shop_id: shopId, tenant_id: tenantId });
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -33,41 +26,26 @@ describe('Sales History (e2e)', () => {
     const url = await app.getUrl();
     baseUrl = url.replace('[::1]', 'localhost');
 
-    systemClient = new SalesPlannerClient({
-      baseUrl,
-      apiKey: SYSTEM_ADMIN_KEY,
-    });
-
-    // Create tenant with shop and user in one call
-    const setup = await systemClient.createTenantWithShopAndUser({
+    ctx = await TestContext.create(app, baseUrl, {
       tenantTitle: `Test Tenant ${Date.now()}`,
       userEmail: `sales-test-${Date.now()}@example.com`,
       userName: 'Sales Test User',
     });
 
-    testUserId = setup.user.id;
-    tenantId = setup.tenant.id;
-    shopId = setup.shop.id;
-
-    client = new SalesPlannerClient({
-      baseUrl,
-      apiKey: setup.apiKey,
-    });
-
     // Create a test SKU
     skuCode = `SKU-SALES-${Date.now()}`;
-    const sku = await client.createSku({ code: skuCode, title: 'Test SKU for Sales' }, ctx());
+    const sku = await ctx.client.createSku(
+      { code: skuCode, title: 'Test SKU for Sales' },
+      ctx.shopContext,
+    );
     skuId = sku.id;
 
     // Create a test marketplace
-    await client.createMarketplace({ id: 'WB', title: 'Wildberries' }, ctx());
+    await ctx.client.createMarketplace({ id: 'WB', title: 'Wildberries' }, ctx.shopContext);
   });
 
   afterAll(async () => {
-    // Cleanup using helper that handles foreign key constraints
-    if (testUserId) {
-      await cleanupUser(app, testUserId);
-    }
+    if (ctx) await ctx.dispose();
     await app.close();
   });
 
@@ -76,7 +54,7 @@ describe('Sales History (e2e)', () => {
       const noAuthClient = new SalesPlannerClient({ baseUrl, apiKey: '' });
 
       try {
-        await noAuthClient.getSalesHistory(ctx());
+        await noAuthClient.getSalesHistory(ctx.shopContext);
         expect.fail('Should have thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(ApiError);
@@ -87,27 +65,27 @@ describe('Sales History (e2e)', () => {
 
   describe('CRUD operations', () => {
     it('POST /sales-history - should create sales history record', async () => {
-      const record = await client.createSalesHistory(
+      const record = await ctx.client.createSalesHistory(
         { sku_id: skuId, period: '2026-01', quantity: 100, marketplace_id: 'WB' },
-        ctx(),
+        ctx.shopContext,
       );
 
       expect(record).toHaveProperty('id');
       expect(record.sku_id).toBe(skuId);
       expect(record.period).toBe('2026-01');
       expect(record.quantity).toBe(100);
-      expect(record.shop_id).toBe(shopId);
-      expect(record.tenant_id).toBe(tenantId);
-      expect(record.marketplace_id).toBe('WB');
+      expect(record.shop_id).toBe(ctx.shop.id);
+      expect(record.tenant_id).toBe(ctx.tenant.id);
+      expect(record.marketplace_id).toBe('wb'); // normalizeId converts to lowercase
 
       salesHistoryId = record.id;
     });
 
     it('POST /sales-history - should reject invalid period format', async () => {
       try {
-        await client.createSalesHistory(
+        await ctx.client.createSalesHistory(
           { sku_id: skuId, period: '2026-13', quantity: 50, marketplace_id: 'WB' },
-          ctx(),
+          ctx.shopContext,
         );
         expect.fail('Should have thrown');
       } catch (error) {
@@ -118,9 +96,9 @@ describe('Sales History (e2e)', () => {
 
     it('POST /sales-history - should reject invalid period string', async () => {
       try {
-        await client.createSalesHistory(
+        await ctx.client.createSalesHistory(
           { sku_id: skuId, period: '2026-1', quantity: 50, marketplace_id: 'WB' },
-          ctx(),
+          ctx.shopContext,
         );
         expect.fail('Should have thrown');
       } catch (error) {
@@ -130,14 +108,14 @@ describe('Sales History (e2e)', () => {
     });
 
     it('GET /sales-history - should return sales history for shop', async () => {
-      const records = await client.getSalesHistory(ctx());
+      const records = await ctx.client.getSalesHistory(ctx.shopContext);
 
       expect(Array.isArray(records)).toBe(true);
       expect(records.length).toBeGreaterThan(0);
     });
 
     it('GET /sales-history - should filter by period range', async () => {
-      const records = await client.getSalesHistory(ctx(), {
+      const records = await ctx.client.getSalesHistory(ctx.shopContext, {
         period_from: '2026-01',
         period_to: '2026-12',
       });
@@ -149,19 +127,23 @@ describe('Sales History (e2e)', () => {
     });
 
     it('GET /sales-history/:id - should return record by id', async () => {
-      const record = await client.getSalesHistoryItem(salesHistoryId, ctx());
+      const record = await ctx.client.getSalesHistoryItem(salesHistoryId, ctx.shopContext);
 
       expect(record.id).toBe(salesHistoryId);
     });
 
     it('PUT /sales-history/:id - should update record', async () => {
-      const record = await client.updateSalesHistory(salesHistoryId, { quantity: 150 }, ctx());
+      const record = await ctx.client.updateSalesHistory(
+        salesHistoryId,
+        { quantity: 150 },
+        ctx.shopContext,
+      );
 
       expect(record.quantity).toBe(150);
     });
 
     it('DELETE /sales-history/:id - should delete record', async () => {
-      await client.deleteSalesHistory(salesHistoryId, ctx());
+      await ctx.client.deleteSalesHistory(salesHistoryId, ctx.shopContext);
       salesHistoryId = 0;
     });
 
@@ -173,10 +155,10 @@ describe('Sales History (e2e)', () => {
         marketplace_id: 'WB',
       };
 
-      await client.createSalesHistory(duplicateEntry, ctx());
+      await ctx.client.createSalesHistory(duplicateEntry, ctx.shopContext);
 
       try {
-        await client.createSalesHistory(duplicateEntry, ctx());
+        await ctx.client.createSalesHistory(duplicateEntry, ctx.shopContext);
         expect.fail('Should have thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(ApiError);
@@ -187,12 +169,12 @@ describe('Sales History (e2e)', () => {
 
   describe('Bulk import', () => {
     it('POST /sales-history/import/json - should import multiple records', async () => {
-      const result = await client.importSalesHistoryJson(
+      const result = await ctx.client.importSalesHistoryJson(
         [
           { sku_code: skuCode, period: '2025-11', quantity: 80, marketplace: 'WB' },
           { sku_code: skuCode, period: '2025-12', quantity: 90, marketplace: 'WB' },
         ],
-        ctx(),
+        ctx.shopContext,
       );
 
       expect(result.created).toBe(2);
@@ -201,9 +183,9 @@ describe('Sales History (e2e)', () => {
     });
 
     it('POST /sales-history/import/json - should upsert existing records', async () => {
-      const result = await client.importSalesHistoryJson(
+      const result = await ctx.client.importSalesHistoryJson(
         [{ sku_code: skuCode, period: '2025-11', quantity: 100, marketplace: 'WB' }],
-        ctx(),
+        ctx.shopContext,
       );
 
       expect(result.created).toBe(0);
@@ -214,9 +196,9 @@ describe('Sales History (e2e)', () => {
       const newSkuCode = `AUTO-SKU-${Date.now()}`;
       const normalizedSkuCode = normalizeSkuCode(newSkuCode);
 
-      const result = await client.importSalesHistoryJson(
+      const result = await ctx.client.importSalesHistoryJson(
         [{ sku_code: newSkuCode, period: '2025-05', quantity: 50, marketplace: 'WB' }],
-        ctx(),
+        ctx.shopContext,
       );
 
       expect(result.created).toBe(1);
@@ -224,7 +206,7 @@ describe('Sales History (e2e)', () => {
       expect(result.errors).toEqual([]);
 
       // Verify SKU was actually created
-      const skus = await client.getSkus(ctx());
+      const skus = await ctx.client.getSkus(ctx.shopContext);
       const createdSku = skus.find((s) => s.code === normalizedSkuCode);
       expect(createdSku).toBeDefined();
       expect(createdSku?.title).toBe(normalizedSkuCode); // Title defaults to code
@@ -232,11 +214,11 @@ describe('Sales History (e2e)', () => {
 
     it('POST /sales-history/import/json - should auto-create missing marketplaces', async () => {
       const uniqueMarketplace = `MP-${Date.now()}`;
-      const normalizedMarketplace = normalizeCode(uniqueMarketplace);
+      const normalizedMarketplace = normalizeId(uniqueMarketplace);
 
-      const result = await client.importSalesHistoryJson(
+      const result = await ctx.client.importSalesHistoryJson(
         [{ sku_code: skuCode, period: '2025-06', quantity: 30, marketplace: uniqueMarketplace }],
-        ctx(),
+        ctx.shopContext,
       );
 
       expect(result.created).toBe(1);
@@ -244,7 +226,7 @@ describe('Sales History (e2e)', () => {
       expect(result.errors).toEqual([]);
 
       // Verify marketplace was actually created
-      const marketplaces = await client.getMarketplaces(ctx());
+      const marketplaces = await ctx.client.getMarketplaces(ctx.shopContext);
       const createdMp = marketplaces.find((m) => m.id === normalizedMarketplace);
       expect(createdMp).toBeDefined();
       expect(createdMp?.title).toBe(normalizedMarketplace); // Title defaults to id
@@ -254,16 +236,19 @@ describe('Sales History (e2e)', () => {
       // Create SKU and sales history data
       const exportSkuCode = `EXPORT-SH-${Date.now()}`;
       const normalizedExportSkuCode = normalizeSkuCode(exportSkuCode);
-      await client.importSkusJson([{ code: exportSkuCode, title: 'Export Test SKU' }], ctx());
+      await ctx.client.importSkusJson(
+        [{ code: exportSkuCode, title: 'Export Test SKU' }],
+        ctx.shopContext,
+      );
 
       // Import sales history
-      await client.importSalesHistoryJson(
+      await ctx.client.importSalesHistoryJson(
         [{ sku_code: exportSkuCode, period: '2025-07', quantity: 100, marketplace: 'OZON' }],
-        ctx(),
+        ctx.shopContext,
       );
 
       // Export
-      const exported = await client.exportSalesHistoryJson(ctx());
+      const exported = await ctx.client.exportSalesHistoryJson(ctx.shopContext);
 
       expect(Array.isArray(exported)).toBe(true);
 
@@ -275,12 +260,12 @@ describe('Sales History (e2e)', () => {
         sku_code: normalizedExportSkuCode,
         period: '2025-07',
         quantity: 100,
-        marketplace: normalizeCode('OZON'),
+        marketplace: normalizeId('OZON'),
       });
     });
 
     it('GET /sales-history/export/json - should filter by period', async () => {
-      const exported = await client.exportSalesHistoryJson(ctx(), {
+      const exported = await ctx.client.exportSalesHistoryJson(ctx.shopContext, {
         period_from: '2025-07',
         period_to: '2025-07',
       });
@@ -293,7 +278,7 @@ describe('Sales History (e2e)', () => {
     });
 
     it('GET /sales-history/export/csv - should export sales history in CSV format', async () => {
-      const csv = await client.exportSalesHistoryCsv(ctx());
+      const csv = await ctx.client.exportSalesHistoryCsv(ctx.shopContext);
 
       expect(csv).toBeTruthy();
       expect(typeof csv).toBe('string');
@@ -308,7 +293,7 @@ describe('Sales History (e2e)', () => {
       const normalizedSkuCode = normalizeSkuCode(skuCode);
       const csvContent = `sku_code,period,quantity,marketplace\n${skuCode},2025-08,75,WB`;
 
-      const result = await client.importSalesHistoryCsv(csvContent, ctx());
+      const result = await ctx.client.importSalesHistoryCsv(csvContent, ctx.shopContext);
 
       expect(result).toHaveProperty('created');
       expect(result.created).toBeGreaterThanOrEqual(1);
@@ -316,7 +301,7 @@ describe('Sales History (e2e)', () => {
       expect(result.skus_created).toBeGreaterThanOrEqual(1);
 
       // Verify the data was imported using the export endpoint which includes sku_code
-      const exported = await client.exportSalesHistoryJson(ctx(), {
+      const exported = await ctx.client.exportSalesHistoryJson(ctx.shopContext, {
         period_from: '2025-08',
         period_to: '2025-08',
       });
@@ -326,13 +311,13 @@ describe('Sales History (e2e)', () => {
       );
       expect(imported).toBeDefined();
       expect(imported?.quantity).toBe(75);
-      expect(imported?.marketplace).toBe(normalizeCode('WB'));
+      expect(imported?.marketplace).toBe(normalizeId('WB'));
     });
   });
 
   describe('Example downloads', () => {
     it('GET /sales-history/examples/json - should return JSON example without auth', async () => {
-      const example = await client.getSalesHistoryExampleJson();
+      const example = await ctx.client.getSalesHistoryExampleJson();
 
       expect(Array.isArray(example)).toBe(true);
       expect(example.length).toBeGreaterThan(0);
@@ -342,7 +327,7 @@ describe('Sales History (e2e)', () => {
     });
 
     it('GET /sales-history/examples/csv - should return CSV example without auth', async () => {
-      const csv = await client.getSalesHistoryExampleCsv();
+      const csv = await ctx.client.getSalesHistoryExampleCsv();
 
       expect(csv).toContain('sku_code,period,quantity');
       expect(csv).toContain('SKU-001');

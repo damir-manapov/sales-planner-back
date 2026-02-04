@@ -1,7 +1,7 @@
 import { type INestApplication } from '@nestjs/common';
 import { Kysely } from 'kysely';
-import type { DB } from '../src/database/database.types.js';
 import { DatabaseService } from '../src/database/database.service.js';
+import type { DB } from '../src/database/database.types.js';
 
 /**
  * System admin key for test authentication

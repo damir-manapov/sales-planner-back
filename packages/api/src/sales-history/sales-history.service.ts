@@ -1,17 +1,11 @@
 import { Injectable } from '@nestjs/common';
+import type { SalesHistory, SalesHistoryExportItem } from '@sales-planner/shared';
 import type { Selectable } from 'kysely';
 import { sql } from 'kysely';
-import type { SalesHistory, SalesHistoryExportItem } from '@sales-planner/shared';
 import { DuplicateResourceException, isUniqueViolation } from '../common/index.js';
 import type { SalesHistory as SalesHistoryTable } from '../database/database.types.js';
 import { DatabaseService } from '../database/index.js';
-import {
-  dateToPeriod,
-  isValidPeriod,
-  periodToDate,
-  normalizeCode,
-  normalizeSkuCode,
-} from '../lib/index.js';
+import { dateToPeriod, normalizeId, normalizeSkuCode, periodToDate } from '../lib/index.js';
 import { MarketplacesService } from '../marketplaces/marketplaces.service.js';
 import { SkusService } from '../skus/skus.service.js';
 import type {
@@ -19,6 +13,7 @@ import type {
   ImportSalesHistoryItem,
   UpdateSalesHistoryDto,
 } from './sales-history.schema.js';
+import { ImportSalesHistoryItemSchema } from './sales-history.schema.js';
 
 export type { SalesHistory };
 
@@ -189,25 +184,17 @@ export class SalesHistoryService {
 
     const errors: string[] = [];
 
-    // Validate items first
+    // Validate items using Zod schema
     const validatedItems: ImportSalesHistoryItem[] = [];
 
     items.forEach((item, i) => {
-      if (!item.sku_code || !item.period) {
-        errors.push(`Invalid item at index ${i}: sku_code and period are required`);
+      const result = ImportSalesHistoryItemSchema.safeParse(item);
+      if (!result.success) {
+        const errorMessages = result.error.issues.map((issue) => issue.message).join(', ');
+        errors.push(`Invalid item at index ${i}: ${errorMessages}`);
         return;
       }
-      if (!item.marketplace) {
-        errors.push(`Invalid item at index ${i}: marketplace is required`);
-        return;
-      }
-      if (!isValidPeriod(item.period)) {
-        errors.push(
-          `Invalid item at index ${i}: period must be in YYYY-MM format with valid month`,
-        );
-        return;
-      }
-      validatedItems.push(item);
+      validatedItems.push(result.data);
     });
 
     if (validatedItems.length === 0) {
@@ -220,7 +207,7 @@ export class SalesHistoryService {
       await this.skusService.findOrCreateByCode(skuCodes, shopId, tenantId);
 
     // Ensure all marketplaces exist (auto-creates missing ones)
-    const marketplaceIds = validatedItems.map((i) => normalizeCode(i.marketplace));
+    const marketplaceIds = validatedItems.map((i) => normalizeId(i.marketplace));
     const marketplacesCreated = await this.marketplacesService.ensureExist(
       marketplaceIds,
       shopId,
@@ -238,7 +225,7 @@ export class SalesHistoryService {
           ...item,
           sku_id: skuId,
           periodDate: periodToDate(item.period),
-          marketplace_id: normalizeCode(item.marketplace),
+          marketplace_id: normalizeId(item.marketplace),
         });
       }
     });

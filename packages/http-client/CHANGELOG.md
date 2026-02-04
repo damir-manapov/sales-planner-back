@@ -1,5 +1,31 @@
 # @sales-planner/http-client
 
+## 0.6.0
+
+### Minor Changes
+
+- **Breaking Change:** Simplified SalesPlannerClient architecture
+
+  - Exposed sub-clients as public properties (`client.users`, `client.shops`, etc.)
+  - Backward compatible: All flat API methods still work (`client.getUsers()`)
+  - Recommended: Use namespaced API for better organization (`client.users.getUsers()`)
+  - Updated README with comprehensive documentation of both API styles
+  - Removed 60+ manual method bindings from constructor in favor of simple delegation
+  - No breaking changes for existing code - all previous methods still available
+
+## 0.5.1
+
+### Patch Changes
+
+- - Split shared/dto.ts into modular structure by entity
+  - Split http-client into domain-specific client classes
+  - Add ImportExportBaseClient for import/export functionality
+  - Rename normalizeCode to normalizeId
+  - Add Zod validation to bulkUpsert methods
+  - Update marketplace examples to use camelCase IDs
+- Updated dependencies
+  - @sales-planner/shared@0.5.1
+
 ## 0.5.0
 
 ### Minor Changes

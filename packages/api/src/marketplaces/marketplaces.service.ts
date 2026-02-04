@@ -1,8 +1,14 @@
 import { Injectable } from '@nestjs/common';
-import type { Marketplace } from '@sales-planner/shared';
+import type { Marketplace, MarketplaceExportItem } from '@sales-planner/shared';
 import { DuplicateResourceException, isUniqueViolation } from '../common/index.js';
 import { DatabaseService } from '../database/index.js';
-import type { CreateMarketplaceDto, UpdateMarketplaceDto } from './marketplaces.schema.js';
+import { normalizeId } from '../lib/index.js';
+import type {
+  CreateMarketplaceDto,
+  ImportMarketplaceItem,
+  UpdateMarketplaceDto,
+} from './marketplaces.schema.js';
+import { ImportMarketplaceItemSchema } from './marketplaces.schema.js';
 
 export type { Marketplace };
 export type { CreateMarketplaceDto, UpdateMarketplaceDto };
@@ -17,6 +23,14 @@ export class MarketplacesService {
 
   async findByShopId(shopId: number): Promise<Marketplace[]> {
     return this.db.selectFrom('marketplaces').selectAll().where('shop_id', '=', shopId).execute();
+  }
+
+  async exportForShop(shopId: number): Promise<MarketplaceExportItem[]> {
+    return this.db
+      .selectFrom('marketplaces')
+      .select(['id', 'title'])
+      .where('shop_id', '=', shopId)
+      .execute();
   }
 
   async findByTenantId(tenantId: number): Promise<Marketplace[]> {
@@ -37,11 +51,12 @@ export class MarketplacesService {
   }
 
   async create(dto: CreateMarketplaceDto): Promise<Marketplace> {
+    const normalizedId = normalizeId(dto.id);
     try {
       const result = await this.db
         .insertInto('marketplaces')
         .values({
-          id: dto.id,
+          id: normalizedId,
           title: dto.title,
           shop_id: dto.shop_id,
           tenant_id: dto.tenant_id,
@@ -53,7 +68,7 @@ export class MarketplacesService {
       return result;
     } catch (error: unknown) {
       if (isUniqueViolation(error)) {
-        throw new DuplicateResourceException('Marketplace', dto.id, 'this shop');
+        throw new DuplicateResourceException('Marketplace', normalizedId, 'this shop');
       }
       throw error;
     }
@@ -98,6 +113,7 @@ export class MarketplacesService {
       return 0;
     }
 
+    // Normalize all IDs first (ids are already normalized from caller, but ensure consistency)
     const uniqueIds = [...new Set(ids)];
 
     const existing = await this.db
@@ -126,5 +142,81 @@ export class MarketplacesService {
     }
 
     return missingIds.length;
+  }
+
+  async bulkUpsert(
+    items: ImportMarketplaceItem[],
+    shopId: number,
+    tenantId: number,
+  ): Promise<{ created: number; updated: number; errors: string[] }> {
+    if (items.length === 0) {
+      return { created: 0, updated: 0, errors: [] };
+    }
+
+    const errors: string[] = [];
+    const validItems: ImportMarketplaceItem[] = [];
+
+    items.forEach((item, i) => {
+      const result = ImportMarketplaceItemSchema.safeParse(item);
+      if (!result.success) {
+        const identifier =
+          typeof item === 'object' && item && 'id' in item ? item.id : `index ${i}`;
+        const errorMessages = result.error.issues.map((issue) => issue.message).join(', ');
+        errors.push(`Invalid item "${identifier}": ${errorMessages}`);
+        return;
+      }
+
+      // Normalize the marketplace ID
+      const normalizedId = normalizeId(result.data.id);
+      validItems.push({
+        ...result.data,
+        id: normalizedId,
+      });
+    });
+
+    if (validItems.length === 0) {
+      return { created: 0, updated: 0, errors };
+    }
+
+    // Get existing marketplaces for this shop in one query
+    const existingIds = new Set(
+      (
+        await this.db
+          .selectFrom('marketplaces')
+          .select('id')
+          .where('shop_id', '=', shopId)
+          .where(
+            'id',
+            'in',
+            validItems.map((i) => i.id),
+          )
+          .execute()
+      ).map((r) => r.id),
+    );
+
+    // Use ON CONFLICT for efficient upsert
+    await this.db
+      .insertInto('marketplaces')
+      .values(
+        validItems.map((item) => ({
+          id: item.id,
+          title: item.title,
+          shop_id: shopId,
+          tenant_id: tenantId,
+          updated_at: new Date(),
+        })),
+      )
+      .onConflict((oc) =>
+        oc.columns(['id', 'shop_id']).doUpdateSet({
+          title: (eb) => eb.ref('excluded.title'),
+          updated_at: new Date(),
+        }),
+      )
+      .execute();
+
+    const created = validItems.filter((i) => !existingIds.has(i.id)).length;
+    const updated = validItems.filter((i) => existingIds.has(i.id)).length;
+
+    return { created, updated, errors };
   }
 }

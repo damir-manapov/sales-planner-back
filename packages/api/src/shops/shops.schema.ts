@@ -1,10 +1,10 @@
-import { z } from 'zod';
 import type {
-  CreateShopRequest as SharedCreateShopRequest,
   CreateShopDto as SharedCreateShopDto,
-  UpdateShopRequest as SharedUpdateShopRequest,
+  CreateShopRequest as SharedCreateShopRequest,
   UpdateShopDto as SharedUpdateShopDto,
+  UpdateShopRequest as SharedUpdateShopRequest,
 } from '@sales-planner/shared';
+import { z } from 'zod';
 import { AssertCompatible, zodSchemas } from '../common/schema.utils.js';
 
 const { title, id } = zodSchemas;

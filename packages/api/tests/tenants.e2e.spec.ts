@@ -1,17 +1,17 @@
-import { describe, it, expect, beforeAll, afterAll } from 'vitest';
-import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
+import { Test, TestingModule } from '@nestjs/testing';
+import { ApiError, SalesPlannerClient } from '@sales-planner/http-client';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
-import { SalesPlannerClient, ApiError } from '@sales-planner/http-client';
-import { cleanupUser, SYSTEM_ADMIN_KEY } from './test-helpers.js';
+import { TestContext } from './test-context.js';
+import { cleanupUser } from './test-helpers.js';
 
 describe('Tenants (e2e)', () => {
   let app: INestApplication;
   let baseUrl: string;
-  let systemClient: SalesPlannerClient;
-  let adminClient: SalesPlannerClient;
+  let ctx: TestContext;
   let userClient: SalesPlannerClient;
-  let testUserId: number;
+  let adminClient: SalesPlannerClient;
   let systemAdminUserId: number;
   let createdTenantId: number;
 
@@ -27,37 +27,37 @@ describe('Tenants (e2e)', () => {
     const url = await app.getUrl();
     baseUrl = url.replace('[::1]', 'localhost');
 
-    systemClient = new SalesPlannerClient({
-      baseUrl,
-      apiKey: SYSTEM_ADMIN_KEY,
+    ctx = await TestContext.create(app, baseUrl, {
+      tenantTitle: `Test Tenant ${Date.now()}`,
+      userEmail: `tenant-test-${Date.now()}@example.com`,
+      userName: 'Tenant Test User',
     });
 
-    // Create test user
-    const testUser = await systemClient.createUser({
-      email: `tenant-test-${Date.now()}@example.com`,
-      name: 'Tenant Test User',
-    });
-    testUserId = testUser.id;
-    const testUserApiKey = await systemClient.createApiKey({ user_id: testUserId, name: 'Test Key' });
-
-    userClient = new SalesPlannerClient({ baseUrl, apiKey: testUserApiKey.key });
+    // Create a regular user without any roles
+    const testUserSetup = await ctx.createUser(
+      `regular-user-${Date.now()}@example.com`,
+      'Regular User',
+    );
+    userClient = testUserSetup.client;
 
     // Create system admin user
-    const adminUser = await systemClient.createUser({
+    const adminUser = await ctx.getSystemClient().createUser({
       email: `admin-test-${Date.now()}@example.com`,
       name: 'System Admin',
     });
     systemAdminUserId = adminUser.id;
-    const adminApiKey = await systemClient.createApiKey({
+    const adminApiKey = await ctx.getSystemClient().createApiKey({
       user_id: systemAdminUserId,
       name: 'Admin Key',
     });
 
     // Get systemAdmin role and assign it
-    const roles = await systemClient.getRoles();
+    const roles = await ctx.getSystemClient().getRoles();
     const sysAdminRole = roles.find((r) => r.name === 'systemAdmin');
     if (sysAdminRole) {
-      await systemClient.createUserRole({ user_id: systemAdminUserId, role_id: sysAdminRole.id });
+      await ctx
+        .getSystemClient()
+        .createUserRole({ user_id: systemAdminUserId, role_id: sysAdminRole.id });
     }
 
     // Create adminClient that uses the created admin's API key
@@ -65,9 +65,7 @@ describe('Tenants (e2e)', () => {
   });
 
   afterAll(async () => {
-    if (testUserId) {
-      await cleanupUser(app, testUserId);
-    }
+    if (ctx) await ctx.dispose();
     if (systemAdminUserId) {
       await cleanupUser(app, systemAdminUserId);
     }
@@ -116,7 +114,7 @@ describe('Tenants (e2e)', () => {
     it('POST /tenants - should create tenant with system admin and set created_by and owner_id', async () => {
       const newTenant = {
         title: `Test Tenant ${Date.now()}`,
-        owner_id: testUserId,
+        owner_id: ctx.user.id,
       };
 
       const tenant = await adminClient.createTenant(newTenant);
@@ -124,7 +122,7 @@ describe('Tenants (e2e)', () => {
       expect(tenant).toHaveProperty('id');
       expect(tenant.title).toBe(newTenant.title);
       expect(tenant.created_by).toBe(systemAdminUserId);
-      expect(tenant.owner_id).toBe(testUserId);
+      expect(tenant.owner_id).toBe(ctx.user.id);
 
       createdTenantId = tenant.id;
     });
@@ -133,7 +131,7 @@ describe('Tenants (e2e)', () => {
       try {
         await userClient.createTenant({
           title: `Test Tenant ${Date.now()}`,
-          owner_id: testUserId,
+          owner_id: ctx.user.id,
         });
         expect.fail('Should have thrown');
       } catch (error) {
@@ -203,7 +201,7 @@ describe('Tenants (e2e)', () => {
   describe('created_by tracking', () => {
     it('should track different users creating different tenants', async () => {
       // Create second user
-      const user2 = await systemClient.createUser({
+      const user2 = await ctx.getSystemClient().createUser({
         email: `tenant-test2-${Date.now()}@example.com`,
         name: 'Tenant Test User 2',
       });
@@ -211,7 +209,7 @@ describe('Tenants (e2e)', () => {
       // Create tenant for first user (by admin user)
       const tenant1 = await adminClient.createTenant({
         title: `Tenant by User 1 ${Date.now()}`,
-        owner_id: testUserId,
+        owner_id: ctx.user.id,
       });
 
       // Create tenant for second user (by admin user)
@@ -222,7 +220,7 @@ describe('Tenants (e2e)', () => {
 
       expect(tenant1.created_by).toBe(systemAdminUserId);
       expect(tenant2.created_by).toBe(systemAdminUserId);
-      expect(tenant1.owner_id).toBe(testUserId);
+      expect(tenant1.owner_id).toBe(ctx.user.id);
       expect(tenant2.owner_id).toBe(user2.id);
       expect(tenant1.owner_id).not.toBe(tenant2.owner_id);
 
@@ -254,7 +252,7 @@ describe('Tenants (e2e)', () => {
         userName: 'E2E Test Owner',
       };
 
-      const result = await systemClient.createTenantWithShopAndUser(requestData);
+      const result = await ctx.getSystemClient().createTenantWithShopAndUser(requestData);
 
       expect(result).toHaveProperty('tenant');
       expect(result).toHaveProperty('shop');
@@ -299,8 +297,8 @@ describe('Tenants (e2e)', () => {
       expect(tenant?.shops[0]?.title).toBe(requestData.tenantTitle);
 
       // Cleanup
-      await systemClient.deleteTenant(result.tenant.id);
-      await systemClient.deleteUser(result.user.id);
+      await ctx.getSystemClient().deleteTenant(result.tenant.id);
+      await ctx.getSystemClient().deleteUser(result.user.id);
     });
   });
 });
