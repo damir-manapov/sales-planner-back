@@ -3,7 +3,11 @@ import 'dotenv/config';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { SalesPlannerClient } from '@sales-planner/http-client';
-import { getOrCreateTenant, initAdminClient, printSuccessSummary } from '../tenant-setup-helpers.js';
+import {
+  getOrCreateTenant,
+  initAdminClient,
+  printSuccessSummary,
+} from '../tenant-setup-helpers.js';
 
 interface AlenaTenantArgs {
   apiUrl?: string;

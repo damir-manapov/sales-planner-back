@@ -71,7 +71,9 @@ export async function getOrCreateTenant(
     const userClient = new SalesPlannerClient({ baseUrl: apiUrl, apiKey: firstApiKey.key });
     const me = await userClient.getMe();
 
-    const existingTenant = me.tenants.find((t: { title: string }) => t.title === config.tenantTitle);
+    const existingTenant = me.tenants.find(
+      (t: { title: string }) => t.title === config.tenantTitle,
+    );
     const existingShop = existingTenant?.shops[0];
 
     if (!existingTenant || !existingShop) {
@@ -113,10 +115,7 @@ export async function getOrCreateTenant(
 /**
  * Prints a formatted success summary
  */
-export function printSuccessSummary(
-  setup: TenantSetup,
-  additionalInfo?: string[],
-): void {
+export function printSuccessSummary(setup: TenantSetup, additionalInfo?: string[]): void {
   console.log('🎉 Setup complete!');
   console.log('');
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
@@ -136,7 +135,9 @@ export function printSuccessSummary(
     console.log('📊 Data Summary:');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('');
-    additionalInfo.forEach((info) => console.log(`  • ${info}`));
+    for (const info of additionalInfo) {
+      console.log(`  • ${info}`);
+    }
     console.log('');
   }
 
