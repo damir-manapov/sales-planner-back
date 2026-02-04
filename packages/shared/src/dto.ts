@@ -11,7 +11,7 @@ export interface CreateUserDto {
 export interface CreateTenantDto {
   title: string;
   owner_id?: number;
-  created_by: number;
+  created_by?: number;
 }
 
 export interface CreateTenantWithShopDto {

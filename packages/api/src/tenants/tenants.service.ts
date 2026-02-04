@@ -2,10 +2,17 @@ import { Injectable } from '@nestjs/common';
 import type { Tenant } from '@sales-planner/shared';
 import { ROLE_NAMES } from '../common/constants.js';
 import { DatabaseService } from '../database/database.service.js';
-import type { CreateTenantDto, CreateTenantWithShopDto, UpdateTenantDto } from './tenants.schema.js';
+import type {
+  CreateTenantDto,
+  CreateTenantWithShopDto,
+  UpdateTenantDto,
+} from './tenants.schema.js';
 
 export type { Tenant };
 export type { CreateTenantDto, CreateTenantWithShopDto, UpdateTenantDto };
+
+// Internal type with required created_by (for DB operations)
+type CreateTenantInput = CreateTenantDto & { created_by: number };
 
 export interface TenantWithShopAndApiKey {
   tenant: Tenant;
@@ -38,7 +45,7 @@ export class TenantsService {
     return this.db.selectFrom('tenants').selectAll().where('owner_id', '=', ownerId).execute();
   }
 
-  async create(dto: CreateTenantDto): Promise<Tenant> {
+  async create(dto: CreateTenantInput): Promise<Tenant> {
     return this.db.insertInto('tenants').values(dto).returningAll().executeTakeFirstOrThrow();
   }
 

@@ -3,15 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
 import { AppModule } from '../src/app.module.js';
 import { SalesPlannerClient, ApiError } from '@sales-planner/http-client';
-import {
-  cleanupUser,
-  createUserWithApiKey,
-  createTenantWithOwner,
-  createShop,
-  getOrCreateRole,
-  assignRole,
-  SYSTEM_ADMIN_KEY,
-} from './test-helpers.js';
+import { cleanupUser, SYSTEM_ADMIN_KEY } from './test-helpers.js';
 
 describe('SKUs (e2e)', () => {
   let app: INestApplication;
@@ -22,7 +14,6 @@ describe('SKUs (e2e)', () => {
   let shopId: number;
   let skuId: number;
   let testUserId: number;
-  let testUserApiKey: string;
 
   const ctx = () => ({ shop_id: shopId, tenant_id: tenantId });
 
@@ -51,13 +42,12 @@ describe('SKUs (e2e)', () => {
     });
 
     testUserId = setup.user.id;
-    testUserApiKey = setup.apiKey;
     tenantId = setup.tenant.id;
     shopId = setup.shop.id;
 
     client = new SalesPlannerClient({
       baseUrl,
-      apiKey: testUserApiKey,
+      apiKey: setup.apiKey,
     });
   });
 
@@ -70,10 +60,7 @@ describe('SKUs (e2e)', () => {
 
   describe('Authentication', () => {
     it('should return 401 without API key', async () => {
-      const noAuthClient = new SalesPlannerClient({
-        baseUrl,
-        apiKey: '',
-      });
+      const noAuthClient = new SalesPlannerClient({ baseUrl, apiKey: '' });
 
       try {
         await noAuthClient.getSkus(ctx());
@@ -85,10 +72,7 @@ describe('SKUs (e2e)', () => {
     });
 
     it('should return 401 with invalid API key', async () => {
-      const badClient = new SalesPlannerClient({
-        baseUrl,
-        apiKey: 'invalid-key',
-      });
+      const badClient = new SalesPlannerClient({ baseUrl, apiKey: 'invalid-key' });
 
       try {
         await badClient.getSkus(ctx());
@@ -102,11 +86,7 @@ describe('SKUs (e2e)', () => {
 
   describe('CRUD operations', () => {
     it('createSku - should create SKU', async () => {
-      const newSku = {
-        code: `SKU-${Date.now()}`,
-        title: 'Test SKU',
-      };
-
+      const newSku = { code: `SKU-${Date.now()}`, title: 'Test SKU' };
       const sku = await client.createSku(newSku, ctx());
 
       expect(sku).toHaveProperty('id');
@@ -140,45 +120,38 @@ describe('SKUs (e2e)', () => {
 
   describe('Tenant-based access control', () => {
     it('should return 403 for wrong tenant', async () => {
-      const otherUser = await createUserWithApiKey(
-        app,
-        `other-${Date.now()}@example.com`,
-        'Other User',
-      );
-      const otherTenant = await createTenantWithOwner(
-        app,
-        `Other Tenant ${Date.now()}`,
-        otherUser.userId,
-      );
-      const otherShop = await createShop(app, `Other Shop ${Date.now()}`, otherTenant.tenantId);
+      // Create another user with their own tenant
+      const otherSetup = await systemClient.createTenantWithShopAndUser({
+        tenantTitle: `Other Tenant ${Date.now()}`,
+        userEmail: `other-${Date.now()}@example.com`,
+        userName: 'Other User',
+      });
 
       try {
-        await client.getSkus({ shop_id: otherShop.shopId, tenant_id: otherTenant.tenantId });
+        await client.getSkus({
+          shop_id: otherSetup.shop.id,
+          tenant_id: otherSetup.tenant.id,
+        });
         expect.fail('Should have thrown ApiError');
       } catch (error) {
         expect(error).toBeInstanceOf(ApiError);
         expect((error as ApiError).status).toBe(403);
       }
 
-      await cleanupUser(app, otherUser.userId);
+      await cleanupUser(app, otherSetup.user.id);
     });
 
     it('should return 403 when creating SKU for wrong tenant', async () => {
-      const otherUser = await createUserWithApiKey(
-        app,
-        `other2-${Date.now()}@example.com`,
-        'Other User 2',
-      );
-      const otherTenant = await createTenantWithOwner(
-        app,
-        `Other Tenant ${Date.now()}`,
-        otherUser.userId,
-      );
+      const otherSetup = await systemClient.createTenantWithShopAndUser({
+        tenantTitle: `Other Tenant ${Date.now()}`,
+        userEmail: `other2-${Date.now()}@example.com`,
+        userName: 'Other User 2',
+      });
 
       try {
         await client.createSku(
           { code: 'FORBIDDEN-SKU', title: 'Should Fail' },
-          { shop_id: shopId, tenant_id: otherTenant.tenantId },
+          { shop_id: shopId, tenant_id: otherSetup.tenant.id },
         );
         expect.fail('Should have thrown ApiError');
       } catch (error) {
@@ -186,34 +159,39 @@ describe('SKUs (e2e)', () => {
         expect((error as ApiError).status).toBe(403);
       }
 
-      await cleanupUser(app, otherUser.userId);
+      await cleanupUser(app, otherSetup.user.id);
     });
 
     it('should return 404 for SKU in wrong tenant', async () => {
-      const otherUser = await createUserWithApiKey(
-        app,
-        `other3-${Date.now()}@example.com`,
-        'Other User 3',
-      );
-      const otherTenant = await createTenantWithOwner(
-        app,
-        `Other Tenant ${Date.now()}`,
-        otherUser.userId,
-      );
-      const otherShop = await createShop(app, `Other Shop ${Date.now()}`, otherTenant.tenantId);
+      const otherSetup = await systemClient.createTenantWithShopAndUser({
+        tenantTitle: `Other Tenant ${Date.now()}`,
+        userEmail: `other3-${Date.now()}@example.com`,
+        userName: 'Other User 3',
+      });
 
-      const tenantAdminRoleId = await getOrCreateRole(app, 'tenantAdmin', 'Tenant Admin');
-      await assignRole(app, testUserId, tenantAdminRoleId, { tenantId: otherTenant.tenantId });
+      // Give test user access to the other tenant
+      const roles = await systemClient.getRoles();
+      const tenantAdminRole = roles.find((r) => r.name === 'tenantAdmin');
+      if (tenantAdminRole) {
+        await systemClient.createUserRole({
+          user_id: testUserId,
+          role_id: tenantAdminRole.id,
+          tenant_id: otherSetup.tenant.id,
+        });
+      }
 
       try {
-        await client.getSku(skuId, { shop_id: otherShop.shopId, tenant_id: otherTenant.tenantId });
+        await client.getSku(skuId, {
+          shop_id: otherSetup.shop.id,
+          tenant_id: otherSetup.tenant.id,
+        });
         expect.fail('Should have thrown ApiError');
       } catch (error) {
         expect(error).toBeInstanceOf(ApiError);
         expect((error as ApiError).status).toBe(404);
       }
 
-      await cleanupUser(app, otherUser.userId);
+      await cleanupUser(app, otherSetup.user.id);
     });
   });
 
@@ -258,7 +236,6 @@ describe('SKUs (e2e)', () => {
       const code = `UPSERT-JSON-${Date.now()}`;
 
       await client.importSkusJson([{ code, title: 'Original Title' }], ctx());
-
       const result = await client.importSkusJson([{ code, title: 'Updated Title' }], ctx());
 
       expect(result.created).toBe(0);
@@ -331,20 +308,32 @@ describe('SKUs (e2e)', () => {
     let viewerClient: SalesPlannerClient;
 
     beforeAll(async () => {
-      const viewer = await createUserWithApiKey(
-        app,
-        `viewer-${Date.now()}@example.com`,
-        'Viewer User',
-      );
-      viewerUserId = viewer.userId;
-
-      viewerClient = new SalesPlannerClient({
-        baseUrl,
-        apiKey: viewer.apiKey,
+      // Create viewer user
+      const viewerUser = await systemClient.createUser({
+        email: `viewer-${Date.now()}@example.com`,
+        name: 'Viewer User',
+      });
+      viewerUserId = viewerUser.id;
+      const viewerKey = `viewer-key-${Date.now()}`;
+      await systemClient.createApiKey({
+        user_id: viewerUserId,
+        key: viewerKey,
+        name: 'Viewer Key',
       });
 
-      const viewerRoleId = await getOrCreateRole(app, 'viewer', 'Viewer user');
-      await assignRole(app, viewerUserId, viewerRoleId, { tenantId, shopId });
+      viewerClient = new SalesPlannerClient({ baseUrl, apiKey: viewerKey });
+
+      // Assign viewer role
+      const roles = await systemClient.getRoles();
+      const viewerRole = roles.find((r) => r.name === 'viewer');
+      if (viewerRole) {
+        await systemClient.createUserRole({
+          user_id: viewerUserId,
+          role_id: viewerRole.id,
+          tenant_id: tenantId,
+          shop_id: shopId,
+        });
+      }
     });
 
     afterAll(async () => {
@@ -408,23 +397,18 @@ describe('SKUs (e2e)', () => {
     const ownerCtx = () => ({ shop_id: ownerShopId, tenant_id: ownerTenantId });
 
     beforeAll(async () => {
-      const owner = await createUserWithApiKey(
-        app,
-        `owner-${Date.now()}@example.com`,
-        'Tenant Owner User',
-      );
-      ownerUserId = owner.userId;
-
-      ownerClient = new SalesPlannerClient({
-        baseUrl,
-        apiKey: owner.apiKey,
+      // Create tenant with owner
+      const ownerSetup = await systemClient.createTenantWithShopAndUser({
+        tenantTitle: `Owner Tenant ${Date.now()}`,
+        userEmail: `owner-${Date.now()}@example.com`,
+        userName: 'Tenant Owner User',
       });
 
-      const tenant = await createTenantWithOwner(app, `Owner Tenant ${Date.now()}`, ownerUserId);
-      ownerTenantId = tenant.tenantId;
+      ownerUserId = ownerSetup.user.id;
+      ownerTenantId = ownerSetup.tenant.id;
+      ownerShopId = ownerSetup.shop.id;
 
-      const shop = await createShop(app, `Owner Shop ${Date.now()}`, ownerTenantId);
-      ownerShopId = shop.shopId;
+      ownerClient = new SalesPlannerClient({ baseUrl, apiKey: ownerSetup.apiKey });
     });
 
     afterAll(async () => {

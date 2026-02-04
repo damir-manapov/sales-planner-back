@@ -1,12 +1,14 @@
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { Test, TestingModule } from '@nestjs/testing';
 import { INestApplication } from '@nestjs/common';
-import request from 'supertest';
 import { AppModule } from '../src/app.module.js';
+import { SalesPlannerClient, ApiError } from '@sales-planner/http-client';
 import { cleanupUser, SYSTEM_ADMIN_KEY } from './test-helpers.js';
 
 describe('Users (e2e)', () => {
   let app: INestApplication;
+  let baseUrl: string;
+  let systemClient: SalesPlannerClient;
   let createdUserId: number;
   let testUserId: number;
 
@@ -17,18 +19,24 @@ describe('Users (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
+    await app.listen(0);
+
+    const url = await app.getUrl();
+    baseUrl = url.replace('[::1]', 'localhost');
+
+    systemClient = new SalesPlannerClient({
+      baseUrl,
+      apiKey: SYSTEM_ADMIN_KEY,
+    });
 
     // Create tenant with shop and user (for tenant admin role)
-    const setupRes = await request(app.getHttpServer())
-      .post('/tenants/with-shop-and-user')
-      .set('X-API-Key', SYSTEM_ADMIN_KEY)
-      .send({
-        tenantTitle: `Test Tenant ${Date.now()}`,
-        userEmail: `users-test-${Date.now()}@example.com`,
-        userName: 'Users Test User',
-      });
+    const setup = await systemClient.createTenantWithShopAndUser({
+      tenantTitle: `Test Tenant ${Date.now()}`,
+      userEmail: `users-test-${Date.now()}@example.com`,
+      userName: 'Users Test User',
+    });
 
-    testUserId = setupRes.body.user.id;
+    testUserId = setup.user.id;
   });
 
   afterAll(async () => {
@@ -40,11 +48,8 @@ describe('Users (e2e)', () => {
   });
 
   it('GET /users - should return users with system admin', async () => {
-    const response = await request(app.getHttpServer())
-      .get('/users')
-      .set('X-API-Key', SYSTEM_ADMIN_KEY);
-    expect(response.status).toBe(200);
-    expect(Array.isArray(response.body)).toBe(true);
+    const users = await systemClient.getUsers();
+    expect(Array.isArray(users)).toBe(true);
   });
 
   it('POST /users - should create a user with system admin', async () => {
@@ -53,52 +58,56 @@ describe('Users (e2e)', () => {
       name: 'Test User',
     };
 
-    const response = await request(app.getHttpServer())
-      .post('/users')
-      .set('X-API-Key', SYSTEM_ADMIN_KEY)
-      .send(newUser);
+    const user = await systemClient.createUser(newUser);
 
-    expect(response.status).toBe(201);
-    expect(response.body).toHaveProperty('id');
-    expect(response.body.email).toBe(newUser.email);
-    expect(response.body.name).toBe(newUser.name);
+    expect(user).toHaveProperty('id');
+    expect(user.email).toBe(newUser.email);
+    expect(user.name).toBe(newUser.name);
 
-    createdUserId = response.body.id;
+    createdUserId = user.id;
   });
 
   it('GET /users/:id - should return created user with system admin', async () => {
-    const response = await request(app.getHttpServer())
-      .get(`/users/${createdUserId}`)
-      .set('X-API-Key', SYSTEM_ADMIN_KEY);
+    const user = await systemClient.getUser(createdUserId);
 
-    expect(response.status).toBe(200);
-    expect(response.body.id).toBe(createdUserId);
+    expect(user.id).toBe(createdUserId);
   });
 
   it('GET /users/:id - should return 404 for non-existent user', async () => {
-    const response = await request(app.getHttpServer())
-      .get('/users/999999')
-      .set('X-API-Key', SYSTEM_ADMIN_KEY);
-
-    expect(response.status).toBe(404);
+    try {
+      await systemClient.getUser(999999);
+      expect.fail('Should have thrown');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ApiError);
+      expect((error as ApiError).status).toBe(404);
+    }
   });
 
   it('DELETE /users/:id - should delete created user with system admin', async () => {
-    const response = await request(app.getHttpServer())
-      .delete(`/users/${createdUserId}`)
-      .set('X-API-Key', SYSTEM_ADMIN_KEY);
-
-    expect(response.status).toBe(200);
+    await systemClient.deleteUser(createdUserId);
 
     // Verify user is deleted
-    const getResponse = await request(app.getHttpServer())
-      .get(`/users/${createdUserId}`)
-      .set('X-API-Key', SYSTEM_ADMIN_KEY);
-    expect(getResponse.status).toBe(404);
+    try {
+      await systemClient.getUser(createdUserId);
+      expect.fail('Should have thrown');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ApiError);
+      expect((error as ApiError).status).toBe(404);
+    }
   });
 
   it('GET /users - should return 401 without API key', async () => {
-    const response = await request(app.getHttpServer()).get('/users');
-    expect(response.status).toBe(401);
+    const noAuthClient = new SalesPlannerClient({
+      baseUrl,
+      apiKey: '',
+    });
+
+    try {
+      await noAuthClient.getUsers();
+      expect.fail('Should have thrown');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ApiError);
+      expect((error as ApiError).status).toBe(401);
+    }
   });
 });

@@ -36,6 +36,15 @@ export const ImportSalesHistoryItemSchema = z.object({
 
 // Infer TypeScript types from schemas with compatibility checks
 export type PeriodQuery = AssertCompatible<SharedPeriodQuery, z.infer<typeof PeriodQuerySchema>>;
-export type CreateSalesHistoryDto = AssertCompatible<SharedCreateSalesHistoryDto, z.infer<typeof CreateSalesHistorySchema>>;
-export type UpdateSalesHistoryDto = AssertCompatible<SharedUpdateSalesHistoryDto, z.infer<typeof UpdateSalesHistorySchema>>;
-export type ImportSalesHistoryItem = AssertCompatible<SharedImportSalesHistoryItem, z.infer<typeof ImportSalesHistoryItemSchema>>;
+export type CreateSalesHistoryDto = AssertCompatible<
+  SharedCreateSalesHistoryDto,
+  z.infer<typeof CreateSalesHistorySchema>
+>;
+export type UpdateSalesHistoryDto = AssertCompatible<
+  SharedUpdateSalesHistoryDto,
+  z.infer<typeof UpdateSalesHistorySchema>
+>;
+export type ImportSalesHistoryItem = AssertCompatible<
+  SharedImportSalesHistoryItem,
+  z.infer<typeof ImportSalesHistoryItemSchema>
+>;

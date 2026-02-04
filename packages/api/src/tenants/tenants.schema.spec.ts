@@ -67,12 +67,13 @@ describe('Tenant Schemas', () => {
       expect(() => CreateTenantSchema.parse(data)).toThrow();
     });
 
-    it('should reject missing created_by', () => {
+    it('should allow missing created_by (set by controller)', () => {
       const data = {
         title: 'Test Tenant',
       };
 
-      expect(() => CreateTenantSchema.parse(data)).toThrow();
+      const result = CreateTenantSchema.parse(data);
+      expect(result).toEqual(data);
     });
   });
 

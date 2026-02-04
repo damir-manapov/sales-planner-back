@@ -1,11 +1,12 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import request from 'supertest';
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
+import { SalesPlannerClient } from '@sales-planner/http-client';
 import { AppModule } from '../src/app.module.js';
 
 describe('AppController (e2e)', () => {
   let app: INestApplication;
+  let client: SalesPlannerClient;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -14,6 +15,11 @@ describe('AppController (e2e)', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
+    await app.listen(0);
+
+    const url = await app.getUrl();
+    const baseUrl = url.replace('[::1]', 'localhost');
+    client = new SalesPlannerClient({ baseUrl, apiKey: '' });
   });
 
   afterAll(async () => {
@@ -21,15 +27,13 @@ describe('AppController (e2e)', () => {
   });
 
   it('/ (GET)', async () => {
-    const response = await request(app.getHttpServer()).get('/');
-    expect(response.status).toBe(200);
-    expect(response.text).toBe('Sales Planner API');
+    const text = await client.getRoot();
+    expect(text).toBe('Sales Planner API');
   });
 
   it('/health (GET)', async () => {
-    const response = await request(app.getHttpServer()).get('/health');
-    expect(response.status).toBe(200);
-    expect(response.body).toHaveProperty('status', 'ok');
-    expect(response.body).toHaveProperty('version');
+    const body = await client.getHealth();
+    expect(body).toHaveProperty('status', 'ok');
+    expect(body).toHaveProperty('version');
   });
 });

@@ -1,24 +1,18 @@
 import { type INestApplication } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
-import request from 'supertest';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
-import {
-  cleanupUser,
-  createShop,
-  createTenantWithOwner,
-  createUserWithApiKey,
-  getOrCreateRole,
-  assignRole,
-  SYSTEM_ADMIN_KEY,
-} from './test-helpers.js';
+import { SalesPlannerClient, ApiError } from '@sales-planner/http-client';
+import { cleanupUser, SYSTEM_ADMIN_KEY } from './test-helpers.js';
 
 describe('Shops E2E', () => {
   let app: INestApplication;
+  let baseUrl: string;
+  let systemClient: SalesPlannerClient;
+  let client: SalesPlannerClient;
 
   // Test data
   let testUserId: number;
-  let testUserApiKey: string;
   let testTenantId: number;
   let testShopId: number;
 
@@ -29,18 +23,33 @@ describe('Shops E2E', () => {
 
     app = moduleFixture.createNestApplication();
     await app.init();
+    await app.listen(0);
+
+    const url = await app.getUrl();
+    baseUrl = url.replace('[::1]', 'localhost');
+
+    systemClient = new SalesPlannerClient({
+      baseUrl,
+      apiKey: SYSTEM_ADMIN_KEY,
+    });
 
     // Create test user and tenant
-    const user = await createUserWithApiKey(
-      app,
-      `shops-test-${Date.now()}@example.com`,
-      'Shops Test User',
-    );
-    testUserId = user.userId;
-    testUserApiKey = user.apiKey;
+    const setup = await systemClient.createTenantWithShopAndUser({
+      tenantTitle: `Shops Test Tenant ${Date.now()}`,
+      userEmail: `shops-test-${Date.now()}@example.com`,
+      userName: 'Shops Test User',
+    });
 
-    const tenant = await createTenantWithOwner(app, `Shops Test Tenant ${Date.now()}`, testUserId);
-    testTenantId = tenant.tenantId;
+    testUserId = setup.user.id;
+    testTenantId = setup.tenant.id;
+
+    client = new SalesPlannerClient({
+      baseUrl,
+      apiKey: setup.apiKey,
+    });
+
+    // Delete initial shop (we'll create our own)
+    await client.deleteShop(setup.shop.id);
   });
 
   afterAll(async () => {
@@ -52,85 +61,81 @@ describe('Shops E2E', () => {
 
   describe('Shop CRUD', () => {
     it('POST /shops - tenant owner should create shop', async () => {
-      const response = await request(app.getHttpServer())
-        .post('/shops')
-        .set('X-API-Key', testUserApiKey)
-        .send({ title: 'Test Shop', tenant_id: testTenantId });
+      const shop = await client.createShop({ title: 'Test Shop', tenant_id: testTenantId });
 
-      expect(response.status).toBe(201);
-      expect(response.body.title).toBe('Test Shop');
-      expect(response.body.tenant_id).toBe(testTenantId);
-      testShopId = response.body.id;
+      expect(shop.title).toBe('Test Shop');
+      expect(shop.tenant_id).toBe(testTenantId);
+      testShopId = shop.id;
     });
 
     it('GET /shops - tenant owner should list shops', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/shops')
-        .set('X-API-Key', testUserApiKey);
+      const shops = await client.getShops();
 
-      expect(response.status).toBe(200);
-      expect(Array.isArray(response.body)).toBe(true);
-      expect(response.body.some((s: { id: number }) => s.id === testShopId)).toBe(true);
+      expect(Array.isArray(shops)).toBe(true);
+      expect(shops.some((s) => s.id === testShopId)).toBe(true);
     });
 
     it('GET /shops?tenantId=X - should filter by tenant', async () => {
-      const response = await request(app.getHttpServer())
-        .get(`/shops?tenantId=${testTenantId}`)
-        .set('X-API-Key', testUserApiKey);
+      const shops = await client.getShops(testTenantId);
 
-      expect(response.status).toBe(200);
-      expect(response.body.every((s: { tenant_id: number }) => s.tenant_id === testTenantId)).toBe(
-        true,
-      );
+      expect(shops.every((s) => s.tenant_id === testTenantId)).toBe(true);
     });
 
     it('GET /shops/:id - should return shop by id', async () => {
-      const response = await request(app.getHttpServer())
-        .get(`/shops/${testShopId}`)
-        .set('X-API-Key', testUserApiKey);
+      const shop = await client.getShop(testShopId);
 
-      expect(response.status).toBe(200);
-      expect(response.body.id).toBe(testShopId);
-      expect(response.body.title).toBe('Test Shop');
+      expect(shop.id).toBe(testShopId);
+      expect(shop.title).toBe('Test Shop');
     });
 
     it('PUT /shops/:id - tenant owner should update shop', async () => {
-      const response = await request(app.getHttpServer())
-        .put(`/shops/${testShopId}`)
-        .set('X-API-Key', testUserApiKey)
-        .send({ title: 'Updated Shop' });
+      const shop = await client.updateShop(testShopId, { title: 'Updated Shop' });
 
-      expect(response.status).toBe(200);
-      expect(response.body.title).toBe('Updated Shop');
+      expect(shop.title).toBe('Updated Shop');
     });
 
     it('GET /shops/:id - should return 404 for non-existent shop', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/shops/999999')
-        .set('X-API-Key', testUserApiKey);
-
-      expect(response.status).toBe(404);
+      try {
+        await client.getShop(999999);
+        expect.fail('Should have thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(404);
+      }
     });
   });
 
   describe('Tenant Admin access', () => {
+    let tenantAdminClient: SalesPlannerClient;
     let tenantAdminUserId: number;
-    let tenantAdminApiKey: string;
     let adminCreatedShopId: number;
 
     beforeAll(async () => {
       // Create tenant admin user
-      const adminUser = await createUserWithApiKey(
-        app,
-        `tenant-admin-${Date.now()}@example.com`,
-        'Tenant Admin User',
-      );
-      tenantAdminUserId = adminUser.userId;
-      tenantAdminApiKey = adminUser.apiKey;
+      const adminUser = await systemClient.createUser({
+        email: `tenant-admin-${Date.now()}@example.com`,
+        name: 'Tenant Admin User',
+      });
+      tenantAdminUserId = adminUser.id;
+      const adminKey = `admin-key-${Date.now()}`;
+      await systemClient.createApiKey({
+        user_id: tenantAdminUserId,
+        key: adminKey,
+        name: 'Admin Key',
+      });
 
-      // Assign tenantAdmin role
-      const tenantAdminRoleId = await getOrCreateRole(app, 'tenantAdmin', 'Tenant Administrator');
-      await assignRole(app, tenantAdminUserId, tenantAdminRoleId, { tenantId: testTenantId });
+      // Get tenantAdmin role and assign it
+      const roles = await systemClient.getRoles();
+      const tenantAdminRole = roles.find((r) => r.name === 'tenantAdmin');
+      if (tenantAdminRole) {
+        await systemClient.createUserRole({
+          user_id: tenantAdminUserId,
+          role_id: tenantAdminRole.id,
+          tenant_id: testTenantId,
+        });
+      }
+
+      tenantAdminClient = new SalesPlannerClient({ baseUrl, apiKey: adminKey });
     });
 
     afterAll(async () => {
@@ -140,59 +145,48 @@ describe('Shops E2E', () => {
     });
 
     it('GET /shops - tenant admin should list shops in their tenant', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/shops')
-        .set('X-API-Key', tenantAdminApiKey);
+      const shops = await tenantAdminClient.getShops();
 
-      expect(response.status).toBe(200);
-      expect(Array.isArray(response.body)).toBe(true);
+      expect(Array.isArray(shops)).toBe(true);
     });
 
     it('POST /shops - tenant admin should create shop', async () => {
-      const response = await request(app.getHttpServer())
-        .post('/shops')
-        .set('X-API-Key', tenantAdminApiKey)
-        .send({ title: 'Admin Created Shop', tenant_id: testTenantId });
+      const shop = await tenantAdminClient.createShop({
+        title: 'Admin Created Shop',
+        tenant_id: testTenantId,
+      });
 
-      expect(response.status).toBe(201);
-      expect(response.body.title).toBe('Admin Created Shop');
-      adminCreatedShopId = response.body.id;
+      expect(shop.title).toBe('Admin Created Shop');
+      adminCreatedShopId = shop.id;
     });
 
     it('PUT /shops/:id - tenant admin should update shop', async () => {
-      const response = await request(app.getHttpServer())
-        .put(`/shops/${adminCreatedShopId}`)
-        .set('X-API-Key', tenantAdminApiKey)
-        .send({ title: 'Admin Updated Shop' });
+      const shop = await tenantAdminClient.updateShop(adminCreatedShopId, {
+        title: 'Admin Updated Shop',
+      });
 
-      expect(response.status).toBe(200);
-      expect(response.body.title).toBe('Admin Updated Shop');
+      expect(shop.title).toBe('Admin Updated Shop');
     });
 
     it('DELETE /shops/:id - tenant admin should delete shop', async () => {
-      const response = await request(app.getHttpServer())
-        .delete(`/shops/${adminCreatedShopId}`)
-        .set('X-API-Key', tenantAdminApiKey);
-
-      expect(response.status).toBe(200);
+      await tenantAdminClient.deleteShop(adminCreatedShopId);
     });
   });
 
   describe('Cross-tenant access control', () => {
+    let otherClient: SalesPlannerClient;
     let otherUserId: number;
-    let otherUserApiKey: string;
 
     beforeAll(async () => {
       // Create another user with their own tenant
-      const otherUser = await createUserWithApiKey(
-        app,
-        `other-user-${Date.now()}@example.com`,
-        'Other User',
-      );
-      otherUserId = otherUser.userId;
-      otherUserApiKey = otherUser.apiKey;
+      const otherSetup = await systemClient.createTenantWithShopAndUser({
+        tenantTitle: `Other Tenant ${Date.now()}`,
+        userEmail: `other-user-${Date.now()}@example.com`,
+        userName: 'Other User',
+      });
 
-      await createTenantWithOwner(app, `Other Tenant ${Date.now()}`, otherUserId);
+      otherUserId = otherSetup.user.id;
+      otherClient = new SalesPlannerClient({ baseUrl, apiKey: otherSetup.apiKey });
     });
 
     afterAll(async () => {
@@ -202,130 +196,128 @@ describe('Shops E2E', () => {
     });
 
     it('GET /shops/:id - should return 403 for shop in other tenant', async () => {
-      const response = await request(app.getHttpServer())
-        .get(`/shops/${testShopId}`)
-        .set('X-API-Key', otherUserApiKey);
-
-      expect(response.status).toBe(403);
+      try {
+        await otherClient.getShop(testShopId);
+        expect.fail('Should have thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(403);
+      }
     });
 
     it('GET /shops?tenantId=X - should return 403 for other tenant', async () => {
-      const response = await request(app.getHttpServer())
-        .get(`/shops?tenantId=${testTenantId}`)
-        .set('X-API-Key', otherUserApiKey);
-
-      expect(response.status).toBe(403);
+      try {
+        await otherClient.getShops(testTenantId);
+        expect.fail('Should have thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(403);
+      }
     });
 
     it('POST /shops - should return 403 when creating shop in other tenant', async () => {
-      const response = await request(app.getHttpServer())
-        .post('/shops')
-        .set('X-API-Key', otherUserApiKey)
-        .send({ title: 'Unauthorized Shop', tenant_id: testTenantId });
-
-      expect(response.status).toBe(403);
+      try {
+        await otherClient.createShop({ title: 'Unauthorized Shop', tenant_id: testTenantId });
+        expect.fail('Should have thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(403);
+      }
     });
 
     it('PUT /shops/:id - should return 403 when updating shop in other tenant', async () => {
-      const response = await request(app.getHttpServer())
-        .put(`/shops/${testShopId}`)
-        .set('X-API-Key', otherUserApiKey)
-        .send({ title: 'Hacked Shop' });
-
-      expect(response.status).toBe(403);
+      try {
+        await otherClient.updateShop(testShopId, { title: 'Hacked Shop' });
+        expect.fail('Should have thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(403);
+      }
     });
 
     it('DELETE /shops/:id - should return 403 when deleting shop in other tenant', async () => {
-      const response = await request(app.getHttpServer())
-        .delete(`/shops/${testShopId}`)
-        .set('X-API-Key', otherUserApiKey);
-
-      expect(response.status).toBe(403);
+      try {
+        await otherClient.deleteShop(testShopId);
+        expect.fail('Should have thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(403);
+      }
     });
   });
 
   describe('Delete shop data', () => {
     let dataShopId: number;
+    const ctx = () => ({ shop_id: dataShopId, tenant_id: testTenantId });
 
     beforeAll(async () => {
       // Create a shop with data
-      const shop = await createShop(app, `Data Shop ${Date.now()}`, testTenantId);
-      dataShopId = shop.shopId;
+      const shop = await client.createShop({
+        title: `Data Shop ${Date.now()}`,
+        tenant_id: testTenantId,
+      });
+      dataShopId = shop.id;
 
       // Import some SKUs
-      await request(app.getHttpServer())
-        .post(`/skus/import/json?shop_id=${dataShopId}&tenant_id=${testTenantId}`)
-        .set('X-API-Key', testUserApiKey)
-        .send([
+      await client.importSkusJson(
+        [
           { code: 'DATA-SKU-1', title: 'Test SKU 1' },
           { code: 'DATA-SKU-2', title: 'Test SKU 2' },
-        ]);
+        ],
+        ctx(),
+      );
 
       // Import sales history
-      await request(app.getHttpServer())
-        .post(`/sales-history/import/json?shop_id=${dataShopId}&tenant_id=${testTenantId}`)
-        .set('X-API-Key', testUserApiKey)
-        .send([
+      await client.importSalesHistoryJson(
+        [
           { sku_code: 'DATA-SKU-1', period: '2025-01', quantity: 100 },
           { sku_code: 'DATA-SKU-2', period: '2025-01', quantity: 200 },
-        ]);
+        ],
+        ctx(),
+      );
     });
 
     it('DELETE /shops/:id/data - should delete shop data', async () => {
-      const response = await request(app.getHttpServer())
-        .delete(`/shops/${dataShopId}/data`)
-        .set('X-API-Key', testUserApiKey);
+      const result = await client.deleteShopData(dataShopId);
 
-      expect(response.status).toBe(200);
-      expect(response.body.skusDeleted).toBe(2);
-      expect(response.body.salesHistoryDeleted).toBe(2);
+      expect(result.skusDeleted).toBe(2);
+      expect(result.salesHistoryDeleted).toBe(2);
     });
 
     it('GET /skus - should return empty after data deletion', async () => {
-      const response = await request(app.getHttpServer())
-        .get(`/skus?shop_id=${dataShopId}&tenant_id=${testTenantId}`)
-        .set('X-API-Key', testUserApiKey);
+      const skus = await client.getSkus(ctx());
 
-      expect(response.status).toBe(200);
-      expect(response.body).toHaveLength(0);
+      expect(skus).toHaveLength(0);
     });
   });
 
   describe('System admin access', () => {
     it('GET /shops - system admin should see all shops', async () => {
-      const response = await request(app.getHttpServer())
-        .get('/shops')
-        .set('X-API-Key', SYSTEM_ADMIN_KEY);
+      const shops = await systemClient.getShops();
 
-      expect(response.status).toBe(200);
-      expect(Array.isArray(response.body)).toBe(true);
+      expect(Array.isArray(shops)).toBe(true);
     });
 
     it('GET /shops/:id - system admin should access any shop', async () => {
-      const response = await request(app.getHttpServer())
-        .get(`/shops/${testShopId}`)
-        .set('X-API-Key', SYSTEM_ADMIN_KEY);
+      const shop = await systemClient.getShop(testShopId);
 
-      expect(response.status).toBe(200);
-      expect(response.body.id).toBe(testShopId);
+      expect(shop.id).toBe(testShopId);
     });
   });
 
   describe('Shop deletion', () => {
     it('DELETE /shops/:id - tenant owner should delete shop', async () => {
-      const response = await request(app.getHttpServer())
-        .delete(`/shops/${testShopId}`)
-        .set('X-API-Key', testUserApiKey);
-
-      expect(response.status).toBe(200);
+      await client.deleteShop(testShopId);
     });
 
     it('GET /shops/:id - should return 404 after deletion', async () => {
-      const response = await request(app.getHttpServer())
-        .get(`/shops/${testShopId}`)
-        .set('X-API-Key', testUserApiKey);
-
-      expect(response.status).toBe(404);
+      try {
+        await client.getShop(testShopId);
+        expect.fail('Should have thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(404);
+      }
     });
   });
 });

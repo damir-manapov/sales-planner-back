@@ -15,5 +15,8 @@ export const UpdateMarketplaceSchema = z.object({
 });
 
 // Infer TypeScript types from schemas with compatibility checks
-export type CreateMarketplaceDto = AssertCompatible<SharedCreateMarketplaceDto, z.infer<typeof CreateMarketplaceSchema>>;
+export type CreateMarketplaceDto = AssertCompatible<
+  SharedCreateMarketplaceDto,
+  z.infer<typeof CreateMarketplaceSchema>
+>;
 export type UpdateMarketplaceDto = z.infer<typeof UpdateMarketplaceSchema>;

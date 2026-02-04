@@ -36,6 +36,5 @@ export const zodSchemas = {
   quantity: () => z.number().int().nonnegative(),
 
   /** YYYY-MM period format */
-  period: () =>
-    z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'Must be in YYYY-MM format'),
+  period: () => z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'Must be in YYYY-MM format'),
 };

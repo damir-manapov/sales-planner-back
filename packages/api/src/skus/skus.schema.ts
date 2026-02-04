@@ -31,4 +31,7 @@ export const ImportSkuItemSchema = z.object({
 // Infer TypeScript types from schemas
 export type CreateSkuDto = AssertCompatible<SharedCreateSkuDto, z.infer<typeof CreateSkuSchema>>;
 export type UpdateSkuDto = AssertCompatible<SharedUpdateSkuDto, z.infer<typeof UpdateSkuSchema>>;
-export type ImportSkuItem = AssertCompatible<SharedImportSkuItem, z.infer<typeof ImportSkuItemSchema>>;
+export type ImportSkuItem = AssertCompatible<
+  SharedImportSkuItem,
+  z.infer<typeof ImportSkuItemSchema>
+>;

@@ -13,4 +13,7 @@ export const CreateUserRoleSchema = z.object({
 });
 
 // Infer TypeScript types from schemas with compatibility checks
-export type CreateUserRoleDto = AssertCompatible<SharedCreateUserRoleDto, z.infer<typeof CreateUserRoleSchema>>;
+export type CreateUserRoleDto = AssertCompatible<
+  SharedCreateUserRoleDto,
+  z.infer<typeof CreateUserRoleSchema>
+>;

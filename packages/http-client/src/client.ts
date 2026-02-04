@@ -463,6 +463,24 @@ export class SalesPlannerClient {
   async deleteMarketplace(id: string): Promise<void> {
     return this.request('DELETE', `/marketplaces/${id}`);
   }
+
+  // Health & Info (unauthenticated)
+
+  async getRoot(): Promise<string> {
+    const response = await fetch(`${this.baseUrl}/`);
+    if (!response.ok) {
+      throw new ApiError(response.status, response.statusText);
+    }
+    return response.text();
+  }
+
+  async getHealth(): Promise<{ status: string; version: string }> {
+    const response = await fetch(`${this.baseUrl}/health`);
+    if (!response.ok) {
+      throw new ApiError(response.status, response.statusText);
+    }
+    return response.json();
+  }
 }
 
 export class ApiError extends Error {

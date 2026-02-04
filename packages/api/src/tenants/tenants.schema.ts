@@ -11,7 +11,7 @@ const { title, email, name, id } = zodSchemas;
 export const CreateTenantSchema = z.object({
   title: title(),
   owner_id: id().optional(),
-  created_by: id(),
+  created_by: id().optional(),
 });
 
 export const UpdateTenantSchema = z.object({
@@ -27,6 +27,12 @@ export const CreateTenantWithShopSchema = z.object({
 });
 
 // Infer TypeScript types from schemas with compatibility checks
-export type CreateTenantDto = AssertCompatible<SharedCreateTenantDto, z.infer<typeof CreateTenantSchema>>;
+export type CreateTenantDto = AssertCompatible<
+  SharedCreateTenantDto,
+  z.infer<typeof CreateTenantSchema>
+>;
 export type UpdateTenantDto = z.infer<typeof UpdateTenantSchema>;
-export type CreateTenantWithShopDto = AssertCompatible<SharedCreateTenantWithShopDto, z.infer<typeof CreateTenantWithShopSchema>>;
+export type CreateTenantWithShopDto = AssertCompatible<
+  SharedCreateTenantWithShopDto,
+  z.infer<typeof CreateTenantWithShopSchema>
+>;

@@ -1,6 +1,7 @@
 {
   "name": "@sales-planner/api",
   "version": "0.0.5",
+  "private": true,
   "description": "NestJS API for sales planner",
   "author": "Damir Manapov",
   "license": "MIT",
@@ -44,7 +45,6 @@
     "pg": "^8.18.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
-    "supertest": "^7.0.0",
     "zod": "^4.3.6"
   },
   "devDependencies": {
@@ -59,7 +59,6 @@
     "@types/multer": "^2.0.0",
     "@types/node": "^25.2.0",
     "@types/pg": "^8.15.2",
-    "@types/supertest": "^6.0.3",
     "@vitest/coverage-v8": "^4.0.18",
     "dotenv": "^17.2.3",
     "kysely-codegen": "^0.19.0",

@@ -18,5 +18,8 @@ export const UpdateApiKeySchema = z.object({
 });
 
 // Infer TypeScript types from schemas with compatibility checks
-export type CreateApiKeyDto = AssertCompatible<SharedCreateApiKeyDto, z.infer<typeof CreateApiKeySchema>>;
+export type CreateApiKeyDto = AssertCompatible<
+  SharedCreateApiKeyDto,
+  z.infer<typeof CreateApiKeySchema>
+>;
 export type UpdateApiKeyDto = z.infer<typeof UpdateApiKeySchema>;
