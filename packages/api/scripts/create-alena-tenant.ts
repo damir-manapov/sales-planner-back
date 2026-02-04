@@ -1,11 +1,12 @@
 #!/usr/bin/env bun
 import 'dotenv/config';
+import { SalesPlannerClient } from '@sales-planner/http-client';
 
 interface AlenaTenantArgs {
   apiUrl?: string;
 }
 
-interface TenantSetupResult {
+interface TenantSetup {
   tenant: { id: number; title: string };
   shop: { id: number; title: string };
   user: { id: number; email: string; name: string };
@@ -34,34 +35,34 @@ const ALENA_SKUS = [
 
 const ALENA_SALES_DATA = [
   // Current period (2026-01)
-  { skuCode: 'FLOWER-001', period: '2026-01', quantity: 45 },
-  { skuCode: 'FLOWER-002', period: '2026-01', quantity: 28 },
-  { skuCode: 'FLOWER-003', period: '2026-01', quantity: 35 },
-  { skuCode: 'FLOWER-004', period: '2026-01', quantity: 20 },
-  { skuCode: 'FLOWER-005', period: '2026-01', quantity: 15 },
-  { skuCode: 'GIFT-001', period: '2026-01', quantity: 12 },
-  { skuCode: 'GIFT-002', period: '2026-01', quantity: 25 },
+  { sku_code: 'FLOWER-001', period: '2026-01', quantity: 45 },
+  { sku_code: 'FLOWER-002', period: '2026-01', quantity: 28 },
+  { sku_code: 'FLOWER-003', period: '2026-01', quantity: 35 },
+  { sku_code: 'FLOWER-004', period: '2026-01', quantity: 20 },
+  { sku_code: 'FLOWER-005', period: '2026-01', quantity: 15 },
+  { sku_code: 'GIFT-001', period: '2026-01', quantity: 12 },
+  { sku_code: 'GIFT-002', period: '2026-01', quantity: 25 },
 
   // Previous period (2025-12) - holiday season
-  { skuCode: 'FLOWER-001', period: '2025-12', quantity: 85 },
-  { skuCode: 'FLOWER-002', period: '2025-12', quantity: 60 },
-  { skuCode: 'FLOWER-003', period: '2025-12', quantity: 50 },
-  { skuCode: 'FLOWER-004', period: '2025-12', quantity: 40 },
-  { skuCode: 'FLOWER-005', period: '2025-12', quantity: 35 },
-  { skuCode: 'FLOWER-008', period: '2025-12', quantity: 20 },
-  { skuCode: 'GIFT-001', period: '2025-12', quantity: 30 },
-  { skuCode: 'GIFT-002', period: '2025-12', quantity: 55 },
-  { skuCode: 'GIFT-003', period: '2025-12', quantity: 100 },
-  { skuCode: 'GIFT-004', period: '2025-12', quantity: 45 },
+  { sku_code: 'FLOWER-001', period: '2025-12', quantity: 85 },
+  { sku_code: 'FLOWER-002', period: '2025-12', quantity: 60 },
+  { sku_code: 'FLOWER-003', period: '2025-12', quantity: 50 },
+  { sku_code: 'FLOWER-004', period: '2025-12', quantity: 40 },
+  { sku_code: 'FLOWER-005', period: '2025-12', quantity: 35 },
+  { sku_code: 'FLOWER-008', period: '2025-12', quantity: 20 },
+  { sku_code: 'GIFT-001', period: '2025-12', quantity: 30 },
+  { sku_code: 'GIFT-002', period: '2025-12', quantity: 55 },
+  { sku_code: 'GIFT-003', period: '2025-12', quantity: 100 },
+  { sku_code: 'GIFT-004', period: '2025-12', quantity: 45 },
 
   // Two periods ago (2025-11)
-  { skuCode: 'FLOWER-001', period: '2025-11', quantity: 38 },
-  { skuCode: 'FLOWER-002', period: '2025-11', quantity: 22 },
-  { skuCode: 'FLOWER-003', period: '2025-11', quantity: 25 },
-  { skuCode: 'FLOWER-004', period: '2025-11', quantity: 18 },
-  { skuCode: 'FLOWER-005', period: '2025-11', quantity: 12 },
-  { skuCode: 'GIFT-001', period: '2025-11', quantity: 8 },
-  { skuCode: 'GIFT-002', period: '2025-11', quantity: 15 },
+  { sku_code: 'FLOWER-001', period: '2025-11', quantity: 38 },
+  { sku_code: 'FLOWER-002', period: '2025-11', quantity: 22 },
+  { sku_code: 'FLOWER-003', period: '2025-11', quantity: 25 },
+  { sku_code: 'FLOWER-004', period: '2025-11', quantity: 18 },
+  { sku_code: 'FLOWER-005', period: '2025-11', quantity: 12 },
+  { sku_code: 'GIFT-001', period: '2025-11', quantity: 8 },
+  { sku_code: 'GIFT-002', period: '2025-11', quantity: 15 },
 ];
 
 async function createAlenaTenant(args: AlenaTenantArgs) {
@@ -73,136 +74,102 @@ async function createAlenaTenant(args: AlenaTenantArgs) {
     process.exit(1);
   }
 
+  const adminClient = new SalesPlannerClient({ baseUrl: apiUrl, apiKey: systemAdminKey });
+
   const tenantTitle = 'Alena Flowers';
   const shopTitle = 'Цветочный магазин';
+  const userEmail = 'alena@alena-flowers.com';
+  const userName = 'Алёна';
 
-  console.log("🌸 Creating Alena's tenant...");
+  console.log("🌸 Setting up Alena's tenant...");
   console.log(`   Tenant: ${tenantTitle}`);
   console.log(`   Shop: ${shopTitle}`);
   console.log(`   API URL: ${apiUrl}`);
   console.log('');
 
   try {
-    // Step 1: Create tenant with shop and user
-    console.log('📦 Step 1: Creating tenant, shop, and admin user...');
-    const setupResponse = await fetch(`${apiUrl}/tenants/with-shop-and-user`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': systemAdminKey,
-      },
-      body: JSON.stringify({
+    // Step 1: Check if user already exists
+    console.log('🔍 Step 1: Checking if tenant already exists...');
+    const users = await adminClient.getUsers();
+    const existingUser = users.find((u) => u.email === userEmail);
+
+    let setup: TenantSetup;
+
+    if (existingUser) {
+      console.log(`   ℹ️  User ${userEmail} already exists (ID: ${existingUser.id})`);
+
+      // Get user's API key
+      const apiKeys = await adminClient.getApiKeys(existingUser.id);
+      const firstApiKey = apiKeys[0];
+      if (!firstApiKey) {
+        console.error('❌ User has no API key');
+        process.exit(1);
+      }
+
+      // Get user's tenants via /me
+      const userClient = new SalesPlannerClient({ baseUrl: apiUrl, apiKey: firstApiKey.key });
+      const me = await userClient.getMe();
+
+      const existingTenant = me.tenants.find((t) => t.title === tenantTitle);
+      const existingShop = existingTenant?.shops[0];
+      if (!existingTenant || !existingShop) {
+        console.error('❌ User exists but tenant/shop not found');
+        process.exit(1);
+      }
+
+      setup = {
+        tenant: { id: existingTenant.id, title: existingTenant.title },
+        shop: { id: existingShop.id, title: existingShop.title },
+        user: { id: existingUser.id, email: existingUser.email, name: existingUser.name },
+        apiKey: firstApiKey.key,
+      };
+
+      console.log(`   ✅ Tenant exists: ${setup.tenant.title} (ID: ${setup.tenant.id})`);
+      console.log(`   ✅ Shop exists: ${setup.shop.title} (ID: ${setup.shop.id})`);
+      console.log('');
+    } else {
+      // Create new tenant, shop, and user
+      console.log('   📦 Creating new tenant, shop, and admin user...');
+      setup = await adminClient.createTenantWithShopAndUser({
         tenantTitle,
         shopTitle,
-        userEmail: 'alena@alena-flowers.com',
-        userName: 'Алёна',
-      }),
-    });
-
-    if (!setupResponse.ok) {
-      const error = await setupResponse.text();
-      console.error(`❌ Error: ${setupResponse.status} ${setupResponse.statusText}`);
-      console.error(error);
-      process.exit(1);
+        userEmail,
+        userName,
+      });
+      console.log(`   ✅ Tenant created: ${setup.tenant.title} (ID: ${setup.tenant.id})`);
+      console.log(`   ✅ Shop created: ${setup.shop.title} (ID: ${setup.shop.id})`);
+      console.log(`   ✅ Admin user created: ${setup.user.name} (${setup.user.email})`);
+      console.log('');
     }
 
-    const setup = (await setupResponse.json()) as TenantSetupResult;
-    console.log(`   ✅ Tenant created: ${setup.tenant.title} (ID: ${setup.tenant.id})`);
-    console.log(`   ✅ Shop created: ${setup.shop.title} (ID: ${setup.shop.id})`);
-    console.log(`   ✅ Admin user created: ${setup.user.name} (${setup.user.email})`);
-    console.log('');
+    // Create client with user's API key for data operations
+    const userClient = new SalesPlannerClient({ baseUrl: apiUrl, apiKey: setup.apiKey });
+    const ctx = { shop_id: setup.shop.id, tenant_id: setup.tenant.id };
 
-    // Step 2: Import SKUs
+    // Step 2: Import SKUs (uses upsert - safe to run multiple times)
     console.log(`💐 Step 2: Importing ${ALENA_SKUS.length} products...`);
-    const skusResponse = await fetch(
-      `${apiUrl}/skus/import/json?shop_id=${setup.shop.id}&tenant_id=${setup.tenant.id}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': setup.apiKey,
-        },
-        body: JSON.stringify(ALENA_SKUS),
-      },
-    );
-
-    if (!skusResponse.ok) {
-      const error = await skusResponse.text();
-      console.error(`❌ Error importing SKUs: ${skusResponse.status} ${skusResponse.statusText}`);
-      console.error(error);
-    } else {
-      const skusResult = (await skusResponse.json()) as { created: number };
-      console.log(`   ✅ Imported ${skusResult.created} products`);
+    const skusResult = await userClient.importSkusJson(ALENA_SKUS, ctx);
+    if (skusResult.created > 0) {
+      console.log(`   ✅ Created ${skusResult.created} new products`);
+    }
+    if (skusResult.updated > 0) {
+      console.log(`   ✅ Updated ${skusResult.updated} existing products`);
+    }
+    if (skusResult.created === 0 && skusResult.updated === 0) {
+      console.log(`   ℹ️  All ${ALENA_SKUS.length} products already exist`);
     }
     console.log('');
 
-    // Step 3: Get SKU IDs for sales data
-    console.log('🔍 Step 3: Fetching SKU IDs...');
-    const skusListResponse = await fetch(
-      `${apiUrl}/skus?shop_id=${setup.shop.id}&tenant_id=${setup.tenant.id}`,
-      {
-        headers: {
-          'x-api-key': setup.apiKey,
-        },
-      },
+    // Step 3: Import sales history (uses upsert - safe to run multiple times)
+    console.log(`📈 Step 3: Importing ${ALENA_SALES_DATA.length} sales history records...`);
+    const salesResult = await userClient.importSalesHistoryJson(ALENA_SALES_DATA, ctx);
+    console.log(
+      `   ✅ Imported sales history: ${salesResult.created} created, ${salesResult.updated} updated`,
     );
-
-    if (!skusListResponse.ok) {
-      console.error('❌ Error fetching SKUs');
-      process.exit(1);
-    }
-
-    const skusList = (await skusListResponse.json()) as Array<{ id: number; code: string }>;
-    const skuMap = new Map(skusList.map((sku) => [sku.code, sku.id]));
-    console.log(`   ✅ Found ${skusList.length} SKUs`);
-    console.log('');
-
-    // Step 4: Create sales history records
-    console.log(`📈 Step 4: Creating ${ALENA_SALES_DATA.length} sales history records...`);
-    let successCount = 0;
-    let errorCount = 0;
-
-    for (const sale of ALENA_SALES_DATA) {
-      const skuId = skuMap.get(sale.skuCode);
-      if (!skuId) {
-        console.log(`   ⚠️  Skipping ${sale.skuCode} - SKU not found`);
-        errorCount++;
-        continue;
-      }
-
-      const salesResponse = await fetch(
-        `${apiUrl}/sales-history?shop_id=${setup.shop.id}&tenant_id=${setup.tenant.id}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': setup.apiKey,
-          },
-          body: JSON.stringify({
-            sku_id: skuId,
-            period: sale.period,
-            quantity: sale.quantity,
-          }),
-        },
-      );
-
-      if (salesResponse.ok) {
-        successCount++;
-      } else {
-        errorCount++;
-        const error = await salesResponse.text();
-        console.log(`   ⚠️  Error for ${sale.skuCode} ${sale.period}: ${error}`);
-      }
-    }
-
-    console.log(`   ✅ Created ${successCount} sales records`);
-    if (errorCount > 0) {
-      console.log(`   ⚠️  ${errorCount} errors`);
-    }
     console.log('');
 
     // Success summary
-    console.log("🎉 Alena's tenant created successfully!");
+    console.log("🎉 Alena's tenant setup complete!");
     console.log('');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('📋 Access Details:');
@@ -220,7 +187,7 @@ async function createAlenaTenant(args: AlenaTenantArgs) {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('');
     console.log(`  • ${ALENA_SKUS.length} products (flowers and gifts)`);
-    console.log(`  • ${successCount} sales history records across 3 periods`);
+    console.log(`  • ${ALENA_SALES_DATA.length} sales history records across 3 periods`);
     console.log(`  • Periods: 2025-11, 2025-12, 2026-01`);
     console.log('');
     console.log('💡 Save the API key - it will not be shown again!');

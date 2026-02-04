@@ -1,16 +1,10 @@
 #!/usr/bin/env bun
 import 'dotenv/config';
+import { SalesPlannerClient } from '@sales-planner/http-client';
 
 interface DemoTenantArgs {
   tenantTitle?: string;
   apiUrl?: string;
-}
-
-interface TenantSetupResult {
-  tenant: { id: number; title: string };
-  shop: { id: number; title: string };
-  user: { id: number; email: string; name: string };
-  apiKey: string;
 }
 
 const DEMO_SKUS = [
@@ -33,31 +27,31 @@ const DEMO_SKUS = [
 
 const DEMO_SALES_DATA = [
   // Current period (2026-01)
-  { skuCode: 'LAPTOP-001', period: '2026-01', quantity: 12 },
-  { skuCode: 'LAPTOP-002', period: '2026-01', quantity: 8 },
-  { skuCode: 'PHONE-001', period: '2026-01', quantity: 25 },
-  { skuCode: 'PHONE-002', period: '2026-01', quantity: 18 },
-  { skuCode: 'TABLET-001', period: '2026-01', quantity: 10 },
-  { skuCode: 'MONITOR-001', period: '2026-01', quantity: 15 },
-  { skuCode: 'HEADSET-001', period: '2026-01', quantity: 20 },
+  { sku_code: 'LAPTOP-001', period: '2026-01', quantity: 12 },
+  { sku_code: 'LAPTOP-002', period: '2026-01', quantity: 8 },
+  { sku_code: 'PHONE-001', period: '2026-01', quantity: 25 },
+  { sku_code: 'PHONE-002', period: '2026-01', quantity: 18 },
+  { sku_code: 'TABLET-001', period: '2026-01', quantity: 10 },
+  { sku_code: 'MONITOR-001', period: '2026-01', quantity: 15 },
+  { sku_code: 'HEADSET-001', period: '2026-01', quantity: 20 },
 
   // Previous period (2025-12)
-  { skuCode: 'LAPTOP-001', period: '2025-12', quantity: 15 },
-  { skuCode: 'LAPTOP-002', period: '2025-12', quantity: 10 },
-  { skuCode: 'PHONE-001', period: '2025-12', quantity: 30 },
-  { skuCode: 'PHONE-002', period: '2025-12', quantity: 22 },
-  { skuCode: 'TABLET-001', period: '2025-12', quantity: 12 },
-  { skuCode: 'MONITOR-001', period: '2025-12', quantity: 18 },
-  { skuCode: 'HEADSET-001', period: '2025-12', quantity: 25 },
+  { sku_code: 'LAPTOP-001', period: '2025-12', quantity: 15 },
+  { sku_code: 'LAPTOP-002', period: '2025-12', quantity: 10 },
+  { sku_code: 'PHONE-001', period: '2025-12', quantity: 30 },
+  { sku_code: 'PHONE-002', period: '2025-12', quantity: 22 },
+  { sku_code: 'TABLET-001', period: '2025-12', quantity: 12 },
+  { sku_code: 'MONITOR-001', period: '2025-12', quantity: 18 },
+  { sku_code: 'HEADSET-001', period: '2025-12', quantity: 25 },
 
   // Two periods ago (2025-11)
-  { skuCode: 'LAPTOP-001', period: '2025-11', quantity: 10 },
-  { skuCode: 'LAPTOP-002', period: '2025-11', quantity: 7 },
-  { skuCode: 'PHONE-001', period: '2025-11', quantity: 20 },
-  { skuCode: 'PHONE-002', period: '2025-11', quantity: 15 },
-  { skuCode: 'TABLET-001', period: '2025-11', quantity: 8 },
-  { skuCode: 'MONITOR-001', period: '2025-11', quantity: 12 },
-  { skuCode: 'HEADSET-001', period: '2025-11', quantity: 18 },
+  { sku_code: 'LAPTOP-001', period: '2025-11', quantity: 10 },
+  { sku_code: 'LAPTOP-002', period: '2025-11', quantity: 7 },
+  { sku_code: 'PHONE-001', period: '2025-11', quantity: 20 },
+  { sku_code: 'PHONE-002', period: '2025-11', quantity: 15 },
+  { sku_code: 'TABLET-001', period: '2025-11', quantity: 8 },
+  { sku_code: 'MONITOR-001', period: '2025-11', quantity: 12 },
+  { sku_code: 'HEADSET-001', period: '2025-11', quantity: 18 },
 ];
 
 async function createDemoTenant(args: DemoTenantArgs) {
@@ -68,6 +62,8 @@ async function createDemoTenant(args: DemoTenantArgs) {
     console.error('❌ Error: SALES_PLANNER_SYSTEM_ADMIN_KEY environment variable is required');
     process.exit(1);
   }
+
+  const adminClient = new SalesPlannerClient({ baseUrl: apiUrl, apiKey: systemAdminKey });
 
   const tenantTitle = args.tenantTitle || 'Demo';
   const tenantSlug = tenantTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-');
@@ -81,120 +77,38 @@ async function createDemoTenant(args: DemoTenantArgs) {
   try {
     // Step 1: Create tenant with shop and user
     console.log('📦 Step 1: Creating tenant, shop, and admin user...');
-    const setupResponse = await fetch(`${apiUrl}/tenants/with-shop-and-user`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': systemAdminKey,
-      },
-      body: JSON.stringify({
-        tenantTitle,
-        shopTitle: 'Electronics',
-        userEmail: `demo-${timestamp}@${tenantSlug}.com`,
-        userName: `${tenantTitle} Admin`,
-      }),
+    const setup = await adminClient.createTenantWithShopAndUser({
+      tenantTitle,
+      shopTitle: 'Electronics',
+      userEmail: `demo-${timestamp}@${tenantSlug}.com`,
+      userName: `${tenantTitle} Admin`,
     });
-
-    if (!setupResponse.ok) {
-      const error = await setupResponse.text();
-      console.error(`❌ Error: ${setupResponse.status} ${setupResponse.statusText}`);
-      console.error(error);
-      process.exit(1);
-    }
-
-    const setup = (await setupResponse.json()) as TenantSetupResult;
     console.log(`   ✅ Tenant created: ${setup.tenant.title} (ID: ${setup.tenant.id})`);
     console.log(`   ✅ Shop created: ${setup.shop.title} (ID: ${setup.shop.id})`);
     console.log(`   ✅ Admin user created: ${setup.user.name} (${setup.user.email})`);
     console.log('');
 
-    // Step 2: Import SKUs
+    // Create client with user's API key for data operations
+    const userClient = new SalesPlannerClient({ baseUrl: apiUrl, apiKey: setup.apiKey });
+    const ctx = { shop_id: setup.shop.id, tenant_id: setup.tenant.id };
+
+    // Step 2: Import SKUs (uses upsert - safe to run multiple times)
     console.log(`📊 Step 2: Importing ${DEMO_SKUS.length} demo products...`);
-    const skusResponse = await fetch(
-      `${apiUrl}/skus/import/json?shop_id=${setup.shop.id}&tenant_id=${setup.tenant.id}`,
-      {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'x-api-key': setup.apiKey,
-        },
-        body: JSON.stringify(DEMO_SKUS),
-      },
-    );
-
-    if (!skusResponse.ok) {
-      const error = await skusResponse.text();
-      console.error(`❌ Error importing SKUs: ${skusResponse.status} ${skusResponse.statusText}`);
-      console.error(error);
-    } else {
-      const skusResult = (await skusResponse.json()) as { created: number };
-      console.log(`   ✅ Imported ${skusResult.created} products`);
+    const skusResult = await userClient.importSkusJson(DEMO_SKUS, ctx);
+    if (skusResult.created > 0) {
+      console.log(`   ✅ Created ${skusResult.created} new products`);
+    }
+    if (skusResult.updated > 0) {
+      console.log(`   ✅ Updated ${skusResult.updated} existing products`);
     }
     console.log('');
 
-    // Step 3: Get SKU IDs for sales data
-    console.log('🔍 Step 3: Fetching SKU IDs...');
-    const skusListResponse = await fetch(
-      `${apiUrl}/skus?shop_id=${setup.shop.id}&tenant_id=${setup.tenant.id}`,
-      {
-        headers: {
-          'x-api-key': setup.apiKey,
-        },
-      },
+    // Step 3: Import sales history (uses upsert - safe to run multiple times)
+    console.log(`📈 Step 3: Importing ${DEMO_SALES_DATA.length} sales history records...`);
+    const salesResult = await userClient.importSalesHistoryJson(DEMO_SALES_DATA, ctx);
+    console.log(
+      `   ✅ Imported sales history: ${salesResult.created} created, ${salesResult.updated} updated`,
     );
-
-    if (!skusListResponse.ok) {
-      console.error('❌ Error fetching SKUs');
-      process.exit(1);
-    }
-
-    const skusList = (await skusListResponse.json()) as Array<{ id: number; code: string }>;
-    const skuMap = new Map(skusList.map((sku) => [sku.code, sku.id]));
-    console.log(`   ✅ Found ${skusList.length} SKUs`);
-    console.log('');
-
-    // Step 4: Create sales history records
-    console.log(`📈 Step 4: Creating ${DEMO_SALES_DATA.length} sales history records...`);
-    let successCount = 0;
-    let errorCount = 0;
-
-    for (const sale of DEMO_SALES_DATA) {
-      const skuId = skuMap.get(sale.skuCode);
-      if (!skuId) {
-        console.log(`   ⚠️  Skipping ${sale.skuCode} - SKU not found`);
-        errorCount++;
-        continue;
-      }
-
-      const salesResponse = await fetch(
-        `${apiUrl}/sales-history?shop_id=${setup.shop.id}&tenant_id=${setup.tenant.id}`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'x-api-key': setup.apiKey,
-          },
-          body: JSON.stringify({
-            sku_id: skuId,
-            period: sale.period,
-            quantity: sale.quantity,
-          }),
-        },
-      );
-
-      if (salesResponse.ok) {
-        successCount++;
-      } else {
-        errorCount++;
-        const error = await salesResponse.text();
-        console.log(`   ⚠️  Error for ${sale.skuCode} ${sale.period}: ${error}`);
-      }
-    }
-
-    console.log(`   ✅ Created ${successCount} sales records`);
-    if (errorCount > 0) {
-      console.log(`   ⚠️  ${errorCount} errors`);
-    }
     console.log('');
 
     // Success summary
@@ -216,7 +130,7 @@ async function createDemoTenant(args: DemoTenantArgs) {
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('');
     console.log(`  • ${DEMO_SKUS.length} products (laptops, phones, tablets, accessories)`);
-    console.log(`  • ${successCount} sales history records across 3 periods`);
+    console.log(`  • ${DEMO_SALES_DATA.length} sales history records across 3 periods`);
     console.log(`  • Periods: 2025-11, 2025-12, 2026-01`);
     console.log('');
     console.log('💡 Save the API key - it will not be shown again!');

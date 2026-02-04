@@ -1,18 +1,12 @@
 #!/usr/bin/env bun
 import 'dotenv/config';
+import { SalesPlannerClient } from '@sales-planner/http-client';
 
 interface CreateTenantArgs {
   tenantTitle: string;
   userEmail?: string;
   userName?: string;
   apiUrl?: string;
-}
-
-interface TenantSetupResult {
-  tenant: { id: number; title: string };
-  shop: { id: number; title: string };
-  user: { id: number; email: string; name: string };
-  apiKey: string;
 }
 
 async function createTenantWithShopAndUser(args: CreateTenantArgs) {
@@ -24,16 +18,12 @@ async function createTenantWithShopAndUser(args: CreateTenantArgs) {
     process.exit(1);
   }
 
+  const client = new SalesPlannerClient({ baseUrl: apiUrl, apiKey: systemAdminKey });
+
   // Derive user details from tenant title if not provided
   const tenantSlug = args.tenantTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-');
   const userEmail = args.userEmail || `admin@${tenantSlug}.com`;
   const userName = args.userName || `${args.tenantTitle} Admin`;
-
-  const payload = {
-    tenantTitle: args.tenantTitle,
-    userEmail,
-    userName,
-  };
 
   console.log(`Creating tenant: ${args.tenantTitle}`);
   console.log(`User: ${userName} (${userEmail})`);
@@ -41,23 +31,11 @@ async function createTenantWithShopAndUser(args: CreateTenantArgs) {
   console.log('');
 
   try {
-    const response = await fetch(`${apiUrl}/tenants/with-shop-and-user`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'x-api-key': systemAdminKey,
-      },
-      body: JSON.stringify(payload),
+    const result = await client.createTenantWithShopAndUser({
+      tenantTitle: args.tenantTitle,
+      userEmail,
+      userName,
     });
-
-    if (!response.ok) {
-      const error = await response.text();
-      console.error(`Error: ${response.status} ${response.statusText}`);
-      console.error(error);
-      process.exit(1);
-    }
-
-    const result = (await response.json()) as TenantSetupResult;
 
     console.log('✅ Tenant created successfully!');
     console.log('');

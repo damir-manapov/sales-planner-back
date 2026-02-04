@@ -433,8 +433,8 @@ export class SalesPlannerClient {
   // API Keys
   // ============================================================
 
-  async getApiKeys(): Promise<ApiKey[]> {
-    return this.request('GET', '/api-keys');
+  async getApiKeys(userId?: number): Promise<ApiKey[]> {
+    return this.request('GET', '/api-keys', { params: { user_id: userId } });
   }
 
   async createApiKey(dto: CreateApiKeyDto): Promise<ApiKey> {
