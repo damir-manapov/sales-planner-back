@@ -19,10 +19,12 @@
       "tar": ">=7.5.4",
       "undici": ">=6.23.0",
       "lodash": ">=4.17.23",
-      "diff": ">=4.0.4"
+      "diff": ">=4.0.4",
+      "@isaacs/brace-expansion": ">=5.0.1"
     },
     "onlyBuiltDependencies": [
       "@nestjs/core",
+      "@scarf/scarf",
       "@swc/core",
       "esbuild"
     ]

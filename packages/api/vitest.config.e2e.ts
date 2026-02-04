@@ -1,5 +1,9 @@
+import { config } from 'dotenv';
 import swc from 'unplugin-swc';
 import { defineConfig } from 'vitest/config';
+
+// Load environment variables before tests run
+config({ path: '.env.local' });
 
 export default defineConfig({
   test: {
