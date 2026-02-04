@@ -1,5 +1,13 @@
 # @sales-planner/shared
 
+## 0.4.0
+
+### Minor Changes
+
+- - Add `created_by` field to `CreateTenantDto`
+  - Change `SalesHistory.period` type from `Date` to `string` (YYYY-MM format) to match API response
+  - Types now serve as compile-time contracts validated against API's Zod schemas
+
 ## 0.3.0
 
 ### Minor Changes

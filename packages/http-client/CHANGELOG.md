@@ -1,5 +1,19 @@
 # @sales-planner/http-client
 
+## 0.3.0
+
+### Minor Changes
+
+- - Move `SalesPlannerClient` implementation to this package (previously in shared)
+  - Add `ApiError` class for typed error handling
+  - Fix JSON parsing error on empty responses (204 No Content)
+  - All methods now properly typed with shared DTOs
+
+### Patch Changes
+
+- Updated dependencies
+  - @sales-planner/shared@0.4.0
+
 ## 0.2.0
 
 ### Minor Changes

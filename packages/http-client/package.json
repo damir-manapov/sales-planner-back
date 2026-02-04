@@ -1,10 +1,15 @@
 {
   "name": "@sales-planner/http-client",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "HTTP client for Sales Planner API",
   "author": "Damir Manapov",
   "license": "MIT",
-  "keywords": ["sales-planner", "api-client", "http-client", "typescript"],
+  "keywords": [
+    "sales-planner",
+    "api-client",
+    "http-client",
+    "typescript"
+  ],
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
