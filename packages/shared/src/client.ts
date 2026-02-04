@@ -152,6 +152,37 @@ export class SalesPlannerClient {
     return response.json();
   }
 
+  private async requestPublic<T>(method: string, path: string): Promise<T> {
+    const url = new URL(this.baseUrl + path);
+
+    const response = await fetch(url.toString(), {
+      method,
+      headers: {
+        'Content-Type': 'application/json',
+      },
+    });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: response.statusText }));
+      throw new ApiError(response.status, error.message || 'Request failed');
+    }
+
+    return response.json();
+  }
+
+  private async requestTextPublic(method: string, path: string): Promise<string> {
+    const url = new URL(this.baseUrl + path);
+
+    const response = await fetch(url.toString(), { method });
+
+    if (!response.ok) {
+      const error = await response.json().catch(() => ({ message: response.statusText }));
+      throw new ApiError(response.status, error.message || 'Request failed');
+    }
+
+    return response.text();
+  }
+
   // ============================================================
   // Me
   // ============================================================
@@ -276,6 +307,14 @@ export class SalesPlannerClient {
     return this.requestText('GET', '/skus/export/csv', { params: ctx });
   }
 
+  async getSkusExampleJson(): Promise<ImportSkuItem[]> {
+    return this.requestPublic('GET', '/skus/examples/json');
+  }
+
+  async getSkusExampleCsv(): Promise<string> {
+    return this.requestTextPublic('GET', '/skus/examples/csv');
+  }
+
   // ============================================================
   // Sales History
   // ============================================================
@@ -327,6 +366,14 @@ export class SalesPlannerClient {
 
   async exportSalesHistoryCsv(ctx: ShopContextParams, query?: PeriodQuery): Promise<string> {
     return this.requestText('GET', '/sales-history/export/csv', { params: { ...ctx, ...query } });
+  }
+
+  async getSalesHistoryExampleJson(): Promise<ImportSalesHistoryItem[]> {
+    return this.requestPublic('GET', '/sales-history/examples/json');
+  }
+
+  async getSalesHistoryExampleCsv(): Promise<string> {
+    return this.requestTextPublic('GET', '/sales-history/examples/csv');
   }
 
   // ============================================================
