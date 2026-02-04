@@ -72,6 +72,8 @@ export interface ApiKey {
 export interface Marketplace {
   id: string;
   title: string;
+  shop_id: number;
+  tenant_id: number;
   created_at: Date;
   updated_at: Date;
 }

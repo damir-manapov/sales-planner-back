@@ -42,6 +42,7 @@ export async function cleanupUser(app: INestApplication, userId: number): Promis
     for (const shop of shops) {
       await db.deleteFrom('sales_history').where('shop_id', '=', shop.id).execute();
       await db.deleteFrom('skus').where('shop_id', '=', shop.id).execute();
+      await db.deleteFrom('marketplaces').where('shop_id', '=', shop.id).execute();
       await db.deleteFrom('shops').where('id', '=', shop.id).execute();
     }
 

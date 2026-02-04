@@ -14,8 +14,10 @@ import {
 } from '@nestjs/common';
 import { hasTenantAccess, validateTenantAdminAccess } from '../auth/access-control.js';
 import { AuthenticatedRequest, AuthGuard } from '../auth/auth.guard.js';
+import { ZodValidationPipe } from '../common/index.js';
 import { UserRolesService } from '../user-roles/user-roles.service.js';
-import { CreateUserDto, User, UsersService } from './users.service.js';
+import { CreateUserSchema, type CreateUserRequest } from './users.schema.js';
+import { type User, UsersService } from './users.service.js';
 
 @Controller('users')
 @UseGuards(AuthGuard)
@@ -83,7 +85,7 @@ export class UsersController {
   async create(
     @Req() req: AuthenticatedRequest,
     @Query('tenantId') tenantId?: string,
-    @Body() dto?: CreateUserDto,
+    @Body(new ZodValidationPipe(CreateUserSchema)) dto?: CreateUserRequest,
   ): Promise<User> {
     // System admins can create users without tenant context
     if (!req.user.isSystemAdmin) {

@@ -30,12 +30,12 @@ import {
 import { parseAndValidateImport, ZodValidationPipe } from '../common/index.js';
 import { fromCsv, toCsv } from '../lib/index.js';
 import {
-  type CreateSalesHistoryDto,
+  type CreateSalesHistoryRequest,
   CreateSalesHistorySchema,
   type ImportSalesHistoryItem,
   ImportSalesHistoryItemSchema,
   PeriodQuerySchema,
-  type UpdateSalesHistoryDto,
+  type UpdateSalesHistoryRequest,
   UpdateSalesHistorySchema,
 } from './sales-history.schema.js';
 import { type SalesHistory, SalesHistoryService } from './sales-history.service.js';
@@ -128,7 +128,7 @@ export class SalesHistoryController {
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @Body(new ZodValidationPipe(CreateSalesHistorySchema.omit({ shop_id: true, tenant_id: true })))
-    dto: Omit<CreateSalesHistoryDto, 'shop_id' | 'tenant_id'>,
+    dto: CreateSalesHistoryRequest,
   ): Promise<SalesHistory> {
     return this.salesHistoryService.create({
       ...dto,
@@ -143,7 +143,7 @@ export class SalesHistoryController {
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @Param('id', ParseIntPipe) id: number,
-    @Body(new ZodValidationPipe(UpdateSalesHistorySchema)) dto: UpdateSalesHistoryDto,
+    @Body(new ZodValidationPipe(UpdateSalesHistorySchema)) dto: UpdateSalesHistoryRequest,
   ): Promise<SalesHistory> {
     const existing = await this.salesHistoryService.findById(id);
     if (!existing) {

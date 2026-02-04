@@ -12,6 +12,13 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard.js';
 import { SystemAdminGuard } from '../auth/system-admin.guard.js';
+import { ZodValidationPipe } from '../common/index.js';
+import {
+  CreateApiKeySchema,
+  UpdateApiKeySchema,
+  type CreateApiKeyRequest,
+  type UpdateApiKeyRequest,
+} from './api-keys.schema.js';
 import { ApiKeysService } from './api-keys.service';
 
 @Controller('api-keys')
@@ -34,18 +41,18 @@ export class ApiKeysController {
 
   @Post()
   async create(
-    @Body()
-    body: { user_id: number; key: string; name?: string; expires_at?: string },
+    @Body(new ZodValidationPipe(CreateApiKeySchema))
+    dto: CreateApiKeyRequest,
   ) {
-    return this.apiKeysService.create(body);
+    return this.apiKeysService.create(dto);
   }
 
   @Put(':id')
   async update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() body: { name?: string; expires_at?: string | null },
+    @Body(new ZodValidationPipe(UpdateApiKeySchema)) dto: UpdateApiKeyRequest,
   ) {
-    return this.apiKeysService.update(id, body);
+    return this.apiKeysService.update(id, dto);
   }
 
   @Delete(':id')

@@ -1,10 +1,17 @@
 import { z } from 'zod';
-import type { CreateMarketplaceDto as SharedCreateMarketplaceDto } from '@sales-planner/shared';
+import type {
+  CreateMarketplaceRequest as SharedCreateMarketplaceRequest,
+  CreateMarketplaceDto as SharedCreateMarketplaceDto,
+  UpdateMarketplaceRequest as SharedUpdateMarketplaceRequest,
+  UpdateMarketplaceDto as SharedUpdateMarketplaceDto,
+  ImportMarketplaceItem as SharedImportMarketplaceItem,
+} from '@sales-planner/shared';
 import { AssertCompatible, zodSchemas } from '../common/schema.utils.js';
 
 const { shortId, title } = zodSchemas;
 
 // Zod schemas
+// Note: shop_id and tenant_id are injected from ShopContext, not from request body
 export const CreateMarketplaceSchema = z.object({
   id: shortId(),
   title: title(),
@@ -12,11 +19,34 @@ export const CreateMarketplaceSchema = z.object({
 
 export const UpdateMarketplaceSchema = z.object({
   title: title().optional(),
+  // Note: shop_id and tenant_id are intentionally not updatable
 });
 
-// Infer TypeScript types from schemas with compatibility checks
-export type CreateMarketplaceDto = AssertCompatible<
-  SharedCreateMarketplaceDto,
+export const ImportMarketplaceItemSchema = z.object({
+  id: shortId(),
+  title: title(),
+});
+
+// TypeScript types
+export type CreateMarketplaceRequest = AssertCompatible<
+  SharedCreateMarketplaceRequest,
   z.infer<typeof CreateMarketplaceSchema>
 >;
-export type UpdateMarketplaceDto = z.infer<typeof UpdateMarketplaceSchema>;
+export type CreateMarketplaceDto = AssertCompatible<
+  SharedCreateMarketplaceDto,
+  Omit<SharedCreateMarketplaceDto, never>
+>;
+export type UpdateMarketplaceDto = AssertCompatible<
+  SharedUpdateMarketplaceDto,
+  z.infer<typeof UpdateMarketplaceSchema>
+>;
+export type UpdateMarketplaceRequest = AssertCompatible<
+  SharedUpdateMarketplaceRequest,
+  z.infer<typeof UpdateMarketplaceSchema>
+>;
+
+// ImportMarketplaceItem uses AssertCompatible to ensure compatibility with shared type
+export type ImportMarketplaceItem = AssertCompatible<
+  SharedImportMarketplaceItem,
+  z.infer<typeof ImportMarketplaceItemSchema>
+>;

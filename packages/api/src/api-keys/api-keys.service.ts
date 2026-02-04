@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import { DuplicateResourceException, isUniqueViolation } from '../common/index.js';
 import { DatabaseService } from '../database/database.service';
 
 @Injectable()
@@ -40,20 +41,54 @@ export class ApiKeysService {
     return apiKey;
   }
 
-  async create(data: { user_id: number; key: string; name?: string; expires_at?: Date | string }) {
-    return this.db
-      .insertInto('api_keys')
-      .values({
-        user_id: data.user_id,
-        key: data.key,
-        name: data.name ?? null,
-        expires_at: data.expires_at ? new Date(data.expires_at) : null,
-      })
-      .returningAll()
-      .executeTakeFirstOrThrow();
+  async create(data: { user_id: number; name?: string; expires_at?: Date | string }) {
+    const key = crypto.randomUUID();
+    try {
+      return this.db
+        .insertInto('api_keys')
+        .values({
+          user_id: data.user_id,
+          key: key,
+          name: data.name ?? null,
+          expires_at: data.expires_at ? new Date(data.expires_at) : null,
+        })
+        .returningAll()
+        .executeTakeFirstOrThrow();
+    } catch (error: unknown) {
+      if (isUniqueViolation(error)) {
+        throw new DuplicateResourceException('API Key', key);
+      }
+      throw error;
+    }
   }
 
-  async update(id: number, data: { name?: string; expires_at?: Date | string | null }) {
+  // Internal method for bootstrap - allows setting a specific key
+  async createWithKey(data: {
+    user_id: number;
+    key: string;
+    name?: string;
+    expires_at?: Date | string;
+  }) {
+    try {
+      return this.db
+        .insertInto('api_keys')
+        .values({
+          user_id: data.user_id,
+          key: data.key,
+          name: data.name ?? null,
+          expires_at: data.expires_at ? new Date(data.expires_at) : null,
+        })
+        .returningAll()
+        .executeTakeFirstOrThrow();
+    } catch (error: unknown) {
+      if (isUniqueViolation(error)) {
+        throw new DuplicateResourceException('API Key', data.key);
+      }
+      throw error;
+    }
+  }
+
+  async update(id: number, data: { name?: string | null; expires_at?: string | Date | null }) {
     return this.db
       .updateTable('api_keys')
       .set({

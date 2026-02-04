@@ -1,19 +1,20 @@
 import { z } from 'zod';
 import type {
+  CreateSkuRequest as SharedCreateSkuRequest,
   CreateSkuDto as SharedCreateSkuDto,
+  UpdateSkuRequest as SharedUpdateSkuRequest,
   UpdateSkuDto as SharedUpdateSkuDto,
   ImportSkuItem as SharedImportSkuItem,
 } from '@sales-planner/shared';
 import { AssertCompatible, zodSchemas } from '../common/schema.utils.js';
 
-const { code, title, id } = zodSchemas;
+const { code, title } = zodSchemas;
 
 // Zod schemas
+// Note: shop_id and tenant_id are injected from ShopContext, not from request body
 export const CreateSkuSchema = z.object({
   code: code(),
   title: title(),
-  shop_id: id(),
-  tenant_id: id(),
 });
 
 export const UpdateSkuSchema = z.object({
@@ -28,9 +29,17 @@ export const ImportSkuItemSchema = z.object({
   title: title(),
 });
 
-// Infer TypeScript types from schemas
-export type CreateSkuDto = AssertCompatible<SharedCreateSkuDto, z.infer<typeof CreateSkuSchema>>;
+// TypeScript types
+export type CreateSkuRequest = AssertCompatible<
+  SharedCreateSkuRequest,
+  z.infer<typeof CreateSkuSchema>
+>;
+export type CreateSkuDto = AssertCompatible<SharedCreateSkuDto, Omit<SharedCreateSkuDto, never>>;
 export type UpdateSkuDto = AssertCompatible<SharedUpdateSkuDto, z.infer<typeof UpdateSkuSchema>>;
+export type UpdateSkuRequest = AssertCompatible<
+  SharedUpdateSkuRequest,
+  z.infer<typeof UpdateSkuSchema>
+>;
 export type ImportSkuItem = AssertCompatible<
   SharedImportSkuItem,
   z.infer<typeof ImportSkuItemSchema>

@@ -36,35 +36,82 @@ Swagger UI provides:
 - **Bootstrap** - Auto-creates systemAdmin user and seeds default roles on startup
 - **Swagger/OpenAPI** - Interactive API documentation with try-it-out functionality
 - **Request Validation** - Zod-based schema validation with type sync to `@sales-planner/shared`
+- **Error Handling** - Returns 409 Conflict for duplicate resources (email, code, period, etc.)
+- **Security** - API keys are auto-generated using `crypto.randomUUID()` (not user-provided)
 
-## Schema Validation
+## Type System Architecture
 
-All DTOs are validated using Zod schemas with compile-time type synchronization:
+The API uses a three-layer type system for type safety and clear separation of concerns:
 
+**1. Shared Package** (`@sales-planner/shared`) - Source of truth
 ```typescript
-// common/schema.utils.ts - Reusable validation patterns
-export const zodSchemas = {
-  title: () => z.string().min(1).max(255),
-  id: () => z.number().int().positive(),
-  period: () => z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'YYYY-MM format'),
-};
+// Request types - HTTP layer (may omit context fields)
+export interface CreateSkuRequest {
+  code: string;
+  title: string;
+  // shop_id, tenant_id omitted - injected by @ShopContext decorator
+}
 
-// skus/skus.schema.ts - Schema with type sync
-import type { CreateSkuDto as SharedCreateSkuDto } from '@sales-planner/shared';
-import { AssertCompatible, zodSchemas } from '../common/schema.utils.js';
+// DTO types - Service layer (includes all fields)
+export interface CreateSkuDto {
+  code: string;
+  title: string;
+  shop_id: number;
+  tenant_id: number;
+}
+```
 
+**2. Zod Schemas** - Runtime validation with compile-time sync
+```typescript
+// skus/skus.schema.ts
+import type { CreateSkuRequest, CreateSkuDto } from '@sales-planner/shared';
+import { AssertCompatible } from '../common/schema.utils.js';
+
+// Schema for HTTP requests (without context)
 export const CreateSkuSchema = z.object({
   code: code(),
   title: title(),
-  shop_id: id(),
-  tenant_id: id(),
 });
 
-// Fails at compile time if Zod schema doesn't match shared DTO
-export type CreateSkuDto = AssertCompatible<SharedCreateSkuDto, z.infer<typeof CreateSkuSchema>>;
+// Compile-time validation - fails if types don't match shared package
+export type CreateSkuRequest = AssertCompatible<
+  SharedCreateSkuRequest,
+  z.infer<typeof CreateSkuSchema>
+>;
+export type CreateSkuDto = AssertCompatible<
+  SharedCreateSkuDto,
+  z.infer<typeof CreateSkuSchema> & { shop_id: number; tenant_id: number }
+>;
 ```
 
-This ensures types in `@sales-planner/shared` and Zod schemas stay in sync.
+**3. Controllers & Services** - Uses Request types (HTTP) and DTO types (service)
+```typescript
+// Controller - HTTP layer uses Request types
+@Post()
+async create(
+  @Body(new ZodValidationPipe(CreateSkuSchema)) dto: CreateSkuRequest,
+  @ShopContext() ctx: ShopContextType,
+): Promise<Sku> {
+  // Merge request with context to create full DTO
+  return this.skusService.create({
+    ...dto,
+    shop_id: ctx.shopId,
+    tenant_id: ctx.tenantId,
+  });
+}
+
+// Service - Business logic uses DTO types
+async create(dto: CreateSkuDto): Promise<Sku> {
+  // dto has all fields including shop_id, tenant_id
+  return this.db.insertInto('skus').values(dto)...
+}
+```
+
+**Pattern consistency:**
+- All create/update operations follow this pattern
+- Request types validated at HTTP boundary with `ZodValidationPipe`
+- DTO types used in service layer with full data
+- `AssertCompatible` utility ensures compile-time type safety
 
 ## Role-Based Access Control
 

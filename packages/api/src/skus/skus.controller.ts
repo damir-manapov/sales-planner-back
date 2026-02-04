@@ -29,11 +29,11 @@ import {
 import { parseAndValidateImport, ZodValidationPipe } from '../common/index.js';
 import { fromCsv, toCsv } from '../lib/index.js';
 import {
-  type CreateSkuDto,
+  type CreateSkuRequest,
   CreateSkuSchema,
   type ImportSkuItem,
   ImportSkuItemSchema,
-  type UpdateSkuDto,
+  type UpdateSkuRequest,
   UpdateSkuSchema,
 } from './skus.schema.js';
 import { type Sku, SkusService } from './skus.service.js';
@@ -109,8 +109,7 @@ export class SkusController {
   async create(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-    @Body(new ZodValidationPipe(CreateSkuSchema.omit({ shop_id: true, tenant_id: true })))
-    dto: Omit<CreateSkuDto, 'shop_id' | 'tenant_id'>,
+    @Body(new ZodValidationPipe(CreateSkuSchema)) dto: CreateSkuRequest,
   ): Promise<Sku> {
     return this.skusService.create({
       ...dto,
@@ -125,7 +124,7 @@ export class SkusController {
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @Param('id', ParseIntPipe) id: number,
-    @Body(new ZodValidationPipe(UpdateSkuSchema)) dto: UpdateSkuDto,
+    @Body(new ZodValidationPipe(UpdateSkuSchema)) dto: UpdateSkuRequest,
   ): Promise<Sku> {
     const existing = await this.skusService.findById(id);
     if (!existing) {

@@ -1,6 +1,8 @@
 import { z } from 'zod';
 import type {
+  CreateSalesHistoryRequest as SharedCreateSalesHistoryRequest,
   CreateSalesHistoryDto as SharedCreateSalesHistoryDto,
+  UpdateSalesHistoryRequest as SharedUpdateSalesHistoryRequest,
   UpdateSalesHistoryDto as SharedUpdateSalesHistoryDto,
   ImportSalesHistoryItem as SharedImportSalesHistoryItem,
   PeriodQuery as SharedPeriodQuery,
@@ -8,6 +10,14 @@ import type {
 import { AssertCompatible, zodSchemas } from '../common/schema.utils.js';
 
 const { id, quantity, period, code } = zodSchemas;
+
+// Schema for requests (omitting shop_id and tenant_id)
+const CreateSalesHistoryRequestSchema = z.object({
+  sku_id: id(),
+  period: period(),
+  quantity: quantity(),
+  marketplace_id: z.string().min(1),
+});
 
 // Zod schemas
 export const PeriodQuerySchema = z.object({
@@ -38,12 +48,20 @@ export const ImportSalesHistoryItemSchema = z.object({
 
 // Infer TypeScript types from schemas with compatibility checks
 export type PeriodQuery = AssertCompatible<SharedPeriodQuery, z.infer<typeof PeriodQuerySchema>>;
+export type CreateSalesHistoryRequest = AssertCompatible<
+  SharedCreateSalesHistoryRequest,
+  z.infer<typeof CreateSalesHistoryRequestSchema>
+>;
 export type CreateSalesHistoryDto = AssertCompatible<
   SharedCreateSalesHistoryDto,
   z.infer<typeof CreateSalesHistorySchema>
 >;
 export type UpdateSalesHistoryDto = AssertCompatible<
   SharedUpdateSalesHistoryDto,
+  z.infer<typeof UpdateSalesHistorySchema>
+>;
+export type UpdateSalesHistoryRequest = AssertCompatible<
+  SharedUpdateSalesHistoryRequest,
   z.infer<typeof UpdateSalesHistorySchema>
 >;
 export type ImportSalesHistoryItem = AssertCompatible<

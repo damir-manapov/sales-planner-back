@@ -1,10 +1,7 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import { ApiKeysService } from '../api-keys/api-keys.service.js';
 import { ROLE_NAMES } from '../common/constants.js';
-import { CreateMarketplaceDto, MarketplacesService } from '../marketplaces/marketplaces.service.js';
 import { RolesService } from '../roles/roles.service.js';
 import { UserRolesService } from '../user-roles/user-roles.service.js';
 import { UsersService } from '../users/users.service.js';
@@ -19,13 +16,12 @@ export class BootstrapService implements OnModuleInit {
     private readonly rolesService: RolesService,
     private readonly userRolesService: UserRolesService,
     private readonly apiKeysService: ApiKeysService,
-    private readonly marketplacesService: MarketplacesService,
   ) {}
 
   async onModuleInit(): Promise<void> {
     await this.seedRoles();
     await this.ensureSystemAdmin();
-    await this.seedMarketplaces();
+    // Note: Marketplaces are now shop-specific and created on-demand
   }
 
   private async seedRoles(): Promise<void> {
@@ -96,7 +92,7 @@ export class BootstrapService implements OnModuleInit {
       });
 
       // Create API key for admin
-      await this.apiKeysService.create({
+      await this.apiKeysService.createWithKey({
         user_id: adminUser.id,
         key: systemAdminKey,
         name: 'System Admin Key',
@@ -114,20 +110,5 @@ export class BootstrapService implements OnModuleInit {
     }
 
     this.logger.log('System admin initialization complete');
-  }
-
-  private async seedMarketplaces(): Promise<void> {
-    const marketplacesData: CreateMarketplaceDto[] = JSON.parse(
-      readFileSync(join(__dirname, '../../data/common/marketplaces.json'), 'utf-8'),
-    );
-
-    for (const marketplace of marketplacesData) {
-      const existing = await this.marketplacesService.findById(marketplace.id);
-      if (!existing) {
-        this.logger.log(`Creating marketplace: ${marketplace.title}`);
-        await this.marketplacesService.create(marketplace);
-      }
-    }
-    this.logger.log('Marketplaces seeding complete');
   }
 }

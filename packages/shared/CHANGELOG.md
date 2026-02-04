@@ -1,5 +1,32 @@
 # @sales-planner/shared
 
+## 0.5.0
+
+### Minor Changes
+
+- Type system refactoring and API improvements
+
+  **Breaking Changes:**
+
+  - Introduced Request vs DTO type separation for all entities
+  - `CreateApiKeyDto` no longer accepts `key` field (auto-generated)
+  - Type structure reorganized for better consistency
+
+  **New Features:**
+
+  - Added Update types for all entities (UpdateUserDto, UpdateTenantDto, etc.)
+  - Added duplicate resource detection with 409 Conflict responses
+  - API keys are now auto-generated using crypto.randomUUID()
+  - All controller update methods now use ZodValidationPipe
+
+  **Improvements:**
+
+  - Simplified dto.ts with better organization and comments
+  - Consistent type pattern across all entities
+  - Request types for HTTP layer, DTO types for service layer
+  - AssertCompatible validation for type safety
+  - Updated README documentation for all packages
+
 ## 0.4.3
 
 ### Patch Changes

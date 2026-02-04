@@ -58,6 +58,9 @@ describe('Sales History (e2e)', () => {
     skuCode = `SKU-SALES-${Date.now()}`;
     const sku = await client.createSku({ code: skuCode, title: 'Test SKU for Sales' }, ctx());
     skuId = sku.id;
+
+    // Create a test marketplace
+    await client.createMarketplace({ id: 'WB', title: 'Wildberries' }, ctx());
   });
 
   afterAll(async () => {
@@ -161,6 +164,25 @@ describe('Sales History (e2e)', () => {
       await client.deleteSalesHistory(salesHistoryId, ctx());
       salesHistoryId = 0;
     });
+
+    it('POST /sales-history - should return 409 on duplicate period entry', async () => {
+      const duplicateEntry = {
+        sku_id: skuId,
+        period: '2026-06',
+        quantity: 100,
+        marketplace_id: 'WB',
+      };
+
+      await client.createSalesHistory(duplicateEntry, ctx());
+
+      try {
+        await client.createSalesHistory(duplicateEntry, ctx());
+        expect.fail('Should have thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(409);
+      }
+    });
   });
 
   describe('Bulk import', () => {
@@ -222,7 +244,7 @@ describe('Sales History (e2e)', () => {
       expect(result.errors).toEqual([]);
 
       // Verify marketplace was actually created
-      const marketplaces = await client.getMarketplaces();
+      const marketplaces = await client.getMarketplaces(ctx());
       const createdMp = marketplaces.find((m) => m.id === normalizedMarketplace);
       expect(createdMp).toBeDefined();
       expect(createdMp?.title).toBe(normalizedMarketplace); // Title defaults to id

@@ -36,8 +36,9 @@ pnpm dev
 | `pnpm test:e2e` | Run e2e tests |
 | `pnpm lint` | Lint all packages (biome) |
 | `pnpm format` | Format all packages (biome) |
+| `pnpm typecheck` | Type check all packages |
 | `pnpm check` | Format, lint, build, test |
-| `pnpm all-checks` | Full CI checks (includes gitleaks, audit) |
+| `pnpm all-checks` | Full CI checks (format, lint, typecheck, test, security, audit) |
 
 ## Project Structure
 

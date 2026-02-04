@@ -14,13 +14,16 @@ import {
 } from '@nestjs/common';
 import { AuthenticatedRequest, AuthGuard } from '../auth/auth.guard.js';
 import { SystemAdminGuard } from '../auth/system-admin.guard.js';
+import { ZodValidationPipe } from '../common/index.js';
 import {
-  CreateTenantDto,
-  CreateTenantWithShopDto,
-  Tenant,
-  TenantsService,
-  TenantWithShopAndApiKey,
-} from './tenants.service.js';
+  type CreateTenantRequest,
+  CreateTenantRequestSchema,
+  type CreateTenantWithShopDto,
+  CreateTenantWithShopSchema,
+  type UpdateTenantRequest,
+  UpdateTenantSchema,
+} from './tenants.schema.js';
+import { type Tenant, TenantsService, type TenantWithShopAndApiKey } from './tenants.service.js';
 
 @Controller('tenants')
 @UseGuards(AuthGuard)
@@ -54,7 +57,7 @@ export class TenantsController {
   @UseGuards(SystemAdminGuard)
   async create(
     @Req() req: AuthenticatedRequest,
-    @Body() dto: Omit<CreateTenantDto, 'created_by'>,
+    @Body(new ZodValidationPipe(CreateTenantRequestSchema)) dto: CreateTenantRequest,
   ): Promise<Tenant> {
     return this.tenantsService.create({
       ...dto,
@@ -64,9 +67,8 @@ export class TenantsController {
 
   @Put(':id')
   async update(
-    @Req() _req: AuthenticatedRequest,
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: Partial<Omit<CreateTenantDto, 'created_by'>>,
+    @Body(new ZodValidationPipe(UpdateTenantSchema)) dto: UpdateTenantRequest,
   ): Promise<Tenant> {
     const tenant = await this.tenantsService.update(id, dto);
     if (!tenant) {
@@ -87,7 +89,7 @@ export class TenantsController {
   @UseGuards(SystemAdminGuard)
   async createWithShop(
     @Req() _req: AuthenticatedRequest,
-    @Body() dto: CreateTenantWithShopDto,
+    @Body(new ZodValidationPipe(CreateTenantWithShopSchema)) dto: CreateTenantWithShopDto,
   ): Promise<TenantWithShopAndApiKey> {
     return this.tenantsService.createTenantWithShopAndUser(dto);
   }

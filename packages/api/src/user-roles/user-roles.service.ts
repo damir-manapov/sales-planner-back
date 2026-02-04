@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { Selectable } from 'kysely';
+import { type Selectable } from 'kysely';
+import { DuplicateResourceException, isUniqueViolation } from '../common/index.js';
 import { DatabaseService } from '../database/database.service.js';
-import { UserRoles } from '../database/database.types.js';
+import { type UserRoles } from '../database/database.types.js';
 import type { CreateUserRoleDto } from './user-roles.schema.js';
 
 export type UserRole = Selectable<UserRoles>;
@@ -54,7 +55,17 @@ export class UserRolesService {
   }
 
   async create(dto: CreateUserRoleDto): Promise<UserRole> {
-    return this.db.insertInto('user_roles').values(dto).returningAll().executeTakeFirstOrThrow();
+    try {
+      return this.db.insertInto('user_roles').values(dto).returningAll().executeTakeFirstOrThrow();
+    } catch (error: unknown) {
+      if (isUniqueViolation(error)) {
+        throw new DuplicateResourceException(
+          'User Role',
+          `User ${dto.user_id} - Role ${dto.role_id}`,
+        );
+      }
+      throw error;
+    }
   }
 
   async delete(id: number): Promise<void> {

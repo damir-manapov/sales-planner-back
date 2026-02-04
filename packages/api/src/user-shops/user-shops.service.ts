@@ -1,7 +1,8 @@
 import { Injectable } from '@nestjs/common';
-import { Insertable, Selectable } from 'kysely';
+import { type Insertable, type Selectable } from 'kysely';
+import { DuplicateResourceException, isUniqueViolation } from '../common/index.js';
 import { DatabaseService } from '../database/database.service.js';
-import { UserShops } from '../database/database.types.js';
+import { type UserShops } from '../database/database.types.js';
 
 export type UserShop = Selectable<UserShops>;
 export type CreateUserShopDto = Insertable<UserShops>;
@@ -36,7 +37,17 @@ export class UserShopsService {
   }
 
   async create(dto: CreateUserShopDto): Promise<UserShop> {
-    return this.db.insertInto('user_shops').values(dto).returningAll().executeTakeFirstOrThrow();
+    try {
+      return this.db.insertInto('user_shops').values(dto).returningAll().executeTakeFirstOrThrow();
+    } catch (error: unknown) {
+      if (isUniqueViolation(error)) {
+        throw new DuplicateResourceException(
+          'User Shop',
+          `User ${dto.user_id} - Shop ${dto.shop_id}`,
+        );
+      }
+      throw error;
+    }
   }
 
   async delete(id: number): Promise<void> {

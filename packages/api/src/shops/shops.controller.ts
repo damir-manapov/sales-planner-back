@@ -20,7 +20,14 @@ import {
   validateWriteAccess,
 } from '../auth/access-control.js';
 import { AuthenticatedRequest, AuthGuard } from '../auth/auth.guard.js';
-import { CreateShopDto, Shop, ShopsService } from './shops.service.js';
+import { ZodValidationPipe } from '../common/zod-validation.pipe.js';
+import {
+  CreateShopSchema,
+  UpdateShopSchema,
+  type CreateShopRequest,
+  type UpdateShopRequest,
+} from './shops.schema.js';
+import { type Shop, ShopsService } from './shops.service.js';
 
 @Controller('shops')
 @UseGuards(AuthGuard)
@@ -84,7 +91,10 @@ export class ShopsController {
   }
 
   @Post()
-  async create(@Req() req: AuthenticatedRequest, @Body() dto: CreateShopDto): Promise<Shop> {
+  async create(
+    @Req() req: AuthenticatedRequest,
+    @Body(new ZodValidationPipe(CreateShopSchema)) dto: CreateShopRequest,
+  ): Promise<Shop> {
     // Validate user can create shops in this tenant
     validateTenantAdminAccess(req.user, dto.tenant_id);
     return this.shopsService.create(dto);
@@ -94,7 +104,7 @@ export class ShopsController {
   async update(
     @Req() req: AuthenticatedRequest,
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: Partial<CreateShopDto>,
+    @Body(new ZodValidationPipe(UpdateShopSchema)) dto: UpdateShopRequest,
   ): Promise<Shop> {
     const shop = await this.shopsService.findById(id);
     if (!shop) {

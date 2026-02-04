@@ -49,7 +49,7 @@ export class TenantsService {
     return this.db.insertInto('tenants').values(dto).returningAll().executeTakeFirstOrThrow();
   }
 
-  async update(id: number, dto: Partial<CreateTenantDto>): Promise<Tenant | undefined> {
+  async update(id: number, dto: UpdateTenantDto): Promise<Tenant | undefined> {
     return this.db
       .updateTable('tenants')
       .set({ ...dto, updated_at: new Date() })

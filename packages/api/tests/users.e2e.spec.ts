@@ -96,6 +96,25 @@ describe('Users (e2e)', () => {
     }
   });
 
+  it('POST /users - should return 409 on duplicate email', async () => {
+    const duplicateEmail = `duplicate-${Date.now()}@example.com`;
+    await systemClient.createUser({
+      email: duplicateEmail,
+      name: 'First User',
+    });
+
+    try {
+      await systemClient.createUser({
+        email: duplicateEmail,
+        name: 'Duplicate User',
+      });
+      expect.fail('Should have thrown');
+    } catch (error) {
+      expect(error).toBeInstanceOf(ApiError);
+      expect((error as ApiError).status).toBe(409);
+    }
+  });
+
   it('GET /users - should return 401 without API key', async () => {
     const noAuthClient = new SalesPlannerClient({
       baseUrl,

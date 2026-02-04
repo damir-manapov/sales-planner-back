@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import type { CreateShopDto as SharedCreateShopDto } from '@sales-planner/shared';
+import type {
+  CreateShopRequest as SharedCreateShopRequest,
+  CreateShopDto as SharedCreateShopDto,
+  UpdateShopRequest as SharedUpdateShopRequest,
+  UpdateShopDto as SharedUpdateShopDto,
+} from '@sales-planner/shared';
 import { AssertCompatible, zodSchemas } from '../common/schema.utils.js';
 
 const { title, id } = zodSchemas;
@@ -15,5 +20,13 @@ export const UpdateShopSchema = z.object({
 });
 
 // Infer TypeScript types from schemas with compatibility checks
+export type CreateShopRequest = AssertCompatible<
+  SharedCreateShopRequest,
+  z.infer<typeof CreateShopSchema>
+>;
 export type CreateShopDto = AssertCompatible<SharedCreateShopDto, z.infer<typeof CreateShopSchema>>;
-export type UpdateShopDto = z.infer<typeof UpdateShopSchema>;
+export type UpdateShopDto = AssertCompatible<SharedUpdateShopDto, z.infer<typeof UpdateShopSchema>>;
+export type UpdateShopRequest = AssertCompatible<
+  SharedUpdateShopRequest,
+  z.infer<typeof UpdateShopSchema>
+>;

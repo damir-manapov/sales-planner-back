@@ -8,11 +8,11 @@ import type {
   Tenant,
   User,
   CreateApiKeyDto,
-  CreateMarketplaceDto,
+  CreateMarketplaceRequest,
   CreateRoleDto,
-  CreateSalesHistoryDto,
+  CreateSalesHistoryRequest,
   CreateShopDto,
-  CreateSkuDto,
+  CreateSkuRequest,
   CreateTenantDto,
   CreateTenantWithShopDto,
   CreateUserDto,
@@ -293,10 +293,7 @@ export class SalesPlannerClient {
     return this.request('GET', `/skus/${id}`, { params: ctx });
   }
 
-  async createSku(
-    dto: Omit<CreateSkuDto, 'shop_id' | 'tenant_id'>,
-    ctx: ShopContextParams,
-  ): Promise<Sku> {
+  async createSku(dto: CreateSkuRequest, ctx: ShopContextParams): Promise<Sku> {
     return this.request('POST', '/skus', { body: dto, params: ctx });
   }
 
@@ -345,7 +342,7 @@ export class SalesPlannerClient {
   }
 
   async createSalesHistory(
-    dto: Omit<CreateSalesHistoryDto, 'shop_id' | 'tenant_id'>,
+    dto: CreateSalesHistoryRequest,
     ctx: ShopContextParams,
   ): Promise<SalesHistory> {
     return this.request('POST', '/sales-history', { body: dto, params: ctx });
@@ -449,24 +446,31 @@ export class SalesPlannerClient {
   // Marketplaces
   // ============================================================
 
-  async getMarketplaces(): Promise<Marketplace[]> {
-    return this.request('GET', '/marketplaces');
+  async getMarketplaces(ctx: ShopContextParams): Promise<Marketplace[]> {
+    return this.request('GET', '/marketplaces', { params: ctx });
   }
 
-  async getMarketplace(id: string): Promise<Marketplace> {
-    return this.request('GET', `/marketplaces/${id}`);
+  async getMarketplace(id: string, ctx: ShopContextParams): Promise<Marketplace> {
+    return this.request('GET', `/marketplaces/${id}`, { params: ctx });
   }
 
-  async createMarketplace(dto: CreateMarketplaceDto): Promise<Marketplace> {
-    return this.request('POST', '/marketplaces', { body: dto });
+  async createMarketplace(
+    dto: CreateMarketplaceRequest,
+    ctx: ShopContextParams,
+  ): Promise<Marketplace> {
+    return this.request('POST', '/marketplaces', { body: dto, params: ctx });
   }
 
-  async updateMarketplace(id: string, dto: Partial<CreateMarketplaceDto>): Promise<Marketplace> {
-    return this.request('PUT', `/marketplaces/${id}`, { body: dto });
+  async updateMarketplace(
+    id: string,
+    dto: Partial<CreateMarketplaceRequest>,
+    ctx: ShopContextParams,
+  ): Promise<Marketplace> {
+    return this.request('PUT', `/marketplaces/${id}`, { body: dto, params: ctx });
   }
 
-  async deleteMarketplace(id: string): Promise<void> {
-    return this.request('DELETE', `/marketplaces/${id}`);
+  async deleteMarketplace(id: string, ctx: ShopContextParams): Promise<void> {
+    return this.request('DELETE', `/marketplaces/${id}`, { params: ctx });
   }
 
   // Health & Info (unauthenticated)

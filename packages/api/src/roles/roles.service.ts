@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { Role } from '@sales-planner/shared';
+import { DuplicateResourceException, isUniqueViolation } from '../common/index.js';
 import { DatabaseService } from '../database/database.service.js';
 import type { CreateRoleDto, UpdateRoleDto } from './roles.schema.js';
 
@@ -23,10 +24,17 @@ export class RolesService {
   }
 
   async create(dto: CreateRoleDto): Promise<Role> {
-    return this.db.insertInto('roles').values(dto).returningAll().executeTakeFirstOrThrow();
+    try {
+      return this.db.insertInto('roles').values(dto).returningAll().executeTakeFirstOrThrow();
+    } catch (error: unknown) {
+      if (isUniqueViolation(error)) {
+        throw new DuplicateResourceException('Role', dto.name);
+      }
+      throw error;
+    }
   }
 
-  async update(id: number, dto: Partial<CreateRoleDto>): Promise<Role | undefined> {
+  async update(id: number, dto: UpdateRoleDto): Promise<Role | undefined> {
     return this.db
       .updateTable('roles')
       .set({ ...dto, updated_at: new Date() })

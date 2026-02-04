@@ -7,8 +7,6 @@ describe('SKU Schemas', () => {
       const data = {
         code: 'SKU-001',
         title: 'Test Product',
-        shop_id: 1,
-        tenant_id: 1,
       };
 
       const result = CreateSkuSchema.parse(data);
@@ -20,8 +18,6 @@ describe('SKU Schemas', () => {
       const data = {
         code: '',
         title: 'Test Product',
-        shop_id: 1,
-        tenant_id: 1,
       };
 
       expect(() => CreateSkuSchema.parse(data)).toThrow();
@@ -31,8 +27,6 @@ describe('SKU Schemas', () => {
       const data = {
         code: 'A'.repeat(101),
         title: 'Test Product',
-        shop_id: 1,
-        tenant_id: 1,
       };
 
       expect(() => CreateSkuSchema.parse(data)).toThrow();
@@ -42,8 +36,6 @@ describe('SKU Schemas', () => {
       const data = {
         code: 'SKU-001',
         title: '',
-        shop_id: 1,
-        tenant_id: 1,
       };
 
       expect(() => CreateSkuSchema.parse(data)).toThrow();
@@ -53,41 +45,6 @@ describe('SKU Schemas', () => {
       const data = {
         code: 'SKU-001',
         title: 'A'.repeat(256),
-        shop_id: 1,
-        tenant_id: 1,
-      };
-
-      expect(() => CreateSkuSchema.parse(data)).toThrow();
-    });
-
-    it('should reject negative shop_id', () => {
-      const data = {
-        code: 'SKU-001',
-        title: 'Test Product',
-        shop_id: -1,
-        tenant_id: 1,
-      };
-
-      expect(() => CreateSkuSchema.parse(data)).toThrow();
-    });
-
-    it('should reject zero tenant_id', () => {
-      const data = {
-        code: 'SKU-001',
-        title: 'Test Product',
-        shop_id: 1,
-        tenant_id: 0,
-      };
-
-      expect(() => CreateSkuSchema.parse(data)).toThrow();
-    });
-
-    it('should reject non-integer IDs', () => {
-      const data = {
-        code: 'SKU-001',
-        title: 'Test Product',
-        shop_id: 1.5,
-        tenant_id: 1,
       };
 
       expect(() => CreateSkuSchema.parse(data)).toThrow();

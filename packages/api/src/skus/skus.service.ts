@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { Sku, SkuExportItem } from '@sales-planner/shared';
+import { DuplicateResourceException, isUniqueViolation } from '../common/index.js';
 import { DatabaseService } from '../database/index.js';
 import { normalizeSkuCode } from '../lib/index.js';
 import type { CreateSkuDto, ImportSkuItem, UpdateSkuDto } from './skus.schema.js';
@@ -36,19 +37,26 @@ export class SkusService {
   }
 
   async create(dto: CreateSkuDto): Promise<Sku> {
-    const result = await this.db
-      .insertInto('skus')
-      .values({
-        code: dto.code,
-        title: dto.title,
-        shop_id: dto.shop_id,
-        tenant_id: dto.tenant_id,
-        updated_at: new Date(),
-      })
-      .returningAll()
-      .executeTakeFirstOrThrow();
+    try {
+      const result = await this.db
+        .insertInto('skus')
+        .values({
+          code: dto.code,
+          title: dto.title,
+          shop_id: dto.shop_id,
+          tenant_id: dto.tenant_id,
+          updated_at: new Date(),
+        })
+        .returningAll()
+        .executeTakeFirstOrThrow();
 
-    return result;
+      return result;
+    } catch (error: unknown) {
+      if (isUniqueViolation(error)) {
+        throw new DuplicateResourceException('SKU', dto.code, 'this shop');
+      }
+      throw error;
+    }
   }
 
   async update(id: number, dto: UpdateSkuDto): Promise<Sku | undefined> {

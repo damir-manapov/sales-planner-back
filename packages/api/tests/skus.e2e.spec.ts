@@ -117,6 +117,19 @@ describe('SKUs (e2e)', () => {
 
       expect(sku.title).toBe('Updated SKU Title');
     });
+
+    it('createSku - should return 409 on duplicate code in same shop', async () => {
+      const duplicateCode = `SKU-${Date.now()}`;
+      await client.createSku({ code: duplicateCode, title: 'First SKU' }, ctx());
+
+      try {
+        await client.createSku({ code: duplicateCode, title: 'Duplicate SKU' }, ctx());
+        expect.fail('Should have thrown ApiError');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(409);
+      }
+    });
   });
 
   describe('Tenant-based access control', () => {

@@ -16,17 +16,58 @@ pnpm add @sales-planner/shared
 
 This package provides TypeScript types only (no runtime code). Types are the single source of truth and are validated at compile-time against the API's Zod schemas.
 
+## Type System
+
+The package provides two type variants for each operation:
+
+**Request Types** - Used at HTTP boundary (may omit context fields):
+```typescript
+export interface CreateSkuRequest {
+  code: string;
+  title: string;
+  // shop_id, tenant_id omitted - injected by API
+}
+```
+
+**DTO Types** - Used in service layer (full data model):
+```typescript
+export interface CreateSkuDto {
+  code: string;
+  title: string;
+  shop_id: number;
+  tenant_id: number;
+}
+```
+
+For entities where Request and DTO are identical, Request is a type alias:
+```typescript
+export interface CreateUserDto {
+  email: string;
+  name: string;
+}
+export type CreateUserRequest = CreateUserDto;
+```
+
+## Usage
+
 ```typescript
 import type { 
   // Entities
   User, Tenant, Shop, Sku, SalesHistory,
   Role, UserRole, ApiKey, Marketplace,
   
-  // DTOs
-  CreateUserDto, CreateTenantDto, CreateShopDto,
-  CreateSkuDto, UpdateSkuDto, ImportSkuItem,
-  CreateSalesHistoryDto, UpdateSalesHistoryDto, ImportSalesHistoryItem,
-  CreateApiKeyDto, CreateRoleDto, CreateUserRoleDto, CreateMarketplaceDto,
+  // Request types (HTTP layer)
+  CreateUserRequest, UpdateUserRequest,
+  CreateSkuRequest, UpdateSkuRequest,
+  CreateSalesHistoryRequest, UpdateSalesHistoryRequest,
+  
+  // DTO types (Service layer)
+  CreateUserDto, UpdateUserDto,
+  CreateSkuDto, UpdateSkuDto,
+  CreateSalesHistoryDto, UpdateSalesHistoryDto,
+  
+  // Import types
+  ImportSkuItem, ImportSalesHistoryItem, ImportMarketplaceItem,
   
   // Query types
   ShopContextParams, PeriodQuery,

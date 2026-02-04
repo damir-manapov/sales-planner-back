@@ -29,10 +29,35 @@ const shops = await client.getShops();
 // Get SKUs for a shop
 const skus = await client.getSkus({ shop_id: 1, tenant_id: 1 });
 
+// Create API key (key is auto-generated)
+const apiKey = await client.createApiKey({
+  user_id: 1,
+  name: 'Production Key',
+  expires_at: '2026-12-31T23:59:59Z'
+});
+
 // Import sales history (marketplace field required)
 const result = await client.importSalesHistoryJson([
   { sku_code: 'SKU-001', period: '2026-01', quantity: 100, marketplace: 'WB' }
 ], { shop_id: 1, tenant_id: 1 });
+```
+
+## Error Handling
+
+The API returns standard HTTP status codes:
+- `409 Conflict` - Duplicate resource (e.g., duplicate email, SKU code, sales period)
+- `404 Not Found` - Resource not found
+- `403 Forbidden` - Insufficient permissions
+- `400 Bad Request` - Validation error
+
+```typescript
+try {
+  await client.createUser({ email: 'user@example.com', name: 'John' });
+} catch (error) {
+  if (error.response?.status === 409) {
+    console.error('User with this email already exists');
+  }
+}
 ```
 
 ## Available Methods

@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import type { CreateUserDto as SharedCreateUserDto } from '@sales-planner/shared';
+import type {
+  CreateUserRequest as SharedCreateUserRequest,
+  CreateUserDto as SharedCreateUserDto,
+  UpdateUserRequest as SharedUpdateUserRequest,
+  UpdateUserDto as SharedUpdateUserDto,
+} from '@sales-planner/shared';
 import { AssertCompatible, zodSchemas } from '../common/schema.utils.js';
 
 const { email, name, id } = zodSchemas;
@@ -18,5 +23,13 @@ export const UpdateUserSchema = z.object({
 });
 
 // Infer TypeScript types from schemas with compatibility checks
+export type CreateUserRequest = AssertCompatible<
+  SharedCreateUserRequest,
+  z.infer<typeof CreateUserSchema>
+>;
 export type CreateUserDto = AssertCompatible<SharedCreateUserDto, z.infer<typeof CreateUserSchema>>;
-export type UpdateUserDto = z.infer<typeof UpdateUserSchema>;
+export type UpdateUserDto = AssertCompatible<SharedUpdateUserDto, z.infer<typeof UpdateUserSchema>>;
+export type UpdateUserRequest = AssertCompatible<
+  SharedUpdateUserRequest,
+  z.infer<typeof UpdateUserSchema>
+>;

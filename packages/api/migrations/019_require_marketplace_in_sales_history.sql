@@ -1,9 +1,11 @@
 -- Marketplace is now required in sales_history
 
--- Ensure UNKNOWN marketplace exists FIRST
-INSERT INTO marketplaces (id, title, updated_at)
-VALUES ('UNKNOWN', 'Unknown', NOW())
-ON CONFLICT (id) DO NOTHING;
+-- Ensure UNKNOWN marketplace exists for ALL shops
+-- Since marketplaces now have composite primary key (id, shop_id), we need to create UNKNOWN for each shop
+INSERT INTO marketplaces (id, title, shop_id, tenant_id, updated_at)
+SELECT 'UNKNOWN', 'Unknown', s.id, s.tenant_id, NOW()
+FROM shops s
+ON CONFLICT (id, shop_id) DO NOTHING;
 
 -- Make marketplace_id NOT NULL (any existing NULL values should be updated first)
 -- If there are NULL values, set them to a default marketplace
@@ -17,6 +19,11 @@ DROP INDEX IF EXISTS idx_sales_history_unique_no_marketplace;
 DROP INDEX IF EXISTS idx_sales_history_unique_with_marketplace;
 
 -- Create regular unique constraint on all 4 columns
-ALTER TABLE sales_history
-ADD CONSTRAINT sales_history_shop_id_sku_id_period_marketplace_id_key 
-UNIQUE (shop_id, sku_id, period, marketplace_id);
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname = 'sales_history_shop_id_sku_id_period_marketplace_id_key') THEN
+    ALTER TABLE sales_history
+    ADD CONSTRAINT sales_history_shop_id_sku_id_period_marketplace_id_key 
+    UNIQUE (shop_id, sku_id, period, marketplace_id);
+  END IF;
+END $$;

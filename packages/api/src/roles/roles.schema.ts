@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import type { CreateRoleDto as SharedCreateRoleDto } from '@sales-planner/shared';
+import type {
+  CreateRoleRequest as SharedCreateRoleRequest,
+  CreateRoleDto as SharedCreateRoleDto,
+  UpdateRoleRequest as SharedUpdateRoleRequest,
+  UpdateRoleDto as SharedUpdateRoleDto,
+} from '@sales-planner/shared';
 import { AssertCompatible, zodSchemas } from '../common/schema.utils.js';
 
 const { code, description } = zodSchemas;
@@ -16,5 +21,13 @@ export const UpdateRoleSchema = z.object({
 });
 
 // Infer TypeScript types from schemas with compatibility checks
+export type CreateRoleRequest = AssertCompatible<
+  SharedCreateRoleRequest,
+  z.infer<typeof CreateRoleSchema>
+>;
 export type CreateRoleDto = AssertCompatible<SharedCreateRoleDto, z.infer<typeof CreateRoleSchema>>;
-export type UpdateRoleDto = z.infer<typeof UpdateRoleSchema>;
+export type UpdateRoleDto = AssertCompatible<SharedUpdateRoleDto, z.infer<typeof UpdateRoleSchema>>;
+export type UpdateRoleRequest = AssertCompatible<
+  SharedUpdateRoleRequest,
+  z.infer<typeof UpdateRoleSchema>
+>;

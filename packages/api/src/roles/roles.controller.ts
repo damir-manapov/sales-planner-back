@@ -12,7 +12,14 @@ import {
 } from '@nestjs/common';
 import { AuthGuard } from '../auth/auth.guard.js';
 import { SystemAdminGuard } from '../auth/system-admin.guard.js';
-import { CreateRoleDto, Role, RolesService } from './roles.service.js';
+import { ZodValidationPipe } from '../common/index.js';
+import {
+  CreateRoleSchema,
+  UpdateRoleSchema,
+  type CreateRoleRequest,
+  type UpdateRoleRequest,
+} from './roles.schema.js';
+import { type Role, RolesService } from './roles.service.js';
 
 @Controller('roles')
 @UseGuards(AuthGuard, SystemAdminGuard)
@@ -34,14 +41,16 @@ export class RolesController {
   }
 
   @Post()
-  async create(@Body() dto: CreateRoleDto): Promise<Role> {
+  async create(
+    @Body(new ZodValidationPipe(CreateRoleSchema)) dto: CreateRoleRequest,
+  ): Promise<Role> {
     return this.rolesService.create(dto);
   }
 
   @Put(':id')
   async update(
     @Param('id', ParseIntPipe) id: number,
-    @Body() dto: Partial<CreateRoleDto>,
+    @Body(new ZodValidationPipe(UpdateRoleSchema)) dto: UpdateRoleRequest,
   ): Promise<Role> {
     const role = await this.rolesService.update(id, dto);
     if (!role) {

@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import type { Marketplace } from '@sales-planner/shared';
+import { DuplicateResourceException, isUniqueViolation } from '../common/index.js';
 import { DatabaseService } from '../database/index.js';
 import type { CreateMarketplaceDto, UpdateMarketplaceDto } from './marketplaces.schema.js';
 
@@ -14,42 +15,94 @@ export class MarketplacesService {
     return this.db.selectFrom('marketplaces').selectAll().execute();
   }
 
-  async findById(id: string): Promise<Marketplace | undefined> {
-    return this.db.selectFrom('marketplaces').selectAll().where('id', '=', id).executeTakeFirst();
+  async findByShopId(shopId: number): Promise<Marketplace[]> {
+    return this.db.selectFrom('marketplaces').selectAll().where('shop_id', '=', shopId).execute();
+  }
+
+  async findByTenantId(tenantId: number): Promise<Marketplace[]> {
+    return this.db
+      .selectFrom('marketplaces')
+      .selectAll()
+      .where('tenant_id', '=', tenantId)
+      .execute();
+  }
+
+  async findById(id: string, shopId: number): Promise<Marketplace | undefined> {
+    return this.db
+      .selectFrom('marketplaces')
+      .selectAll()
+      .where('id', '=', id)
+      .where('shop_id', '=', shopId)
+      .executeTakeFirst();
+  }
+
+  async findByIdAndShop(id: string, shopId: number): Promise<Marketplace | undefined> {
+    return this.db
+      .selectFrom('marketplaces')
+      .selectAll()
+      .where('id', '=', id)
+      .where('shop_id', '=', shopId)
+      .executeTakeFirst();
   }
 
   async create(dto: CreateMarketplaceDto): Promise<Marketplace> {
-    const result = await this.db
-      .insertInto('marketplaces')
-      .values({
-        id: dto.id,
-        title: dto.title,
-        updated_at: new Date(),
-      })
-      .returningAll()
-      .executeTakeFirstOrThrow();
+    try {
+      const result = await this.db
+        .insertInto('marketplaces')
+        .values({
+          id: dto.id,
+          title: dto.title,
+          shop_id: dto.shop_id,
+          tenant_id: dto.tenant_id,
+          updated_at: new Date(),
+        })
+        .returningAll()
+        .executeTakeFirstOrThrow();
 
-    return result;
+      return result;
+    } catch (error: unknown) {
+      if (isUniqueViolation(error)) {
+        throw new DuplicateResourceException('Marketplace', dto.id, 'this shop');
+      }
+      throw error;
+    }
   }
 
-  async update(id: string, dto: UpdateMarketplaceDto): Promise<Marketplace | undefined> {
+  async update(
+    id: string,
+    shopId: number,
+    dto: UpdateMarketplaceDto,
+  ): Promise<Marketplace | undefined> {
     return this.db
       .updateTable('marketplaces')
       .set({ ...dto, updated_at: new Date() })
       .where('id', '=', id)
+      .where('shop_id', '=', shopId)
       .returningAll()
       .executeTakeFirst();
   }
 
-  async delete(id: string): Promise<void> {
-    await this.db.deleteFrom('marketplaces').where('id', '=', id).execute();
+  async delete(id: string, shopId: number): Promise<void> {
+    await this.db
+      .deleteFrom('marketplaces')
+      .where('id', '=', id)
+      .where('shop_id', '=', shopId)
+      .execute();
+  }
+
+  async deleteByShopId(shopId: number): Promise<number> {
+    const result = await this.db
+      .deleteFrom('marketplaces')
+      .where('shop_id', '=', shopId)
+      .executeTakeFirst();
+    return Number(result.numDeletedRows);
   }
 
   /**
-   * Ensures all given marketplace IDs exist, auto-creating missing ones.
+   * Ensures all given marketplace IDs exist for a specific shop, auto-creating missing ones.
    * Returns the count of newly created marketplaces.
    */
-  async ensureExist(ids: string[]): Promise<number> {
+  async ensureExist(ids: string[], shopId: number, tenantId: number): Promise<number> {
     if (ids.length === 0) {
       return 0;
     }
@@ -60,6 +113,7 @@ export class MarketplacesService {
       .selectFrom('marketplaces')
       .select('id')
       .where('id', 'in', uniqueIds)
+      .where('shop_id', '=', shopId)
       .execute();
 
     const existingIds = new Set(existing.map((m) => m.id));
@@ -72,6 +126,8 @@ export class MarketplacesService {
           missingIds.map((id) => ({
             id,
             title: id,
+            shop_id: shopId,
+            tenant_id: tenantId,
             updated_at: new Date(),
           })),
         )

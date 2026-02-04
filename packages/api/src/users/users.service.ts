@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { sql } from 'kysely';
 import type { User } from '@sales-planner/shared';
+import { DuplicateResourceException, isUniqueViolation } from '../common/index.js';
 import { ROLE_NAMES } from '../common/constants.js';
 import { DatabaseService } from '../database/index.js';
 import type { CreateUserDto, UpdateUserDto } from './users.schema.js';
@@ -51,17 +52,24 @@ export class UsersService {
   }
 
   async create(dto: CreateUserDto): Promise<User> {
-    const result = await this.db
-      .insertInto('users')
-      .values({
-        email: dto.email,
-        name: dto.name,
-        updated_at: new Date(),
-      })
-      .returningAll()
-      .executeTakeFirstOrThrow();
+    try {
+      const result = await this.db
+        .insertInto('users')
+        .values({
+          email: dto.email,
+          name: dto.name,
+          updated_at: new Date(),
+        })
+        .returningAll()
+        .executeTakeFirstOrThrow();
 
-    return result;
+      return result;
+    } catch (error: unknown) {
+      if (isUniqueViolation(error)) {
+        throw new DuplicateResourceException('User', dto.email);
+      }
+      throw error;
+    }
   }
 
   async update(id: number, dto: Partial<CreateUserDto>): Promise<User | undefined> {

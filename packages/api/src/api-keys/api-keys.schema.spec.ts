@@ -16,7 +16,6 @@ describe('ApiKey Schemas', () => {
     it('should validate with all optional fields', () => {
       const data = {
         user_id: 1,
-        key: 'sk_test_12345',
         name: 'Production Key',
         expires_at: '2025-12-31T23:59:59Z',
       };
@@ -37,24 +36,6 @@ describe('ApiKey Schemas', () => {
     it('should reject zero user_id', () => {
       const data = {
         user_id: 0,
-      };
-
-      expect(() => CreateApiKeySchema.parse(data)).toThrow();
-    });
-
-    it('should reject empty key', () => {
-      const data = {
-        user_id: 1,
-        key: '',
-      };
-
-      expect(() => CreateApiKeySchema.parse(data)).toThrow();
-    });
-
-    it('should reject key longer than 255 characters', () => {
-      const data = {
-        user_id: 1,
-        key: 'A'.repeat(256),
       };
 
       expect(() => CreateApiKeySchema.parse(data)).toThrow();

@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { Selectable } from 'kysely';
 import { sql } from 'kysely';
 import type { SalesHistory, SalesHistoryExportItem } from '@sales-planner/shared';
+import { DuplicateResourceException, isUniqueViolation } from '../common/index.js';
 import type { SalesHistory as SalesHistoryTable } from '../database/database.types.js';
 import { DatabaseService } from '../database/index.js';
 import {
@@ -96,21 +97,32 @@ export class SalesHistoryService {
   }
 
   async create(dto: CreateSalesHistoryDto): Promise<SalesHistory> {
-    const result = await this.db
-      .insertInto('sales_history')
-      .values({
-        shop_id: dto.shop_id,
-        tenant_id: dto.tenant_id,
-        sku_id: dto.sku_id,
-        period: periodToDate(dto.period),
-        quantity: dto.quantity,
-        marketplace_id: dto.marketplace_id,
-        updated_at: new Date(),
-      })
-      .returningAll()
-      .executeTakeFirstOrThrow();
+    try {
+      const result = await this.db
+        .insertInto('sales_history')
+        .values({
+          shop_id: dto.shop_id,
+          tenant_id: dto.tenant_id,
+          sku_id: dto.sku_id,
+          period: periodToDate(dto.period),
+          quantity: dto.quantity,
+          marketplace_id: dto.marketplace_id,
+          updated_at: new Date(),
+        })
+        .returningAll()
+        .executeTakeFirstOrThrow();
 
-    return this.mapRow(result);
+      return this.mapRow(result);
+    } catch (error: unknown) {
+      if (isUniqueViolation(error)) {
+        throw new DuplicateResourceException(
+          'Sales History',
+          `SKU ${dto.sku_id} for period ${dto.period}`,
+          'this shop',
+        );
+      }
+      throw error;
+    }
   }
 
   async update(id: number, dto: UpdateSalesHistoryDto): Promise<SalesHistory | undefined> {
@@ -209,7 +221,11 @@ export class SalesHistoryService {
 
     // Ensure all marketplaces exist (auto-creates missing ones)
     const marketplaceIds = validatedItems.map((i) => normalizeCode(i.marketplace));
-    const marketplacesCreated = await this.marketplacesService.ensureExist(marketplaceIds);
+    const marketplacesCreated = await this.marketplacesService.ensureExist(
+      marketplaceIds,
+      shopId,
+      tenantId,
+    );
 
     // Map items to include sku_id
     const validItems: PreparedSalesHistoryItem[] = [];
