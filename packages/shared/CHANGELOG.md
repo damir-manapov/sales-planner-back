@@ -1,5 +1,15 @@
 # @sales-planner/shared
 
+## 0.4.1
+
+### Patch Changes
+
+- 0e747cf: Refactored e2e tests to use http-client, removed supertest dependency
+
+  - Added getRoot() and getHealth() methods to http-client for unauthenticated endpoints
+  - Made CreateTenantDto.created_by optional (set automatically by API controller)
+  - Simplified test-helpers.ts to only export cleanupUser and SYSTEM_ADMIN_KEY
+
 ## 0.4.0
 
 ### Minor Changes
