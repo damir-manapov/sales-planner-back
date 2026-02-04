@@ -7,8 +7,6 @@ import type {
   Sku,
   Tenant,
   User,
-} from './entities.js';
-import type {
   CreateApiKeyDto,
   CreateMarketplaceDto,
   CreateRoleDto,
@@ -23,16 +21,15 @@ import type {
   ImportSkuItem,
   UpdateSalesHistoryDto,
   UpdateSkuDto,
-} from './dto.js';
-import type {
   DeleteDataResult,
   ImportResult,
   SalesHistoryExportItem,
   SkuExportItem,
   TenantWithShopAndApiKey,
   UserWithRolesAndTenants,
-} from './responses.js';
-import type { PeriodQuery, ShopContextParams } from './query.js';
+  PeriodQuery,
+  ShopContextParams,
+} from '@sales-planner/shared';
 
 export interface ClientConfig {
   baseUrl: string;

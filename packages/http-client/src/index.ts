@@ -1,8 +1,8 @@
-// Re-export client and types from @sales-planner/shared
-export { SalesPlannerClient, ApiError } from '@sales-planner/shared';
-export type { ClientConfig } from '@sales-planner/shared';
+// Client
+export { SalesPlannerClient, ApiError } from './client.js';
+export type { ClientConfig } from './client.js';
 
-// Re-export all types for convenience
+// Re-export all types from @sales-planner/shared for convenience
 export type {
   // Entities
   User,

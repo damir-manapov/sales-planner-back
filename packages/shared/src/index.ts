@@ -9,6 +9,3 @@ export * from './responses.js';
 
 // Query types
 export * from './query.js';
-
-// Client
-export { SalesPlannerClient, ApiError, type ClientConfig } from './client.js';

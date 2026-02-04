@@ -1,6 +1,8 @@
-be for project ot rep package?# @sales-planner/shared
+# @sales-planner/shared
 
-Shared types and HTTP client for the Sales Planner API.
+Shared types and DTOs for the Sales Planner API.
+
+> **Note**: For the HTTP client, use `@sales-planner/http-client` instead.
 
 ## Installation
 
@@ -12,97 +14,65 @@ pnpm add @sales-planner/shared
 
 ## Usage
 
-### HTTP Client
-
-```typescript
-import { SalesPlannerClient } from '@sales-planner/shared';
-
-const client = new SalesPlannerClient({
-  baseUrl: 'https://sales-planner-back.vercel.app',
-  apiKey: 'your-api-key'
-});
-
-// Get current user
-const me = await client.getMe();
-
-// Get shops
-const shops = await client.getShops();
-
-// Get SKUs for a shop
-const skus = await client.getSkus({ shop_id: 1, tenant_id: 1 });
-
-// Import sales history
-const result = await client.importSalesHistoryJson([
-  { sku_code: 'SKU-001', period: '2026-01', quantity: 100 }
-], { shop_id: 1, tenant_id: 1 });
-```
-
-### Available Methods
-
-#### Authentication
-- `getMe()` - Get current user with roles and tenants
-
-#### Users
-- `getUsers()`, `getUser(id)`, `createUser(dto)`, `deleteUser(id)`
-
-#### Tenants
-- `getTenants()`, `getTenant(id)`, `createTenant(dto)`, `updateTenant(id, dto)`, `deleteTenant(id)`
-- `createTenantWithShopAndUser(dto)` - Create tenant with shop and user in one call
-
-#### Shops
-- `getShops(tenantId?)`, `getShop(id)`, `createShop(dto)`, `updateShop(id, dto)`, `deleteShop(id)`
-- `deleteShopData(id)` - Delete all data (SKUs, sales history) for a shop
-
-#### SKUs
-- `getSkus(ctx)`, `getSku(id, ctx)`, `createSku(dto, ctx)`, `updateSku(id, dto, ctx)`, `deleteSku(id, ctx)`
-- `importSkusJson(items, ctx)`, `importSkusCsv(csvContent, ctx)`
-- `exportSkusJson(ctx)`, `exportSkusCsv(ctx)`
-- `getSkusExampleJson()`, `getSkusExampleCsv()` - Get import format examples
-
-#### Sales History
-- `getSalesHistory(ctx, query?)`, `getSalesHistoryItem(id, ctx)`
-- `createSalesHistory(dto, ctx)`, `updateSalesHistory(id, dto, ctx)`, `deleteSalesHistory(id, ctx)`
-- `importSalesHistoryJson(items, ctx)`, `importSalesHistoryCsv(csvContent, ctx)`
-- `exportSalesHistoryJson(ctx, query?)`, `exportSalesHistoryCsv(ctx, query?)`
-- `getSalesHistoryExampleJson()`, `getSalesHistoryExampleCsv()` - Get import format examples
-
-#### Roles & User Roles
-- `getRoles()`, `getRole(id)`, `createRole(dto)`, `updateRole(id, dto)`, `deleteRole(id)`
-- `createUserRole(dto)`, `deleteUserRole(id)`
-
-#### API Keys
-- `getApiKeys()`, `createApiKey(dto)`, `deleteApiKey(id)`
-
-#### Marketplaces
-- `getMarketplaces()`, `getMarketplace(id)`, `createMarketplace(dto)`, `updateMarketplace(id, dto)`, `deleteMarketplace(id)`
-
-### Types
-
-All entity types, DTOs, and response types are exported:
+This package provides TypeScript types only (no runtime code).
 
 ```typescript
 import type { 
+  // Entities
   User, Tenant, Shop, Sku, SalesHistory,
+  Role, UserRole, ApiKey, Marketplace,
+  
+  // DTOs
   CreateUserDto, CreateTenantDto, CreateShopDto,
+  CreateSkuDto, UpdateSkuDto, ImportSkuItem,
+  CreateSalesHistoryDto, UpdateSalesHistoryDto, ImportSalesHistoryItem,
+  CreateApiKeyDto, CreateRoleDto, CreateUserRoleDto, CreateMarketplaceDto,
+  
+  // Query types
   ShopContextParams, PeriodQuery,
-  UserWithRolesAndTenants, ImportResult
+  
+  // Response types
+  UserWithRolesAndTenants, TenantWithShopAndApiKey,
+  ImportResult, DeleteDataResult,
+  SkuExportItem, SalesHistoryExportItem
 } from '@sales-planner/shared';
 ```
 
-### Error Handling
+## Types Reference
 
-```typescript
-import { SalesPlannerClient, ApiError } from '@sales-planner/shared';
+### Entities
 
-try {
-  const user = await client.getUser(999);
-} catch (error) {
-  if (error instanceof ApiError) {
-    console.log(error.status); // 404
-    console.log(error.message); // "User not found"
-  }
-}
-```
+| Type | Description |
+|------|-------------|
+| `User` | User account |
+| `Tenant` | Organization/company |
+| `Shop` | Store within a tenant |
+| `Sku` | Stock keeping unit |
+| `SalesHistory` | Sales record for a period |
+| `Role` | Access role |
+| `UserRole` | User-role assignment |
+| `ApiKey` | API authentication key |
+| `Marketplace` | E-commerce platform |
+
+### Query Types
+
+| Type | Description |
+|------|-------------|
+| `ShopContextParams` | `{ shop_id: number; tenant_id: number }` |
+| `PeriodQuery` | `{ period_from?: string; period_to?: string }` |
+
+### Response Types
+
+| Type | Description |
+|------|-------------|
+| `UserWithRolesAndTenants` | User with their roles and tenants |
+| `TenantWithShopAndApiKey` | Created tenant with shop and API key |
+| `ImportResult` | `{ created: number; updated: number; errors: string[] }` |
+| `DeleteDataResult` | `{ deletedSkus: number; deletedSalesHistory: number }` |
+
+## Related Packages
+
+- `@sales-planner/http-client` - HTTP client for the API (includes this package)
 
 ## License
 
