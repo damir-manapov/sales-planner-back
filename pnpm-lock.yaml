@@ -73,6 +73,9 @@ importers:
       '@nestjs/testing':
         specifier: ^11.1.13
         version: 11.1.13(@nestjs/common@11.1.13(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.13)(@nestjs/platform-express@11.1.13)
+      '@sales-planner/http-client':
+        specifier: workspace:*
+        version: link:../http-client
       '@swc/cli':
         specifier: ^0.7.10
         version: 0.7.10(@swc/core@1.15.11)(chokidar@4.0.3)
@@ -128,8 +131,8 @@ importers:
   packages/http-client:
     dependencies:
       '@sales-planner/shared':
-        specifier: ^0.2.0
-        version: 0.2.0
+        specifier: workspace:*
+        version: link:../shared
     devDependencies:
       typescript:
         specifier: ^5.7.3
@@ -1469,9 +1472,6 @@ packages:
     resolution: {integrity: sha512-mxRFDdHIWRxg3UfIIAwCm6NzvxG0jDX/wBN6KsQFTvKFqqg9vTrWUE68qEjHt19A5wwx5X5aUi2zuZT7YR0jrA==}
     cpu: [x64]
     os: [win32]
-
-  '@sales-planner/shared@0.2.0':
-    resolution: {integrity: sha512-k/NOz+6I3KS0UetTSM86f/u1h0lQ2t45fP7PEKUOMNeMNmr+PPE2kXsPOsJIdo43sicMM6WYYWSYKqZBZ5aj8A==}
 
   '@scarf/scarf@1.4.0':
     resolution: {integrity: sha512-xxeapPiUXdZAE3che6f3xogoJPeZgig6omHEy1rIY5WVsB3H2BHNnZH+gHG6x91SCWyQCzWGsuL2Hh3ClO5/qQ==}
@@ -5363,8 +5363,6 @@ snapshots:
 
   '@rollup/rollup-win32-x64-msvc@4.57.1':
     optional: true
-
-  '@sales-planner/shared@0.2.0': {}
 
   '@scarf/scarf@1.4.0': {}
 

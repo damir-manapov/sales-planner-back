@@ -48,6 +48,20 @@ export class SalesPlannerClient {
     this.apiKey = config.apiKey;
   }
 
+  private async handleErrorResponse(response: Response): Promise<never> {
+    const text = await response.text();
+    let message = response.statusText;
+    if (text) {
+      try {
+        const error = JSON.parse(text);
+        message = error.message || message;
+      } catch {
+        message = text;
+      }
+    }
+    throw new ApiError(response.status, message || 'Request failed');
+  }
+
   private async request<T>(
     method: string,
     path: string,
@@ -76,15 +90,20 @@ export class SalesPlannerClient {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: response.statusText }));
-      throw new ApiError(response.status, error.message || 'Request failed');
+      await this.handleErrorResponse(response);
     }
 
     if (response.status === 204) {
       return undefined as T;
     }
 
-    return response.json();
+    // Handle empty response body (e.g., void return type from NestJS)
+    const text = await response.text();
+    if (!text) {
+      return undefined as T;
+    }
+
+    return JSON.parse(text);
   }
 
   private async requestText(
@@ -112,8 +131,7 @@ export class SalesPlannerClient {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: response.statusText }));
-      throw new ApiError(response.status, error.message || 'Request failed');
+      await this.handleErrorResponse(response);
     }
 
     return response.text();
@@ -145,8 +163,7 @@ export class SalesPlannerClient {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: response.statusText }));
-      throw new ApiError(response.status, error.message || 'Request failed');
+      await this.handleErrorResponse(response);
     }
 
     return response.json();
@@ -163,8 +180,7 @@ export class SalesPlannerClient {
     });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: response.statusText }));
-      throw new ApiError(response.status, error.message || 'Request failed');
+      await this.handleErrorResponse(response);
     }
 
     return response.json();
@@ -176,8 +192,7 @@ export class SalesPlannerClient {
     const response = await fetch(url.toString(), { method });
 
     if (!response.ok) {
-      const error = await response.json().catch(() => ({ message: response.statusText }));
-      throw new ApiError(response.status, error.message || 'Request failed');
+      await this.handleErrorResponse(response);
     }
 
     return response.text();
