@@ -34,7 +34,36 @@ Swagger UI provides:
 - **Me** - Get current user data with roles and tenants
 - **Bootstrap** - Auto-creates systemAdmin user and seeds default roles on startup
 - **Swagger/OpenAPI** - Interactive API documentation with try-it-out functionality
-- **Request Validation** - Zod-based schema validation for all endpoints
+- **Request Validation** - Zod-based schema validation with type sync to `@sales-planner/shared`
+
+## Schema Validation
+
+All DTOs are validated using Zod schemas with compile-time type synchronization:
+
+```typescript
+// common/schema.utils.ts - Reusable validation patterns
+export const zodSchemas = {
+  title: () => z.string().min(1).max(255),
+  id: () => z.number().int().positive(),
+  period: () => z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'YYYY-MM format'),
+};
+
+// skus/skus.schema.ts - Schema with type sync
+import type { CreateSkuDto as SharedCreateSkuDto } from '@sales-planner/shared';
+import { AssertCompatible, zodSchemas } from '../common/schema.utils.js';
+
+export const CreateSkuSchema = z.object({
+  code: code(),
+  title: title(),
+  shop_id: id(),
+  tenant_id: id(),
+});
+
+// Fails at compile time if Zod schema doesn't match shared DTO
+export type CreateSkuDto = AssertCompatible<SharedCreateSkuDto, z.infer<typeof CreateSkuSchema>>;
+```
+
+This ensures types in `@sales-planner/shared` and Zod schemas stay in sync.
 
 ## Role-Based Access Control
 

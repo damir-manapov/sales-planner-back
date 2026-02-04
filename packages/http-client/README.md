@@ -2,8 +2,6 @@
 
 Type-safe HTTP client for the Sales Planner API.
 
-> This package re-exports the client from `@sales-planner/shared`. You can use either package.
-
 ## Installation
 
 ```bash

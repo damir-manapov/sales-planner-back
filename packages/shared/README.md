@@ -2,7 +2,7 @@
 
 Shared types and DTOs for the Sales Planner API.
 
-> **Note**: For the HTTP client, use `@sales-planner/http-client` instead.
+> **For the HTTP client**: Use `@sales-planner/http-client` - it includes this package as a dependency.
 
 ## Installation
 
@@ -14,7 +14,7 @@ pnpm add @sales-planner/shared
 
 ## Usage
 
-This package provides TypeScript types only (no runtime code).
+This package provides TypeScript types only (no runtime code). Types are the single source of truth and are validated at compile-time against the API's Zod schemas.
 
 ```typescript
 import type { 
