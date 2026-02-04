@@ -76,6 +76,7 @@ describe('Sales History Schemas', () => {
         sku_id: 100,
         period: '2024-01',
         quantity: 50,
+        marketplace_id: 'WB',
       };
 
       const result = CreateSalesHistorySchema.parse(data);
@@ -90,6 +91,7 @@ describe('Sales History Schemas', () => {
         sku_id: 100,
         period: '2024-01',
         quantity: 0,
+        marketplace_id: 'WB',
       };
 
       const result = CreateSalesHistorySchema.parse(data);
@@ -104,6 +106,7 @@ describe('Sales History Schemas', () => {
         sku_id: 100,
         period: '2024-01',
         quantity: -5,
+        marketplace_id: 'WB',
       };
 
       expect(() => CreateSalesHistorySchema.parse(data)).toThrow();
@@ -116,6 +119,7 @@ describe('Sales History Schemas', () => {
         sku_id: 100,
         period: '2024-01',
         quantity: 5.5,
+        marketplace_id: 'WB',
       };
 
       expect(() => CreateSalesHistorySchema.parse(data)).toThrow();
@@ -128,6 +132,7 @@ describe('Sales History Schemas', () => {
         sku_id: 100,
         period: '2024-1',
         quantity: 50,
+        marketplace_id: 'WB',
       };
 
       expect(() => CreateSalesHistorySchema.parse(data)).toThrow();
@@ -136,6 +141,19 @@ describe('Sales History Schemas', () => {
     it('should reject negative shop_id', () => {
       const data = {
         shop_id: -1,
+        tenant_id: 1,
+        sku_id: 100,
+        period: '2024-01',
+        quantity: 50,
+        marketplace_id: 'WB',
+      };
+
+      expect(() => CreateSalesHistorySchema.parse(data)).toThrow();
+    });
+
+    it('should reject missing marketplace_id', () => {
+      const data = {
+        shop_id: 1,
         tenant_id: 1,
         sku_id: 100,
         period: '2024-01',
@@ -155,6 +173,7 @@ describe('Sales History Schemas', () => {
           sku_id: 100,
           period: `2024-${month}`,
           quantity: 50,
+          marketplace_id: 'WB',
         };
 
         expect(() => CreateSalesHistorySchema.parse(data)).not.toThrow();
@@ -200,6 +219,7 @@ describe('Sales History Schemas', () => {
         sku_code: 'SKU-001',
         period: '2024-01',
         quantity: 50,
+        marketplace: 'WB',
       };
 
       const result = ImportSalesHistoryItemSchema.parse(data);
@@ -211,6 +231,7 @@ describe('Sales History Schemas', () => {
       const data = {
         period: '2024-01',
         quantity: 50,
+        marketplace: 'WB',
       };
 
       expect(() => ImportSalesHistoryItemSchema.parse(data)).toThrow();
@@ -221,6 +242,7 @@ describe('Sales History Schemas', () => {
         sku_code: '',
         period: '2024-01',
         quantity: 50,
+        marketplace: 'WB',
       };
 
       expect(() => ImportSalesHistoryItemSchema.parse(data)).toThrow();
@@ -231,6 +253,7 @@ describe('Sales History Schemas', () => {
         sku_code: 'A'.repeat(101),
         period: '2024-01',
         quantity: 50,
+        marketplace: 'WB',
       };
 
       expect(() => ImportSalesHistoryItemSchema.parse(data)).toThrow();
@@ -241,6 +264,28 @@ describe('Sales History Schemas', () => {
         sku_code: 'SKU-001',
         period: 'invalid',
         quantity: 50,
+        marketplace: 'WB',
+      };
+
+      expect(() => ImportSalesHistoryItemSchema.parse(data)).toThrow();
+    });
+
+    it('should reject missing marketplace', () => {
+      const data = {
+        sku_code: 'SKU-001',
+        period: '2024-01',
+        quantity: 50,
+      };
+
+      expect(() => ImportSalesHistoryItemSchema.parse(data)).toThrow();
+    });
+
+    it('should reject empty marketplace', () => {
+      const data = {
+        sku_code: 'SKU-001',
+        period: '2024-01',
+        quantity: 50,
+        marketplace: '',
       };
 
       expect(() => ImportSalesHistoryItemSchema.parse(data)).toThrow();
@@ -248,9 +293,9 @@ describe('Sales History Schemas', () => {
 
     it('should validate array of import items', () => {
       const data = [
-        { sku_code: 'SKU-001', period: '2024-01', quantity: 10 },
-        { sku_code: 'SKU-002', period: '2024-02', quantity: 20 },
-        { sku_code: 'SKU-003', period: '2024-03', quantity: 0 },
+        { sku_code: 'SKU-001', period: '2024-01', quantity: 10, marketplace: 'WB' },
+        { sku_code: 'SKU-002', period: '2024-02', quantity: 20, marketplace: 'OZON' },
+        { sku_code: 'SKU-003', period: '2024-03', quantity: 0, marketplace: 'WB' },
       ];
 
       const results = data.map((item) => ImportSalesHistoryItemSchema.parse(item));

@@ -49,7 +49,7 @@ export interface CreateSalesHistoryDto {
   tenant_id: number;
   period: string; // YYYY-MM format
   quantity: number;
-  marketplace_id?: string;
+  marketplace_id: string;
 }
 
 export interface UpdateSalesHistoryDto {
@@ -60,7 +60,7 @@ export interface ImportSalesHistoryItem {
   sku_code: string;
   period: string; // YYYY-MM format
   quantity: number;
-  marketplace?: string;
+  marketplace: string;
 }
 
 export interface CreateApiKeyDto {

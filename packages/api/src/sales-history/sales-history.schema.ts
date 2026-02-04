@@ -21,6 +21,7 @@ export const CreateSalesHistorySchema = z.object({
   sku_id: id(),
   period: period(),
   quantity: quantity(),
+  marketplace_id: z.string().min(1),
 });
 
 export const UpdateSalesHistorySchema = z.object({
@@ -32,7 +33,7 @@ export const ImportSalesHistoryItemSchema = z.object({
   sku_code: code(),
   period: period(),
   quantity: quantity(),
-  marketplace: z.string().optional(),
+  marketplace: z.string().min(1),
 });
 
 // Infer TypeScript types from schemas with compatibility checks

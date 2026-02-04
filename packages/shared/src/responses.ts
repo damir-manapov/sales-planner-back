@@ -49,6 +49,7 @@ export interface ImportResult {
   created: number;
   updated: number;
   skus_created?: number;
+  marketplaces_created?: number;
   errors: string[];
 }
 
@@ -61,7 +62,7 @@ export interface SalesHistoryExportItem {
   sku_code: string;
   period: string;
   quantity: number;
-  marketplace?: string;
+  marketplace: string;
 }
 
 export interface SkuExportItem {

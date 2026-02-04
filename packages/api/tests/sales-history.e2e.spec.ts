@@ -84,7 +84,7 @@ describe('Sales History (e2e)', () => {
   describe('CRUD operations', () => {
     it('POST /sales-history - should create sales history record', async () => {
       const record = await client.createSalesHistory(
-        { sku_id: skuId, period: '2026-01', quantity: 100 },
+        { sku_id: skuId, period: '2026-01', quantity: 100, marketplace_id: 'WB' },
         ctx(),
       );
 
@@ -94,13 +94,17 @@ describe('Sales History (e2e)', () => {
       expect(record.quantity).toBe(100);
       expect(record.shop_id).toBe(shopId);
       expect(record.tenant_id).toBe(tenantId);
+      expect(record.marketplace_id).toBe('WB');
 
       salesHistoryId = record.id;
     });
 
     it('POST /sales-history - should reject invalid period format', async () => {
       try {
-        await client.createSalesHistory({ sku_id: skuId, period: '2026-13', quantity: 50 }, ctx());
+        await client.createSalesHistory(
+          { sku_id: skuId, period: '2026-13', quantity: 50, marketplace_id: 'WB' },
+          ctx(),
+        );
         expect.fail('Should have thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(ApiError);
@@ -110,7 +114,10 @@ describe('Sales History (e2e)', () => {
 
     it('POST /sales-history - should reject invalid period string', async () => {
       try {
-        await client.createSalesHistory({ sku_id: skuId, period: '2026-1', quantity: 50 }, ctx());
+        await client.createSalesHistory(
+          { sku_id: skuId, period: '2026-1', quantity: 50, marketplace_id: 'WB' },
+          ctx(),
+        );
         expect.fail('Should have thrown');
       } catch (error) {
         expect(error).toBeInstanceOf(ApiError);
@@ -159,8 +166,8 @@ describe('Sales History (e2e)', () => {
     it('POST /sales-history/import/json - should import multiple records', async () => {
       const result = await client.importSalesHistoryJson(
         [
-          { sku_code: skuCode, period: '2025-11', quantity: 80 },
-          { sku_code: skuCode, period: '2025-12', quantity: 90 },
+          { sku_code: skuCode, period: '2025-11', quantity: 80, marketplace: 'WB' },
+          { sku_code: skuCode, period: '2025-12', quantity: 90, marketplace: 'WB' },
         ],
         ctx(),
       );
@@ -172,7 +179,7 @@ describe('Sales History (e2e)', () => {
 
     it('POST /sales-history/import/json - should upsert existing records', async () => {
       const result = await client.importSalesHistoryJson(
-        [{ sku_code: skuCode, period: '2025-11', quantity: 100 }],
+        [{ sku_code: skuCode, period: '2025-11', quantity: 100, marketplace: 'WB' }],
         ctx(),
       );
 
@@ -184,7 +191,7 @@ describe('Sales History (e2e)', () => {
       const newSkuCode = `AUTO-SKU-${Date.now()}`;
 
       const result = await client.importSalesHistoryJson(
-        [{ sku_code: newSkuCode, period: '2025-05', quantity: 50 }],
+        [{ sku_code: newSkuCode, period: '2025-05', quantity: 50, marketplace: 'WB' }],
         ctx(),
       );
 
@@ -199,6 +206,25 @@ describe('Sales History (e2e)', () => {
       expect(createdSku?.title).toBe(newSkuCode); // Title defaults to code
     });
 
+    it('POST /sales-history/import/json - should auto-create missing marketplaces', async () => {
+      const uniqueMarketplace = `MP-${Date.now()}`;
+
+      const result = await client.importSalesHistoryJson(
+        [{ sku_code: skuCode, period: '2025-06', quantity: 30, marketplace: uniqueMarketplace }],
+        ctx(),
+      );
+
+      expect(result.created).toBe(1);
+      expect(result.marketplaces_created).toBe(1);
+      expect(result.errors).toEqual([]);
+
+      // Verify marketplace was actually created
+      const marketplaces = await client.getMarketplaces();
+      const createdMp = marketplaces.find((m) => m.id === uniqueMarketplace);
+      expect(createdMp).toBeDefined();
+      expect(createdMp?.title).toBe(uniqueMarketplace); // Title defaults to id
+    });
+
     it('GET /sales-history/export/json - should export sales history in import format', async () => {
       // Create SKU and sales history data
       const exportSkuCode = `EXPORT-SH-${Date.now()}`;
@@ -206,7 +232,7 @@ describe('Sales History (e2e)', () => {
 
       // Import sales history
       await client.importSalesHistoryJson(
-        [{ sku_code: exportSkuCode, period: '2025-07', quantity: 100 }],
+        [{ sku_code: exportSkuCode, period: '2025-07', quantity: 100, marketplace: 'OZON' }],
         ctx(),
       );
 
@@ -221,6 +247,7 @@ describe('Sales History (e2e)', () => {
         sku_code: exportSkuCode,
         period: '2025-07',
         quantity: 100,
+        marketplace: 'OZON',
       });
     });
 
@@ -244,13 +271,13 @@ describe('Sales History (e2e)', () => {
       expect(typeof csv).toBe('string');
 
       const lines = csv.split('\n');
-      expect(lines[0]).toBe('sku_code,period,quantity');
+      expect(lines[0]).toBe('sku_code,period,quantity,marketplace');
       expect(lines.length).toBeGreaterThan(1);
     });
 
     it('POST /sales-history/import/csv - should import sales history from CSV', async () => {
       const skuCode = `CSV-IMPORT-${Date.now()}`;
-      const csvContent = `sku_code,period,quantity\n${skuCode},2025-08,75`;
+      const csvContent = `sku_code,period,quantity,marketplace\n${skuCode},2025-08,75,WB`;
 
       const result = await client.importSalesHistoryCsv(csvContent, ctx());
 
@@ -268,6 +295,7 @@ describe('Sales History (e2e)', () => {
       const imported = exported.find((r) => r.sku_code === skuCode && r.period === '2025-08');
       expect(imported).toBeDefined();
       expect(imported?.quantity).toBe(75);
+      expect(imported?.marketplace).toBe('WB');
     });
   });
 

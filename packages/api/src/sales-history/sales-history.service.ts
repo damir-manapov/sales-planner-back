@@ -14,7 +14,7 @@ export type { SalesHistory };
 interface PreparedSalesHistoryItem extends ImportSalesHistoryItem {
   sku_id: number;
   periodDate: Date;
-  marketplace_id?: string;
+  marketplace_id: string;
 }
 
 @Injectable()
@@ -98,6 +98,7 @@ export class SalesHistoryService {
         sku_id: dto.sku_id,
         period: periodToDate(dto.period),
         quantity: dto.quantity,
+        marketplace_id: dto.marketplace_id,
         updated_at: new Date(),
       })
       .returningAll()
@@ -156,9 +157,15 @@ export class SalesHistoryService {
     items: ImportSalesHistoryItem[],
     shopId: number,
     tenantId: number,
-  ): Promise<{ created: number; updated: number; skus_created: number; errors: string[] }> {
+  ): Promise<{
+    created: number;
+    updated: number;
+    skus_created: number;
+    marketplaces_created: number;
+    errors: string[];
+  }> {
     if (items.length === 0) {
-      return { created: 0, updated: 0, skus_created: 0, errors: [] };
+      return { created: 0, updated: 0, skus_created: 0, marketplaces_created: 0, errors: [] };
     }
 
     const errors: string[] = [];
@@ -171,6 +178,10 @@ export class SalesHistoryService {
         errors.push(`Invalid item at index ${i}: sku_code and period are required`);
         return;
       }
+      if (!item.marketplace) {
+        errors.push(`Invalid item at index ${i}: marketplace is required`);
+        return;
+      }
       if (!isValidPeriod(item.period)) {
         errors.push(
           `Invalid item at index ${i}: period must be in YYYY-MM format with valid month`,
@@ -181,7 +192,7 @@ export class SalesHistoryService {
     });
 
     if (validatedItems.length === 0) {
-      return { created: 0, updated: 0, skus_created: 0, errors };
+      return { created: 0, updated: 0, skus_created: 0, marketplaces_created: 0, errors };
     }
 
     // Resolve SKU codes to IDs
@@ -218,6 +229,30 @@ export class SalesHistoryService {
     const skusCreated = missingCodes.length;
     const skuCodeToId = new Map(skus.map((s) => [s.code, s.id]));
 
+    // Auto-create missing marketplaces
+    const marketplaceIds = [...new Set(validatedItems.map((i) => i.marketplace))];
+    const existingMarketplaces = await this.db
+      .selectFrom('marketplaces')
+      .select('id')
+      .where('id', 'in', marketplaceIds)
+      .execute();
+
+    const existingMarketplaceIds = new Set(existingMarketplaces.map((m) => m.id));
+    const missingMarketplaceIds = marketplaceIds.filter((id) => !existingMarketplaceIds.has(id));
+
+    if (missingMarketplaceIds.length > 0) {
+      await this.db
+        .insertInto('marketplaces')
+        .values(
+          missingMarketplaceIds.map((id) => ({
+            id,
+            title: id, // Use id as title for auto-created marketplaces
+            updated_at: new Date(),
+          })),
+        )
+        .execute();
+    }
+
     // Map items to include sku_id
     const validItems: PreparedSalesHistoryItem[] = [];
 
@@ -233,8 +268,16 @@ export class SalesHistoryService {
       }
     });
 
+    const marketplacesCreated = missingMarketplaceIds.length;
+
     if (validItems.length === 0) {
-      return { created: 0, updated: 0, skus_created: skusCreated, errors };
+      return {
+        created: 0,
+        updated: 0,
+        skus_created: skusCreated,
+        marketplaces_created: marketplacesCreated,
+        errors,
+      };
     }
 
     // Get existing records for counting
@@ -254,70 +297,45 @@ export class SalesHistoryService {
             validItems.map((i) => i.sku_id),
           )
           .execute()
-      ).map((r) => `${r.sku_id}-${r.period_str}-${r.marketplace_id || ''}`),
+      ).map((r) => `${r.sku_id}-${r.period_str}-${r.marketplace_id}`),
     );
 
-    // Use ON CONFLICT for efficient upsert
-    // Split items by marketplace presence due to partial unique indexes
-    const itemsWithMarketplace = validItems.filter((i) => i.marketplace_id);
-    const itemsWithoutMarketplace = validItems.filter((i) => !i.marketplace_id);
-
-    // Insert items without marketplace
-    if (itemsWithoutMarketplace.length > 0) {
-      await this.db
-        .insertInto('sales_history')
-        .values(
-          itemsWithoutMarketplace.map((item) => ({
-            shop_id: shopId,
-            tenant_id: tenantId,
-            sku_id: item.sku_id,
-            period: item.periodDate,
-            quantity: item.quantity,
-            marketplace_id: null,
-            updated_at: new Date(),
-          })),
-        )
-        .onConflict((oc) =>
-          oc.columns(['shop_id', 'sku_id', 'period']).doUpdateSet({
-            quantity: (eb) => eb.ref('excluded.quantity'),
-            updated_at: new Date(),
-          }),
-        )
-        .execute();
-    }
-
-    // Insert items with marketplace
-    if (itemsWithMarketplace.length > 0) {
-      await this.db
-        .insertInto('sales_history')
-        .values(
-          itemsWithMarketplace.map((item) => ({
-            shop_id: shopId,
-            tenant_id: tenantId,
-            sku_id: item.sku_id,
-            period: item.periodDate,
-            quantity: item.quantity,
-            marketplace_id: item.marketplace_id || null,
-            updated_at: new Date(),
-          })),
-        )
-        .onConflict((oc) =>
-          oc.columns(['shop_id', 'sku_id', 'period', 'marketplace_id']).doUpdateSet({
-            quantity: (eb) => eb.ref('excluded.quantity'),
-            updated_at: new Date(),
-          }),
-        )
-        .execute();
-    }
+    // Use ON CONFLICT for efficient upsert (all items have marketplace since it's required)
+    await this.db
+      .insertInto('sales_history')
+      .values(
+        validItems.map((item) => ({
+          shop_id: shopId,
+          tenant_id: tenantId,
+          sku_id: item.sku_id,
+          period: item.periodDate,
+          quantity: item.quantity,
+          marketplace_id: item.marketplace_id,
+          updated_at: new Date(),
+        })),
+      )
+      .onConflict((oc) =>
+        oc.columns(['shop_id', 'sku_id', 'period', 'marketplace_id']).doUpdateSet({
+          quantity: (eb) => eb.ref('excluded.quantity'),
+          updated_at: new Date(),
+        }),
+      )
+      .execute();
 
     const created = validItems.filter(
-      (i) => !existingKeys.has(`${i.sku_id}-${i.period}-${i.marketplace_id || ''}`),
+      (i) => !existingKeys.has(`${i.sku_id}-${i.period}-${i.marketplace_id}`),
     ).length;
     const updated = validItems.filter((i) =>
-      existingKeys.has(`${i.sku_id}-${i.period}-${i.marketplace_id || ''}`),
+      existingKeys.has(`${i.sku_id}-${i.period}-${i.marketplace_id}`),
     ).length;
 
-    return { created, updated, skus_created: skusCreated, errors };
+    return {
+      created,
+      updated,
+      skus_created: skusCreated,
+      marketplaces_created: marketplacesCreated,
+      errors,
+    };
   }
 
   async exportForShop(
@@ -352,7 +370,7 @@ export class SalesHistoryService {
       sku_code: r.sku_code,
       period: r.period,
       quantity: r.quantity,
-      marketplace: r.marketplace_id || undefined,
+      marketplace: r.marketplace_id || '',
     }));
   }
 }

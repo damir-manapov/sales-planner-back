@@ -44,6 +44,7 @@ interface ImportResult {
   created: number;
   updated: number;
   skus_created: number;
+  marketplaces_created: number;
   errors: string[];
 }
 
@@ -96,7 +97,7 @@ export class SalesHistoryController {
     // Validate query params
     PeriodQuerySchema.parse({ period_from: periodFrom, period_to: periodTo });
     const items = await this.salesHistoryService.exportForShop(ctx.shopId, periodFrom, periodTo);
-    const csvContent = toCsv(items, ['sku_code', 'period', 'quantity']);
+    const csvContent = toCsv(items, ['sku_code', 'period', 'quantity', 'marketplace']);
     (res as unknown as { send: (body: string) => void }).send(csvContent);
   }
 
@@ -236,7 +237,7 @@ export class SalesHistoryController {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'CSV file with columns: sku_code, period, quantity',
+          description: 'CSV file with columns: sku_code, period, quantity, marketplace',
         },
       },
     },
@@ -250,11 +251,12 @@ export class SalesHistoryController {
       throw new BadRequestException('File is required');
     }
     const content = file.buffer.toString('utf-8');
-    const records = fromCsv<{ sku_code: string; period: string; quantity: string }>(content, [
-      'sku_code',
-      'period',
-      'quantity',
-    ]);
+    const records = fromCsv<{
+      sku_code: string;
+      period: string;
+      quantity: string;
+      marketplace: string;
+    }>(content, ['sku_code', 'period', 'quantity', 'marketplace']);
 
     // Validate and transform each record with Zod
     const validatedData = records.map((record, index) => {
@@ -267,6 +269,7 @@ export class SalesHistoryController {
           sku_code: record.sku_code,
           period: record.period,
           quantity,
+          marketplace: record.marketplace,
         });
       } catch (error) {
         throw new BadRequestException(`Invalid data at row ${index + 1}: ${error}`);

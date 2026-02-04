@@ -27,31 +27,31 @@ const DEMO_SKUS = [
 
 const DEMO_SALES_DATA = [
   // Current period (2026-01)
-  { sku_code: 'LAPTOP-001', period: '2026-01', quantity: 12 },
-  { sku_code: 'LAPTOP-002', period: '2026-01', quantity: 8 },
-  { sku_code: 'PHONE-001', period: '2026-01', quantity: 25 },
-  { sku_code: 'PHONE-002', period: '2026-01', quantity: 18 },
-  { sku_code: 'TABLET-001', period: '2026-01', quantity: 10 },
-  { sku_code: 'MONITOR-001', period: '2026-01', quantity: 15 },
-  { sku_code: 'HEADSET-001', period: '2026-01', quantity: 20 },
+  { sku_code: 'LAPTOP-001', period: '2026-01', quantity: 12, marketplace: 'WB' },
+  { sku_code: 'LAPTOP-002', period: '2026-01', quantity: 8, marketplace: 'WB' },
+  { sku_code: 'PHONE-001', period: '2026-01', quantity: 25, marketplace: 'OZON' },
+  { sku_code: 'PHONE-002', period: '2026-01', quantity: 18, marketplace: 'OZON' },
+  { sku_code: 'TABLET-001', period: '2026-01', quantity: 10, marketplace: 'WB' },
+  { sku_code: 'MONITOR-001', period: '2026-01', quantity: 15, marketplace: 'WB' },
+  { sku_code: 'HEADSET-001', period: '2026-01', quantity: 20, marketplace: 'OZON' },
 
   // Previous period (2025-12)
-  { sku_code: 'LAPTOP-001', period: '2025-12', quantity: 15 },
-  { sku_code: 'LAPTOP-002', period: '2025-12', quantity: 10 },
-  { sku_code: 'PHONE-001', period: '2025-12', quantity: 30 },
-  { sku_code: 'PHONE-002', period: '2025-12', quantity: 22 },
-  { sku_code: 'TABLET-001', period: '2025-12', quantity: 12 },
-  { sku_code: 'MONITOR-001', period: '2025-12', quantity: 18 },
-  { sku_code: 'HEADSET-001', period: '2025-12', quantity: 25 },
+  { sku_code: 'LAPTOP-001', period: '2025-12', quantity: 15, marketplace: 'WB' },
+  { sku_code: 'LAPTOP-002', period: '2025-12', quantity: 10, marketplace: 'WB' },
+  { sku_code: 'PHONE-001', period: '2025-12', quantity: 30, marketplace: 'OZON' },
+  { sku_code: 'PHONE-002', period: '2025-12', quantity: 22, marketplace: 'OZON' },
+  { sku_code: 'TABLET-001', period: '2025-12', quantity: 12, marketplace: 'WB' },
+  { sku_code: 'MONITOR-001', period: '2025-12', quantity: 18, marketplace: 'WB' },
+  { sku_code: 'HEADSET-001', period: '2025-12', quantity: 25, marketplace: 'OZON' },
 
   // Two periods ago (2025-11)
-  { sku_code: 'LAPTOP-001', period: '2025-11', quantity: 10 },
-  { sku_code: 'LAPTOP-002', period: '2025-11', quantity: 7 },
-  { sku_code: 'PHONE-001', period: '2025-11', quantity: 20 },
-  { sku_code: 'PHONE-002', period: '2025-11', quantity: 15 },
-  { sku_code: 'TABLET-001', period: '2025-11', quantity: 8 },
-  { sku_code: 'MONITOR-001', period: '2025-11', quantity: 12 },
-  { sku_code: 'HEADSET-001', period: '2025-11', quantity: 18 },
+  { sku_code: 'LAPTOP-001', period: '2025-11', quantity: 10, marketplace: 'WB' },
+  { sku_code: 'LAPTOP-002', period: '2025-11', quantity: 7, marketplace: 'WB' },
+  { sku_code: 'PHONE-001', period: '2025-11', quantity: 20, marketplace: 'OZON' },
+  { sku_code: 'PHONE-002', period: '2025-11', quantity: 15, marketplace: 'OZON' },
+  { sku_code: 'TABLET-001', period: '2025-11', quantity: 8, marketplace: 'WB' },
+  { sku_code: 'MONITOR-001', period: '2025-11', quantity: 12, marketplace: 'WB' },
+  { sku_code: 'HEADSET-001', period: '2025-11', quantity: 18, marketplace: 'OZON' },
 ];
 
 interface TenantSetup {

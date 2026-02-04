@@ -270,8 +270,8 @@ describe('Shops E2E', () => {
       // Import sales history
       await client.importSalesHistoryJson(
         [
-          { sku_code: 'DATA-SKU-1', period: '2025-01', quantity: 100 },
-          { sku_code: 'DATA-SKU-2', period: '2025-01', quantity: 200 },
+          { sku_code: 'DATA-SKU-1', period: '2025-01', quantity: 100, marketplace: 'WB' },
+          { sku_code: 'DATA-SKU-2', period: '2025-01', quantity: 200, marketplace: 'OZON' },
         ],
         ctx(),
       );

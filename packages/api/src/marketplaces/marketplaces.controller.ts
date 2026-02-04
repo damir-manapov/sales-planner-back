@@ -19,7 +19,7 @@ import {
 } from './marketplaces.service.js';
 
 @Controller('marketplaces')
-@UseGuards(AuthGuard, SystemAdminGuard)
+@UseGuards(AuthGuard)
 export class MarketplacesController {
   constructor(private readonly marketplacesService: MarketplacesService) {}
 
@@ -38,11 +38,13 @@ export class MarketplacesController {
   }
 
   @Post()
+  @UseGuards(SystemAdminGuard)
   async create(@Body() dto: CreateMarketplaceDto): Promise<Marketplace> {
     return this.marketplacesService.create(dto);
   }
 
   @Put(':id')
+  @UseGuards(SystemAdminGuard)
   async update(@Param('id') id: string, @Body() dto: UpdateMarketplaceDto): Promise<Marketplace> {
     const marketplace = await this.marketplacesService.update(id, dto);
     if (!marketplace) {
@@ -52,6 +54,7 @@ export class MarketplacesController {
   }
 
   @Delete(':id')
+  @UseGuards(SystemAdminGuard)
   async delete(@Param('id') id: string): Promise<void> {
     await this.marketplacesService.delete(id);
   }
