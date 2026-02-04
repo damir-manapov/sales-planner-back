@@ -1,10 +1,8 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
-  Header,
   NotFoundException,
   Param,
   Post,
@@ -26,8 +24,15 @@ import {
   ShopContext,
   type ShopContext as ShopContextType,
 } from '../auth/decorators.js';
-import { parseAndValidateImport, ZodValidationPipe } from '../common/index.js';
-import { fromCsv, normalizeId, toCsv } from '../lib/index.js';
+import {
+  type ImportResult,
+  parseAndValidateImport,
+  parseCsvImport,
+  sendCsvExport,
+  sendJsonExport,
+  ZodValidationPipe,
+} from '../common/index.js';
+import { normalizeId } from '../lib/index.js';
 import {
   type CreateMarketplaceRequest,
   CreateMarketplaceSchema,
@@ -37,12 +42,6 @@ import {
   UpdateMarketplaceSchema,
 } from './marketplaces.schema.js';
 import { type Marketplace, MarketplacesService } from './marketplaces.service.js';
-
-interface ImportResult {
-  created: number;
-  updated: number;
-  errors: string[];
-}
 
 @Controller('marketplaces')
 @UseGuards(AuthGuard)
@@ -60,29 +59,24 @@ export class MarketplacesController {
 
   @Get('export/json')
   @RequireReadAccess()
-  @Header('Content-Type', 'application/json')
-  @Header('Content-Disposition', 'attachment; filename="marketplaces.json"')
   async exportJson(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @Res() res: ExpressResponse,
   ): Promise<void> {
     const items = await this.marketplacesService.exportForShop(ctx.shopId);
-    (res as unknown as { json: (body: unknown) => void }).json(items);
+    sendJsonExport(res, items, 'marketplaces.json');
   }
 
   @Get('export/csv')
   @RequireReadAccess()
-  @Header('Content-Type', 'text/csv')
-  @Header('Content-Disposition', 'attachment; filename="marketplaces.csv"')
   async exportCsv(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @Res() res: ExpressResponse,
   ): Promise<void> {
     const items = await this.marketplacesService.exportForShop(ctx.shopId);
-    const csvContent = toCsv(items, ['id', 'title']);
-    (res as unknown as { send: (body: string) => void }).send(csvContent);
+    sendCsvExport(res, items, 'marketplaces.csv', ['id', 'title']);
   }
 
   @Get(':id')
@@ -202,13 +196,9 @@ export class MarketplacesController {
   async importCsv(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file?: Express.Multer.File,
   ): Promise<ImportResult> {
-    if (!file) {
-      throw new BadRequestException('File is required');
-    }
-    const content = file.buffer.toString('utf-8');
-    const records = fromCsv<{ id: string; title: string }>(content, ['id', 'title']);
+    const records = parseCsvImport<{ id: string; title: string }>(file, undefined, ['id', 'title']);
     const items: ImportMarketplaceItem[] = records.map((record) => ({
       id: record.id,
       title: record.title,

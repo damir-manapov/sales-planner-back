@@ -4,7 +4,6 @@ import {
   Controller,
   Delete,
   Get,
-  Header,
   NotFoundException,
   Param,
   ParseIntPipe,
@@ -27,8 +26,13 @@ import {
   ShopContext,
   type ShopContext as ShopContextType,
 } from '../auth/decorators.js';
-import { parseAndValidateImport, ZodValidationPipe } from '../common/index.js';
-import { fromCsv, normalizeId, toCsv } from '../lib/index.js';
+import {
+  parseAndValidateImport,
+  sendCsvExport,
+  sendJsonExport,
+  ZodValidationPipe,
+} from '../common/index.js';
+import { fromCsv, normalizeId } from '../lib/index.js';
 import {
   type CreateSalesHistoryRequest,
   CreateSalesHistorySchema,
@@ -68,8 +72,6 @@ export class SalesHistoryController {
 
   @Get('export/json')
   @RequireReadAccess()
-  @Header('Content-Type', 'application/json')
-  @Header('Content-Disposition', 'attachment; filename="sales-history.json"')
   async exportJson(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
@@ -80,13 +82,11 @@ export class SalesHistoryController {
     // Validate query params
     PeriodQuerySchema.parse({ period_from: periodFrom, period_to: periodTo });
     const items = await this.salesHistoryService.exportForShop(ctx.shopId, periodFrom, periodTo);
-    (res as unknown as { json: (body: unknown) => void }).json(items);
+    sendJsonExport(res, items, 'sales-history.json');
   }
 
   @Get('export/csv')
   @RequireReadAccess()
-  @Header('Content-Type', 'text/csv')
-  @Header('Content-Disposition', 'attachment; filename="sales-history.csv"')
   async exportCsv(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
@@ -97,8 +97,12 @@ export class SalesHistoryController {
     // Validate query params
     PeriodQuerySchema.parse({ period_from: periodFrom, period_to: periodTo });
     const items = await this.salesHistoryService.exportForShop(ctx.shopId, periodFrom, periodTo);
-    const csvContent = toCsv(items, ['sku_code', 'period', 'quantity', 'marketplace']);
-    (res as unknown as { send: (body: string) => void }).send(csvContent);
+    sendCsvExport(res, items, 'sales-history.csv', [
+      'sku_code',
+      'period',
+      'quantity',
+      'marketplace',
+    ]);
   }
 
   @Get(':id')

@@ -1,10 +1,8 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
   Get,
-  Header,
   NotFoundException,
   Param,
   ParseIntPipe,
@@ -26,8 +24,14 @@ import {
   ShopContext,
   type ShopContext as ShopContextType,
 } from '../auth/decorators.js';
-import { parseAndValidateImport, ZodValidationPipe } from '../common/index.js';
-import { fromCsv, toCsv } from '../lib/index.js';
+import {
+  type ImportResult,
+  parseAndValidateImport,
+  parseCsvImport,
+  sendCsvExport,
+  sendJsonExport,
+  ZodValidationPipe,
+} from '../common/index.js';
 import {
   type CreateSkuRequest,
   CreateSkuSchema,
@@ -37,12 +41,6 @@ import {
   UpdateSkuSchema,
 } from './skus.schema.js';
 import { type Sku, SkusService } from './skus.service.js';
-
-interface ImportResult {
-  created: number;
-  updated: number;
-  errors: string[];
-}
 
 @Controller('skus')
 @UseGuards(AuthGuard)
@@ -60,29 +58,24 @@ export class SkusController {
 
   @Get('export/json')
   @RequireReadAccess()
-  @Header('Content-Type', 'application/json')
-  @Header('Content-Disposition', 'attachment; filename="skus.json"')
   async exportJson(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @Res() res: ExpressResponse,
   ): Promise<void> {
     const items = await this.skusService.exportForShop(ctx.shopId);
-    (res as unknown as { json: (body: unknown) => void }).json(items);
+    sendJsonExport(res, items, 'skus.json');
   }
 
   @Get('export/csv')
   @RequireReadAccess()
-  @Header('Content-Type', 'text/csv')
-  @Header('Content-Disposition', 'attachment; filename="skus.csv"')
   async exportCsv(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @Res() res: ExpressResponse,
   ): Promise<void> {
     const items = await this.skusService.exportForShop(ctx.shopId);
-    const csvContent = toCsv(items, ['code', 'title']);
-    (res as unknown as { send: (body: string) => void }).send(csvContent);
+    sendCsvExport(res, items, 'skus.csv', ['code', 'title']);
   }
 
   @Get(':id')
@@ -202,13 +195,12 @@ export class SkusController {
   async importCsv(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file?: Express.Multer.File,
   ): Promise<ImportResult> {
-    if (!file) {
-      throw new BadRequestException('File is required');
-    }
-    const content = file.buffer.toString('utf-8');
-    const records = fromCsv<{ code: string; title: string }>(content, ['code', 'title']);
+    const records = parseCsvImport<{ code: string; title: string }>(file, undefined, [
+      'code',
+      'title',
+    ]);
     const items: ImportSkuItem[] = records.map((record) => ({
       code: record.code,
       title: record.title,
