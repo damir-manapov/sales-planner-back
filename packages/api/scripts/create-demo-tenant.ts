@@ -54,6 +54,13 @@ const DEMO_SALES_DATA = [
   { sku_code: 'HEADSET-001', period: '2025-11', quantity: 18 },
 ];
 
+interface TenantSetup {
+  tenant: { id: number; title: string };
+  shop: { id: number; title: string };
+  user: { id: number; email: string; name: string };
+  apiKey: string;
+}
+
 async function createDemoTenant(args: DemoTenantArgs) {
   const apiUrl = args.apiUrl || process.env.SALES_PLANNER_API_URL || 'http://localhost:3000';
   const systemAdminKey = process.env.SALES_PLANNER_SYSTEM_ADMIN_KEY;
@@ -67,26 +74,68 @@ async function createDemoTenant(args: DemoTenantArgs) {
 
   const tenantTitle = args.tenantTitle || 'Demo';
   const tenantSlug = tenantTitle.toLowerCase().replace(/[^a-z0-9]+/g, '-');
-  const timestamp = Date.now();
+  const userEmail = `demo@${tenantSlug}.com`;
+  const userName = `${tenantTitle} Admin`;
 
-  console.log('🚀 Creating demo tenant...');
+  console.log('🚀 Setting up demo tenant...');
   console.log(`   Tenant: ${tenantTitle}`);
   console.log(`   API URL: ${apiUrl}`);
   console.log('');
 
   try {
-    // Step 1: Create tenant with shop and user
-    console.log('📦 Step 1: Creating tenant, shop, and admin user...');
-    const setup = await adminClient.createTenantWithShopAndUser({
-      tenantTitle,
-      shopTitle: 'Electronics',
-      userEmail: `demo-${timestamp}@${tenantSlug}.com`,
-      userName: `${tenantTitle} Admin`,
-    });
-    console.log(`   ✅ Tenant created: ${setup.tenant.title} (ID: ${setup.tenant.id})`);
-    console.log(`   ✅ Shop created: ${setup.shop.title} (ID: ${setup.shop.id})`);
-    console.log(`   ✅ Admin user created: ${setup.user.name} (${setup.user.email})`);
-    console.log('');
+    // Step 1: Check if user already exists
+    console.log('🔍 Step 1: Checking if tenant already exists...');
+    const users = await adminClient.getUsers();
+    const existingUser = users.find((u) => u.email === userEmail);
+
+    let setup: TenantSetup;
+
+    if (existingUser) {
+      console.log(`   ℹ️  User ${userEmail} already exists (ID: ${existingUser.id})`);
+
+      // Get user's API key
+      const apiKeys = await adminClient.getApiKeys(existingUser.id);
+      const firstApiKey = apiKeys[0];
+      if (!firstApiKey) {
+        console.error('❌ User has no API key');
+        process.exit(1);
+      }
+
+      // Get user's tenants via /me
+      const userClient = new SalesPlannerClient({ baseUrl: apiUrl, apiKey: firstApiKey.key });
+      const me = await userClient.getMe();
+
+      const existingTenant = me.tenants.find((t) => t.title === tenantTitle);
+      const existingShop = existingTenant?.shops[0];
+      if (!existingTenant || !existingShop) {
+        console.error('❌ User exists but tenant/shop not found');
+        process.exit(1);
+      }
+
+      setup = {
+        tenant: { id: existingTenant.id, title: existingTenant.title },
+        shop: { id: existingShop.id, title: existingShop.title },
+        user: { id: existingUser.id, email: existingUser.email, name: existingUser.name },
+        apiKey: firstApiKey.key,
+      };
+
+      console.log(`   ✅ Tenant exists: ${setup.tenant.title} (ID: ${setup.tenant.id})`);
+      console.log(`   ✅ Shop exists: ${setup.shop.title} (ID: ${setup.shop.id})`);
+      console.log('');
+    } else {
+      // Create new tenant, shop, and user
+      console.log('   📦 Creating new tenant, shop, and admin user...');
+      setup = await adminClient.createTenantWithShopAndUser({
+        tenantTitle,
+        shopTitle: 'Electronics',
+        userEmail,
+        userName,
+      });
+      console.log(`   ✅ Tenant created: ${setup.tenant.title} (ID: ${setup.tenant.id})`);
+      console.log(`   ✅ Shop created: ${setup.shop.title} (ID: ${setup.shop.id})`);
+      console.log(`   ✅ Admin user created: ${setup.user.name} (${setup.user.email})`);
+      console.log('');
+    }
 
     // Create client with user's API key for data operations
     const userClient = new SalesPlannerClient({ baseUrl: apiUrl, apiKey: setup.apiKey });
