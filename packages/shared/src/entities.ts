@@ -43,7 +43,7 @@ export interface SalesHistory {
   sku_id: number;
   shop_id: number;
   tenant_id: number;
-  period: Date;
+  period: string; // YYYY-MM format
   quantity: number;
   created_at: Date;
   updated_at: Date;

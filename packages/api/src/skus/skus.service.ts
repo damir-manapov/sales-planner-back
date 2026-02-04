@@ -1,16 +1,9 @@
 import { Injectable } from '@nestjs/common';
+import type { Sku } from '@sales-planner/shared';
 import { DatabaseService } from '../database/index.js';
 import type { CreateSkuDto, ImportSkuItem, UpdateSkuDto } from './skus.schema.js';
 
-export interface Sku {
-  id: number;
-  code: string;
-  title: string;
-  shop_id: number;
-  tenant_id: number;
-  created_at: Date;
-  updated_at: Date;
-}
+export type { Sku };
 
 @Injectable()
 export class SkusService {

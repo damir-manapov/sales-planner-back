@@ -1,21 +1,15 @@
 import { Injectable } from '@nestjs/common';
 import { sql } from 'kysely';
+import type { User } from '@sales-planner/shared';
 import { ROLE_NAMES } from '../common/constants.js';
 import { DatabaseService } from '../database/index.js';
+
+export type { User };
 
 export interface CreateUserDto {
   email: string;
   name: string;
   default_shop_id?: number;
-}
-
-export interface User {
-  id: number;
-  email: string;
-  name: string;
-  default_shop_id: number | null;
-  created_at: Date;
-  updated_at: Date;
 }
 
 export interface UserRole {

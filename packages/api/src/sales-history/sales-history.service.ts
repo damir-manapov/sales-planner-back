@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { sql } from 'kysely';
+import type { SalesHistory } from '@sales-planner/shared';
 import { DatabaseService } from '../database/index.js';
 import { dateToPeriod, isValidPeriod, periodToDate } from '../lib/index.js';
 import type {
@@ -8,16 +9,7 @@ import type {
   UpdateSalesHistoryDto,
 } from './sales-history.schema.js';
 
-export interface SalesHistory {
-  id: number;
-  shop_id: number;
-  tenant_id: number;
-  sku_id: number;
-  period: string; // "YYYY-MM" format
-  quantity: number;
-  created_at: Date;
-  updated_at: Date;
-}
+export type { SalesHistory };
 
 @Injectable()
 export class SalesHistoryService {

@@ -1,10 +1,11 @@
 import { Injectable } from '@nestjs/common';
-import { Insertable, Selectable } from 'kysely';
+import type { Insertable } from 'kysely';
+import type { Tenant } from '@sales-planner/shared';
 import { ROLE_NAMES } from '../common/constants.js';
 import { DatabaseService } from '../database/database.service.js';
-import { Tenants } from '../database/database.types.js';
+import type { Tenants } from '../database/database.types.js';
 
-export type Tenant = Selectable<Tenants>;
+export type { Tenant };
 export type CreateTenantDto = Insertable<Tenants>;
 
 export interface CreateTenantWithShopDto {

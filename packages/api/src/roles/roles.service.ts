@@ -1,9 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import { Insertable, Selectable } from 'kysely';
+import type { Insertable } from 'kysely';
+import type { Role } from '@sales-planner/shared';
 import { DatabaseService } from '../database/database.service.js';
-import { Roles } from '../database/database.types.js';
+import type { Roles } from '../database/database.types.js';
 
-export type Role = Selectable<Roles>;
+export type { Role };
 export type CreateRoleDto = Insertable<Roles>;
 
 @Injectable()

@@ -12,5 +12,5 @@ export {
   PeriodQuerySchema,
   UpdateSalesHistorySchema,
 } from './sales-history.schema.js';
-export type { SalesHistory } from './sales-history.service.js';
+export type { SalesHistory } from '@sales-planner/shared';
 export { SalesHistoryService } from './sales-history.service.js';
