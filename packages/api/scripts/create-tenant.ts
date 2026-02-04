@@ -11,10 +11,10 @@ interface CreateTenantArgs {
 
 async function createTenantWithShopAndUser(args: CreateTenantArgs) {
   const apiUrl = args.apiUrl || process.env.SALES_PLANNER_API_URL || 'http://localhost:3000';
-  const systemAdminKey = process.env.SALES_PLANNER_SYSTEM_ADMIN_KEY;
+  const systemAdminKey = process.env.SYSTEM_ADMIN_KEY;
 
   if (!systemAdminKey) {
-    console.error('Error: SALES_PLANNER_SYSTEM_ADMIN_KEY environment variable is required');
+    console.error('Error: SYSTEM_ADMIN_KEY environment variable is required');
     process.exit(1);
   }
 
@@ -69,7 +69,7 @@ Options:
   --help, -h                Show this help message
 
 Environment Variables:
-  SALES_PLANNER_SYSTEM_ADMIN_KEY  System admin API key (required)
+  SYSTEM_ADMIN_KEY                System admin API key (required)
   SALES_PLANNER_API_URL           Default API URL
 
 Example:

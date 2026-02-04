@@ -1,9 +1,8 @@
 #!/usr/bin/env bun
 import 'dotenv/config';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { SalesPlannerClient } from '@sales-planner/http-client';
-import type { ImportSalesHistoryItem, ImportSkuItem } from '@sales-planner/shared';
-import skusData from './skus.json';
-import salesHistoryData from './sales-history.json';
 
 interface AlenaTenantArgs {
   apiUrl?: string;
@@ -16,15 +15,16 @@ interface TenantSetup {
   apiKey: string;
 }
 
-const ALENA_SKUS: ImportSkuItem[] = skusData;
-const ALENA_SALES_DATA: ImportSalesHistoryItem[] = salesHistoryData;
+const __dirname = import.meta.dirname;
+const SKUS_CSV = readFileSync(join(__dirname, 'skus.csv'), 'utf-8');
+const SALES_HISTORY_CSV = readFileSync(join(__dirname, 'sales-history.csv'), 'utf-8');
 
 async function createAlenaTenant(args: AlenaTenantArgs) {
   const apiUrl = args.apiUrl || process.env.SALES_PLANNER_API_URL || 'http://localhost:3000';
-  const systemAdminKey = process.env.SALES_PLANNER_SYSTEM_ADMIN_KEY;
+  const systemAdminKey = process.env.SYSTEM_ADMIN_KEY;
 
   if (!systemAdminKey) {
-    console.error('❌ Error: SALES_PLANNER_SYSTEM_ADMIN_KEY environment variable is required');
+    console.error('❌ Error: SYSTEM_ADMIN_KEY environment variable is required');
     process.exit(1);
   }
 
@@ -109,15 +109,15 @@ async function createAlenaTenant(args: AlenaTenantArgs) {
 
     const ctx = { shop_id: setup.shop.id, tenant_id: setup.tenant.id };
 
-    // Step 3: Import SKUs
-    console.log(`💐 Step 3: Importing ${ALENA_SKUS.length} products...`);
-    const skusResult = await userClient.importSkusJson(ALENA_SKUS, ctx);
+    // Step 3: Import SKUs from CSV
+    console.log('💐 Step 3: Importing products from CSV...');
+    const skusResult = await userClient.importSkusCsv(SKUS_CSV, ctx);
     console.log(`   ✅ Created ${skusResult.created} products`);
     console.log('');
 
-    // Step 4: Import sales history
-    console.log(`📈 Step 4: Importing ${ALENA_SALES_DATA.length} sales history records...`);
-    const salesResult = await userClient.importSalesHistoryJson(ALENA_SALES_DATA, ctx);
+    // Step 4: Import sales history from CSV
+    console.log('📈 Step 4: Importing sales history from CSV...');
+    const salesResult = await userClient.importSalesHistoryCsv(SALES_HISTORY_CSV, ctx);
     console.log(`   ✅ Created ${salesResult.created} sales records`);
     console.log('');
 
@@ -139,8 +139,8 @@ async function createAlenaTenant(args: AlenaTenantArgs) {
     console.log('🌸 Shop Data:');
     console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     console.log('');
-    console.log(`  • ${ALENA_SKUS.length} products (flowers and gifts)`);
-    console.log(`  • ${ALENA_SALES_DATA.length} sales history records across 3 periods`);
+    console.log(`  • ${skusResult.created} products (flowers and gifts)`);
+    console.log(`  • ${salesResult.created} sales history records across 3 periods`);
     console.log(`  • Periods: 2025-11, 2025-12, 2026-01`);
     console.log('');
     console.log('💡 Save the API key - it will not be shown again!');
@@ -167,7 +167,7 @@ Options:
   -h, --help                Show this help message
 
 Environment Variables:
-  SALES_PLANNER_SYSTEM_ADMIN_KEY    System admin API key (required)
+  SYSTEM_ADMIN_KEY                  System admin API key (required)
   SALES_PLANNER_API_URL             Base API URL (optional)
 
 Shop Data Includes:
