@@ -4,7 +4,7 @@
 
 ### Database Layer
 - ✅ Migration 002: Create categories table
-- ✅ Migration 003: Create groups table  
+- ✅ Migration 003: Create groups table
 - ✅ Migration 004: Create statuses table
 - ✅ Migration 005: Add SKU classification fields (category_code, group_code, status_code)
 
@@ -30,11 +30,11 @@ For each entity (categories, groups, statuses), create:
 export class {Entity}Controller {
   // CRUD endpoints:
   @Post() create()
-  @Get() findAll()  
+  @Get() findAll()
   @Get(':id') findOne()
   @Put(':id') update()
   @Delete(':id') delete()
-  
+
   // Import/Export:
   @Post('import/json') importJson()
   @Post('import/csv') importCsv()
@@ -82,7 +82,7 @@ imports: [
 Create index.ts for each entity module:
 ```typescript
 export * from './{entity}.controller';
-export * from './{entity}.service';  
+export * from './{entity}.service';
 export * from './{entity}.schema';
 export * from './{entity}.module';
 ```
@@ -98,7 +98,7 @@ export class CategoriesClient extends ImportExportBaseClient<Category, CategoryE
   }
 }
 
-// groups-client.ts  
+// groups-client.ts
 export class GroupsClient extends ImportExportBaseClient<Group, GroupExportItem, ImportGroupItem> {
   constructor(config: ClientConfig) {
     super(config, 'groups');
@@ -120,7 +120,7 @@ export class SalesPlannerClient {
   public readonly categories: CategoriesClient;
   public readonly groups: GroupsClient;
   public readonly statuses: StatusesClient;
-  
+
   constructor(config: ClientConfig) {
     // ... existing clients
     this.categories = new CategoriesClient(config);
@@ -151,7 +151,7 @@ describe('{Entity} Schemas', () => {
 
 **Service Tests** (~5 tests per file):
 ```typescript
-// Pattern: src/{entity}/{entity}.service.spec.ts  
+// Pattern: src/{entity}/{entity}.service.spec.ts
 describe('{Entity}Service', () => {
   it('should be defined');
   it('should normalize codes');
@@ -201,7 +201,7 @@ export const CreateSkuSchema = z.object({
   code: code(),
   title: title(),
   category_code: code().optional(),
-  group_code: code().optional(), 
+  group_code: code().optional(),
   status_code: code().optional(),
 });
 
@@ -253,7 +253,7 @@ export const ENTITIES_METADATA: EntitiesMetadata = {
     ],
   },
   statuses: {
-    name: 'Statuses', 
+    name: 'Statuses',
     description: 'Product statuses (new, discontinued, etc.)',
     fields: [
       { name: 'code', type: 'string', description: 'Unique status identifier', required: true, example: 'new' },
@@ -304,7 +304,7 @@ Update `scripts/alena/create-alena-tenant.ts` to import categories, groups, and 
 - Controllers (3 × ~200 lines): 2-3 hours
 - Modules & setup: 30 mins
 - HTTP Client: 1 hour
-- Unit tests (6 files × ~50 lines): 2 hours  
+- Unit tests (6 files × ~50 lines): 2 hours
 - E2E tests (3 files × ~300 lines): 3-4 hours
 - Metadata & docs: 30 mins
 - Testing & debugging: 1-2 hours

@@ -53,23 +53,30 @@ export type CreateUserRequest = CreateUserDto;
 ```typescript
 import type { 
   // Entities
-  User, Tenant, Shop, Sku, Brand, SalesHistory,
-  Role, UserRole, ApiKey, Marketplace,
+  User, Tenant, Shop, Sku, Brand, Category, Group, Status,
+  SalesHistory, Role, UserRole, ApiKey, Marketplace,
 
   // Request types (HTTP layer)
   CreateUserRequest, UpdateUserRequest,
   CreateSkuRequest, UpdateSkuRequest,
   CreateBrandRequest, UpdateBrandRequest,
+  CreateCategoryRequest, UpdateCategoryRequest,
+  CreateGroupRequest, UpdateGroupRequest,
+  CreateStatusRequest, UpdateStatusRequest,
   CreateSalesHistoryRequest, UpdateSalesHistoryRequest,
 
   // DTO types (Service layer)
   CreateUserDto, UpdateUserDto,
   CreateSkuDto, UpdateSkuDto,
   CreateBrandDto, UpdateBrandDto,
+  CreateCategoryDto, UpdateCategoryDto,
+  CreateGroupDto, UpdateGroupDto,
+  CreateStatusDto, UpdateStatusDto,
   CreateSalesHistoryDto, UpdateSalesHistoryDto,
 
   // Import types
-  ImportSkuItem, ImportBrandItem, ImportSalesHistoryItem, ImportMarketplaceItem,
+  ImportSkuItem, ImportBrandItem, ImportCategoryItem, ImportGroupItem, ImportStatusItem,
+  ImportSalesHistoryItem, ImportMarketplaceItem,
 
   // Query types
   ShopContextParams, PeriodQuery,
@@ -77,7 +84,8 @@ import type {
   // Response types
   UserWithRolesAndTenants, TenantWithShopAndApiKey,
   ImportResult, DeleteDataResult,
-  SkuExportItem, BrandExportItem, SalesHistoryExportItem
+  SkuExportItem, BrandExportItem, CategoryExportItem, GroupExportItem, StatusExportItem,
+  SalesHistoryExportItem
 } from '@sales-planner/shared';
 ```
 
@@ -99,6 +107,9 @@ The API uses **numeric IDs** internally for referential integrity:
 | `Shop` | Store within a tenant |
 | `Sku` | Stock keeping unit (product variant) |
 | `Brand` | Product brand (shop-scoped) |
+| `Category` | Product category for classification (shop-scoped) |
+| `Group` | Product group for classification (shop-scoped) |
+| `Status` | Product status for classification (shop-scoped) |
 | `SalesHistory` | Sales record for a period (uses numeric marketplace_id) |
 | `Role` | Access role |
 | `UserRole` | User-role assignment |

@@ -53,8 +53,13 @@ export function fromCsv<T extends Record<string, string>>(
       bom: true, // Handle BOM at parser level too
     }) as Array<Record<string, string>>;
 
-    // Validate required columns exist
-    for (const record of records) {
+    // Filter out empty records (all values empty or whitespace)
+    const nonEmptyRecords = records.filter((record) => {
+      return Object.values(record).some((value) => value && value.trim() !== '');
+    });
+
+    // Validate required columns exist in non-empty records
+    for (const record of nonEmptyRecords) {
       for (const column of requiredColumns) {
         if (!(column in record) || !record[column]) {
           throw new BadRequestException(`CSV must have a "${column}" column with values`);
@@ -62,7 +67,7 @@ export function fromCsv<T extends Record<string, string>>(
       }
     }
 
-    return records as T[];
+    return nonEmptyRecords as T[];
   } catch (error) {
     if (error instanceof BadRequestException) {
       throw error;

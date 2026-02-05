@@ -52,6 +52,18 @@ const brands = await client.brands.getBrands({ tenantId, shopId });
 await client.brands.importBrandsJson(items, { tenantId, shopId });
 const brandsCsv = await client.brands.exportBrandsCsv({ tenantId, shopId });
 
+// Categories with import/export
+const categories = await client.categories.getCategories({ tenantId, shopId });
+await client.categories.importCategoriesJson(items, { tenantId, shopId });
+
+// Groups with import/export
+const groups = await client.groups.getGroups({ tenantId, shopId });
+await client.groups.importGroupsJson(items, { tenantId, shopId });
+
+// Statuses with import/export
+const statuses = await client.statuses.getStatuses({ tenantId, shopId });
+await client.statuses.importStatusesJson(items, { tenantId, shopId });
+
 // Sales History
 const history = await client.salesHistory.getSalesHistory(
   { tenantId, shopId },
@@ -63,7 +75,7 @@ const marketplaces = await client.marketplaces.getMarketplaces({ tenantId });
 
 // Entity Metadata (for UI documentation)
 const metadata = await client.metadata.getEntitiesMetadata();
-// Returns field definitions for brands, marketplaces, skus, sales history
+// Returns field definitions for brands, categories, groups, statuses, marketplaces, skus, sales history
 ```
 
 **Benefits:**
@@ -84,7 +96,7 @@ const skus = await client.getSkus({ tenantId, shopId });
 
 ## Import/Export Pattern
 
-Resources that support bulk operations (SKUs, Brands, Sales History, Marketplaces) follow a consistent pattern:
+Resources that support bulk operations (SKUs, Brands, Categories, Groups, Statuses, Sales History, Marketplaces) follow a consistent pattern:
 
 ```typescript
 // Import from JSON
@@ -107,13 +119,26 @@ const csv = await client.skus.exportSkusCsv({ tenantId, shopId });
 // Get example templates (no auth required)
 const exampleCsv = await client.skus.getSkusExampleCsv();
 
-// Same pattern works for brands
+// Same pattern works for brands, categories, groups, statuses
 const brandResult = await client.brands.importBrandsJson(
   [{ code: 'apple', title: 'Apple' }],
   { tenantId, shopId }
 );
-const brandsCsv = await client.brands.exportBrandsCsv({ tenantId, shopId });
-const brandExample = await client.brands.getBrandsExampleCsv();
+
+const categoryResult = await client.categories.importCategoriesJson(
+  [{ code: 'electronics', title: 'Electronics' }],
+  { tenantId, shopId }
+);
+
+const groupResult = await client.groups.importGroupsJson(
+  [{ code: 'smartphones', title: 'Smartphones' }],
+  { tenantId, shopId }
+);
+
+const statusResult = await client.statuses.importStatusesJson(
+  [{ code: 'active', title: 'Active' }],
+  { tenantId, shopId }
+);
 ```
 
 ## Data Requirements
@@ -129,6 +154,36 @@ const brandExample = await client.brands.getBrandsExampleCsv();
 - `title` (optional): String, 1-200 characters
 
 ### Brands
+
+**Create/Import:**
+- `code` (required): String, 1-100 characters, unique per shop
+- `title` (required): String, 1-200 characters
+
+**Update:**
+- `code` (optional): String, 1-100 characters
+- `title` (optional): String, 1-200 characters
+
+### Categories
+
+**Create/Import:**
+- `code` (required): String, 1-100 characters, unique per shop
+- `title` (required): String, 1-200 characters
+
+**Update:**
+- `code` (optional): String, 1-100 characters
+- `title` (optional): String, 1-200 characters
+
+### Groups
+
+**Create/Import:**
+- `code` (required): String, 1-100 characters, unique per shop
+- `title` (required): String, 1-200 characters
+
+**Update:**
+- `code` (optional): String, 1-100 characters
+- `title` (optional): String, 1-200 characters
+
+### Statuses
 
 **Create/Import:**
 - `code` (required): String, 1-100 characters, unique per shop
@@ -264,6 +319,27 @@ try {
 - `exportBrandsJson(ctx)`, `exportBrandsCsv(ctx)` - Requires read access
 - `getBrandsExampleJson()`, `getBrandsExampleCsv()` - Get import format examples (no auth required)
 
+### Categories
+- `getCategories(ctx)`, `getCategory(id, ctx)` - Requires read access (viewer or higher)
+- `createCategory(dto, ctx)`, `updateCategory(id, dto, ctx)`, `deleteCategory(id, ctx)` - Requires write access (editor or higher)
+- `importCategoriesJson(items, ctx)`, `importCategoriesCsv(csvContent, ctx)` - Requires write access (bulk upsert by code)
+- `exportCategoriesJson(ctx)`, `exportCategoriesCsv(ctx)` - Requires read access
+- `getExampleCategoriesJson()`, `getExampleCategoriesCsv()` - Get import format examples (no auth required)
+
+### Groups
+- `getGroups(ctx)`, `getGroup(id, ctx)` - Requires read access (viewer or higher)
+- `createGroup(dto, ctx)`, `updateGroup(id, dto, ctx)`, `deleteGroup(id, ctx)` - Requires write access (editor or higher)
+- `importGroupsJson(items, ctx)`, `importGroupsCsv(csvContent, ctx)` - Requires write access (bulk upsert by code)
+- `exportGroupsJson(ctx)`, `exportGroupsCsv(ctx)` - Requires read access
+- `getExampleGroupsJson()`, `getExampleGroupsCsv()` - Get import format examples (no auth required)
+
+### Statuses
+- `getStatuses(ctx)`, `getStatus(id, ctx)` - Requires read access (viewer or higher)
+- `createStatus(dto, ctx)`, `updateStatus(id, dto, ctx)`, `deleteStatus(id, ctx)` - Requires write access (editor or higher)
+- `importStatusesJson(items, ctx)`, `importStatusesCsv(csvContent, ctx)` - Requires write access (bulk upsert by code)
+- `exportStatusesJson(ctx)`, `exportStatusesCsv(ctx)` - Requires read access
+- `getExampleStatusesJson()`, `getExampleStatusesCsv()` - Get import format examples (no auth required)
+
 ### Sales History
 - `getSalesHistory(ctx, query?)`, `getSalesHistoryItem(id, ctx)` - Requires read access (viewer or higher)
 - `createSalesHistory(dto, ctx)`, `updateSalesHistory(id, dto, ctx)`, `deleteSalesHistory(id, ctx)` - Requires write access (editor or higher)
@@ -304,12 +380,14 @@ All entity types, DTOs, and response types are exported:
 
 ```typescript
 import type { 
-  User, Tenant, Shop, Sku, Brand, SalesHistory,
+  User, Tenant, Shop, Sku, Brand, Category, Group, Status, SalesHistory,
   CreateUserDto, CreateTenantDto, CreateShopDto,
-  CreateSkuRequest, CreateBrandRequest,
+  CreateSkuRequest, CreateBrandRequest, CreateCategoryRequest, 
+  CreateGroupRequest, CreateStatusRequest,
   ShopContextParams, PeriodQuery,
   UserWithRolesAndTenants, ImportResult,
-  SkuExportItem, BrandExportItem
+  SkuExportItem, BrandExportItem, CategoryExportItem, 
+  GroupExportItem, StatusExportItem
 } from '@sales-planner/http-client';
 ```
 

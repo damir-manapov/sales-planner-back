@@ -36,7 +36,20 @@ Swagger UI provides:
   - **Example Downloads**: `/brands/examples/json` and `/brands/examples/csv` (no auth required)
   - **Bulk Operations**: Import performs upsert (insert or update) based on code
   - **Data Validation**: Zod schemas with type safety from `@sales-planner/shared`
+- **Categories** - Product category management linked to shops (unique code per shop)
+  - Full CRUD operations with access control
+  - Import/Export: JSON and CSV support
+  - Example endpoints for download templates
+- **Groups** - Product group management linked to shops (unique code per shop)
+  - Full CRUD operations with access control
+  - Import/Export: JSON and CSV support
+  - Example endpoints for download templates
+- **Statuses** - Product status management linked to shops (unique code per shop)
+  - Full CRUD operations with access control
+  - Import/Export: JSON and CSV support
+  - Example endpoints for download templates
 - **SKUs** - SKU management linked to shops (unique code per shop)
+  - Supports classification via category_code, group_code, status_code (optional)
   - Import/Export: JSON and CSV file upload support
   - Proper file download headers for exports
 - **Sales History** - Monthly sales data per SKU (shop-level entity with numeric marketplace_id)
@@ -47,7 +60,7 @@ Swagger UI provides:
   - Proper file download headers for exports
 - **Me** - Get current user data with roles and tenants
 - **Metadata** - Entity metadata API for UI documentation
-  - **GET /metadata/entities** - Returns metadata describing all entities (brands, marketplaces, skus, sales history) managed by shop admin
+  - **GET /metadata/entities** - Returns metadata describing all entities (brands, categories, groups, statuses, marketplaces, skus, sales history) managed by shop admin
   - Includes field definitions (name, type, description, required, examples)
   - Excludes technical fields, only shows user-visible fields from export operations
   - Used by UI for documentation and dynamic form generation

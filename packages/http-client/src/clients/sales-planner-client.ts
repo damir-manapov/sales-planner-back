@@ -7,6 +7,9 @@ import { TenantsClient } from './tenants-client.js';
 import { ShopsClient } from './shops-client.js';
 import { SkusClient } from './skus-client.js';
 import { BrandsClient } from './brands-client.js';
+import { CategoriesClient } from './categories-client.js';
+import { GroupsClient } from './groups-client.js';
+import { StatusesClient } from './statuses-client.js';
 import { SalesHistoryClient } from './sales-history-client.js';
 import { MarketplacesClient } from './marketplaces-client.js';
 import { RolesClient } from './roles-client.js';
@@ -24,6 +27,9 @@ export class SalesPlannerClient {
   readonly shops: ShopsClient;
   readonly skus: SkusClient;
   readonly brands: BrandsClient;
+  readonly categories: CategoriesClient;
+  readonly groups: GroupsClient;
+  readonly statuses: StatusesClient;
   readonly salesHistory: SalesHistoryClient;
   readonly marketplaces: MarketplacesClient;
   readonly roles: RolesClient;
@@ -39,6 +45,9 @@ export class SalesPlannerClient {
     this.shops = new ShopsClient(config);
     this.skus = new SkusClient(config);
     this.brands = new BrandsClient(config);
+    this.categories = new CategoriesClient(config);
+    this.groups = new GroupsClient(config);
+    this.statuses = new StatusesClient(config);
     this.salesHistory = new SalesHistoryClient(config);
     this.marketplaces = new MarketplacesClient(config);
     this.roles = new RolesClient(config);
@@ -121,6 +130,85 @@ export class SalesPlannerClient {
     this.brands.exportBrandsJson(ctx);
   exportBrandsCsv = (ctx: Parameters<BrandsClient['exportBrandsCsv']>[0]) =>
     this.brands.exportBrandsCsv(ctx);
+  getCategories = (ctx: Parameters<CategoriesClient['getCategories']>[0]) =>
+    this.categories.getCategories(ctx);
+  getCategory = (id: number, ctx: Parameters<CategoriesClient['getCategory']>[1]) =>
+    this.categories.getCategory(id, ctx);
+  createCategory = (
+    dto: Parameters<CategoriesClient['createCategory']>[0],
+    ctx: Parameters<CategoriesClient['createCategory']>[1],
+  ) => this.categories.createCategory(dto, ctx);
+  updateCategory = (
+    id: number,
+    dto: Parameters<CategoriesClient['updateCategory']>[1],
+    ctx: Parameters<CategoriesClient['updateCategory']>[2],
+  ) => this.categories.updateCategory(id, dto, ctx);
+  deleteCategory = (id: number, ctx: Parameters<CategoriesClient['deleteCategory']>[1]) =>
+    this.categories.deleteCategory(id, ctx);
+  importCategoriesJson = (
+    items: Parameters<CategoriesClient['importCategoriesJson']>[0],
+    ctx: Parameters<CategoriesClient['importCategoriesJson']>[1],
+  ) => this.categories.importCategoriesJson(items, ctx);
+  importCategoriesCsv = (
+    csvContent: Parameters<CategoriesClient['importCategoriesCsv']>[0],
+    ctx: Parameters<CategoriesClient['importCategoriesCsv']>[1],
+  ) => this.categories.importCategoriesCsv(csvContent, ctx);
+  exportCategoriesJson = (ctx: Parameters<CategoriesClient['exportCategoriesJson']>[0]) =>
+    this.categories.exportCategoriesJson(ctx);
+  exportCategoriesCsv = (ctx: Parameters<CategoriesClient['exportCategoriesCsv']>[0]) =>
+    this.categories.exportCategoriesCsv(ctx);
+  getGroups = (ctx: Parameters<GroupsClient['getGroups']>[0]) => this.groups.getGroups(ctx);
+  getGroup = (id: number, ctx: Parameters<GroupsClient['getGroup']>[1]) =>
+    this.groups.getGroup(id, ctx);
+  createGroup = (
+    dto: Parameters<GroupsClient['createGroup']>[0],
+    ctx: Parameters<GroupsClient['createGroup']>[1],
+  ) => this.groups.createGroup(dto, ctx);
+  updateGroup = (
+    id: number,
+    dto: Parameters<GroupsClient['updateGroup']>[1],
+    ctx: Parameters<GroupsClient['updateGroup']>[2],
+  ) => this.groups.updateGroup(id, dto, ctx);
+  deleteGroup = (id: number, ctx: Parameters<GroupsClient['deleteGroup']>[1]) =>
+    this.groups.deleteGroup(id, ctx);
+  importGroupsJson = (
+    items: Parameters<GroupsClient['importGroupsJson']>[0],
+    ctx: Parameters<GroupsClient['importGroupsJson']>[1],
+  ) => this.groups.importGroupsJson(items, ctx);
+  importGroupsCsv = (
+    csvContent: Parameters<GroupsClient['importGroupsCsv']>[0],
+    ctx: Parameters<GroupsClient['importGroupsCsv']>[1],
+  ) => this.groups.importGroupsCsv(csvContent, ctx);
+  exportGroupsJson = (ctx: Parameters<GroupsClient['exportGroupsJson']>[0]) =>
+    this.groups.exportGroupsJson(ctx);
+  exportGroupsCsv = (ctx: Parameters<GroupsClient['exportGroupsCsv']>[0]) =>
+    this.groups.exportGroupsCsv(ctx);
+  getStatuses = (ctx: Parameters<StatusesClient['getStatuses']>[0]) => this.statuses.getStatuses(ctx);
+  getStatus = (id: number, ctx: Parameters<StatusesClient['getStatus']>[1]) =>
+    this.statuses.getStatus(id, ctx);
+  createStatus = (
+    dto: Parameters<StatusesClient['createStatus']>[0],
+    ctx: Parameters<StatusesClient['createStatus']>[1],
+  ) => this.statuses.createStatus(dto, ctx);
+  updateStatus = (
+    id: number,
+    dto: Parameters<StatusesClient['updateStatus']>[1],
+    ctx: Parameters<StatusesClient['updateStatus']>[2],
+  ) => this.statuses.updateStatus(id, dto, ctx);
+  deleteStatus = (id: number, ctx: Parameters<StatusesClient['deleteStatus']>[1]) =>
+    this.statuses.deleteStatus(id, ctx);
+  importStatusesJson = (
+    items: Parameters<StatusesClient['importStatusesJson']>[0],
+    ctx: Parameters<StatusesClient['importStatusesJson']>[1],
+  ) => this.statuses.importStatusesJson(items, ctx);
+  importStatusesCsv = (
+    csvContent: Parameters<StatusesClient['importStatusesCsv']>[0],
+    ctx: Parameters<StatusesClient['importStatusesCsv']>[1],
+  ) => this.statuses.importStatusesCsv(csvContent, ctx);
+  exportStatusesJson = (ctx: Parameters<StatusesClient['exportStatusesJson']>[0]) =>
+    this.statuses.exportStatusesJson(ctx);
+  exportStatusesCsv = (ctx: Parameters<StatusesClient['exportStatusesCsv']>[0]) =>
+    this.statuses.exportStatusesCsv(ctx);
   getSalesHistory = (
     ctx: Parameters<SalesHistoryClient['getSalesHistory']>[0],
     query?: Parameters<SalesHistoryClient['getSalesHistory']>[1],

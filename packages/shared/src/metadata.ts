@@ -16,6 +16,9 @@ export interface EntityMetadata {
 
 export interface EntitiesMetadata {
   brands: EntityMetadata;
+  categories: EntityMetadata;
+  groups: EntityMetadata;
+  statuses: EntityMetadata;
   marketplaces: EntityMetadata;
   skus: EntityMetadata;
   salesHistory: EntityMetadata;
@@ -39,6 +42,66 @@ export const ENTITIES_METADATA: EntitiesMetadata = {
         description: 'Brand display name',
         required: true,
         example: 'Apple Inc.',
+      },
+    ],
+  },
+  categories: {
+    name: 'Categories',
+    description: 'Product categories for classification',
+    fields: [
+      {
+        name: 'code',
+        type: 'string',
+        description: 'Unique category identifier',
+        required: true,
+        example: 'electronics',
+      },
+      {
+        name: 'title',
+        type: 'string',
+        description: 'Category display name',
+        required: true,
+        example: 'Electronics',
+      },
+    ],
+  },
+  groups: {
+    name: 'Groups',
+    description: 'Product groups for classification',
+    fields: [
+      {
+        name: 'code',
+        type: 'string',
+        description: 'Unique group identifier',
+        required: true,
+        example: 'smartphones',
+      },
+      {
+        name: 'title',
+        type: 'string',
+        description: 'Group display name',
+        required: true,
+        example: 'Smartphones',
+      },
+    ],
+  },
+  statuses: {
+    name: 'Statuses',
+    description: 'Product statuses for classification',
+    fields: [
+      {
+        name: 'code',
+        type: 'string',
+        description: 'Unique status identifier',
+        required: true,
+        example: 'active',
+      },
+      {
+        name: 'title',
+        type: 'string',
+        description: 'Status display name',
+        required: true,
+        example: 'Active',
       },
     ],
   },
@@ -79,6 +142,27 @@ export const ENTITIES_METADATA: EntitiesMetadata = {
         description: 'Product display name',
         required: true,
         example: 'iPhone 15 Pro',
+      },
+      {
+        name: 'category_code',
+        type: 'string',
+        description: 'Product category code',
+        required: false,
+        example: 'electronics',
+      },
+      {
+        name: 'group_code',
+        type: 'string',
+        description: 'Product group code',
+        required: false,
+        example: 'smartphones',
+      },
+      {
+        name: 'status_code',
+        type: 'string',
+        description: 'Product status code',
+        required: false,
+        example: 'active',
       },
     ],
   },
