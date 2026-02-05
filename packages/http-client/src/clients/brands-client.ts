@@ -2,20 +2,12 @@ import type {
   Brand,
   CreateBrandRequest,
   UpdateBrandDto,
+  ImportBrandItem,
+  BrandExportItem,
   ImportResult,
   ShopContextParams,
 } from '@sales-planner/shared';
 import { ImportExportBaseClient } from './import-export-base-client.js';
-
-export interface ImportBrandItem {
-  code: string;
-  title: string;
-}
-
-export interface BrandExportItem {
-  code: string;
-  title: string;
-}
 
 export class BrandsClient extends ImportExportBaseClient {
   async getBrands(ctx: ShopContextParams): Promise<Brand[]> {
@@ -52,5 +44,13 @@ export class BrandsClient extends ImportExportBaseClient {
 
   async exportBrandsCsv(ctx: ShopContextParams): Promise<string> {
     return this.requestText('GET', '/brands/export/csv', { params: ctx });
+  }
+
+  async getBrandsExampleJson(): Promise<ImportBrandItem[]> {
+    return this.requestPublic('GET', '/brands/examples/json');
+  }
+
+  async getBrandsExampleCsv(): Promise<string> {
+    return this.requestTextPublic('GET', '/brands/examples/csv');
   }
 }

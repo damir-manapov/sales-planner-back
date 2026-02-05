@@ -1,6 +1,6 @@
 // Client
-export { SalesPlannerClient, ApiError } from './client.js';
-export type { ClientConfig } from './client.js';
+export { SalesPlannerClient, ApiError } from './clients/index.js';
+export type { ClientConfig } from './clients/index.js';
 
 // Re-export all types from @sales-planner/shared for convenience
 export type {

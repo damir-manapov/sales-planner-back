@@ -1,5 +1,30 @@
 # @sales-planner/http-client
 
+## 0.7.1
+
+### Patch Changes
+
+- Cleanup and documentation improvements
+
+  **Improvements:**
+
+  - Added `ImportBrandItem` type to shared package
+  - Added missing brand example endpoints to http-client (`getBrandsExampleJson`, `getBrandsExampleCsv`)
+  - Removed duplicate `dto.ts` file (using split dto/ structure)
+  - Removed unnecessary `client.ts` re-export layer
+  - Added comprehensive Data Requirements section to http-client README
+  - Brands client now imports types from shared package (consistent with SKUs)
+
+  **Documentation:**
+
+  - Field requirements for all entities (SKUs, Brands, Sales History, Users, Tenants, Shops, Marketplaces)
+  - Required vs optional fields clearly documented
+  - Field constraints (length, format, uniqueness)
+  - Special behaviors (auto-creation for imports)
+
+- Updated dependencies
+  - @sales-planner/shared@0.6.1
+
 ## 0.7.0
 
 ### Minor Changes

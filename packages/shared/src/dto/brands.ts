@@ -17,3 +17,8 @@ export interface UpdateBrandDto {
 }
 
 export type UpdateBrandRequest = UpdateBrandDto;
+
+export interface ImportBrandItem {
+  code: string;
+  title: string;
+}

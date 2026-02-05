@@ -112,6 +112,83 @@ const brandsCsv = await client.brands.exportBrandsCsv({ tenantId, shopId });
 const brandExample = await client.brands.getBrandsExampleCsv();
 ```
 
+## Data Requirements
+
+### SKUs
+
+**Create/Import:**
+- `code` (required): String, 1-100 characters, unique per shop
+- `title` (required): String, 1-200 characters
+
+**Update:**
+- `code` (optional): String, 1-100 characters
+- `title` (optional): String, 1-200 characters
+
+### Brands
+
+**Create/Import:**
+- `code` (required): String, 1-100 characters, unique per shop
+- `title` (required): String, 1-200 characters
+
+**Update:**
+- `code` (optional): String, 1-100 characters
+- `title` (optional): String, 1-200 characters
+
+### Sales History
+
+**Create/Import:**
+- `sku_code` (required): String, must match existing SKU or will be auto-created
+- `period` (required): String, format `YYYY-MM` (e.g., "2026-01")
+- `quantity` (required): Number, integer
+- `marketplace` (required): String, must match existing marketplace ID or will be auto-created
+
+**Update:**
+- `sku_id` (optional): Number
+- `period` (optional): String, format `YYYY-MM`
+- `quantity` (optional): Number
+- `marketplace` (optional): String
+
+### Users
+
+**Create:**
+- `email` (required): String, valid email format, unique
+- `name` (required): String, 1-200 characters
+- `default_shop_id` (optional): Number
+
+**Update:**
+- `email` (optional): String, valid email format
+- `name` (optional): String, 1-200 characters
+- `default_shop_id` (optional): Number or null
+
+### Tenants
+
+**Create:**
+- `title` (required): String, 1-200 characters
+- `owner_id` (optional): Number, user ID
+
+**Update:**
+- `title` (optional): String, 1-200 characters
+- `owner_id` (optional): Number or null
+
+### Shops
+
+**Create:**
+- `title` (required): String, 1-200 characters
+- `tenant_id` (required): Number
+
+**Update:**
+- `title` (optional): String, 1-200 characters
+
+### Marketplaces
+
+**Create:**
+- `id` (required): String, 1-100 characters, unique (e.g., "amazon", "ebay")
+- `title` (required): String, 1-200 characters
+
+**Update:**
+- `id` (optional): String, 1-100 characters
+- `title` (optional): String, 1-200 characters
+
 ## Error Handling
 
 ```typescript
