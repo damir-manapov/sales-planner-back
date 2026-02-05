@@ -1,6 +1,6 @@
 # Sales Planner Backend
 
-Monorepo for Sales Planner API and related packages.
+Monorepo for Sales Planner API and related packages. Multi-tenant sales planning platform with role-based access control, comprehensive import/export capabilities, and full TypeScript support.
 
 ## Packages
 
@@ -9,6 +9,15 @@ Monorepo for Sales Planner API and related packages.
 | [@sales-planner/api](packages/api) | NestJS REST API | Private |
 | [@sales-planner/shared](packages/shared) | Shared types and DTOs | [![npm](https://img.shields.io/npm/v/@sales-planner/shared)](https://www.npmjs.com/package/@sales-planner/shared) |
 | [@sales-planner/http-client](packages/http-client) | TypeScript HTTP client | [![npm](https://img.shields.io/npm/v/@sales-planner/http-client)](https://www.npmjs.com/package/@sales-planner/http-client) |
+
+## Features
+
+- **Multi-tenant Architecture** - Isolated data per tenant with shop-level granularity
+- **Role-Based Access Control** - viewer, editor, tenantAdmin, tenantOwner, systemAdmin
+- **Entity Management** - SKUs, Brands, Categories, Groups, Statuses, Suppliers, Marketplaces
+- **Sales History** - Monthly sales data with composite key (SKU + marketplace + period)
+- **Import/Export** - JSON and CSV support with auto-delimiter detection
+- **Comprehensive Testing** - 400+ e2e tests across 15 test files
 
 ## Quick Start
 

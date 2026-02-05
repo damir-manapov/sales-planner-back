@@ -97,18 +97,17 @@ export class SalesPlannerClient {
   deleteSku = (id: number, ctx: Parameters<SkusClient['deleteSku']>[1]) =>
     this.skus.deleteSku(id, ctx);
   importSkusJson = (
-    items: Parameters<SkusClient['importSkusJson']>[0],
-    ctx: Parameters<SkusClient['importSkusJson']>[1],
-  ) => this.skus.importSkusJson(items, ctx);
+    items: Parameters<SkusClient['importJson']>[0],
+    ctx: Parameters<SkusClient['importJson']>[1],
+  ) => this.skus.importJson(items, ctx);
   importSkusCsv = (
-    csvContent: Parameters<SkusClient['importSkusCsv']>[0],
-    ctx: Parameters<SkusClient['importSkusCsv']>[1],
-  ) => this.skus.importSkusCsv(csvContent, ctx);
-  exportSkusJson = (ctx: Parameters<SkusClient['exportSkusJson']>[0]) =>
-    this.skus.exportSkusJson(ctx);
-  exportSkusCsv = (ctx: Parameters<SkusClient['exportSkusCsv']>[0]) => this.skus.exportSkusCsv(ctx);
-  getSkusExampleJson = () => this.skus.getSkusExampleJson();
-  getSkusExampleCsv = () => this.skus.getSkusExampleCsv();
+    csvContent: Parameters<SkusClient['importCsv']>[0],
+    ctx: Parameters<SkusClient['importCsv']>[1],
+  ) => this.skus.importCsv(csvContent, ctx);
+  exportSkusJson = (ctx: Parameters<SkusClient['exportJson']>[0]) => this.skus.exportJson(ctx);
+  exportSkusCsv = (ctx: Parameters<SkusClient['exportCsv']>[0]) => this.skus.exportCsv(ctx);
+  getSkusExampleJson = () => this.skus.getExampleJson();
+  getSkusExampleCsv = () => this.skus.getExampleCsv();
   getBrands = (ctx: Parameters<BrandsClient['getBrands']>[0]) => this.brands.getBrands(ctx);
   getBrand = (id: number, ctx: Parameters<BrandsClient['getBrand']>[1]) =>
     this.brands.getBrand(id, ctx);
@@ -126,19 +125,18 @@ export class SalesPlannerClient {
   deleteBrand = (id: number, ctx: Parameters<BrandsClient['deleteBrand']>[1]) =>
     this.brands.deleteBrand(id, ctx);
   importBrandsJson = (
-    items: Parameters<BrandsClient['importBrandsJson']>[0],
-    ctx: Parameters<BrandsClient['importBrandsJson']>[1],
-  ) => this.brands.importBrandsJson(items, ctx);
+    items: Parameters<BrandsClient['importJson']>[0],
+    ctx: Parameters<BrandsClient['importJson']>[1],
+  ) => this.brands.importJson(items, ctx);
   importBrandsCsv = (
-    csvContent: Parameters<BrandsClient['importBrandsCsv']>[0],
-    ctx: Parameters<BrandsClient['importBrandsCsv']>[1],
-  ) => this.brands.importBrandsCsv(csvContent, ctx);
-  exportBrandsJson = (ctx: Parameters<BrandsClient['exportBrandsJson']>[0]) =>
-    this.brands.exportBrandsJson(ctx);
-  exportBrandsCsv = (ctx: Parameters<BrandsClient['exportBrandsCsv']>[0]) =>
-    this.brands.exportBrandsCsv(ctx);
-  getBrandsExampleJson = () => this.brands.getBrandsExampleJson();
-  getBrandsExampleCsv = () => this.brands.getBrandsExampleCsv();
+    csvContent: Parameters<BrandsClient['importCsv']>[0],
+    ctx: Parameters<BrandsClient['importCsv']>[1],
+  ) => this.brands.importCsv(csvContent, ctx);
+  exportBrandsJson = (ctx: Parameters<BrandsClient['exportJson']>[0]) =>
+    this.brands.exportJson(ctx);
+  exportBrandsCsv = (ctx: Parameters<BrandsClient['exportCsv']>[0]) => this.brands.exportCsv(ctx);
+  getBrandsExampleJson = () => this.brands.getExampleJson();
+  getBrandsExampleCsv = () => this.brands.getExampleCsv();
   getCategories = (ctx: Parameters<CategoriesClient['getCategories']>[0]) =>
     this.categories.getCategories(ctx);
   getCategory = (id: number, ctx: Parameters<CategoriesClient['getCategory']>[1]) =>
@@ -157,19 +155,19 @@ export class SalesPlannerClient {
   deleteCategory = (id: number, ctx: Parameters<CategoriesClient['deleteCategory']>[1]) =>
     this.categories.deleteCategory(id, ctx);
   importCategoriesJson = (
-    items: Parameters<CategoriesClient['importCategoriesJson']>[0],
-    ctx: Parameters<CategoriesClient['importCategoriesJson']>[1],
-  ) => this.categories.importCategoriesJson(items, ctx);
+    items: Parameters<CategoriesClient['importJson']>[0],
+    ctx: Parameters<CategoriesClient['importJson']>[1],
+  ) => this.categories.importJson(items, ctx);
   importCategoriesCsv = (
-    csvContent: Parameters<CategoriesClient['importCategoriesCsv']>[0],
-    ctx: Parameters<CategoriesClient['importCategoriesCsv']>[1],
-  ) => this.categories.importCategoriesCsv(csvContent, ctx);
-  exportCategoriesJson = (ctx: Parameters<CategoriesClient['exportCategoriesJson']>[0]) =>
-    this.categories.exportCategoriesJson(ctx);
-  exportCategoriesCsv = (ctx: Parameters<CategoriesClient['exportCategoriesCsv']>[0]) =>
-    this.categories.exportCategoriesCsv(ctx);
-  getCategoriesExampleJson = () => this.categories.getExampleCategoriesJson();
-  getCategoriesExampleCsv = () => this.categories.getExampleCategoriesCsv();
+    csvContent: Parameters<CategoriesClient['importCsv']>[0],
+    ctx: Parameters<CategoriesClient['importCsv']>[1],
+  ) => this.categories.importCsv(csvContent, ctx);
+  exportCategoriesJson = (ctx: Parameters<CategoriesClient['exportJson']>[0]) =>
+    this.categories.exportJson(ctx);
+  exportCategoriesCsv = (ctx: Parameters<CategoriesClient['exportCsv']>[0]) =>
+    this.categories.exportCsv(ctx);
+  getCategoriesExampleJson = () => this.categories.getExampleJson();
+  getCategoriesExampleCsv = () => this.categories.getExampleCsv();
   getGroups = (ctx: Parameters<GroupsClient['getGroups']>[0]) => this.groups.getGroups(ctx);
   getGroup = (id: number, ctx: Parameters<GroupsClient['getGroup']>[1]) =>
     this.groups.getGroup(id, ctx);
@@ -187,19 +185,18 @@ export class SalesPlannerClient {
   deleteGroup = (id: number, ctx: Parameters<GroupsClient['deleteGroup']>[1]) =>
     this.groups.deleteGroup(id, ctx);
   importGroupsJson = (
-    items: Parameters<GroupsClient['importGroupsJson']>[0],
-    ctx: Parameters<GroupsClient['importGroupsJson']>[1],
-  ) => this.groups.importGroupsJson(items, ctx);
+    items: Parameters<GroupsClient['importJson']>[0],
+    ctx: Parameters<GroupsClient['importJson']>[1],
+  ) => this.groups.importJson(items, ctx);
   importGroupsCsv = (
-    csvContent: Parameters<GroupsClient['importGroupsCsv']>[0],
-    ctx: Parameters<GroupsClient['importGroupsCsv']>[1],
-  ) => this.groups.importGroupsCsv(csvContent, ctx);
-  exportGroupsJson = (ctx: Parameters<GroupsClient['exportGroupsJson']>[0]) =>
-    this.groups.exportGroupsJson(ctx);
-  exportGroupsCsv = (ctx: Parameters<GroupsClient['exportGroupsCsv']>[0]) =>
-    this.groups.exportGroupsCsv(ctx);
-  getGroupsExampleJson = () => this.groups.getExampleGroupsJson();
-  getGroupsExampleCsv = () => this.groups.getExampleGroupsCsv();
+    csvContent: Parameters<GroupsClient['importCsv']>[0],
+    ctx: Parameters<GroupsClient['importCsv']>[1],
+  ) => this.groups.importCsv(csvContent, ctx);
+  exportGroupsJson = (ctx: Parameters<GroupsClient['exportJson']>[0]) =>
+    this.groups.exportJson(ctx);
+  exportGroupsCsv = (ctx: Parameters<GroupsClient['exportCsv']>[0]) => this.groups.exportCsv(ctx);
+  getGroupsExampleJson = () => this.groups.getExampleJson();
+  getGroupsExampleCsv = () => this.groups.getExampleCsv();
   getStatuses = (ctx: Parameters<StatusesClient['getStatuses']>[0]) =>
     this.statuses.getStatuses(ctx);
   getStatus = (id: number, ctx: Parameters<StatusesClient['getStatus']>[1]) =>
@@ -218,19 +215,19 @@ export class SalesPlannerClient {
   deleteStatus = (id: number, ctx: Parameters<StatusesClient['deleteStatus']>[1]) =>
     this.statuses.deleteStatus(id, ctx);
   importStatusesJson = (
-    items: Parameters<StatusesClient['importStatusesJson']>[0],
-    ctx: Parameters<StatusesClient['importStatusesJson']>[1],
-  ) => this.statuses.importStatusesJson(items, ctx);
+    items: Parameters<StatusesClient['importJson']>[0],
+    ctx: Parameters<StatusesClient['importJson']>[1],
+  ) => this.statuses.importJson(items, ctx);
   importStatusesCsv = (
-    csvContent: Parameters<StatusesClient['importStatusesCsv']>[0],
-    ctx: Parameters<StatusesClient['importStatusesCsv']>[1],
-  ) => this.statuses.importStatusesCsv(csvContent, ctx);
-  exportStatusesJson = (ctx: Parameters<StatusesClient['exportStatusesJson']>[0]) =>
-    this.statuses.exportStatusesJson(ctx);
-  exportStatusesCsv = (ctx: Parameters<StatusesClient['exportStatusesCsv']>[0]) =>
-    this.statuses.exportStatusesCsv(ctx);
-  getStatusesExampleJson = () => this.statuses.getExampleStatusesJson();
-  getStatusesExampleCsv = () => this.statuses.getExampleStatusesCsv();
+    csvContent: Parameters<StatusesClient['importCsv']>[0],
+    ctx: Parameters<StatusesClient['importCsv']>[1],
+  ) => this.statuses.importCsv(csvContent, ctx);
+  exportStatusesJson = (ctx: Parameters<StatusesClient['exportJson']>[0]) =>
+    this.statuses.exportJson(ctx);
+  exportStatusesCsv = (ctx: Parameters<StatusesClient['exportCsv']>[0]) =>
+    this.statuses.exportCsv(ctx);
+  getStatusesExampleJson = () => this.statuses.getExampleJson();
+  getStatusesExampleCsv = () => this.statuses.getExampleCsv();
   getSuppliers = (ctx: Parameters<SuppliersClient['getSuppliers']>[0]) =>
     this.suppliers.getSuppliers(ctx);
   getSupplier = (id: number, ctx: Parameters<SuppliersClient['getSupplier']>[1]) =>
@@ -249,19 +246,19 @@ export class SalesPlannerClient {
   deleteSupplier = (id: number, ctx: Parameters<SuppliersClient['deleteSupplier']>[1]) =>
     this.suppliers.deleteSupplier(id, ctx);
   importSuppliersJson = (
-    items: Parameters<SuppliersClient['importSuppliersJson']>[0],
-    ctx: Parameters<SuppliersClient['importSuppliersJson']>[1],
-  ) => this.suppliers.importSuppliersJson(items, ctx);
+    items: Parameters<SuppliersClient['importJson']>[0],
+    ctx: Parameters<SuppliersClient['importJson']>[1],
+  ) => this.suppliers.importJson(items, ctx);
   importSuppliersCsv = (
-    csvContent: Parameters<SuppliersClient['importSuppliersCsv']>[0],
-    ctx: Parameters<SuppliersClient['importSuppliersCsv']>[1],
-  ) => this.suppliers.importSuppliersCsv(csvContent, ctx);
-  exportSuppliersJson = (ctx: Parameters<SuppliersClient['exportSuppliersJson']>[0]) =>
-    this.suppliers.exportSuppliersJson(ctx);
-  exportSuppliersCsv = (ctx: Parameters<SuppliersClient['exportSuppliersCsv']>[0]) =>
-    this.suppliers.exportSuppliersCsv(ctx);
-  getSupplierExamplesJson = () => this.suppliers.getSupplierExamplesJson();
-  getSupplierExamplesCsv = () => this.suppliers.getSupplierExamplesCsv();
+    csvContent: Parameters<SuppliersClient['importCsv']>[0],
+    ctx: Parameters<SuppliersClient['importCsv']>[1],
+  ) => this.suppliers.importCsv(csvContent, ctx);
+  exportSuppliersJson = (ctx: Parameters<SuppliersClient['exportJson']>[0]) =>
+    this.suppliers.exportJson(ctx);
+  exportSuppliersCsv = (ctx: Parameters<SuppliersClient['exportCsv']>[0]) =>
+    this.suppliers.exportCsv(ctx);
+  getSupplierExamplesJson = () => this.suppliers.getExampleJson();
+  getSupplierExamplesCsv = () => this.suppliers.getExampleCsv();
   getSalesHistory = (
     ctx: Parameters<SalesHistoryClient['getSalesHistory']>[0],
     query?: Parameters<SalesHistoryClient['getSalesHistory']>[1],
@@ -282,23 +279,23 @@ export class SalesPlannerClient {
   deleteSalesHistory = (id: number, ctx: Parameters<SalesHistoryClient['deleteSalesHistory']>[1]) =>
     this.salesHistory.deleteSalesHistory(id, ctx);
   importSalesHistoryJson = (
-    items: Parameters<SalesHistoryClient['importSalesHistoryJson']>[0],
-    ctx: Parameters<SalesHistoryClient['importSalesHistoryJson']>[1],
-  ) => this.salesHistory.importSalesHistoryJson(items, ctx);
+    items: Parameters<SalesHistoryClient['importJson']>[0],
+    ctx: Parameters<SalesHistoryClient['importJson']>[1],
+  ) => this.salesHistory.importJson(items, ctx);
   importSalesHistoryCsv = (
-    csvContent: Parameters<SalesHistoryClient['importSalesHistoryCsv']>[0],
-    ctx: Parameters<SalesHistoryClient['importSalesHistoryCsv']>[1],
-  ) => this.salesHistory.importSalesHistoryCsv(csvContent, ctx);
+    csvContent: Parameters<SalesHistoryClient['importCsv']>[0],
+    ctx: Parameters<SalesHistoryClient['importCsv']>[1],
+  ) => this.salesHistory.importCsv(csvContent, ctx);
   exportSalesHistoryJson = (
-    ctx: Parameters<SalesHistoryClient['exportSalesHistoryJson']>[0],
-    query?: Parameters<SalesHistoryClient['exportSalesHistoryJson']>[1],
-  ) => this.salesHistory.exportSalesHistoryJson(ctx, query);
+    ctx: Parameters<SalesHistoryClient['exportJson']>[0],
+    query?: Parameters<SalesHistoryClient['exportJson']>[1],
+  ) => this.salesHistory.exportJson(ctx, query);
   exportSalesHistoryCsv = (
-    ctx: Parameters<SalesHistoryClient['exportSalesHistoryCsv']>[0],
-    query?: Parameters<SalesHistoryClient['exportSalesHistoryCsv']>[1],
-  ) => this.salesHistory.exportSalesHistoryCsv(ctx, query);
-  getSalesHistoryExampleJson = () => this.salesHistory.getSalesHistoryExampleJson();
-  getSalesHistoryExampleCsv = () => this.salesHistory.getSalesHistoryExampleCsv();
+    ctx: Parameters<SalesHistoryClient['exportCsv']>[0],
+    query?: Parameters<SalesHistoryClient['exportCsv']>[1],
+  ) => this.salesHistory.exportCsv(ctx, query);
+  getSalesHistoryExampleJson = () => this.salesHistory.getExampleJson();
+  getSalesHistoryExampleCsv = () => this.salesHistory.getExampleCsv();
   getMarketplaces = (ctx: Parameters<MarketplacesClient['getMarketplaces']>[0]) =>
     this.marketplaces.getMarketplaces(ctx);
   getMarketplace = (id: number, ctx: Parameters<MarketplacesClient['getMarketplace']>[1]) =>
@@ -319,19 +316,19 @@ export class SalesPlannerClient {
   deleteMarketplace = (id: number, ctx: Parameters<MarketplacesClient['deleteMarketplace']>[1]) =>
     this.marketplaces.deleteMarketplace(id, ctx);
   importMarketplacesJson = (
-    items: Parameters<MarketplacesClient['importMarketplacesJson']>[0],
-    ctx: Parameters<MarketplacesClient['importMarketplacesJson']>[1],
-  ) => this.marketplaces.importMarketplacesJson(items, ctx);
+    items: Parameters<MarketplacesClient['importJson']>[0],
+    ctx: Parameters<MarketplacesClient['importJson']>[1],
+  ) => this.marketplaces.importJson(items, ctx);
   importMarketplacesCsv = (
-    csvContent: Parameters<MarketplacesClient['importMarketplacesCsv']>[0],
-    ctx: Parameters<MarketplacesClient['importMarketplacesCsv']>[1],
-  ) => this.marketplaces.importMarketplacesCsv(csvContent, ctx);
-  exportMarketplacesJson = (ctx: Parameters<MarketplacesClient['exportMarketplacesJson']>[0]) =>
-    this.marketplaces.exportMarketplacesJson(ctx);
-  exportMarketplacesCsv = (ctx: Parameters<MarketplacesClient['exportMarketplacesCsv']>[0]) =>
-    this.marketplaces.exportMarketplacesCsv(ctx);
-  getMarketplaceExamplesJson = () => this.marketplaces.getMarketplaceExamplesJson();
-  getMarketplaceExamplesCsv = () => this.marketplaces.getMarketplaceExamplesCsv();
+    csvContent: Parameters<MarketplacesClient['importCsv']>[0],
+    ctx: Parameters<MarketplacesClient['importCsv']>[1],
+  ) => this.marketplaces.importCsv(csvContent, ctx);
+  exportMarketplacesJson = (ctx: Parameters<MarketplacesClient['exportJson']>[0]) =>
+    this.marketplaces.exportJson(ctx);
+  exportMarketplacesCsv = (ctx: Parameters<MarketplacesClient['exportCsv']>[0]) =>
+    this.marketplaces.exportCsv(ctx);
+  getMarketplaceExamplesJson = () => this.marketplaces.getExampleJson();
+  getMarketplaceExamplesCsv = () => this.marketplaces.getExampleCsv();
   getRoles = () => this.roles.getRoles();
   getRole = (id: number) => this.roles.getRole(id);
   createRole = (dto: Parameters<RolesClient['createRole']>[0]) => this.roles.createRole(dto);

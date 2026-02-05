@@ -40,30 +40,27 @@ export class MarketplacesClient extends ImportExportBaseClient {
     return this.request('DELETE', `/marketplaces/${id}`, { params: ctx });
   }
 
-  async importMarketplacesJson(
-    items: ImportMarketplaceItem[],
-    ctx: ShopContextParams,
-  ): Promise<ImportResult> {
+  async importJson(items: ImportMarketplaceItem[], ctx: ShopContextParams): Promise<ImportResult> {
     return this.request('POST', '/marketplaces/import/json', { body: items, params: ctx });
   }
 
-  async importMarketplacesCsv(csvContent: string, ctx: ShopContextParams): Promise<ImportResult> {
+  async importCsv(csvContent: string, ctx: ShopContextParams): Promise<ImportResult> {
     return this.uploadCsv('/marketplaces/import/csv', csvContent, ctx);
   }
 
-  async exportMarketplacesJson(ctx: ShopContextParams): Promise<MarketplaceExportItem[]> {
+  async exportJson(ctx: ShopContextParams): Promise<MarketplaceExportItem[]> {
     return this.request('GET', '/marketplaces/export/json', { params: ctx });
   }
 
-  async exportMarketplacesCsv(ctx: ShopContextParams): Promise<string> {
+  async exportCsv(ctx: ShopContextParams): Promise<string> {
     return this.requestText('GET', '/marketplaces/export/csv', { params: ctx });
   }
 
-  async getMarketplaceExamplesJson(): Promise<ImportMarketplaceItem[]> {
+  async getExampleJson(): Promise<ImportMarketplaceItem[]> {
     return this.requestPublic('GET', '/marketplaces/examples/json');
   }
 
-  async getMarketplaceExamplesCsv(): Promise<string> {
+  async getExampleCsv(): Promise<string> {
     return this.requestTextPublic('GET', '/marketplaces/examples/csv');
   }
 }

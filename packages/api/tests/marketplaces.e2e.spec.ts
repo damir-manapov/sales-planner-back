@@ -384,14 +384,18 @@ describe('Marketplaces (e2e)', () => {
         expect(marketplace).toHaveProperty('id');
       });
 
-        it('editor should get marketplace by code', async () => {
-          const marketplaces = await editorClient.getMarketplaces(ctx.shopContext);
-          if (marketplaces.length === 0) throw new Error('Expected at least one marketplace for editor');
-          const firstMarketplace = marketplaces[0];
-          if (!firstMarketplace) throw new Error('Expected marketplace');
-          const marketplace = await editorClient.getMarketplaceByCode(firstMarketplace.code, ctx.shopContext);
-          expect(marketplace.id).toBe(firstMarketplace.id);
-        });
+      it('editor should get marketplace by code', async () => {
+        const marketplaces = await editorClient.getMarketplaces(ctx.shopContext);
+        if (marketplaces.length === 0)
+          throw new Error('Expected at least one marketplace for editor');
+        const firstMarketplace = marketplaces[0];
+        if (!firstMarketplace) throw new Error('Expected marketplace');
+        const marketplace = await editorClient.getMarketplaceByCode(
+          firstMarketplace.code,
+          ctx.shopContext,
+        );
+        expect(marketplace.id).toBe(firstMarketplace.id);
+      });
 
       it('editor should update marketplace', async () => {
         const marketplaces = await editorClient.getMarketplaces(ctx.shopContext);
@@ -482,14 +486,18 @@ describe('Marketplaces (e2e)', () => {
         }
       });
 
-        it('viewer should get marketplace by code', async () => {
-          const marketplaces = await viewerClient.getMarketplaces(ctx.shopContext);
-          if (marketplaces.length === 0) throw new Error('Expected at least one marketplace for viewer');
-          const firstMarketplace = marketplaces[0];
-          if (!firstMarketplace) throw new Error('Expected marketplace');
-          const marketplace = await viewerClient.getMarketplaceByCode(firstMarketplace.code, ctx.shopContext);
-          expect(marketplace.id).toBe(firstMarketplace.id);
-        });
+      it('viewer should get marketplace by code', async () => {
+        const marketplaces = await viewerClient.getMarketplaces(ctx.shopContext);
+        if (marketplaces.length === 0)
+          throw new Error('Expected at least one marketplace for viewer');
+        const firstMarketplace = marketplaces[0];
+        if (!firstMarketplace) throw new Error('Expected marketplace');
+        const marketplace = await viewerClient.getMarketplaceByCode(
+          firstMarketplace.code,
+          ctx.shopContext,
+        );
+        expect(marketplace.id).toBe(firstMarketplace.id);
+      });
 
       it('viewer should NOT create marketplace', async () => {
         await expectForbidden(() =>

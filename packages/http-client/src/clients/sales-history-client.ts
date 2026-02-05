@@ -38,36 +38,30 @@ export class SalesHistoryClient extends ImportExportBaseClient {
     return this.request('DELETE', `/sales-history/${id}`, { params: ctx });
   }
 
-  async importSalesHistoryJson(
+  async importJson(
     items: ImportSalesHistoryItem[],
     ctx: ShopContextParams,
   ): Promise<SalesHistoryImportResult> {
     return this.request('POST', '/sales-history/import/json', { body: items, params: ctx });
   }
 
-  async importSalesHistoryCsv(
-    csvContent: string,
-    ctx: ShopContextParams,
-  ): Promise<SalesHistoryImportResult> {
+  async importCsv(csvContent: string, ctx: ShopContextParams): Promise<SalesHistoryImportResult> {
     return this.uploadCsv('/sales-history/import/csv', csvContent, ctx);
   }
 
-  async exportSalesHistoryJson(
-    ctx: ShopContextParams,
-    query?: PeriodQuery,
-  ): Promise<SalesHistoryExportItem[]> {
+  async exportJson(ctx: ShopContextParams, query?: PeriodQuery): Promise<SalesHistoryExportItem[]> {
     return this.request('GET', '/sales-history/export/json', { params: { ...ctx, ...query } });
   }
 
-  async exportSalesHistoryCsv(ctx: ShopContextParams, query?: PeriodQuery): Promise<string> {
+  async exportCsv(ctx: ShopContextParams, query?: PeriodQuery): Promise<string> {
     return this.requestText('GET', '/sales-history/export/csv', { params: { ...ctx, ...query } });
   }
 
-  async getSalesHistoryExampleJson(): Promise<ImportSalesHistoryItem[]> {
+  async getExampleJson(): Promise<ImportSalesHistoryItem[]> {
     return this.requestPublic('GET', '/sales-history/examples/json');
   }
 
-  async getSalesHistoryExampleCsv(): Promise<string> {
+  async getExampleCsv(): Promise<string> {
     return this.requestTextPublic('GET', '/sales-history/examples/csv');
   }
 }

@@ -1,6 +1,6 @@
 # Sales Planner API
 
-NestJS API for sales planning and management with Kysely + PostgreSQL (Neon).
+NestJS REST API for multi-tenant sales planning and management. Built with Kysely + PostgreSQL (Neon) with comprehensive role-based access control.
 
 ## 📚 API Documentation
 
@@ -53,7 +53,7 @@ Swagger UI provides:
   - Import/Export: JSON and CSV support
   - Example endpoints for download templates
 - **SKUs** - SKU management linked to shops (unique code per shop)
-  - Supports classification via category_code, group_code, status_code, supplier_code (optional)
+  - Supports classification via brand_code, category_code, group_code, status_code, supplier_code (all optional)
   - Import/Export: JSON and CSV file upload support
   - Proper file download headers for exports
 - **Sales History** - Monthly sales data per SKU (shop-level entity with numeric marketplace_id)

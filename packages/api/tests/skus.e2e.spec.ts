@@ -92,7 +92,6 @@ describe('SKUs (e2e)', () => {
       expect(sku.id).toBe(created.id);
     });
 
-
     it('should get SKU by code', async () => {
       const created = await ctx.client.createSku(
         { code: generateTestCode('SKU-GET-CODE'), title: 'Get SKU Code' },

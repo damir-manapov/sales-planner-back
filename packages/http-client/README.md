@@ -1,6 +1,6 @@
 # @sales-planner/http-client
 
-TypeScript HTTP client for the Sales Planner API with full type safety.
+TypeScript HTTP client for the Sales Planner API with full type safety. Provides both namespaced and flat API styles for flexible integration.
 
 ## Installation
 
@@ -44,29 +44,30 @@ const shops = await client.shops.getShops(tenantId);
 
 // SKUs with import/export
 const skus = await client.skus.getSkus({ tenantId, shopId });
-await client.skus.importSkusJson(items, { tenantId, shopId });
-const csv = await client.skus.exportSkusCsv({ tenantId, shopId });
+await client.skus.importJson(items, { tenantId, shopId });
+const csv = await client.skus.exportCsv({ tenantId, shopId });
 
 // Brands with import/export
 const brands = await client.brands.getBrands({ tenantId, shopId });
-await client.brands.importBrandsJson(items, { tenantId, shopId });
-const brandsCsv = await client.brands.exportBrandsCsv({ tenantId, shopId });
+await client.brands.importJson(items, { tenantId, shopId });
+const brandsCsv = await client.brands.exportCsv({ tenantId, shopId });
 
 // Categories with import/export
 const categories = await client.categories.getCategories({ tenantId, shopId });
-await client.categories.importCategoriesJson(items, { tenantId, shopId });
+await client.categories.importJson(items, { tenantId, shopId });
 
 // Groups with import/export
 const groups = await client.groups.getGroups({ tenantId, shopId });
-await client.groups.importGroupsJson(items, { tenantId, shopId });
+await client.groups.importJson(items, { tenantId, shopId });
 
 // Statuses with import/export
 const statuses = await client.statuses.getStatuses({ tenantId, shopId });
-await client.statuses.importStatusesJson(items, { tenantId, shopId });
+await client.statuses.importJson(items, { tenantId, shopId });
 
 // Suppliers with import/export
 const suppliers = await client.suppliers.getSuppliers({ tenantId, shopId });
-await client.suppliers.importSuppliersJson({ suppliers: items }, { tenantId, shopId });
+await client.suppliers.importJson(items, { tenantId, shopId });
+const suppliersCsv = await client.suppliers.exportCsv({ tenantId, shopId });
 
 // Sales History
 const history = await client.salesHistory.getSalesHistory(
@@ -104,42 +105,42 @@ Resources that support bulk operations (SKUs, Brands, Categories, Groups, Status
 
 ```typescript
 // Import from JSON
-const result = await client.skus.importSkusJson(
+const result = await client.skus.importJson(
   [
     { code: 'SKU-001', title: 'Product 1' },
     { code: 'SKU-002', title: 'Product 2' },
   ],
   { tenantId, shopId }
 );
-// Returns: { inserted: 2, updated: 0, errors: [] }
+// Returns: { created: 2, updated: 0, errors: [] }
 
 // Import from CSV file
 const csvContent = await fs.readFile('skus.csv', 'utf-8');
-const result = await client.skus.importSkusCsv(csvContent, { tenantId, shopId });
+const result = await client.skus.importCsv(csvContent, { tenantId, shopId });
 
 // Export to CSV
-const csv = await client.skus.exportSkusCsv({ tenantId, shopId });
+const csv = await client.skus.exportCsv({ tenantId, shopId });
 
 // Get example templates (no auth required)
-const exampleCsv = await client.skus.getSkusExampleCsv();
+const exampleCsv = await client.skus.getExampleCsv();
 
 // Same pattern works for brands, categories, groups, statuses
-const brandResult = await client.brands.importBrandsJson(
+const brandResult = await client.brands.importJson(
   [{ code: 'apple', title: 'Apple' }],
   { tenantId, shopId }
 );
 
-const categoryResult = await client.categories.importCategoriesJson(
+const categoryResult = await client.categories.importJson(
   [{ code: 'electronics', title: 'Electronics' }],
   { tenantId, shopId }
 );
 
-const groupResult = await client.groups.importGroupsJson(
+const groupResult = await client.groups.importJson(
   [{ code: 'smartphones', title: 'Smartphones' }],
   { tenantId, shopId }
 );
 
-const statusResult = await client.statuses.importStatusesJson(
+const statusResult = await client.statuses.importJson(
   [{ code: 'active', title: 'Active' }],
   { tenantId, shopId }
 );
@@ -188,6 +189,16 @@ const statusResult = await client.statuses.importStatusesJson(
 - `title` (optional): String, 1-200 characters
 
 ### Statuses
+
+**Create/Import:**
+- `code` (required): String, 1-100 characters, unique per shop
+- `title` (required): String, 1-200 characters
+
+**Update:**
+- `code` (optional): String, 1-100 characters
+- `title` (optional): String, 1-200 characters
+
+### Suppliers
 
 **Create/Import:**
 - `code` (required): String, 1-100 characters, unique per shop
@@ -310,46 +321,53 @@ try {
 - `deleteShopData(id)` - Delete all data (SKUs, sales history) for a shop
 
 ### SKUs
-- `getSkus(ctx)`, `getSku(id, ctx)` - Requires read access (viewer or higher)
+- `getSkus(ctx)`, `getSku(id, ctx)`, `getSkuByCode(code, ctx)` - Requires read access (viewer or higher)
 - `createSku(dto, ctx)`, `updateSku(id, dto, ctx)`, `deleteSku(id, ctx)` - Requires write access (editor or higher)
-- `importSkusJson(items, ctx)`, `importSkusCsv(csvContent, ctx)` - Requires write access
-- `exportSkusJson(ctx)`, `exportSkusCsv(ctx)` - Requires read access
-- `getSkusExampleJson()`, `getSkusExampleCsv()` - Get import format examples (no auth required)
+- `importJson(items, ctx)`, `importCsv(csvContent, ctx)` - Requires write access
+- `exportJson(ctx)`, `exportCsv(ctx)` - Requires read access
+- `getExampleJson()`, `getExampleCsv()` - Get import format examples (no auth required)
 
 ### Brands
-- `getBrands(ctx)`, `getBrand(id, ctx)` - Requires read access (viewer or higher)
+- `getBrands(ctx)`, `getBrand(id, ctx)`, `getBrandByCode(code, ctx)` - Requires read access (viewer or higher)
 - `createBrand(dto, ctx)`, `updateBrand(id, dto, ctx)`, `deleteBrand(id, ctx)` - Requires write access (editor or higher)
-- `importBrandsJson(items, ctx)`, `importBrandsCsv(csvContent, ctx)` - Requires write access (bulk upsert by code)
-- `exportBrandsJson(ctx)`, `exportBrandsCsv(ctx)` - Requires read access
-- `getBrandsExampleJson()`, `getBrandsExampleCsv()` - Get import format examples (no auth required)
+- `importJson(items, ctx)`, `importCsv(csvContent, ctx)` - Requires write access (bulk upsert by code)
+- `exportJson(ctx)`, `exportCsv(ctx)` - Requires read access
+- `getExampleJson()`, `getExampleCsv()` - Get import format examples (no auth required)
 
 ### Categories
-- `getCategories(ctx)`, `getCategory(id, ctx)` - Requires read access (viewer or higher)
+- `getCategories(ctx)`, `getCategory(id, ctx)`, `getCategoryByCode(code, ctx)` - Requires read access (viewer or higher)
 - `createCategory(dto, ctx)`, `updateCategory(id, dto, ctx)`, `deleteCategory(id, ctx)` - Requires write access (editor or higher)
-- `importCategoriesJson(items, ctx)`, `importCategoriesCsv(csvContent, ctx)` - Requires write access (bulk upsert by code)
-- `exportCategoriesJson(ctx)`, `exportCategoriesCsv(ctx)` - Requires read access
-- `getExampleCategoriesJson()`, `getExampleCategoriesCsv()` - Get import format examples (no auth required)
+- `importJson(items, ctx)`, `importCsv(csvContent, ctx)` - Requires write access (bulk upsert by code)
+- `exportJson(ctx)`, `exportCsv(ctx)` - Requires read access
+- `getExampleJson()`, `getExampleCsv()` - Get import format examples (no auth required)
 
 ### Groups
-- `getGroups(ctx)`, `getGroup(id, ctx)` - Requires read access (viewer or higher)
+- `getGroups(ctx)`, `getGroup(id, ctx)`, `getGroupByCode(code, ctx)` - Requires read access (viewer or higher)
 - `createGroup(dto, ctx)`, `updateGroup(id, dto, ctx)`, `deleteGroup(id, ctx)` - Requires write access (editor or higher)
-- `importGroupsJson(items, ctx)`, `importGroupsCsv(csvContent, ctx)` - Requires write access (bulk upsert by code)
-- `exportGroupsJson(ctx)`, `exportGroupsCsv(ctx)` - Requires read access
-- `getExampleGroupsJson()`, `getExampleGroupsCsv()` - Get import format examples (no auth required)
+- `importJson(items, ctx)`, `importCsv(csvContent, ctx)` - Requires write access (bulk upsert by code)
+- `exportJson(ctx)`, `exportCsv(ctx)` - Requires read access
+- `getExampleJson()`, `getExampleCsv()` - Get import format examples (no auth required)
 
 ### Statuses
-- `getStatuses(ctx)`, `getStatus(id, ctx)` - Requires read access (viewer or higher)
+- `getStatuses(ctx)`, `getStatus(id, ctx)`, `getStatusByCode(code, ctx)` - Requires read access (viewer or higher)
 - `createStatus(dto, ctx)`, `updateStatus(id, dto, ctx)`, `deleteStatus(id, ctx)` - Requires write access (editor or higher)
-- `importStatusesJson(items, ctx)`, `importStatusesCsv(csvContent, ctx)` - Requires write access (bulk upsert by code)
-- `exportStatusesJson(ctx)`, `exportStatusesCsv(ctx)` - Requires read access
-- `getExampleStatusesJson()`, `getExampleStatusesCsv()` - Get import format examples (no auth required)
+- `importJson(items, ctx)`, `importCsv(csvContent, ctx)` - Requires write access (bulk upsert by code)
+- `exportJson(ctx)`, `exportCsv(ctx)` - Requires read access
+- `getExampleJson()`, `getExampleCsv()` - Get import format examples (no auth required)
+
+### Suppliers
+- `getSuppliers(ctx)`, `getSupplier(id, ctx)`, `getSupplierByCode(code, ctx)` - Requires read access (viewer or higher)
+- `createSupplier(dto, ctx)`, `updateSupplier(id, dto, ctx)`, `deleteSupplier(id, ctx)` - Requires write access (editor or higher)
+- `importJson(items, ctx)`, `importCsv(csvContent, ctx)` - Requires write access (bulk upsert by code)
+- `exportJson(ctx)`, `exportCsv(ctx)` - Requires read access
+- `getExampleJson()`, `getExampleCsv()` - Get import format examples (no auth required)
 
 ### Sales History
 - `getSalesHistory(ctx, query?)`, `getSalesHistoryItem(id, ctx)` - Requires read access (viewer or higher)
 - `createSalesHistory(dto, ctx)`, `updateSalesHistory(id, dto, ctx)`, `deleteSalesHistory(id, ctx)` - Requires write access (editor or higher)
-- `importSalesHistoryJson(items, ctx)`, `importSalesHistoryCsv(csvContent, ctx)` - Requires write access
-- `exportSalesHistoryJson(ctx, query?)`, `exportSalesHistoryCsv(ctx, query?)` - Requires read access
-- `getSalesHistoryExampleJson()`, `getSalesHistoryExampleCsv()` - Get import format examples (no auth required)
+- `importJson(items, ctx)`, `importCsv(csvContent, ctx)` - Requires write access
+- `exportJson(ctx, query?)`, `exportCsv(ctx, query?)` - Requires read access
+- `getExampleJson()`, `getExampleCsv()` - Get import format examples (no auth required)
 
 ### Roles & User Roles
 - `getRoles()`, `getRole(id)` - System admin only
@@ -360,8 +378,10 @@ try {
 - `getApiKeys()`, `createApiKey(dto)`, `deleteApiKey(id)` - System admin only
 
 ### Marketplaces
-- `getMarketplaces()`, `getMarketplace(id)` - All authenticated users
-- `createMarketplace(dto)`, `updateMarketplace(id, dto)`, `deleteMarketplace(id)` - Requires write access (editor or higher)
+- `getMarketplaces(ctx)`, `getMarketplace(id, ctx)`, `getMarketplaceByCode(code, ctx)` - Requires read access
+- `createMarketplace(dto, ctx)`, `updateMarketplace(id, dto, ctx)`, `deleteMarketplace(id, ctx)` - Requires write access (editor or higher)
+- `importJson(items, ctx)`, `importCsv(csvContent, ctx)` - Requires write access
+- `exportJson(ctx)`, `exportCsv(ctx)` - Requires read access
 
 ## Error Handling
 
@@ -380,19 +400,27 @@ try {
 
 ## Types
 
-All entity types, DTOs, and response types are exported:
+Common types are re-exported from `@sales-planner/shared` for convenience:
 
 ```typescript
 import type { 
-  User, Tenant, Shop, Sku, Brand, Category, Group, Status, SalesHistory,
+  // Entities
+  User, Tenant, Shop, Sku, SalesHistory, Role, UserRole, ApiKey, Marketplace,
+  // DTOs
   CreateUserDto, CreateTenantDto, CreateShopDto,
-  CreateSkuRequest, CreateBrandRequest, CreateCategoryRequest, 
-  CreateGroupRequest, CreateStatusRequest,
+  CreateSkuDto, CreateSkuRequest, CreateSalesHistoryDto, CreateSalesHistoryRequest,
+  CreateMarketplaceDto, CreateMarketplaceRequest,
+  // Query types
   ShopContextParams, PeriodQuery,
-  UserWithRolesAndTenants, ImportResult,
-  SkuExportItem, BrandExportItem, CategoryExportItem, 
-  GroupExportItem, StatusExportItem
+  // Response types
+  UserWithRolesAndTenants, TenantWithShopAndApiKey,
+  ImportResult, DeleteDataResult,
+  SkuExportItem, SalesHistoryExportItem,
 } from '@sales-planner/http-client';
+
+// For additional types (Brand, Category, Group, Status, Supplier, etc.)
+// import directly from @sales-planner/shared
+import type { Brand, Category, Group, Status, Supplier } from '@sales-planner/shared';
 ```
 
 ## License

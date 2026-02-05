@@ -223,12 +223,10 @@ describe('Suppliers (e2e)', () => {
       const code2 = generateTestCode('import-json-2');
 
       const result = await ctx.client.importSuppliersJson(
-        {
-          suppliers: [
-            { code: code1, title: 'Import JSON Supplier 1' },
-            { code: code2, title: 'Import JSON Supplier 2' },
-          ],
-        },
+        [
+          { code: code1, title: 'Import JSON Supplier 1' },
+          { code: code2, title: 'Import JSON Supplier 2' },
+        ],
         ctx.shopContext,
       );
 
@@ -245,12 +243,9 @@ describe('Suppliers (e2e)', () => {
     it('should upsert existing suppliers on import', async () => {
       const code = generateTestCode('upsert-json');
 
-      await ctx.client.importSuppliersJson(
-        { suppliers: [{ code, title: 'Original Title' }] },
-        ctx.shopContext,
-      );
+      await ctx.client.importSuppliersJson([{ code, title: 'Original Title' }], ctx.shopContext);
       const result = await ctx.client.importSuppliersJson(
-        { suppliers: [{ code, title: 'Updated Title' }] },
+        [{ code, title: 'Updated Title' }],
         ctx.shopContext,
       );
 
@@ -279,12 +274,10 @@ describe('Suppliers (e2e)', () => {
       const code2 = generateTestCode('export-supplier-2');
 
       await ctx.client.importSuppliersJson(
-        {
-          suppliers: [
-            { code: code1, title: 'Export Test Supplier 1' },
-            { code: code2, title: 'Export Test Supplier 2' },
-          ],
-        },
+        [
+          { code: code1, title: 'Export Test Supplier 1' },
+          { code: code2, title: 'Export Test Supplier 2' },
+        ],
         ctx.shopContext,
       );
 
@@ -301,12 +294,10 @@ describe('Suppliers (e2e)', () => {
       const code2 = generateTestCode('csv-export-supplier-2');
 
       await ctx.client.importSuppliersJson(
-        {
-          suppliers: [
-            { code: code1, title: 'CSV Export Test 1' },
-            { code: code2, title: 'CSV Export Test 2' },
-          ],
-        },
+        [
+          { code: code1, title: 'CSV Export Test 1' },
+          { code: code2, title: 'CSV Export Test 2' },
+        ],
         ctx.shopContext,
       );
 
@@ -417,7 +408,7 @@ describe('Suppliers (e2e)', () => {
 
       it('editor should import suppliers', async () => {
         const result = await editorClient.importSuppliersJson(
-          { suppliers: [{ code: generateTestCode('editor-import'), title: 'Editor Import' }] },
+          [{ code: generateTestCode('editor-import'), title: 'Editor Import' }],
           ctx.shopContext,
         );
         expect(result.created).toBe(1);
@@ -528,7 +519,7 @@ describe('Suppliers (e2e)', () => {
       it('viewer should NOT import suppliers', async () => {
         await expectForbidden(() =>
           viewerClient.importSuppliersJson(
-            { suppliers: [{ code: 'test', title: 'Should Fail' }] },
+            [{ code: 'test', title: 'Should Fail' }],
             ctx.shopContext,
           ),
         );

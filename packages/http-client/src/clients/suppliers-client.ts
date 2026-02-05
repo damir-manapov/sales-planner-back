@@ -16,8 +16,9 @@ export interface SupplierExportItem {
   title: string;
 }
 
-export interface ImportSuppliersJsonDto {
-  suppliers: CreateSupplierDto[];
+export interface ImportSupplierItem {
+  code: string;
+  title: string;
 }
 
 export interface ImportResult {
@@ -55,30 +56,27 @@ export class SuppliersClient extends ImportExportBaseClient {
     return this.request('DELETE', `/suppliers/${id}`, { params: ctx });
   }
 
-  async importSuppliersJson(
-    data: ImportSuppliersJsonDto,
-    ctx: ShopContextParams,
-  ): Promise<ImportResult> {
-    return this.request('POST', '/suppliers/import/json', { params: ctx, body: data });
+  async importJson(items: ImportSupplierItem[], ctx: ShopContextParams): Promise<ImportResult> {
+    return this.request('POST', '/suppliers/import/json', { params: ctx, body: items });
   }
 
-  async importSuppliersCsv(csvContent: string, ctx: ShopContextParams): Promise<ImportResult> {
+  async importCsv(csvContent: string, ctx: ShopContextParams): Promise<ImportResult> {
     return this.uploadCsv('/suppliers/import/csv', csvContent, ctx);
   }
 
-  async exportSuppliersJson(ctx: ShopContextParams): Promise<SupplierExportItem[]> {
+  async exportJson(ctx: ShopContextParams): Promise<SupplierExportItem[]> {
     return this.request('GET', '/suppliers/export/json', { params: ctx });
   }
 
-  async exportSuppliersCsv(ctx: ShopContextParams): Promise<string> {
+  async exportCsv(ctx: ShopContextParams): Promise<string> {
     return this.requestText('GET', '/suppliers/export/csv', { params: ctx });
   }
 
-  async getSupplierExamplesJson(): Promise<SupplierExportItem[]> {
+  async getExampleJson(): Promise<SupplierExportItem[]> {
     return this.requestPublic('GET', '/suppliers/examples/json');
   }
 
-  async getSupplierExamplesCsv(): Promise<string> {
+  async getExampleCsv(): Promise<string> {
     return this.requestTextPublic('GET', '/suppliers/examples/csv');
   }
 }

@@ -178,10 +178,10 @@ export class SuppliersController {
   async importJson(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-    @Body() body: { suppliers: unknown[] },
+    @Body() items?: unknown[],
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<ImportResult> {
-    const validatedData = parseAndValidateImport(file, body.suppliers, ImportSupplierItemSchema);
+    const validatedData = parseAndValidateImport(file, items, ImportSupplierItemSchema);
     return this.suppliersService.bulkUpsert(validatedData, ctx.shopId, ctx.tenantId);
   }
 

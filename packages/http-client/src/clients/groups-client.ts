@@ -35,27 +35,27 @@ export class GroupsClient extends ImportExportBaseClient {
   }
 
   // Import/Export methods
-  async importGroupsJson(items: ImportGroupItem[], ctx: ShopContextParams): Promise<ImportResult> {
+  async importJson(items: ImportGroupItem[], ctx: ShopContextParams): Promise<ImportResult> {
     return this.request('POST', '/groups/import/json', { body: items, params: ctx });
   }
 
-  async importGroupsCsv(csvContent: string, ctx: ShopContextParams): Promise<ImportResult> {
+  async importCsv(csvContent: string, ctx: ShopContextParams): Promise<ImportResult> {
     return this.uploadCsv('/groups/import/csv', csvContent, ctx);
   }
 
-  async exportGroupsJson(ctx: ShopContextParams): Promise<GroupExportItem[]> {
+  async exportJson(ctx: ShopContextParams): Promise<GroupExportItem[]> {
     return this.request('GET', '/groups/export/json', { params: ctx });
   }
 
-  async exportGroupsCsv(ctx: ShopContextParams): Promise<string> {
+  async exportCsv(ctx: ShopContextParams): Promise<string> {
     return this.requestText('GET', '/groups/export/csv', { params: ctx });
   }
 
-  async getExampleGroupsJson(): Promise<GroupExportItem[]> {
+  async getExampleJson(): Promise<GroupExportItem[]> {
     return this.requestPublic('GET', '/groups/examples/json');
   }
 
-  async getExampleGroupsCsv(): Promise<string> {
+  async getExampleCsv(): Promise<string> {
     return this.requestTextPublic('GET', '/groups/examples/csv');
   }
 }

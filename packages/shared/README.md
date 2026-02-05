@@ -1,6 +1,6 @@
 # @sales-planner/shared
 
-Shared types and DTOs for the Sales Planner API.
+Shared types, DTOs, and entities for the Sales Planner API. This package provides the single source of truth for all TypeScript types used across the API and HTTP client.
 
 > **For the HTTP client**: Use `@sales-planner/http-client` - it includes this package as a dependency.
 
@@ -87,7 +87,7 @@ import type {
   UserWithRolesAndTenants, TenantWithShopAndApiKey,
   ImportResult, DeleteDataResult,
   SkuExportItem, BrandExportItem, CategoryExportItem, GroupExportItem, StatusExportItem,
-  SalesHistoryExportItem
+  SupplierExportItem, MarketplaceExportItem, SalesHistoryExportItem
 } from '@sales-planner/shared';
 ```
 
@@ -112,6 +112,7 @@ The API uses **numeric IDs** internally for referential integrity:
 | `Category` | Product category for classification (shop-scoped) |
 | `Group` | Product group for classification (shop-scoped) |
 | `Status` | Product status for classification (shop-scoped) |
+| `Supplier` | Product supplier (shop-scoped) |
 | `SalesHistory` | Sales record for a period (uses numeric marketplace_id) |
 | `Role` | Access role |
 | `UserRole` | User-role assignment |
@@ -132,7 +133,15 @@ The API uses **numeric IDs** internally for referential integrity:
 | `UserWithRolesAndTenants` | User with their roles and tenants |
 | `TenantWithShopAndApiKey` | Created tenant with shop and API key |
 | `ImportResult` | `{ created: number; updated: number; errors: string[] }` |
-| `DeleteDataResult` | `{ deletedSkus: number; deletedSalesHistory: number }` |
+| `DeleteDataResult` | `{ skusDeleted: number; salesHistoryDeleted: number; marketplacesDeleted: number }` |
+| `SkuExportItem` | SKU data for export |
+| `BrandExportItem` | Brand data for export |
+| `CategoryExportItem` | Category data for export |
+| `GroupExportItem` | Group data for export |
+| `StatusExportItem` | Status data for export |
+| `SupplierExportItem` | Supplier data for export |
+| `MarketplaceExportItem` | Marketplace data for export |
+| `SalesHistoryExportItem` | Sales history data for export |
 
 ## Related Packages
 

@@ -34,27 +34,27 @@ export class BrandsClient extends ImportExportBaseClient {
     return this.request('DELETE', `/brands/${id}`, { params: ctx });
   }
 
-  async importBrandsJson(items: ImportBrandItem[], ctx: ShopContextParams): Promise<ImportResult> {
+  async importJson(items: ImportBrandItem[], ctx: ShopContextParams): Promise<ImportResult> {
     return this.request('POST', '/brands/import/json', { body: items, params: ctx });
   }
 
-  async importBrandsCsv(csvContent: string, ctx: ShopContextParams): Promise<ImportResult> {
+  async importCsv(csvContent: string, ctx: ShopContextParams): Promise<ImportResult> {
     return this.uploadCsv('/brands/import/csv', csvContent, ctx);
   }
 
-  async exportBrandsJson(ctx: ShopContextParams): Promise<BrandExportItem[]> {
+  async exportJson(ctx: ShopContextParams): Promise<BrandExportItem[]> {
     return this.request('GET', '/brands/export/json', { params: ctx });
   }
 
-  async exportBrandsCsv(ctx: ShopContextParams): Promise<string> {
+  async exportCsv(ctx: ShopContextParams): Promise<string> {
     return this.requestText('GET', '/brands/export/csv', { params: ctx });
   }
 
-  async getBrandsExampleJson(): Promise<ImportBrandItem[]> {
+  async getExampleJson(): Promise<ImportBrandItem[]> {
     return this.requestPublic('GET', '/brands/examples/json');
   }
 
-  async getBrandsExampleCsv(): Promise<string> {
+  async getExampleCsv(): Promise<string> {
     return this.requestTextPublic('GET', '/brands/examples/csv');
   }
 }

@@ -35,30 +35,27 @@ export class StatusesClient extends ImportExportBaseClient {
   }
 
   // Import/Export methods
-  async importStatusesJson(
-    items: ImportStatusItem[],
-    ctx: ShopContextParams,
-  ): Promise<ImportResult> {
+  async importJson(items: ImportStatusItem[], ctx: ShopContextParams): Promise<ImportResult> {
     return this.request('POST', '/statuses/import/json', { body: items, params: ctx });
   }
 
-  async importStatusesCsv(csvContent: string, ctx: ShopContextParams): Promise<ImportResult> {
+  async importCsv(csvContent: string, ctx: ShopContextParams): Promise<ImportResult> {
     return this.uploadCsv('/statuses/import/csv', csvContent, ctx);
   }
 
-  async exportStatusesJson(ctx: ShopContextParams): Promise<StatusExportItem[]> {
+  async exportJson(ctx: ShopContextParams): Promise<StatusExportItem[]> {
     return this.request('GET', '/statuses/export/json', { params: ctx });
   }
 
-  async exportStatusesCsv(ctx: ShopContextParams): Promise<string> {
+  async exportCsv(ctx: ShopContextParams): Promise<string> {
     return this.requestText('GET', '/statuses/export/csv', { params: ctx });
   }
 
-  async getExampleStatusesJson(): Promise<StatusExportItem[]> {
+  async getExampleJson(): Promise<StatusExportItem[]> {
     return this.requestPublic('GET', '/statuses/examples/json');
   }
 
-  async getExampleStatusesCsv(): Promise<string> {
+  async getExampleCsv(): Promise<string> {
     return this.requestTextPublic('GET', '/statuses/examples/csv');
   }
 }

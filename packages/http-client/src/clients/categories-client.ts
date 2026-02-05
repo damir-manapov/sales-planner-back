@@ -39,30 +39,27 @@ export class CategoriesClient extends ImportExportBaseClient {
   }
 
   // Import/Export methods
-  async importCategoriesJson(
-    items: ImportCategoryItem[],
-    ctx: ShopContextParams,
-  ): Promise<ImportResult> {
+  async importJson(items: ImportCategoryItem[], ctx: ShopContextParams): Promise<ImportResult> {
     return this.request('POST', '/categories/import/json', { body: items, params: ctx });
   }
 
-  async importCategoriesCsv(csvContent: string, ctx: ShopContextParams): Promise<ImportResult> {
+  async importCsv(csvContent: string, ctx: ShopContextParams): Promise<ImportResult> {
     return this.uploadCsv('/categories/import/csv', csvContent, ctx);
   }
 
-  async exportCategoriesJson(ctx: ShopContextParams): Promise<CategoryExportItem[]> {
+  async exportJson(ctx: ShopContextParams): Promise<CategoryExportItem[]> {
     return this.request('GET', '/categories/export/json', { params: ctx });
   }
 
-  async exportCategoriesCsv(ctx: ShopContextParams): Promise<string> {
+  async exportCsv(ctx: ShopContextParams): Promise<string> {
     return this.requestText('GET', '/categories/export/csv', { params: ctx });
   }
 
-  async getExampleCategoriesJson(): Promise<CategoryExportItem[]> {
+  async getExampleJson(): Promise<CategoryExportItem[]> {
     return this.requestPublic('GET', '/categories/examples/json');
   }
 
-  async getExampleCategoriesCsv(): Promise<string> {
+  async getExampleCsv(): Promise<string> {
     return this.requestTextPublic('GET', '/categories/examples/csv');
   }
 }

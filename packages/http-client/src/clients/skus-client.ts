@@ -34,27 +34,27 @@ export class SkusClient extends ImportExportBaseClient {
     return this.request('DELETE', `/skus/${id}`, { params: ctx });
   }
 
-  async importSkusJson(items: ImportSkuItem[], ctx: ShopContextParams): Promise<SkuImportResult> {
+  async importJson(items: ImportSkuItem[], ctx: ShopContextParams): Promise<SkuImportResult> {
     return this.request('POST', '/skus/import/json', { body: items, params: ctx });
   }
 
-  async importSkusCsv(csvContent: string, ctx: ShopContextParams): Promise<SkuImportResult> {
+  async importCsv(csvContent: string, ctx: ShopContextParams): Promise<SkuImportResult> {
     return this.uploadCsv('/skus/import/csv', csvContent, ctx);
   }
 
-  async exportSkusJson(ctx: ShopContextParams): Promise<SkuExportItem[]> {
+  async exportJson(ctx: ShopContextParams): Promise<SkuExportItem[]> {
     return this.request('GET', '/skus/export/json', { params: ctx });
   }
 
-  async exportSkusCsv(ctx: ShopContextParams): Promise<string> {
+  async exportCsv(ctx: ShopContextParams): Promise<string> {
     return this.requestText('GET', '/skus/export/csv', { params: ctx });
   }
 
-  async getSkusExampleJson(): Promise<ImportSkuItem[]> {
+  async getExampleJson(): Promise<ImportSkuItem[]> {
     return this.requestPublic('GET', '/skus/examples/json');
   }
 
-  async getSkusExampleCsv(): Promise<string> {
+  async getExampleCsv(): Promise<string> {
     return this.requestTextPublic('GET', '/skus/examples/csv');
   }
 }
