@@ -1,4 +1,5 @@
-import type { SalesPlannerClient } from '@sales-planner/http-client';
+import type { SalesPlannerClient } from '../../http-client/dist/index.js';
+import { SalesPlannerClient as Client } from '../../http-client/dist/index.js';
 
 export interface TenantSetup {
   tenant: { id: number; title: string };
@@ -29,8 +30,7 @@ export function initAdminClient(apiUrl?: string): {
     process.exit(1);
   }
 
-  const SalesPlannerClient = require('@sales-planner/http-client').SalesPlannerClient;
-  const client = new SalesPlannerClient({ baseUrl: resolvedApiUrl, apiKey: systemAdminKey });
+  const client = new Client({ baseUrl: resolvedApiUrl, apiKey: systemAdminKey });
 
   return { client, apiUrl: resolvedApiUrl };
 }
@@ -67,8 +67,7 @@ export async function getOrCreateTenant(
     }
 
     // Get user's tenants via /me
-    const SalesPlannerClient = require('@sales-planner/http-client').SalesPlannerClient;
-    const userClient = new SalesPlannerClient({ baseUrl: apiUrl, apiKey: firstApiKey.key });
+    const userClient = new Client({ baseUrl: apiUrl, apiKey: firstApiKey.key });
     const me = await userClient.getMe();
 
     const existingTenant = me.tenants.find(

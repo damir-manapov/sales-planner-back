@@ -2,7 +2,7 @@
 import 'dotenv/config';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { SalesPlannerClient } from '@sales-planner/http-client';
+import { SalesPlannerClient } from '../../../http-client/dist/index.js';
 import {
   getOrCreateTenant,
   initAdminClient,

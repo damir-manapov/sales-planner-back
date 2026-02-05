@@ -26,6 +26,8 @@
     "db:generate": "kysely-codegen --out-file src/database/database.types.ts",
     "db:migrate": "tsx scripts/migrate.ts",
     "db:migrate:local": "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/sales_planner tsx scripts/migrate.ts",
+    "db:reset": "tsx scripts/reset-db.ts && tsx scripts/migrate.ts",
+    "db:reset:local": "DATABASE_URL=postgresql://postgres:postgres@localhost:5432/sales_planner tsx scripts/reset-db.ts && DATABASE_URL=postgresql://postgres:postgres@localhost:5432/sales_planner tsx scripts/migrate.ts",
     "script:create-tenant": "bun scripts/create-tenant.ts",
     "compose:up": "docker compose up starter -d",
     "compose:down": "docker compose down",

@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 import 'dotenv/config';
-import { SalesPlannerClient } from '@sales-planner/http-client';
+import { SalesPlannerClient } from '../../http-client/dist/index.js';
 import {
   createSlug,
   getOrCreateTenant,
