@@ -1,5 +1,11 @@
 # @sales-planner/shared
 
+## 0.10.0
+
+### Minor Changes
+
+- 98537c8: Change sales history import/export format from `sku_code, period, quantity, marketplace` to `marketplace, period, sku, quantity` to match original data file structure
+
 ## 0.9.3
 
 ### Patch Changes
