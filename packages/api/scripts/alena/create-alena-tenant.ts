@@ -15,7 +15,7 @@ interface AlenaTenantArgs {
 
 const __dirname = import.meta.dirname;
 const SKUS_CSV = readFileSync(join(__dirname, 'skus.csv'), 'utf-8');
-const SALES_HISTORY_CSV = readFileSync(join(__dirname, 'sales-history.csv'), 'utf-8');
+const SALES_HISTORY_CSV = readFileSync(join(__dirname, 'original/historyOfSales.csv'), 'utf-8');
 const BRANDS_CSV = readFileSync(join(__dirname, 'original/brands.csv'), 'utf-8');
 
 async function createAlenaTenant(args: AlenaTenantArgs) {
