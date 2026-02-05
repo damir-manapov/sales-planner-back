@@ -299,6 +299,24 @@ describe('Brands (e2e)', () => {
     });
   });
 
+  describe('Example downloads', () => {
+    it('should return JSON example', async () => {
+      const examples = await ctx.client.getBrandsExampleJson();
+
+      expect(Array.isArray(examples)).toBe(true);
+      expect(examples.length).toBeGreaterThan(0);
+      expect(examples[0]).toHaveProperty('code');
+      expect(examples[0]).toHaveProperty('title');
+    });
+
+    it('should return CSV example', async () => {
+      const csv = await ctx.client.getBrandsExampleCsv();
+
+      expect(typeof csv).toBe('string');
+      expect(csv).toContain('code,title');
+    });
+  });
+
   describe('Role-based access', () => {
     describe('Editor role', () => {
       let editorUserId: number;
@@ -319,7 +337,8 @@ describe('Brands (e2e)', () => {
 
         const roles = await ctx.getSystemClient().getRoles();
         const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
-        if (editorRole) {
+        if (!editorRole) throw new Error('Editor role not found');
+        {
           await ctx.getSystemClient().createUserRole({
             user_id: editorUserId,
             role_id: editorRole.id,
@@ -349,7 +368,8 @@ describe('Brands (e2e)', () => {
       it('editor should update brand', async () => {
         const brands = await editorClient.getBrands(ctx.shopContext);
         if (brands.length > 0) {
-          const firstBrand = brands[0]!;
+          const firstBrand = brands[0];
+          if (!firstBrand) throw new Error('Expected brand');
           const updated = await editorClient.updateBrand(
             firstBrand.id,
             { title: 'Editor Updated' },
@@ -401,7 +421,8 @@ describe('Brands (e2e)', () => {
 
         const roles = await ctx.getSystemClient().getRoles();
         const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
-        if (viewerRole) {
+        if (!viewerRole) throw new Error('Viewer role not found');
+        {
           await ctx.getSystemClient().createUserRole({
             user_id: viewerUserId,
             role_id: viewerRole.id,
@@ -423,7 +444,8 @@ describe('Brands (e2e)', () => {
       it('viewer should get brand by id', async () => {
         const brands = await viewerClient.getBrands(ctx.shopContext);
         if (brands.length > 0) {
-          const firstBrand = brands[0]!;
+          const firstBrand = brands[0];
+          if (!firstBrand) throw new Error('Expected brand');
           const brand = await viewerClient.getBrand(firstBrand.id, ctx.shopContext);
           expect(brand.id).toBe(firstBrand.id);
         }
@@ -431,17 +453,15 @@ describe('Brands (e2e)', () => {
 
       it('viewer should NOT create brand', async () => {
         await expectForbidden(() =>
-          viewerClient.createBrand(
-            { code: 'viewer-brand', title: 'Should Fail' },
-            ctx.shopContext,
-          ),
+          viewerClient.createBrand({ code: 'viewer-brand', title: 'Should Fail' }, ctx.shopContext),
         );
       });
 
       it('viewer should NOT update brand', async () => {
         const brands = await viewerClient.getBrands(ctx.shopContext);
         if (brands.length > 0) {
-          const firstBrand = brands[0]!;
+          const firstBrand = brands[0];
+          if (!firstBrand) throw new Error('Expected brand');
           await expectForbidden(() =>
             viewerClient.updateBrand(firstBrand.id, { title: 'Should Fail' }, ctx.shopContext),
           );
@@ -451,7 +471,8 @@ describe('Brands (e2e)', () => {
       it('viewer should NOT delete brand', async () => {
         const brands = await viewerClient.getBrands(ctx.shopContext);
         if (brands.length > 0) {
-          const firstBrand = brands[0]!;
+          const firstBrand = brands[0];
+          if (!firstBrand) throw new Error('Expected brand');
           await expectForbidden(() => viewerClient.deleteBrand(firstBrand.id, ctx.shopContext));
         }
       });
@@ -463,10 +484,7 @@ describe('Brands (e2e)', () => {
 
       it('viewer should NOT import brands', async () => {
         await expectForbidden(() =>
-          viewerClient.importBrandsJson(
-            [{ code: 'test', title: 'Should Fail' }],
-            ctx.shopContext,
-          ),
+          viewerClient.importBrandsJson([{ code: 'test', title: 'Should Fail' }], ctx.shopContext),
         );
       });
     });

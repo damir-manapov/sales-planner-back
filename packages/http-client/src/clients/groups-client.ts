@@ -47,11 +47,11 @@ export class GroupsClient extends ImportExportBaseClient {
     return this.requestText('GET', '/groups/export/csv', { params: ctx });
   }
 
-  async getExampleGroupsJson(_ctx: ShopContextParams): Promise<GroupExportItem[]> {
+  async getExampleGroupsJson(): Promise<GroupExportItem[]> {
     return this.requestPublic('GET', '/groups/examples/json');
   }
 
-  async getExampleGroupsCsv(_ctx: ShopContextParams): Promise<string> {
+  async getExampleGroupsCsv(): Promise<string> {
     return this.requestTextPublic('GET', '/groups/examples/csv');
   }
 }

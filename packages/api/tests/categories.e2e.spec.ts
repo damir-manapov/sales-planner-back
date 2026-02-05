@@ -303,6 +303,24 @@ describe('Categories (e2e)', () => {
     });
   });
 
+  describe('Example downloads', () => {
+    it('should return JSON example', async () => {
+      const examples = await ctx.client.getCategoriesExampleJson();
+
+      expect(Array.isArray(examples)).toBe(true);
+      expect(examples.length).toBeGreaterThan(0);
+      expect(examples[0]).toHaveProperty('code');
+      expect(examples[0]).toHaveProperty('title');
+    });
+
+    it('should return CSV example', async () => {
+      const csv = await ctx.client.getCategoriesExampleCsv();
+
+      expect(typeof csv).toBe('string');
+      expect(csv).toContain('code,title');
+    });
+  });
+
   describe('Role-based access', () => {
     describe('Editor role', () => {
       let editorUserId: number;
@@ -323,7 +341,8 @@ describe('Categories (e2e)', () => {
 
         const roles = await ctx.getSystemClient().getRoles();
         const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
-        if (editorRole) {
+        if (!editorRole) throw new Error('Editor role not found');
+        {
           await ctx.getSystemClient().createUserRole({
             user_id: editorUserId,
             role_id: editorRole.id,
@@ -353,7 +372,8 @@ describe('Categories (e2e)', () => {
       it('editor should update category', async () => {
         const categories = await editorClient.getCategories(ctx.shopContext);
         if (categories.length > 0) {
-          const firstCategory = categories[0]!;
+          const firstCategory = categories[0];
+          if (!firstCategory) throw new Error('Expected category');
           const updated = await editorClient.updateCategory(
             firstCategory.id,
             { title: 'Editor Updated' },
@@ -405,7 +425,8 @@ describe('Categories (e2e)', () => {
 
         const roles = await ctx.getSystemClient().getRoles();
         const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
-        if (viewerRole) {
+        if (!viewerRole) throw new Error('Viewer role not found');
+        {
           await ctx.getSystemClient().createUserRole({
             user_id: viewerUserId,
             role_id: viewerRole.id,
@@ -427,7 +448,8 @@ describe('Categories (e2e)', () => {
       it('viewer should get category by id', async () => {
         const categories = await viewerClient.getCategories(ctx.shopContext);
         if (categories.length > 0) {
-          const firstCategory = categories[0]!;
+          const firstCategory = categories[0];
+          if (!firstCategory) throw new Error('Expected category');
           const category = await viewerClient.getCategory(firstCategory.id, ctx.shopContext);
           expect(category.id).toBe(firstCategory.id);
         }
@@ -445,9 +467,14 @@ describe('Categories (e2e)', () => {
       it('viewer should NOT update category', async () => {
         const categories = await viewerClient.getCategories(ctx.shopContext);
         if (categories.length > 0) {
-          const firstCategory = categories[0]!;
+          const firstCategory = categories[0];
+          if (!firstCategory) throw new Error('Expected category');
           await expectForbidden(() =>
-            viewerClient.updateCategory(firstCategory.id, { title: 'Should Fail' }, ctx.shopContext),
+            viewerClient.updateCategory(
+              firstCategory.id,
+              { title: 'Should Fail' },
+              ctx.shopContext,
+            ),
           );
         }
       });
@@ -455,8 +482,11 @@ describe('Categories (e2e)', () => {
       it('viewer should NOT delete category', async () => {
         const categories = await viewerClient.getCategories(ctx.shopContext);
         if (categories.length > 0) {
-          const firstCategory = categories[0]!;
-          await expectForbidden(() => viewerClient.deleteCategory(firstCategory.id, ctx.shopContext));
+          const firstCategory = categories[0];
+          if (!firstCategory) throw new Error('Expected category');
+          await expectForbidden(() =>
+            viewerClient.deleteCategory(firstCategory.id, ctx.shopContext),
+          );
         }
       });
 

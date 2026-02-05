@@ -107,14 +107,15 @@ export class TestContext {
     const editorRole = await systemClient.roles
       .getRoles()
       .then((roles) => roles.find((r) => r.name === 'editor'));
-    if (editorRole) {
-      await systemClient.userRoles.createUserRole({
-        user_id: user.id,
-        role_id: editorRole.id,
-        tenant_id: this.tenant.id,
-        shop_id: this.shop.id,
-      });
-    }
+
+    if (!editorRole) throw new Error('Editor role not found');
+
+    await systemClient.userRoles.createUserRole({
+      user_id: user.id,
+      role_id: editorRole.id,
+      tenant_id: this.tenant.id,
+      shop_id: this.shop.id,
+    });
 
     const client = new SalesPlannerClient({
       baseUrl: this.baseUrl,

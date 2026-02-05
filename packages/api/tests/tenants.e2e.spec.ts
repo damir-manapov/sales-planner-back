@@ -251,7 +251,9 @@ describe('Tenants (e2e)', () => {
       // Verify user has tenantAdmin role for the created tenant
       const hasTenantAdminRole = me.roles.some(
         (r) =>
-          r.role_name === ROLE_NAMES.TENANT_ADMIN && r.tenant_id === result.tenant.id && r.shop_id === null,
+          r.role_name === ROLE_NAMES.TENANT_ADMIN &&
+          r.tenant_id === result.tenant.id &&
+          r.shop_id === null,
       );
       expect(hasTenantAdminRole).toBe(true);
 

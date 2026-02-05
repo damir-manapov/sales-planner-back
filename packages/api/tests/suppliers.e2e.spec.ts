@@ -97,10 +97,16 @@ describe('Suppliers (e2e)', () => {
 
     it('should return 409 on duplicate code', async () => {
       const duplicateCode = generateTestCode('supplier');
-      await ctx.client.createSupplier({ code: duplicateCode, title: 'First Supplier' }, ctx.shopContext);
+      await ctx.client.createSupplier(
+        { code: duplicateCode, title: 'First Supplier' },
+        ctx.shopContext,
+      );
 
       await expectConflict(() =>
-        ctx.client.createSupplier({ code: duplicateCode, title: 'Duplicate Supplier' }, ctx.shopContext),
+        ctx.client.createSupplier(
+          { code: duplicateCode, title: 'Duplicate Supplier' },
+          ctx.shopContext,
+        ),
       );
     });
 
@@ -182,10 +188,12 @@ describe('Suppliers (e2e)', () => {
       const code2 = generateTestCode('import-json-2');
 
       const result = await ctx.client.importSuppliersJson(
-        { suppliers: [
-          { code: code1, title: 'Import JSON Supplier 1' },
-          { code: code2, title: 'Import JSON Supplier 2' },
-        ] },
+        {
+          suppliers: [
+            { code: code1, title: 'Import JSON Supplier 1' },
+            { code: code2, title: 'Import JSON Supplier 2' },
+          ],
+        },
         ctx.shopContext,
       );
 
@@ -236,10 +244,12 @@ describe('Suppliers (e2e)', () => {
       const code2 = generateTestCode('export-supplier-2');
 
       await ctx.client.importSuppliersJson(
-        { suppliers: [
-          { code: code1, title: 'Export Test Supplier 1' },
-          { code: code2, title: 'Export Test Supplier 2' },
-        ] },
+        {
+          suppliers: [
+            { code: code1, title: 'Export Test Supplier 1' },
+            { code: code2, title: 'Export Test Supplier 2' },
+          ],
+        },
         ctx.shopContext,
       );
 
@@ -256,10 +266,12 @@ describe('Suppliers (e2e)', () => {
       const code2 = generateTestCode('csv-export-supplier-2');
 
       await ctx.client.importSuppliersJson(
-        { suppliers: [
-          { code: code1, title: 'CSV Export Test 1' },
-          { code: code2, title: 'CSV Export Test 2' },
-        ] },
+        {
+          suppliers: [
+            { code: code1, title: 'CSV Export Test 1' },
+            { code: code2, title: 'CSV Export Test 2' },
+          ],
+        },
         ctx.shopContext,
       );
 
@@ -310,7 +322,8 @@ describe('Suppliers (e2e)', () => {
 
         const roles = await ctx.getSystemClient().getRoles();
         const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
-        if (editorRole) {
+        if (!editorRole) throw new Error('Editor role not found');
+        {
           await ctx.getSystemClient().createUserRole({
             user_id: editorUserId,
             role_id: editorRole.id,
@@ -340,7 +353,8 @@ describe('Suppliers (e2e)', () => {
       it('editor should update supplier', async () => {
         const suppliers = await editorClient.getSuppliers(ctx.shopContext);
         if (suppliers.length > 0) {
-          const firstSupplier = suppliers[0]!;
+          const firstSupplier = suppliers[0];
+          if (!firstSupplier) throw new Error('Expected supplier');
           const updated = await editorClient.updateSupplier(
             firstSupplier.id,
             { title: 'Editor Updated' },
@@ -392,7 +406,8 @@ describe('Suppliers (e2e)', () => {
 
         const roles = await ctx.getSystemClient().getRoles();
         const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
-        if (viewerRole) {
+        if (!viewerRole) throw new Error('Viewer role not found');
+        {
           await ctx.getSystemClient().createUserRole({
             user_id: viewerUserId,
             role_id: viewerRole.id,
@@ -414,7 +429,8 @@ describe('Suppliers (e2e)', () => {
       it('viewer should get supplier by id', async () => {
         const suppliers = await viewerClient.getSuppliers(ctx.shopContext);
         if (suppliers.length > 0) {
-          const firstSupplier = suppliers[0]!;
+          const firstSupplier = suppliers[0];
+          if (!firstSupplier) throw new Error('Expected supplier');
           const supplier = await viewerClient.getSupplier(firstSupplier.id, ctx.shopContext);
           expect(supplier.id).toBe(firstSupplier.id);
         }
@@ -432,9 +448,14 @@ describe('Suppliers (e2e)', () => {
       it('viewer should NOT update supplier', async () => {
         const suppliers = await viewerClient.getSuppliers(ctx.shopContext);
         if (suppliers.length > 0) {
-          const firstSupplier = suppliers[0]!;
+          const firstSupplier = suppliers[0];
+          if (!firstSupplier) throw new Error('Expected supplier');
           await expectForbidden(() =>
-            viewerClient.updateSupplier(firstSupplier.id, { title: 'Should Fail' }, ctx.shopContext),
+            viewerClient.updateSupplier(
+              firstSupplier.id,
+              { title: 'Should Fail' },
+              ctx.shopContext,
+            ),
           );
         }
       });
@@ -442,8 +463,11 @@ describe('Suppliers (e2e)', () => {
       it('viewer should NOT delete supplier', async () => {
         const suppliers = await viewerClient.getSuppliers(ctx.shopContext);
         if (suppliers.length > 0) {
-          const firstSupplier = suppliers[0]!;
-          await expectForbidden(() => viewerClient.deleteSupplier(firstSupplier.id, ctx.shopContext));
+          const firstSupplier = suppliers[0];
+          if (!firstSupplier) throw new Error('Expected supplier');
+          await expectForbidden(() =>
+            viewerClient.deleteSupplier(firstSupplier.id, ctx.shopContext),
+          );
         }
       });
 

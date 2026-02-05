@@ -97,10 +97,16 @@ describe('Statuses (e2e)', () => {
 
     it('should return 409 on duplicate code', async () => {
       const duplicateCode = generateTestCode('status');
-      await ctx.client.createStatus({ code: duplicateCode, title: 'First Status' }, ctx.shopContext);
+      await ctx.client.createStatus(
+        { code: duplicateCode, title: 'First Status' },
+        ctx.shopContext,
+      );
 
       await expectConflict(() =>
-        ctx.client.createStatus({ code: duplicateCode, title: 'Duplicate Status' }, ctx.shopContext),
+        ctx.client.createStatus(
+          { code: duplicateCode, title: 'Duplicate Status' },
+          ctx.shopContext,
+        ),
       );
     });
   });
@@ -297,6 +303,24 @@ describe('Statuses (e2e)', () => {
     });
   });
 
+  describe('Example downloads', () => {
+    it('should return JSON example', async () => {
+      const examples = await ctx.client.getStatusesExampleJson();
+
+      expect(Array.isArray(examples)).toBe(true);
+      expect(examples.length).toBeGreaterThan(0);
+      expect(examples[0]).toHaveProperty('code');
+      expect(examples[0]).toHaveProperty('title');
+    });
+
+    it('should return CSV example', async () => {
+      const csv = await ctx.client.getStatusesExampleCsv();
+
+      expect(typeof csv).toBe('string');
+      expect(csv).toContain('code,title');
+    });
+  });
+
   describe('Role-based access', () => {
     describe('Editor role', () => {
       let editorUserId: number;
@@ -317,7 +341,8 @@ describe('Statuses (e2e)', () => {
 
         const roles = await ctx.getSystemClient().getRoles();
         const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
-        if (editorRole) {
+        if (!editorRole) throw new Error('Editor role not found');
+        {
           await ctx.getSystemClient().createUserRole({
             user_id: editorUserId,
             role_id: editorRole.id,
@@ -347,7 +372,8 @@ describe('Statuses (e2e)', () => {
       it('editor should update status', async () => {
         const statuses = await editorClient.getStatuses(ctx.shopContext);
         if (statuses.length > 0) {
-          const firstStatus = statuses[0]!;
+          const firstStatus = statuses[0];
+          if (!firstStatus) throw new Error('Expected status');
           const updated = await editorClient.updateStatus(
             firstStatus.id,
             { title: 'Editor Updated' },
@@ -399,7 +425,8 @@ describe('Statuses (e2e)', () => {
 
         const roles = await ctx.getSystemClient().getRoles();
         const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
-        if (viewerRole) {
+        if (!viewerRole) throw new Error('Viewer role not found');
+        {
           await ctx.getSystemClient().createUserRole({
             user_id: viewerUserId,
             role_id: viewerRole.id,
@@ -421,7 +448,8 @@ describe('Statuses (e2e)', () => {
       it('viewer should get status by id', async () => {
         const statuses = await viewerClient.getStatuses(ctx.shopContext);
         if (statuses.length > 0) {
-          const firstStatus = statuses[0]!;
+          const firstStatus = statuses[0];
+          if (!firstStatus) throw new Error('Expected status');
           const status = await viewerClient.getStatus(firstStatus.id, ctx.shopContext);
           expect(status.id).toBe(firstStatus.id);
         }
@@ -439,7 +467,8 @@ describe('Statuses (e2e)', () => {
       it('viewer should NOT update status', async () => {
         const statuses = await viewerClient.getStatuses(ctx.shopContext);
         if (statuses.length > 0) {
-          const firstStatus = statuses[0]!;
+          const firstStatus = statuses[0];
+          if (!firstStatus) throw new Error('Expected status');
           await expectForbidden(() =>
             viewerClient.updateStatus(firstStatus.id, { title: 'Should Fail' }, ctx.shopContext),
           );
@@ -449,7 +478,8 @@ describe('Statuses (e2e)', () => {
       it('viewer should NOT delete status', async () => {
         const statuses = await viewerClient.getStatuses(ctx.shopContext);
         if (statuses.length > 0) {
-          const firstStatus = statuses[0]!;
+          const firstStatus = statuses[0];
+          if (!firstStatus) throw new Error('Expected status');
           await expectForbidden(() => viewerClient.deleteStatus(firstStatus.id, ctx.shopContext));
         }
       });

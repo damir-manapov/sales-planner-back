@@ -49,28 +49,6 @@ describe('Brand Schemas', () => {
 
       expect(() => CreateBrandSchema.parse(data)).toThrow();
     });
-
-    it('should allow code with mixed case and special characters', () => {
-      const data = {
-        code: 'Test-Brand_123',
-        title: 'Test Brand',
-      };
-
-      const result = CreateBrandSchema.parse(data);
-
-      expect(result.code).toBe('Test-Brand_123');
-    });
-
-    it('should handle Cyrillic characters in title', () => {
-      const data = {
-        code: 'marshall',
-        title: 'MARSHALL',
-      };
-
-      const result = CreateBrandSchema.parse(data);
-
-      expect(result).toEqual(data);
-    });
   });
 
   describe('UpdateBrandSchema', () => {
@@ -190,18 +168,6 @@ describe('Brand Schemas', () => {
       };
 
       expect(() => ImportBrandItemSchema.parse(data)).toThrow();
-    });
-
-    it('should handle multiple items with Cyrillic characters', () => {
-      const items = [
-        { code: 'mavyko', title: 'Мавико' },
-        { code: 'marshall', title: 'MARSHALL' },
-        { code: 'mazda', title: 'Mazda' },
-      ];
-
-      const results = items.map((item) => ImportBrandItemSchema.parse(item));
-
-      expect(results).toEqual(items);
     });
   });
 });

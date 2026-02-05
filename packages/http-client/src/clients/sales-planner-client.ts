@@ -133,6 +133,8 @@ export class SalesPlannerClient {
     this.brands.exportBrandsJson(ctx);
   exportBrandsCsv = (ctx: Parameters<BrandsClient['exportBrandsCsv']>[0]) =>
     this.brands.exportBrandsCsv(ctx);
+  getBrandsExampleJson = () => this.brands.getBrandsExampleJson();
+  getBrandsExampleCsv = () => this.brands.getBrandsExampleCsv();
   getCategories = (ctx: Parameters<CategoriesClient['getCategories']>[0]) =>
     this.categories.getCategories(ctx);
   getCategory = (id: number, ctx: Parameters<CategoriesClient['getCategory']>[1]) =>
@@ -160,6 +162,8 @@ export class SalesPlannerClient {
     this.categories.exportCategoriesJson(ctx);
   exportCategoriesCsv = (ctx: Parameters<CategoriesClient['exportCategoriesCsv']>[0]) =>
     this.categories.exportCategoriesCsv(ctx);
+  getCategoriesExampleJson = () => this.categories.getExampleCategoriesJson();
+  getCategoriesExampleCsv = () => this.categories.getExampleCategoriesCsv();
   getGroups = (ctx: Parameters<GroupsClient['getGroups']>[0]) => this.groups.getGroups(ctx);
   getGroup = (id: number, ctx: Parameters<GroupsClient['getGroup']>[1]) =>
     this.groups.getGroup(id, ctx);
@@ -186,6 +190,8 @@ export class SalesPlannerClient {
     this.groups.exportGroupsJson(ctx);
   exportGroupsCsv = (ctx: Parameters<GroupsClient['exportGroupsCsv']>[0]) =>
     this.groups.exportGroupsCsv(ctx);
+  getGroupsExampleJson = () => this.groups.getExampleGroupsJson();
+  getGroupsExampleCsv = () => this.groups.getExampleGroupsCsv();
   getStatuses = (ctx: Parameters<StatusesClient['getStatuses']>[0]) =>
     this.statuses.getStatuses(ctx);
   getStatus = (id: number, ctx: Parameters<StatusesClient['getStatus']>[1]) =>
@@ -213,6 +219,8 @@ export class SalesPlannerClient {
     this.statuses.exportStatusesJson(ctx);
   exportStatusesCsv = (ctx: Parameters<StatusesClient['exportStatusesCsv']>[0]) =>
     this.statuses.exportStatusesCsv(ctx);
+  getStatusesExampleJson = () => this.statuses.getExampleStatusesJson();
+  getStatusesExampleCsv = () => this.statuses.getExampleStatusesCsv();
   getSuppliers = (ctx: Parameters<SuppliersClient['getSuppliers']>[0]) =>
     this.suppliers.getSuppliers(ctx);
   getSupplier = (id: number, ctx: Parameters<SuppliersClient['getSupplier']>[1]) =>

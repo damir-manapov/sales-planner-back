@@ -120,7 +120,8 @@ describe('Shops E2E', () => {
       // Get tenantAdmin role and assign it
       const roles = await ctx.getSystemClient().getRoles();
       const tenantAdminRole = roles.find((r) => r.name === ROLE_NAMES.TENANT_ADMIN);
-      if (tenantAdminRole) {
+      if (!tenantAdminRole) throw new Error('Tenant Admin role not found');
+      {
         await ctx.getSystemClient().createUserRole({
           user_id: tenantAdminUserId,
           role_id: tenantAdminRole.id,
@@ -197,7 +198,9 @@ describe('Shops E2E', () => {
     });
 
     it('POST /shops - should return 403 when creating shop in other tenant', async () => {
-      await expectForbidden(() => otherClient.createShop({ title: 'Unauthorized Shop', tenant_id: ctx.tenant.id }));
+      await expectForbidden(() =>
+        otherClient.createShop({ title: 'Unauthorized Shop', tenant_id: ctx.tenant.id }),
+      );
     });
 
     it('PUT /shops/:id - should return 403 when updating shop in other tenant', async () => {
@@ -294,7 +297,8 @@ describe('Shops E2E', () => {
 
         const roles = await ctx.getSystemClient().getRoles();
         const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
-        if (editorRole) {
+        if (!editorRole) throw new Error('Editor role not found');
+        {
           await ctx.getSystemClient().createUserRole({
             user_id: editorUserId,
             role_id: editorRole.id,
@@ -355,7 +359,8 @@ describe('Shops E2E', () => {
 
         const roles = await ctx.getSystemClient().getRoles();
         const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
-        if (viewerRole) {
+        if (!viewerRole) throw new Error('Viewer role not found');
+        {
           await ctx.getSystemClient().createUserRole({
             user_id: viewerUserId,
             role_id: viewerRole.id,

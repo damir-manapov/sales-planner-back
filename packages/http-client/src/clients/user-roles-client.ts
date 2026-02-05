@@ -1,8 +1,4 @@
-import type {
-  CreateUserRoleDto,
-  GetUserRolesQuery,
-  UserRoleResponse,
-} from '@sales-planner/shared';
+import type { CreateUserRoleDto, GetUserRolesQuery, UserRoleResponse } from '@sales-planner/shared';
 import { BaseClient } from './base-client.js';
 
 export class UserRolesClient extends BaseClient {

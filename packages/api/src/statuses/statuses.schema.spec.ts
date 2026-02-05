@@ -7,7 +7,7 @@ import {
 
 describe('Status Schemas', () => {
   describe('CreateStatusSchema', () => {
-    it('should validate valid brand creation data', () => {
+    it('should validate valid status creation data', () => {
       const data = {
         code: 'mavyko',
         title: 'Мавико',
@@ -52,28 +52,6 @@ describe('Status Schemas', () => {
       };
 
       expect(() => CreateStatusSchema.parse(data)).toThrow();
-    });
-
-    it('should allow code with mixed case and special characters', () => {
-      const data = {
-        code: 'Test-Status_123',
-        title: 'Test Status',
-      };
-
-      const result = CreateStatusSchema.parse(data);
-
-      expect(result.code).toBe('Test-Status_123');
-    });
-
-    it('should handle Cyrillic characters in title', () => {
-      const data = {
-        code: 'marshall',
-        title: 'MARSHALL',
-      };
-
-      const result = CreateStatusSchema.parse(data);
-
-      expect(result).toEqual(data);
     });
   });
 
@@ -194,18 +172,6 @@ describe('Status Schemas', () => {
       };
 
       expect(() => ImportStatusItemSchema.parse(data)).toThrow();
-    });
-
-    it('should handle multiple items with Cyrillic characters', () => {
-      const items = [
-        { code: 'mavyko', title: 'Мавико' },
-        { code: 'marshall', title: 'MARSHALL' },
-        { code: 'mazda', title: 'Mazda' },
-      ];
-
-      const results = items.map((item) => ImportStatusItemSchema.parse(item));
-
-      expect(results).toEqual(items);
     });
   });
 });

@@ -297,6 +297,24 @@ describe('Groups (e2e)', () => {
     });
   });
 
+  describe('Example downloads', () => {
+    it('should return JSON example', async () => {
+      const examples = await ctx.client.getGroupsExampleJson();
+
+      expect(Array.isArray(examples)).toBe(true);
+      expect(examples.length).toBeGreaterThan(0);
+      expect(examples[0]).toHaveProperty('code');
+      expect(examples[0]).toHaveProperty('title');
+    });
+
+    it('should return CSV example', async () => {
+      const csv = await ctx.client.getGroupsExampleCsv();
+
+      expect(typeof csv).toBe('string');
+      expect(csv).toContain('code,title');
+    });
+  });
+
   describe('Role-based access', () => {
     describe('Editor role', () => {
       let editorUserId: number;
@@ -317,7 +335,8 @@ describe('Groups (e2e)', () => {
 
         const roles = await ctx.getSystemClient().getRoles();
         const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
-        if (editorRole) {
+        if (!editorRole) throw new Error('Editor role not found');
+        {
           await ctx.getSystemClient().createUserRole({
             user_id: editorUserId,
             role_id: editorRole.id,
@@ -347,7 +366,8 @@ describe('Groups (e2e)', () => {
       it('editor should update group', async () => {
         const groups = await editorClient.getGroups(ctx.shopContext);
         if (groups.length > 0) {
-          const firstGroup = groups[0]!;
+          const firstGroup = groups[0];
+          if (!firstGroup) throw new Error('Expected group');
           const updated = await editorClient.updateGroup(
             firstGroup.id,
             { title: 'Editor Updated' },
@@ -399,7 +419,8 @@ describe('Groups (e2e)', () => {
 
         const roles = await ctx.getSystemClient().getRoles();
         const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
-        if (viewerRole) {
+        if (!viewerRole) throw new Error('Viewer role not found');
+        {
           await ctx.getSystemClient().createUserRole({
             user_id: viewerUserId,
             role_id: viewerRole.id,
@@ -421,7 +442,8 @@ describe('Groups (e2e)', () => {
       it('viewer should get group by id', async () => {
         const groups = await viewerClient.getGroups(ctx.shopContext);
         if (groups.length > 0) {
-          const firstGroup = groups[0]!;
+          const firstGroup = groups[0];
+          if (!firstGroup) throw new Error('Expected group');
           const group = await viewerClient.getGroup(firstGroup.id, ctx.shopContext);
           expect(group.id).toBe(firstGroup.id);
         }
@@ -429,17 +451,15 @@ describe('Groups (e2e)', () => {
 
       it('viewer should NOT create group', async () => {
         await expectForbidden(() =>
-          viewerClient.createGroup(
-            { code: 'viewer-group', title: 'Should Fail' },
-            ctx.shopContext,
-          ),
+          viewerClient.createGroup({ code: 'viewer-group', title: 'Should Fail' }, ctx.shopContext),
         );
       });
 
       it('viewer should NOT update group', async () => {
         const groups = await viewerClient.getGroups(ctx.shopContext);
         if (groups.length > 0) {
-          const firstGroup = groups[0]!;
+          const firstGroup = groups[0];
+          if (!firstGroup) throw new Error('Expected group');
           await expectForbidden(() =>
             viewerClient.updateGroup(firstGroup.id, { title: 'Should Fail' }, ctx.shopContext),
           );
@@ -449,7 +469,8 @@ describe('Groups (e2e)', () => {
       it('viewer should NOT delete group', async () => {
         const groups = await viewerClient.getGroups(ctx.shopContext);
         if (groups.length > 0) {
-          const firstGroup = groups[0]!;
+          const firstGroup = groups[0];
+          if (!firstGroup) throw new Error('Expected group');
           await expectForbidden(() => viewerClient.deleteGroup(firstGroup.id, ctx.shopContext));
         }
       });
@@ -461,10 +482,7 @@ describe('Groups (e2e)', () => {
 
       it('viewer should NOT import groups', async () => {
         await expectForbidden(() =>
-          viewerClient.importGroupsJson(
-            [{ code: 'test', title: 'Should Fail' }],
-            ctx.shopContext,
-          ),
+          viewerClient.importGroupsJson([{ code: 'test', title: 'Should Fail' }], ctx.shopContext),
         );
       });
     });

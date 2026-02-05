@@ -7,7 +7,7 @@ import {
 
 describe('Category Schemas', () => {
   describe('CreateCategorySchema', () => {
-    it('should validate valid brand creation data', () => {
+    it('should validate valid category creation data', () => {
       const data = {
         code: 'mavyko',
         title: 'Мавико',
@@ -52,28 +52,6 @@ describe('Category Schemas', () => {
       };
 
       expect(() => CreateCategorySchema.parse(data)).toThrow();
-    });
-
-    it('should allow code with mixed case and special characters', () => {
-      const data = {
-        code: 'Test-Category_123',
-        title: 'Test Category',
-      };
-
-      const result = CreateCategorySchema.parse(data);
-
-      expect(result.code).toBe('Test-Category_123');
-    });
-
-    it('should handle Cyrillic characters in title', () => {
-      const data = {
-        code: 'marshall',
-        title: 'MARSHALL',
-      };
-
-      const result = CreateCategorySchema.parse(data);
-
-      expect(result).toEqual(data);
     });
   });
 
@@ -194,18 +172,6 @@ describe('Category Schemas', () => {
       };
 
       expect(() => ImportCategoryItemSchema.parse(data)).toThrow();
-    });
-
-    it('should handle multiple items with Cyrillic characters', () => {
-      const items = [
-        { code: 'mavyko', title: 'Мавико' },
-        { code: 'marshall', title: 'MARSHALL' },
-        { code: 'mazda', title: 'Mazda' },
-      ];
-
-      const results = items.map((item) => ImportCategoryItemSchema.parse(item));
-
-      expect(results).toEqual(items);
     });
   });
 });

@@ -54,11 +54,11 @@ export class CategoriesClient extends ImportExportBaseClient {
     return this.requestText('GET', '/categories/export/csv', { params: ctx });
   }
 
-  async getExampleCategoriesJson(_ctx: ShopContextParams): Promise<CategoryExportItem[]> {
+  async getExampleCategoriesJson(): Promise<CategoryExportItem[]> {
     return this.requestPublic('GET', '/categories/examples/json');
   }
 
-  async getExampleCategoriesCsv(_ctx: ShopContextParams): Promise<string> {
+  async getExampleCategoriesCsv(): Promise<string> {
     return this.requestTextPublic('GET', '/categories/examples/csv');
   }
 }

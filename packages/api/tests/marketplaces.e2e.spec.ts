@@ -101,10 +101,16 @@ describe('Marketplaces (e2e)', () => {
 
     it('should return 409 on duplicate code', async () => {
       const duplicateCode = generateTestCode('marketplace');
-      await ctx.client.createMarketplace({ code: duplicateCode, title: 'First Marketplace' }, ctx.shopContext);
+      await ctx.client.createMarketplace(
+        { code: duplicateCode, title: 'First Marketplace' },
+        ctx.shopContext,
+      );
 
       await expectConflict(() =>
-        ctx.client.createMarketplace({ code: duplicateCode, title: 'Duplicate Marketplace' }, ctx.shopContext),
+        ctx.client.createMarketplace(
+          { code: duplicateCode, title: 'Duplicate Marketplace' },
+          ctx.shopContext,
+        ),
       );
     });
 
@@ -315,7 +321,8 @@ describe('Marketplaces (e2e)', () => {
 
         const roles = await ctx.getSystemClient().getRoles();
         const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
-        if (editorRole) {
+        if (!editorRole) throw new Error('Editor role not found');
+        {
           await ctx.getSystemClient().createUserRole({
             user_id: editorUserId,
             role_id: editorRole.id,
@@ -345,7 +352,8 @@ describe('Marketplaces (e2e)', () => {
       it('editor should update marketplace', async () => {
         const marketplaces = await editorClient.getMarketplaces(ctx.shopContext);
         if (marketplaces.length > 0) {
-          const firstMarketplace = marketplaces[0]!;
+          const firstMarketplace = marketplaces[0];
+          if (!firstMarketplace) throw new Error('Expected marketplace');
           const updated = await editorClient.updateMarketplace(
             firstMarketplace.id,
             { title: 'Editor Updated' },
@@ -397,7 +405,8 @@ describe('Marketplaces (e2e)', () => {
 
         const roles = await ctx.getSystemClient().getRoles();
         const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
-        if (viewerRole) {
+        if (!viewerRole) throw new Error('Viewer role not found');
+        {
           await ctx.getSystemClient().createUserRole({
             user_id: viewerUserId,
             role_id: viewerRole.id,
@@ -419,8 +428,12 @@ describe('Marketplaces (e2e)', () => {
       it('viewer should get marketplace by id', async () => {
         const marketplaces = await viewerClient.getMarketplaces(ctx.shopContext);
         if (marketplaces.length > 0) {
-          const firstMarketplace = marketplaces[0]!;
-          const marketplace = await viewerClient.getMarketplace(firstMarketplace.id, ctx.shopContext);
+          const firstMarketplace = marketplaces[0];
+          if (!firstMarketplace) throw new Error('Expected marketplace');
+          const marketplace = await viewerClient.getMarketplace(
+            firstMarketplace.id,
+            ctx.shopContext,
+          );
           expect(marketplace.id).toBe(firstMarketplace.id);
         }
       });
@@ -437,9 +450,14 @@ describe('Marketplaces (e2e)', () => {
       it('viewer should NOT update marketplace', async () => {
         const marketplaces = await viewerClient.getMarketplaces(ctx.shopContext);
         if (marketplaces.length > 0) {
-          const firstMarketplace = marketplaces[0]!;
+          const firstMarketplace = marketplaces[0];
+          if (!firstMarketplace) throw new Error('Expected marketplace');
           await expectForbidden(() =>
-            viewerClient.updateMarketplace(firstMarketplace.id, { title: 'Should Fail' }, ctx.shopContext),
+            viewerClient.updateMarketplace(
+              firstMarketplace.id,
+              { title: 'Should Fail' },
+              ctx.shopContext,
+            ),
           );
         }
       });
@@ -447,8 +465,11 @@ describe('Marketplaces (e2e)', () => {
       it('viewer should NOT delete marketplace', async () => {
         const marketplaces = await viewerClient.getMarketplaces(ctx.shopContext);
         if (marketplaces.length > 0) {
-          const firstMarketplace = marketplaces[0]!;
-          await expectForbidden(() => viewerClient.deleteMarketplace(firstMarketplace.id, ctx.shopContext));
+          const firstMarketplace = marketplaces[0];
+          if (!firstMarketplace) throw new Error('Expected marketplace');
+          await expectForbidden(() =>
+            viewerClient.deleteMarketplace(firstMarketplace.id, ctx.shopContext),
+          );
         }
       });
 

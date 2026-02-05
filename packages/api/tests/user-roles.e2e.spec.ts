@@ -40,8 +40,11 @@ describe('User Roles (e2e)', () => {
 
     // Get role IDs
     const roles = await ctx.getSystemClient().getRoles();
-    editorRoleId = roles.find((r) => r.name === ROLE_NAMES.EDITOR)!.id;
-    viewerRoleId = roles.find((r) => r.name === ROLE_NAMES.VIEWER)!.id;
+    const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
+    const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
+    if (!editorRole || !viewerRole) throw new Error('Required roles not found');
+    editorRoleId = editorRole.id;
+    viewerRoleId = viewerRole.id;
   });
 
   afterAll(async () => {
@@ -148,7 +151,8 @@ describe('User Roles (e2e)', () => {
       // Assign tenant admin role
       const roles = await ctx.getSystemClient().getRoles();
       const tenantAdminRole = roles.find((r) => r.name === ROLE_NAMES.TENANT_ADMIN);
-      if (tenantAdminRole) {
+      if (!tenantAdminRole) throw new Error('Tenant Admin role not found');
+      {
         await ctx.getSystemClient().createUserRole({
           user_id: tenantAdminUserId,
           role_id: tenantAdminRole.id,

@@ -384,7 +384,8 @@ describe('SKUs (e2e)', () => {
 
         const roles = await ctx.getSystemClient().getRoles();
         const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
-        if (editorRole) {
+        if (!editorRole) throw new Error('Editor role not found');
+        {
           await ctx.getSystemClient().createUserRole({
             user_id: editorUserId,
             role_id: editorRole.id,
@@ -414,7 +415,8 @@ describe('SKUs (e2e)', () => {
       it('editor should update SKU', async () => {
         const skus = await editorClient.getSkus(ctx.shopContext);
         if (skus.length > 0) {
-          const firstSku = skus[0]!;
+          const firstSku = skus[0];
+          if (!firstSku) throw new Error('Expected sku');
           const updated = await editorClient.updateSku(
             firstSku.id,
             { title: 'Editor Updated' },
@@ -466,7 +468,8 @@ describe('SKUs (e2e)', () => {
 
         const roles = await ctx.getSystemClient().getRoles();
         const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
-        if (viewerRole) {
+        if (!viewerRole) throw new Error('Viewer role not found');
+        {
           await ctx.getSystemClient().createUserRole({
             user_id: viewerUserId,
             role_id: viewerRole.id,
@@ -488,7 +491,8 @@ describe('SKUs (e2e)', () => {
       it('viewer should get SKU by id', async () => {
         const skus = await viewerClient.getSkus(ctx.shopContext);
         if (skus.length > 0) {
-          const firstSku = skus[0]!;
+          const firstSku = skus[0];
+          if (!firstSku) throw new Error('Expected sku');
           const sku = await viewerClient.getSku(firstSku.id, ctx.shopContext);
           expect(sku.id).toBe(firstSku.id);
         }
@@ -496,17 +500,15 @@ describe('SKUs (e2e)', () => {
 
       it('viewer should NOT create SKU', async () => {
         await expectForbidden(() =>
-          viewerClient.createSku(
-            { code: 'VIEWER-CREATE', title: 'Should Fail' },
-            ctx.shopContext,
-          ),
+          viewerClient.createSku({ code: 'VIEWER-CREATE', title: 'Should Fail' }, ctx.shopContext),
         );
       });
 
       it('viewer should NOT update SKU', async () => {
         const skus = await viewerClient.getSkus(ctx.shopContext);
         if (skus.length > 0) {
-          const firstSku = skus[0]!;
+          const firstSku = skus[0];
+          if (!firstSku) throw new Error('Expected sku');
           await expectForbidden(() =>
             viewerClient.updateSku(firstSku.id, { title: 'Should Fail' }, ctx.shopContext),
           );
@@ -516,7 +518,8 @@ describe('SKUs (e2e)', () => {
       it('viewer should NOT delete SKU', async () => {
         const skus = await viewerClient.getSkus(ctx.shopContext);
         if (skus.length > 0) {
-          const firstSku = skus[0]!;
+          const firstSku = skus[0];
+          if (!firstSku) throw new Error('Expected sku');
           await expectForbidden(() => viewerClient.deleteSku(firstSku.id, ctx.shopContext));
         }
       });

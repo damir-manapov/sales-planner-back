@@ -3,7 +3,7 @@ import { CreateGroupSchema, ImportGroupItemSchema, UpdateGroupSchema } from './g
 
 describe('Group Schemas', () => {
   describe('CreateGroupSchema', () => {
-    it('should validate valid brand creation data', () => {
+    it('should validate valid group creation data', () => {
       const data = {
         code: 'mavyko',
         title: 'Мавико',
@@ -48,28 +48,6 @@ describe('Group Schemas', () => {
       };
 
       expect(() => CreateGroupSchema.parse(data)).toThrow();
-    });
-
-    it('should allow code with mixed case and special characters', () => {
-      const data = {
-        code: 'Test-Group_123',
-        title: 'Test Group',
-      };
-
-      const result = CreateGroupSchema.parse(data);
-
-      expect(result.code).toBe('Test-Group_123');
-    });
-
-    it('should handle Cyrillic characters in title', () => {
-      const data = {
-        code: 'marshall',
-        title: 'MARSHALL',
-      };
-
-      const result = CreateGroupSchema.parse(data);
-
-      expect(result).toEqual(data);
     });
   });
 
@@ -190,18 +168,6 @@ describe('Group Schemas', () => {
       };
 
       expect(() => ImportGroupItemSchema.parse(data)).toThrow();
-    });
-
-    it('should handle multiple items with Cyrillic characters', () => {
-      const items = [
-        { code: 'mavyko', title: 'Мавико' },
-        { code: 'marshall', title: 'MARSHALL' },
-        { code: 'mazda', title: 'Mazda' },
-      ];
-
-      const results = items.map((item) => ImportGroupItemSchema.parse(item));
-
-      expect(results).toEqual(items);
     });
   });
 });

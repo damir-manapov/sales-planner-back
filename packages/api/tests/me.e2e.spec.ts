@@ -96,6 +96,7 @@ describe('Me (e2e)', () => {
     expect(Array.isArray(me.tenants)).toBe(true);
     expect(me.tenants.length).toBeGreaterThan(0);
     const tenant = me.tenants[0];
+    if (!tenant) throw new Error('Expected tenant');
     expect(tenant).toBeDefined();
     expect(tenant).toHaveProperty('id', ctx.tenant.id);
     expect(tenant?.title).toBeTruthy();

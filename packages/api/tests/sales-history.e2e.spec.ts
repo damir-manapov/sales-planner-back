@@ -114,7 +114,12 @@ describe('Sales History (e2e)', () => {
       );
 
       await ctx.client.createSalesHistory(
-        { sku_id: skuId, period: periodFrom, quantity: 50, marketplace_id: rangeTestMarketplace.id },
+        {
+          sku_id: skuId,
+          period: periodFrom,
+          quantity: 50,
+          marketplace_id: rangeTestMarketplace.id,
+        },
         ctx.shopContext,
       );
       await ctx.client.createSalesHistory(
@@ -237,7 +242,12 @@ describe('Sales History (e2e)', () => {
 
     it('should return 404 when getting resource from other tenant', async () => {
       const otherRecord = await otherCtx.client.createSalesHistory(
-        { sku_id: otherSkuId, period: generateTestPeriod(), quantity: 50, marketplace_id: otherMarketplaceId },
+        {
+          sku_id: otherSkuId,
+          period: generateTestPeriod(),
+          quantity: 50,
+          marketplace_id: otherMarketplaceId,
+        },
         otherCtx.shopContext,
       );
 
@@ -460,7 +470,8 @@ describe('Sales History (e2e)', () => {
 
         const roles = await ctx.getSystemClient().getRoles();
         const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
-        if (editorRole) {
+        if (!editorRole) throw new Error('Editor role not found');
+        {
           await ctx.getSystemClient().createUserRole({
             user_id: editorUserId,
             role_id: editorRole.id,
@@ -490,7 +501,12 @@ describe('Sales History (e2e)', () => {
         );
 
         const record = await editorClient.createSalesHistory(
-          { sku_id: editorSku.id, period: generateTestPeriod(), quantity: 50, marketplace_id: editorMp.id },
+          {
+            sku_id: editorSku.id,
+            period: generateTestPeriod(),
+            quantity: 50,
+            marketplace_id: editorMp.id,
+          },
           ctx.shopContext,
         );
         expect(record).toHaveProperty('id');
@@ -499,7 +515,8 @@ describe('Sales History (e2e)', () => {
       it('editor should update sales history', async () => {
         const records = await editorClient.getSalesHistory(ctx.shopContext);
         if (records.length > 0) {
-          const firstRecord = records[0]!;
+          const firstRecord = records[0];
+          if (!firstRecord) throw new Error('Expected record');
           const updated = await editorClient.updateSalesHistory(
             firstRecord.id,
             { quantity: 999 },
@@ -519,7 +536,12 @@ describe('Sales History (e2e)', () => {
           ctx.shopContext,
         );
         const record = await editorClient.createSalesHistory(
-          { sku_id: editorSku.id, period: generateTestPeriod(), quantity: 10, marketplace_id: editorMp.id },
+          {
+            sku_id: editorSku.id,
+            period: generateTestPeriod(),
+            quantity: 10,
+            marketplace_id: editorMp.id,
+          },
           ctx.shopContext,
         );
         await editorClient.deleteSalesHistory(record.id, ctx.shopContext);
@@ -528,7 +550,14 @@ describe('Sales History (e2e)', () => {
 
       it('editor should import sales history', async () => {
         const result = await editorClient.importSalesHistoryJson(
-          [{ marketplace: generateTestCode('EDITOR-IMP'), period: generateTestPeriod(), sku: skuCode, quantity: 20 }],
+          [
+            {
+              marketplace: generateTestCode('EDITOR-IMP'),
+              period: generateTestPeriod(),
+              sku: skuCode,
+              quantity: 20,
+            },
+          ],
           ctx.shopContext,
         );
         expect(result.created).toBe(1);
@@ -560,7 +589,8 @@ describe('Sales History (e2e)', () => {
 
         const roles = await ctx.getSystemClient().getRoles();
         const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
-        if (viewerRole) {
+        if (!viewerRole) throw new Error('Viewer role not found');
+        {
           await ctx.getSystemClient().createUserRole({
             user_id: viewerUserId,
             role_id: viewerRole.id,
@@ -579,7 +609,12 @@ describe('Sales History (e2e)', () => {
           ctx.shopContext,
         );
         const record = await ctx.client.createSalesHistory(
-          { sku_id: viewerSku.id, period: generateTestPeriod(), quantity: 25, marketplace_id: viewerMp.id },
+          {
+            sku_id: viewerSku.id,
+            period: generateTestPeriod(),
+            quantity: 25,
+            marketplace_id: viewerMp.id,
+          },
           ctx.shopContext,
         );
         testRecordId = record.id;
@@ -602,7 +637,12 @@ describe('Sales History (e2e)', () => {
       it('viewer should NOT create sales history', async () => {
         await expectForbidden(() =>
           viewerClient.createSalesHistory(
-            { sku_id: skuId, period: generateTestPeriod(), quantity: 50, marketplace_id: marketplaceId },
+            {
+              sku_id: skuId,
+              period: generateTestPeriod(),
+              quantity: 50,
+              marketplace_id: marketplaceId,
+            },
             ctx.shopContext,
           ),
         );
