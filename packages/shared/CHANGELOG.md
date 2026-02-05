@@ -1,5 +1,11 @@
 # @sales-planner/shared
 
+## 0.8.2
+
+### Patch Changes
+
+- Remove unused dto.ts file (DTOs already organized in dto/ folder)
+
 ## 0.8.1
 
 ### Patch Changes

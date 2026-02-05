@@ -1,5 +1,12 @@
 # @sales-planner/http-client
 
+## 0.8.3
+
+### Patch Changes
+
+- Updated dependencies
+  - @sales-planner/shared@0.8.2
+
 ## 0.8.2
 
 ### Patch Changes
