@@ -106,15 +106,15 @@ function toCamelCase(text: string): string {
 }
 
 /**
- * Normalizes ID: removes all spaces, transliterates Cyrillic to Latin, and converts to camelCase
- * Used for marketplace IDs and other identifiers
+ * Normalizes code: removes all spaces, transliterates Cyrillic to Latin, and converts to camelCase
+ * Used for marketplace codes, brand codes, and other identifiers
  * Examples:
  * - "Товар-123" -> "tovar123"
  * - "SKU_CODE" -> "skuCode"
  * - "My SKU 01" -> "mySku01"
  * - " code with spaces " -> "codeWithSpaces"
  */
-export function normalizeId(code: string): string {
+export function normalizeCode(code: string): string {
   if (!code) return code;
 
   // Replace spaces with hyphens (preserving word boundaries), then transliterate

@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ApiError, SalesPlannerClient } from '@sales-planner/http-client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
-import { normalizeId, normalizeSkuCode } from '../src/lib/normalize-code.js';
+import { normalizeCode, normalizeSkuCode } from '../src/lib/normalize-code.js';
 import { TestContext } from './test-context.js';
 
 describe('Sales History (e2e)', () => {
@@ -219,7 +219,7 @@ describe('Sales History (e2e)', () => {
 
     it('POST /sales-history/import/json - should auto-create missing marketplaces', async () => {
       const uniqueMarketplace = `MP-${Date.now()}`;
-      const normalizedMarketplace = normalizeId(uniqueMarketplace);
+      const normalizedMarketplace = normalizeCode(uniqueMarketplace);
 
       const result = await ctx.client.importSalesHistoryJson(
         [{ sku_code: skuCode, period: '2025-06', quantity: 30, marketplace: uniqueMarketplace }],
@@ -265,7 +265,7 @@ describe('Sales History (e2e)', () => {
         sku_code: normalizedExportSkuCode,
         period: '2025-07',
         quantity: 100,
-        marketplace: normalizeId('OZON'),
+        marketplace: normalizeCode('OZON'),
       });
     });
 
@@ -316,7 +316,7 @@ describe('Sales History (e2e)', () => {
       );
       expect(imported).toBeDefined();
       expect(imported?.quantity).toBe(75);
-      expect(imported?.marketplace).toBe(normalizeId('WB'));
+      expect(imported?.marketplace).toBe(normalizeCode('WB'));
     });
   });
 

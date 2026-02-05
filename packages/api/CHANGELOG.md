@@ -1,5 +1,11 @@
 # @sales-planner/api
 
+## 0.4.5
+
+### Patch Changes
+
+- Rename normalizeId to normalizeCode for consistency with service method naming
+
 ## 0.4.4
 
 ### Patch Changes

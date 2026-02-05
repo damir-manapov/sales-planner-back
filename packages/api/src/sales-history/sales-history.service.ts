@@ -5,7 +5,7 @@ import { sql } from 'kysely';
 import { DuplicateResourceException, isUniqueViolation } from '../common/index.js';
 import type { SalesHistory as SalesHistoryTable } from '../database/database.types.js';
 import { DatabaseService } from '../database/index.js';
-import { dateToPeriod, normalizeId, normalizeSkuCode, periodToDate } from '../lib/index.js';
+import { dateToPeriod, normalizeCode, normalizeSkuCode, periodToDate } from '../lib/index.js';
 import { MarketplacesService } from '../marketplaces/marketplaces.service.js';
 import { SkusService } from '../skus/skus.service.js';
 import type {
@@ -207,7 +207,7 @@ export class SalesHistoryService {
       await this.skusService.findOrCreateByCode(skuCodes, shopId, tenantId);
 
     // Ensure all marketplaces exist (auto-creates missing ones)
-    const marketplaceCodes = validatedItems.map((i) => normalizeId(i.marketplace));
+    const marketplaceCodes = validatedItems.map((i) => normalizeCode(i.marketplace));
     const marketplacesCreated = await this.marketplacesService.ensureExist(
       marketplaceCodes,
       shopId,
@@ -223,7 +223,7 @@ export class SalesHistoryService {
 
     validatedItems.forEach((item) => {
       const normalizedSkuCode = normalizeSkuCode(item.sku_code);
-      const normalizedMarketplaceCode = normalizeId(item.marketplace);
+      const normalizedMarketplaceCode = normalizeCode(item.marketplace);
       const skuId = skuCodeToId.get(normalizedSkuCode);
       const marketplaceId = marketplaceCodeToId.get(normalizedMarketplaceCode);
       if (skuId && marketplaceId) {

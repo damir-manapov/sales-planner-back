@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ApiError } from '@sales-planner/http-client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
-import { normalizeId } from '../src/lib/normalize-code.js';
+import { normalizeCode } from '../src/lib/normalize-code.js';
 import { TestContext } from './test-context.js';
 
 describe('Marketplaces (e2e)', () => {
@@ -56,7 +56,7 @@ describe('Marketplaces (e2e)', () => {
         { code: testMarketplaceCode, title: 'Test Marketplace' },
         ctx.shopContext,
       );
-      expect(marketplace.code).toBe(normalizeId(testMarketplaceCode));
+      expect(marketplace.code).toBe(normalizeCode(testMarketplaceCode));
       expect(marketplace.title).toBe('Test Marketplace');
       expect(marketplace.shop_id).toBe(ctx.shop.id);
       expect(marketplace.tenant_id).toBe(ctx.tenant.id);
@@ -90,7 +90,7 @@ describe('Marketplaces (e2e)', () => {
 
     it('should get marketplace by id', async () => {
       const marketplace = await ctx.client.getMarketplace(marketplaceId, ctx.shopContext);
-      expect(marketplace.code).toBe(normalizeId(testMarketplaceCode));
+      expect(marketplace.code).toBe(normalizeCode(testMarketplaceCode));
       expect(marketplace.shop_id).toBe(ctx.shop.id);
     });
 
@@ -198,7 +198,9 @@ describe('Marketplaces (e2e)', () => {
     it('should not access marketplace from other shop', async () => {
       // Get the marketplace ID from the first shop
       const marketplaces = await ctx.client.getMarketplaces(ctx.shopContext);
-      const marketplace = marketplaces.find((m) => m.code === normalizeId(isolatedMarketplaceCode));
+      const marketplace = marketplaces.find(
+        (m) => m.code === normalizeCode(isolatedMarketplaceCode),
+      );
       expect(marketplace).toBeDefined();
       if (!marketplace) throw new Error('Marketplace not found');
 
@@ -216,7 +218,7 @@ describe('Marketplaces (e2e)', () => {
         { code: isolatedMarketplaceCode, title: 'Same Code Different Shop' },
         otherCtx.shopContext,
       );
-      expect(marketplace.code).toBe(normalizeId(isolatedMarketplaceCode));
+      expect(marketplace.code).toBe(normalizeCode(isolatedMarketplaceCode));
       expect(marketplace.shop_id).toBe(otherCtx.shop.id);
     });
   });
@@ -238,8 +240,8 @@ describe('Marketplaces (e2e)', () => {
 
       const marketplaces = await ctx.client.getMarketplaces(ctx.shopContext);
       const codes = marketplaces.map((m) => m.code);
-      expect(codes).toContain(normalizeId(code1));
-      expect(codes).toContain(normalizeId(code2));
+      expect(codes).toContain(normalizeCode(code1));
+      expect(codes).toContain(normalizeCode(code2));
     });
 
     it('importMarketplacesJson - should upsert existing marketplaces', async () => {
@@ -261,7 +263,7 @@ describe('Marketplaces (e2e)', () => {
 
       // Find by code in the list
       const marketplaces = await ctx.client.getMarketplaces(ctx.shopContext);
-      const marketplace = marketplaces.find((m) => m.code === normalizeId(code));
+      const marketplace = marketplaces.find((m) => m.code === normalizeCode(code));
       expect(marketplace).toBeDefined();
       if (!marketplace) throw new Error('Marketplace not found');
       expect(marketplace.title).toBe('Updated Title');
@@ -279,8 +281,8 @@ describe('Marketplaces (e2e)', () => {
 
       const marketplaces = await ctx.client.getMarketplaces(ctx.shopContext);
       const codes = marketplaces.map((m) => m.code);
-      expect(codes).toContain(normalizeId(code1));
-      expect(codes).toContain(normalizeId(code2));
+      expect(codes).toContain(normalizeCode(code1));
+      expect(codes).toContain(normalizeCode(code2));
     });
 
     it('exportMarketplacesJson - should export marketplaces in import format', async () => {
@@ -299,11 +301,11 @@ describe('Marketplaces (e2e)', () => {
 
       expect(Array.isArray(exported)).toBe(true);
       const exportedCodes = exported.map((m) => m.code);
-      expect(exportedCodes).toContain(normalizeId(code1));
-      expect(exportedCodes).toContain(normalizeId(code2));
+      expect(exportedCodes).toContain(normalizeCode(code1));
+      expect(exportedCodes).toContain(normalizeCode(code2));
 
-      const item = exported.find((m) => m.code === normalizeId(code1));
-      expect(item).toEqual({ code: normalizeId(code1), title: 'Export Test Marketplace 1' });
+      const item = exported.find((m) => m.code === normalizeCode(code1));
+      expect(item).toEqual({ code: normalizeCode(code1), title: 'Export Test Marketplace 1' });
     });
 
     it('exportMarketplacesCsv - should export marketplaces in CSV format', async () => {
@@ -323,8 +325,8 @@ describe('Marketplaces (e2e)', () => {
       expect(typeof csv).toBe('string');
       const lines = csv.split('\n');
       expect(lines[0]).toBe('code,title');
-      expect(lines.some((line) => line.includes(normalizeId(code1)))).toBe(true);
-      expect(lines.some((line) => line.includes(normalizeId(code2)))).toBe(true);
+      expect(lines.some((line) => line.includes(normalizeCode(code1)))).toBe(true);
+      expect(lines.some((line) => line.includes(normalizeCode(code2)))).toBe(true);
     });
 
     it('getMarketplaceExamplesJson - should return example marketplaces', async () => {

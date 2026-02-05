@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { Brand } from '@sales-planner/shared';
 import { BaseEntityService } from '../common/index.js';
 import { DatabaseService } from '../database/index.js';
-import { normalizeId } from '../lib/index.js';
+import { normalizeCode } from '../lib/index.js';
 import type { CreateBrandDto, ImportBrandItem, UpdateBrandDto } from './brands.schema.js';
 import { ImportBrandItemSchema } from './brands.schema.js';
 
@@ -20,7 +20,7 @@ export class BrandsService extends BaseEntityService<
   }
 
   protected normalizeCode(code: string): string {
-    return normalizeId(code);
+    return normalizeCode(code);
   }
 
   protected validateImportItem(item: unknown) {

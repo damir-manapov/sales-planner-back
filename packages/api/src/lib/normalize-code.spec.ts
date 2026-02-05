@@ -1,75 +1,75 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeId, normalizeSkuCode } from './normalize-code.js';
+import { normalizeCode, normalizeSkuCode } from './normalize-code.js';
 
-describe('normalizeId', () => {
+describe('normalizeCode', () => {
   it('should transliterate Cyrillic to Latin', () => {
-    expect(normalizeId('Товар')).toBe('tovar');
-    expect(normalizeId('ТОВАР')).toBe('tovar');
-    expect(normalizeId('Яблоко')).toBe('yabloko');
+    expect(normalizeCode('Товар')).toBe('tovar');
+    expect(normalizeCode('ТОВАР')).toBe('tovar');
+    expect(normalizeCode('Яблоко')).toBe('yabloko');
   });
 
   it('should convert to camelCase', () => {
-    expect(normalizeId('SKU_CODE')).toBe('skuCode');
-    expect(normalizeId('my-sku')).toBe('mySku');
-    expect(normalizeId('my sku')).toBe('mySku');
-    expect(normalizeId('MY-SKU-CODE')).toBe('mySkuCode');
+    expect(normalizeCode('SKU_CODE')).toBe('skuCode');
+    expect(normalizeCode('my-sku')).toBe('mySku');
+    expect(normalizeCode('my sku')).toBe('mySku');
+    expect(normalizeCode('MY-SKU-CODE')).toBe('mySkuCode');
   });
 
   it('should handle mixed Cyrillic and Latin', () => {
-    expect(normalizeId('Товар-123')).toBe('tovar123');
-    expect(normalizeId('SKU_Яблоко')).toBe('skuYabloko');
-    expect(normalizeId('my-Товар-01')).toBe('myTovar01');
+    expect(normalizeCode('Товар-123')).toBe('tovar123');
+    expect(normalizeCode('SKU_Яблоко')).toBe('skuYabloko');
+    expect(normalizeCode('my-Товар-01')).toBe('myTovar01');
   });
 
   it('should preserve numbers', () => {
-    expect(normalizeId('SKU-001')).toBe('sku001');
-    expect(normalizeId('item_123_abc')).toBe('item123Abc');
+    expect(normalizeCode('SKU-001')).toBe('sku001');
+    expect(normalizeCode('item_123_abc')).toBe('item123Abc');
   });
 
   it('should handle already normalized codes', () => {
-    expect(normalizeId('sku-code')).toBe('skuCode');
-    expect(normalizeId('my_product_01')).toBe('myProduct01');
+    expect(normalizeCode('sku-code')).toBe('skuCode');
+    expect(normalizeCode('my_product_01')).toBe('myProduct01');
   });
 
   it('should handle empty string', () => {
-    expect(normalizeId('')).toBe('');
+    expect(normalizeCode('')).toBe('');
   });
 
   it('should handle special characters', () => {
-    expect(normalizeId('sku@code')).toBe('sku@code');
-    expect(normalizeId('sku.code')).toBe('sku.code');
+    expect(normalizeCode('sku@code')).toBe('sku@code');
+    expect(normalizeCode('sku.code')).toBe('sku.code');
   });
 
   it('should handle consecutive separators', () => {
-    expect(normalizeId('my--sku')).toBe('mySku');
-    expect(normalizeId('my__sku')).toBe('mySku');
-    expect(normalizeId('my  sku')).toBe('mySku');
+    expect(normalizeCode('my--sku')).toBe('mySku');
+    expect(normalizeCode('my__sku')).toBe('mySku');
+    expect(normalizeCode('my  sku')).toBe('mySku');
   });
 
   it('should handle multi-character Cyrillic transliterations', () => {
-    expect(normalizeId('Щука')).toBe('shchuka'); // щ → shch
-    expect(normalizeId('Часы')).toBe('chasy'); // ч → ch
-    expect(normalizeId('Юнит')).toBe('yunit'); // ю → yu
-    expect(normalizeId('Ёлка')).toBe('yolka'); // ё → yo
+    expect(normalizeCode('Щука')).toBe('shchuka'); // щ → shch
+    expect(normalizeCode('Часы')).toBe('chasy'); // ч → ch
+    expect(normalizeCode('Юнит')).toBe('yunit'); // ю → yu
+    expect(normalizeCode('Ёлка')).toBe('yolka'); // ё → yo
   });
 
   it('should handle hard and soft signs', () => {
-    expect(normalizeId('объект')).toBe('obekt'); // ъ is removed
-    expect(normalizeId('мышь')).toBe('mysh'); // ь is removed
+    expect(normalizeCode('объект')).toBe('obekt'); // ъ is removed
+    expect(normalizeCode('мышь')).toBe('mysh'); // ь is removed
   });
 
   it('should handle leading and trailing separators', () => {
-    expect(normalizeId('-my-sku-')).toBe('mySku');
-    expect(normalizeId('_my_sku_')).toBe('mySku');
-    expect(normalizeId(' my sku ')).toBe('mySku');
+    expect(normalizeCode('-my-sku-')).toBe('mySku');
+    expect(normalizeCode('_my_sku_')).toBe('mySku');
+    expect(normalizeCode(' my sku ')).toBe('mySku');
   });
 
   it('should remove all whitespace', () => {
-    expect(normalizeId('  my-sku  ')).toBe('mySku');
-    expect(normalizeId('\tmy-sku\t')).toBe('mySku');
-    expect(normalizeId(' SKU_CODE ')).toBe('skuCode');
-    expect(normalizeId('my sku code')).toBe('mySkuCode');
-    expect(normalizeId('SKU 001')).toBe('sku001');
+    expect(normalizeCode('  my-sku  ')).toBe('mySku');
+    expect(normalizeCode('\tmy-sku\t')).toBe('mySku');
+    expect(normalizeCode(' SKU_CODE ')).toBe('skuCode');
+    expect(normalizeCode('my sku code')).toBe('mySkuCode');
+    expect(normalizeCode('SKU 001')).toBe('sku001');
   });
 });
 

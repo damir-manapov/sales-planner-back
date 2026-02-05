@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import type { Marketplace } from '@sales-planner/shared';
 import { BaseEntityService } from '../common/base-entity.service.js';
 import { DatabaseService } from '../database/index.js';
-import { normalizeId } from '../lib/index.js';
+import { normalizeCode as normalizeMarketplaceCode } from '../lib/index.js';
 import type {
   CreateMarketplaceDto,
   ImportMarketplaceItem,
@@ -25,7 +25,7 @@ export class MarketplacesService extends BaseEntityService<
   }
 
   protected normalizeCode(code: string): string {
-    return normalizeId(code);
+    return normalizeMarketplaceCode(code);
   }
 
   protected validateImportItem(item: unknown) {
@@ -42,7 +42,7 @@ export class MarketplacesService extends BaseEntityService<
     }
 
     // Normalize all codes first
-    const normalizedCodes = codes.map((code) => normalizeId(code));
+    const normalizedCodes = codes.map((code) => normalizeMarketplaceCode(code));
     const uniqueCodes = [...new Set(normalizedCodes)];
 
     const existing = await this.db
