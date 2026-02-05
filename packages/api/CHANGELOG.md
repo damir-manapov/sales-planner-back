@@ -1,5 +1,22 @@
 # @sales-planner/api
 
+## 0.4.0
+
+### Minor Changes
+
+- Refactor sales_history to use numeric marketplace_id
+
+  - Changed sales_history.marketplace_id from string (marketplace code) to numeric ID (foreign key to marketplaces.id)
+  - Consolidated all 23 migrations into a single clean 001_initial_schema.sql
+  - Import/export still use marketplace codes for user-friendly data exchange
+  - API internally uses numeric marketplace IDs for referential integrity
+  - Fixed race condition in bootstrap service for parallel test execution
+
+### Patch Changes
+
+- Updated dependencies
+  - @sales-planner/shared@0.8.0
+
 ## 0.3.0
 
 ### Minor Changes

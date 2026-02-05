@@ -33,7 +33,7 @@ import {
   ZodValidationPipe,
 } from '../common/index.js';
 import type { ImportResult } from '@sales-planner/shared';
-import { fromCsv, normalizeId } from '../lib/index.js';
+import { fromCsv } from '../lib/index.js';
 import {
   type CreateSalesHistoryRequest,
   CreateSalesHistorySchema,
@@ -129,7 +129,6 @@ export class SalesHistoryController {
   ): Promise<SalesHistory> {
     return this.salesHistoryService.create({
       ...dto,
-      marketplace_id: normalizeId(dto.marketplace_id),
       shop_id: ctx.shopId,
       tenant_id: ctx.tenantId,
     });

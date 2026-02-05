@@ -22,7 +22,7 @@ type SalesHistoryRow = Selectable<SalesHistoryTable>;
 interface PreparedSalesHistoryItem extends ImportSalesHistoryItem {
   sku_id: number;
   periodDate: Date;
-  marketplace_id: string;
+  marketplace_id: number;
 }
 
 @Injectable()
@@ -207,25 +207,31 @@ export class SalesHistoryService {
       await this.skusService.findOrCreateByCode(skuCodes, shopId, tenantId);
 
     // Ensure all marketplaces exist (auto-creates missing ones)
-    const marketplaceIds = validatedItems.map((i) => normalizeId(i.marketplace));
+    const marketplaceCodes = validatedItems.map((i) => normalizeId(i.marketplace));
     const marketplacesCreated = await this.marketplacesService.ensureExist(
-      marketplaceIds,
+      marketplaceCodes,
       shopId,
       tenantId,
     );
 
-    // Map items to include sku_id
+    // Get marketplace code to ID mapping
+    const marketplaces = await this.marketplacesService.findByShopId(shopId);
+    const marketplaceCodeToId = new Map(marketplaces.map((m) => [m.code, m.id]));
+
+    // Map items to include sku_id and marketplace_id
     const validItems: PreparedSalesHistoryItem[] = [];
 
     validatedItems.forEach((item) => {
       const normalizedSkuCode = normalizeSkuCode(item.sku_code);
+      const normalizedMarketplaceCode = normalizeId(item.marketplace);
       const skuId = skuCodeToId.get(normalizedSkuCode);
-      if (skuId) {
+      const marketplaceId = marketplaceCodeToId.get(normalizedMarketplaceCode);
+      if (skuId && marketplaceId) {
         validItems.push({
           ...item,
           sku_id: skuId,
           periodDate: periodToDate(item.period),
-          marketplace_id: normalizeId(item.marketplace),
+          marketplace_id: marketplaceId,
         });
       }
     });
@@ -306,11 +312,12 @@ export class SalesHistoryService {
     let query = this.db
       .selectFrom('sales_history')
       .innerJoin('skus', 'skus.id', 'sales_history.sku_id')
+      .innerJoin('marketplaces', 'marketplaces.id', 'sales_history.marketplace_id')
       .select([
         'skus.code as sku_code',
         sql<string>`to_char(sales_history.period, 'YYYY-MM')`.as('period'),
         'sales_history.quantity',
-        'sales_history.marketplace_id',
+        'marketplaces.code as marketplace_code',
       ])
       .where('sales_history.shop_id', '=', shopId);
 
@@ -330,7 +337,7 @@ export class SalesHistoryService {
       sku_code: r.sku_code,
       period: r.period,
       quantity: r.quantity,
-      marketplace: r.marketplace_id,
+      marketplace: r.marketplace_code,
     }));
   }
 }

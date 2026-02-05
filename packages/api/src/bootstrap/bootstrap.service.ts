@@ -86,17 +86,28 @@ export class BootstrapService implements OnModuleInit {
 
     if (!adminUser) {
       this.logger.log('Creating system admin user...');
-      adminUser = await this.usersService.create({
-        email: 'admin@system.local',
-        name: 'System Admin',
-      });
+      try {
+        adminUser = await this.usersService.create({
+          email: 'admin@system.local',
+          name: 'System Admin',
+        });
 
-      // Create API key for admin
-      await this.apiKeysService.createWithKey({
-        user_id: adminUser.id,
-        key: systemAdminKey,
-        name: 'System Admin Key',
-      });
+        // Create API key for admin
+        await this.apiKeysService.createWithKey({
+          user_id: adminUser.id,
+          key: systemAdminKey,
+          name: 'System Admin Key',
+        });
+      } catch (error) {
+        // Handle race condition: another process may have created the user
+        // Try to find the user by email
+        const users = await this.usersService.findAll();
+        adminUser = users.find((u) => u.email === 'admin@system.local');
+        if (!adminUser) {
+          throw error; // Re-throw if it's not a duplicate error
+        }
+        this.logger.log('System admin user already exists (created by another process)');
+      }
     }
 
     // Assign systemAdmin role to user

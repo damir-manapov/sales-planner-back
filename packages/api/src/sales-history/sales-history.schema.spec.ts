@@ -76,7 +76,7 @@ describe('Sales History Schemas', () => {
         sku_id: 100,
         period: '2024-01',
         quantity: 50,
-        marketplace_id: 'WB',
+        marketplace_id: 1,
       };
 
       const result = CreateSalesHistorySchema.parse(data);
@@ -91,7 +91,7 @@ describe('Sales History Schemas', () => {
         sku_id: 100,
         period: '2024-01',
         quantity: 0,
-        marketplace_id: 'WB',
+        marketplace_id: 1,
       };
 
       const result = CreateSalesHistorySchema.parse(data);
@@ -106,7 +106,7 @@ describe('Sales History Schemas', () => {
         sku_id: 100,
         period: '2024-01',
         quantity: -5,
-        marketplace_id: 'WB',
+        marketplace_id: 1,
       };
 
       expect(() => CreateSalesHistorySchema.parse(data)).toThrow();
@@ -119,7 +119,7 @@ describe('Sales History Schemas', () => {
         sku_id: 100,
         period: '2024-01',
         quantity: 5.5,
-        marketplace_id: 'WB',
+        marketplace_id: 1,
       };
 
       expect(() => CreateSalesHistorySchema.parse(data)).toThrow();
@@ -132,7 +132,7 @@ describe('Sales History Schemas', () => {
         sku_id: 100,
         period: '2024-1',
         quantity: 50,
-        marketplace_id: 'WB',
+        marketplace_id: 1,
       };
 
       expect(() => CreateSalesHistorySchema.parse(data)).toThrow();
@@ -145,7 +145,7 @@ describe('Sales History Schemas', () => {
         sku_id: 100,
         period: '2024-01',
         quantity: 50,
-        marketplace_id: 'WB',
+        marketplace_id: 1,
       };
 
       expect(() => CreateSalesHistorySchema.parse(data)).toThrow();
@@ -173,7 +173,7 @@ describe('Sales History Schemas', () => {
           sku_id: 100,
           period: `2024-${month}`,
           quantity: 50,
-          marketplace_id: 'WB',
+          marketplace_id: 1,
         };
 
         expect(() => CreateSalesHistorySchema.parse(data)).not.toThrow();

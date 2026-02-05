@@ -13,6 +13,7 @@ describe('Sales History (e2e)', () => {
   let skuId: number;
   let skuCode: string;
   let salesHistoryId: number;
+  let marketplaceId: number;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -40,8 +41,12 @@ describe('Sales History (e2e)', () => {
     );
     skuId = sku.id;
 
-    // Create a test marketplace
-    await ctx.client.createMarketplace({ code: 'WB', title: 'Wildberries' }, ctx.shopContext);
+    // Create a test marketplace and store its ID
+    const marketplace = await ctx.client.createMarketplace(
+      { code: 'WB', title: 'Wildberries' },
+      ctx.shopContext,
+    );
+    marketplaceId = marketplace.id;
   });
 
   afterAll(async () => {
@@ -66,7 +71,7 @@ describe('Sales History (e2e)', () => {
   describe('CRUD operations', () => {
     it('POST /sales-history - should create sales history record', async () => {
       const record = await ctx.client.createSalesHistory(
-        { sku_id: skuId, period: '2026-01', quantity: 100, marketplace_id: 'WB' },
+        { sku_id: skuId, period: '2026-01', quantity: 100, marketplace_id: marketplaceId },
         ctx.shopContext,
       );
 
@@ -76,7 +81,7 @@ describe('Sales History (e2e)', () => {
       expect(record.quantity).toBe(100);
       expect(record.shop_id).toBe(ctx.shop.id);
       expect(record.tenant_id).toBe(ctx.tenant.id);
-      expect(record.marketplace_id).toBe('wb'); // normalizeId converts to lowercase
+      expect(record.marketplace_id).toBe(marketplaceId);
 
       salesHistoryId = record.id;
     });
@@ -84,7 +89,7 @@ describe('Sales History (e2e)', () => {
     it('POST /sales-history - should reject invalid period format', async () => {
       try {
         await ctx.client.createSalesHistory(
-          { sku_id: skuId, period: '2026-13', quantity: 50, marketplace_id: 'WB' },
+          { sku_id: skuId, period: '2026-13', quantity: 50, marketplace_id: marketplaceId },
           ctx.shopContext,
         );
         expect.fail('Should have thrown');
@@ -97,7 +102,7 @@ describe('Sales History (e2e)', () => {
     it('POST /sales-history - should reject invalid period string', async () => {
       try {
         await ctx.client.createSalesHistory(
-          { sku_id: skuId, period: '2026-1', quantity: 50, marketplace_id: 'WB' },
+          { sku_id: skuId, period: '2026-1', quantity: 50, marketplace_id: marketplaceId },
           ctx.shopContext,
         );
         expect.fail('Should have thrown');
@@ -152,7 +157,7 @@ describe('Sales History (e2e)', () => {
         sku_id: skuId,
         period: '2026-06',
         quantity: 100,
-        marketplace_id: 'WB',
+        marketplace_id: marketplaceId,
       };
 
       await ctx.client.createSalesHistory(duplicateEntry, ctx.shopContext);

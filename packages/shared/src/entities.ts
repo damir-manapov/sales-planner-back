@@ -53,7 +53,7 @@ export interface SalesHistory {
   tenant_id: number;
   period: string; // YYYY-MM format
   quantity: number;
-  marketplace_id: string | null;
+  marketplace_id: number;
   created_at: Date;
   updated_at: Date;
 }

@@ -2,7 +2,7 @@ export interface CreateSalesHistoryRequest {
   sku_id: number;
   period: string; // YYYY-MM format
   quantity: number;
-  marketplace_id: string;
+  marketplace_id: number;
 }
 export interface CreateSalesHistoryDto {
   sku_id: number;
@@ -10,7 +10,7 @@ export interface CreateSalesHistoryDto {
   tenant_id: number;
   period: string; // YYYY-MM format
   quantity: number;
-  marketplace_id: string;
+  marketplace_id: number;
 }
 
 export interface UpdateSalesHistoryDto {

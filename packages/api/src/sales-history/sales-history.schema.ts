@@ -16,7 +16,7 @@ const CreateSalesHistoryRequestSchema = z.object({
   sku_id: id(),
   period: period(),
   quantity: quantity(),
-  marketplace_id: z.string().min(1),
+  marketplace_id: id(),
 });
 
 // Zod schemas
@@ -31,7 +31,7 @@ export const CreateSalesHistorySchema = z.object({
   sku_id: id(),
   period: period(),
   quantity: quantity(),
-  marketplace_id: z.string().min(1),
+  marketplace_id: id(),
 });
 
 export const UpdateSalesHistorySchema = z.object({
