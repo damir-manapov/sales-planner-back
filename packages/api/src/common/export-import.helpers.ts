@@ -6,9 +6,9 @@ import { fromCsv, toCsv } from '../lib/index.js';
  * Use with @Header decorators in controller
  */
 export function sendJsonExport<T>(res: ExpressResponse, data: T[], filename: string): void {
-  res.setHeader('Content-Type', 'application/json');
-  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-  (res as unknown as { json: (body: unknown) => void }).json(data);
+  (res as any).setHeader('Content-Type', 'application/json');
+  (res as any).setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  (res as any).json(data);
 }
 
 /**
@@ -24,9 +24,9 @@ export function sendCsvExport<T extends object>(
   const csv = columns
     ? toCsv(data, columns)
     : toCsv(data, Object.keys(data[0] || {}) as Array<keyof T>);
-  res.setHeader('Content-Type', 'text/csv');
-  res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
-  res.send(csv);
+  (res as any).setHeader('Content-Type', 'text/csv');
+  (res as any).setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+  (res as any).send(csv);
 }
 
 /**
