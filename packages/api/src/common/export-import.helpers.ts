@@ -3,9 +3,9 @@ import { fromCsv, toCsv } from '../lib/index.js';
 // Use a minimal interface that works with Express Response
 // This avoids needing @types/express in production builds
 interface ExpressResponse {
-  setHeader(name: string, value: string): this;
-  json(body: unknown): this;
-  send(body: unknown): this;
+  setHeader(name: string, value: string): unknown;
+  json(body: unknown): unknown;
+  send(body: unknown): unknown;
 }
 
 /**
