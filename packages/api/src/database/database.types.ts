@@ -46,8 +46,9 @@ export interface Brands {
 }
 
 export interface Marketplaces {
+  code: string;
   created_at: Generated<Timestamp>;
-  id: string;
+  id: Generated<number>;
   shop_id: number;
   tenant_id: number;
   title: string;

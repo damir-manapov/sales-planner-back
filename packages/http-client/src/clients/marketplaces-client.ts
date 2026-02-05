@@ -13,7 +13,7 @@ export class MarketplacesClient extends ImportExportBaseClient {
     return this.request('GET', '/marketplaces', { params: ctx });
   }
 
-  async getMarketplace(id: string, ctx: ShopContextParams): Promise<Marketplace> {
+  async getMarketplace(id: number, ctx: ShopContextParams): Promise<Marketplace> {
     return this.request('GET', `/marketplaces/${id}`, { params: ctx });
   }
 
@@ -25,14 +25,14 @@ export class MarketplacesClient extends ImportExportBaseClient {
   }
 
   async updateMarketplace(
-    id: string,
+    id: number,
     dto: Partial<CreateMarketplaceRequest>,
     ctx: ShopContextParams,
   ): Promise<Marketplace> {
     return this.request('PUT', `/marketplaces/${id}`, { body: dto, params: ctx });
   }
 
-  async deleteMarketplace(id: string, ctx: ShopContextParams): Promise<void> {
+  async deleteMarketplace(id: number, ctx: ShopContextParams): Promise<void> {
     return this.request('DELETE', `/marketplaces/${id}`, { params: ctx });
   }
 

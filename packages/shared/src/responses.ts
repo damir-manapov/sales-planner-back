@@ -77,6 +77,6 @@ export interface BrandExportItem {
 }
 
 export interface MarketplaceExportItem {
-  id: string;
+  code: string;
   title: string;
 }

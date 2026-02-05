@@ -13,7 +13,7 @@ const { shortId, title } = zodSchemas;
 // Zod schemas
 // Note: shop_id and tenant_id are injected from ShopContext, not from request body
 export const CreateMarketplaceSchema = z.object({
-  id: shortId(),
+  code: shortId(),
   title: title(),
 });
 
@@ -23,7 +23,7 @@ export const UpdateMarketplaceSchema = z.object({
 });
 
 export const ImportMarketplaceItemSchema = z.object({
-  id: shortId(),
+  code: shortId(),
   title: title(),
 });
 

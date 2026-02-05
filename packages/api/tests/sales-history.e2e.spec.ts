@@ -41,7 +41,7 @@ describe('Sales History (e2e)', () => {
     skuId = sku.id;
 
     // Create a test marketplace
-    await ctx.client.createMarketplace({ id: 'WB', title: 'Wildberries' }, ctx.shopContext);
+    await ctx.client.createMarketplace({ code: 'WB', title: 'Wildberries' }, ctx.shopContext);
   });
 
   afterAll(async () => {
@@ -227,9 +227,9 @@ describe('Sales History (e2e)', () => {
 
       // Verify marketplace was actually created
       const marketplaces = await ctx.client.getMarketplaces(ctx.shopContext);
-      const createdMp = marketplaces.find((m) => m.id === normalizedMarketplace);
+      const createdMp = marketplaces.find((m) => m.code === normalizedMarketplace);
       expect(createdMp).toBeDefined();
-      expect(createdMp?.title).toBe(normalizedMarketplace); // Title defaults to id
+      expect(createdMp?.title).toBe(normalizedMarketplace); // Title defaults to code
     });
 
     it('GET /sales-history/export/json - should export sales history in import format', async () => {

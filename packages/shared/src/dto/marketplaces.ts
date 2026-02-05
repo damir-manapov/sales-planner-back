@@ -1,9 +1,9 @@
 export interface CreateMarketplaceRequest {
-  id: string;
+  code: string;
   title: string;
 }
 export interface CreateMarketplaceDto {
-  id: string;
+  code: string;
   title: string;
   shop_id: number;
   tenant_id: number;
@@ -15,6 +15,6 @@ export interface UpdateMarketplaceDto {
 export type UpdateMarketplaceRequest = UpdateMarketplaceDto;
 
 export interface ImportMarketplaceItem {
-  id: string;
+  code: string;
   title: string;
 }

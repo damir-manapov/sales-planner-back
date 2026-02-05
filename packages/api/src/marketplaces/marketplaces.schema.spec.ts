@@ -5,7 +5,7 @@ describe('Marketplace Schemas', () => {
   describe('CreateMarketplaceSchema', () => {
     it('should validate valid marketplace creation data', () => {
       const data = {
-        id: 'amazon',
+        code: 'amazon',
         title: 'Amazon',
       };
 
@@ -14,18 +14,18 @@ describe('Marketplace Schemas', () => {
       expect(result).toEqual(data);
     });
 
-    it('should reject empty id', () => {
+    it('should reject empty code', () => {
       const data = {
-        id: '',
+        code: '',
         title: 'Amazon',
       };
 
       expect(() => CreateMarketplaceSchema.parse(data)).toThrow();
     });
 
-    it('should reject id longer than 50 characters', () => {
+    it('should reject code longer than 50 characters', () => {
       const data = {
-        id: 'A'.repeat(51),
+        code: 'A'.repeat(51),
         title: 'Amazon',
       };
 
@@ -34,7 +34,7 @@ describe('Marketplace Schemas', () => {
 
     it('should reject empty title', () => {
       const data = {
-        id: 'amazon',
+        code: 'amazon',
         title: '',
       };
 
@@ -43,14 +43,14 @@ describe('Marketplace Schemas', () => {
 
     it('should reject title longer than 255 characters', () => {
       const data = {
-        id: 'amazon',
+        code: 'amazon',
         title: 'A'.repeat(256),
       };
 
       expect(() => CreateMarketplaceSchema.parse(data)).toThrow();
     });
 
-    it('should reject missing id', () => {
+    it('should reject missing code', () => {
       const data = {
         title: 'Amazon',
       };
@@ -60,7 +60,7 @@ describe('Marketplace Schemas', () => {
 
     it('should reject missing title', () => {
       const data = {
-        id: 'amazon',
+        code: 'amazon',
       };
 
       expect(() => CreateMarketplaceSchema.parse(data)).toThrow();

@@ -12,7 +12,7 @@ ALTER TABLE marketplaces ADD COLUMN IF NOT EXISTS shop_id INTEGER;
 ALTER TABLE marketplaces ADD COLUMN IF NOT EXISTS tenant_id INTEGER;
 
 -- Create marketplace records for all (marketplace_id, shop_id) combinations in sales_history
-INSERT INTO marketplaces (id, title, shop_id, tenant_id, created_at, updated_at)
+INSERT INTO marketplaces (code, title, shop_id, tenant_id, created_at, updated_at)
 SELECT DISTINCT 
   sh.marketplace_id,
   sh.marketplace_id as title,
@@ -63,20 +63,20 @@ BEGIN
   END IF;
 END $$;
 
--- Add new composite primary key (id per shop)
--- First, remove any duplicate (id, shop_id) pairs keeping the first one
+-- Add new composite primary key (code per shop)
+-- First, remove any duplicate (code, shop_id) pairs keeping the first one
 DELETE FROM marketplaces a USING marketplaces b
 WHERE a.ctid < b.ctid
-  AND a.id = b.id
+  AND a.code = b.code
   AND a.shop_id = b.shop_id;
 
-ALTER TABLE marketplaces ADD PRIMARY KEY (id, shop_id);
+ALTER TABLE marketplaces ADD PRIMARY KEY (code, shop_id);
 
 -- Add indexes for lookups
 CREATE INDEX IF NOT EXISTS idx_marketplaces_shop_id ON marketplaces(shop_id);
 CREATE INDEX IF NOT EXISTS idx_marketplaces_tenant_id ON marketplaces(tenant_id);
 
 -- Recreate the foreign key from sales_history to marketplaces
--- Note: This now references the composite key (id, shop_id)
+-- Note: This now references the composite key (code, shop_id)
 ALTER TABLE sales_history ADD CONSTRAINT sales_history_marketplace_id_fkey
-  FOREIGN KEY (marketplace_id, shop_id) REFERENCES marketplaces(id, shop_id) ON DELETE SET NULL;
+  FOREIGN KEY (marketplace_id, shop_id) REFERENCES marketplaces(code, shop_id) ON DELETE SET NULL;

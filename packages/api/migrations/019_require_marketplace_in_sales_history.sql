@@ -1,11 +1,11 @@
 -- Marketplace is now required in sales_history
 
 -- Ensure UNKNOWN marketplace exists for ALL shops
--- Since marketplaces now have composite primary key (id, shop_id), we need to create UNKNOWN for each shop
-INSERT INTO marketplaces (id, title, shop_id, tenant_id, updated_at)
+-- Since marketplaces now have composite primary key (code, shop_id), we need to create UNKNOWN for each shop
+INSERT INTO marketplaces (code, title, shop_id, tenant_id, updated_at)
 SELECT 'UNKNOWN', 'Unknown', s.id, s.tenant_id, NOW()
 FROM shops s
-ON CONFLICT (id, shop_id) DO NOTHING;
+ON CONFLICT (code, shop_id) DO NOTHING;
 
 -- Make marketplace_id NOT NULL (any existing NULL values should be updated first)
 -- If there are NULL values, set them to a default marketplace

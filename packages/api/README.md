@@ -23,7 +23,7 @@ Swagger UI provides:
 - **Roles** - Role-based access control (viewer, editor, tenantAdmin, systemAdmin)
 - **User-Roles** - Assign roles to users (per shop or per tenant)
 - **API Keys** - API keys with optional expiration, linked to users
-- **Marketplaces** - Marketplace management (string IDs, read access for all users, write access for system admins only)
+- **Marketplaces** - Marketplace management (numeric IDs, shop-scoped with unique codes, managed by shop editors like brands)
 - **Brands** - Brand management linked to shops (unique code per shop)
   - **CRUD Operations**: Full create, read, update, delete with access control
   - **Import/Export**: Supports both JSON and CSV formats

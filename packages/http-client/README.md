@@ -140,7 +140,7 @@ const brandExample = await client.brands.getBrandsExampleCsv();
 - `sku_code` (required): String, must match existing SKU or will be auto-created
 - `period` (required): String, format `YYYY-MM` (e.g., "2026-01")
 - `quantity` (required): Number, integer
-- `marketplace` (required): String, must match existing marketplace ID or will be auto-created
+- `marketplace` (required): String, must match existing marketplace code or will be auto-created
 
 **Update:**
 - `sku_id` (optional): Number
@@ -182,11 +182,11 @@ const brandExample = await client.brands.getBrandsExampleCsv();
 ### Marketplaces
 
 **Create:**
-- `id` (required): String, 1-100 characters, unique (e.g., "amazon", "ebay")
+- `code` (required): String, 1-100 characters, unique (e.g., "amazon", "ebay")
 - `title` (required): String, 1-200 characters
 
 **Update:**
-- `id` (optional): String, 1-100 characters
+- `code` (optional): String, 1-100 characters
 - `title` (optional): String, 1-200 characters
 
 ## Error Handling
@@ -269,7 +269,7 @@ try {
 
 ### Marketplaces
 - `getMarketplaces()`, `getMarketplace(id)` - All authenticated users
-- `createMarketplace(dto)`, `updateMarketplace(id, dto)`, `deleteMarketplace(id)` - System admin only
+- `createMarketplace(dto)`, `updateMarketplace(id, dto)`, `deleteMarketplace(id)` - Requires write access (editor or higher)
 
 ## Error Handling
 

@@ -49,14 +49,14 @@ describe('Marketplaces (e2e)', () => {
   });
 
   describe('POST /marketplaces', () => {
-    const testMarketplaceId = `MP-CREATE-${Date.now()}`;
+    const testMarketplaceCode = `MP-CREATE-${Date.now()}`;
 
     it("should create marketplace in the user's shop", async () => {
       const marketplace = await ctx.client.createMarketplace(
-        { id: testMarketplaceId, title: 'Test Marketplace' },
+        { code: testMarketplaceCode, title: 'Test Marketplace' },
         ctx.shopContext,
       );
-      expect(marketplace.id).toBe(normalizeId(testMarketplaceId));
+      expect(marketplace.code).toBe(normalizeId(testMarketplaceCode));
       expect(marketplace.title).toBe('Test Marketplace');
       expect(marketplace.shop_id).toBe(ctx.shop.id);
       expect(marketplace.tenant_id).toBe(ctx.tenant.id);
@@ -65,7 +65,7 @@ describe('Marketplaces (e2e)', () => {
     it('should return 409 on duplicate marketplace code in same shop', async () => {
       try {
         await ctx.client.createMarketplace(
-          { id: testMarketplaceId, title: 'Duplicate' },
+          { code: testMarketplaceCode, title: 'Duplicate' },
           ctx.shopContext,
         );
         expect.fail('Should have thrown');
@@ -77,21 +77,26 @@ describe('Marketplaces (e2e)', () => {
   });
 
   describe('GET /marketplaces/:id', () => {
-    const testMarketplaceId = `MP-GET-${Date.now()}`;
+    const testMarketplaceCode = `MP-GET-${Date.now()}`;
+    let marketplaceId: number;
 
     beforeAll(async () => {
-      await ctx.client.createMarketplace({ id: testMarketplaceId, title: 'Test' }, ctx.shopContext);
+      const marketplace = await ctx.client.createMarketplace(
+        { code: testMarketplaceCode, title: 'Test' },
+        ctx.shopContext,
+      );
+      marketplaceId = marketplace.id;
     });
 
     it('should get marketplace by id', async () => {
-      const marketplace = await ctx.client.getMarketplace(testMarketplaceId, ctx.shopContext);
-      expect(marketplace.id).toBe(normalizeId(testMarketplaceId));
+      const marketplace = await ctx.client.getMarketplace(marketplaceId, ctx.shopContext);
+      expect(marketplace.code).toBe(normalizeId(testMarketplaceCode));
       expect(marketplace.shop_id).toBe(ctx.shop.id);
     });
 
     it('should return 404 for non-existent marketplace', async () => {
       try {
-        await ctx.client.getMarketplace('NON-EXISTENT', ctx.shopContext);
+        await ctx.client.getMarketplace(999999, ctx.shopContext);
         expect.fail('Should have thrown 404');
       } catch (e) {
         expect(e).toBeInstanceOf(ApiError);
@@ -101,18 +106,20 @@ describe('Marketplaces (e2e)', () => {
   });
 
   describe('PUT /marketplaces/:id', () => {
-    const testMarketplaceId = `MP-UPDATE-${Date.now()}`;
+    const testMarketplaceCode = `MP-UPDATE-${Date.now()}`;
+    let marketplaceId: number;
 
     beforeAll(async () => {
-      await ctx.client.createMarketplace(
-        { id: testMarketplaceId, title: 'Original' },
+      const marketplace = await ctx.client.createMarketplace(
+        { code: testMarketplaceCode, title: 'Original' },
         ctx.shopContext,
       );
+      marketplaceId = marketplace.id;
     });
 
     it('should update marketplace', async () => {
       const marketplace = await ctx.client.updateMarketplace(
-        testMarketplaceId,
+        marketplaceId,
         { title: 'Updated Title' },
         ctx.shopContext,
       );
@@ -122,7 +129,7 @@ describe('Marketplaces (e2e)', () => {
 
     it('should return 404 for non-existent marketplace', async () => {
       try {
-        await ctx.client.updateMarketplace('NON-EXISTENT', { title: 'Updated' }, ctx.shopContext);
+        await ctx.client.updateMarketplace(999999, { title: 'Updated' }, ctx.shopContext);
         expect.fail('Should have thrown 404');
       } catch (e) {
         expect(e).toBeInstanceOf(ApiError);
@@ -132,21 +139,23 @@ describe('Marketplaces (e2e)', () => {
   });
 
   describe('DELETE /marketplaces/:id', () => {
-    const testMarketplaceId = `MP-DELETE-${Date.now()}`;
+    const testMarketplaceCode = `MP-DELETE-${Date.now()}`;
+    let marketplaceId: number;
 
     beforeAll(async () => {
-      await ctx.client.createMarketplace(
-        { id: testMarketplaceId, title: 'To Delete' },
+      const marketplace = await ctx.client.createMarketplace(
+        { code: testMarketplaceCode, title: 'To Delete' },
         ctx.shopContext,
       );
+      marketplaceId = marketplace.id;
     });
 
     it('should delete marketplace', async () => {
-      await ctx.client.deleteMarketplace(testMarketplaceId, ctx.shopContext);
+      await ctx.client.deleteMarketplace(marketplaceId, ctx.shopContext);
 
       // Verify it's deleted
       try {
-        await ctx.client.getMarketplace(testMarketplaceId, ctx.shopContext);
+        await ctx.client.getMarketplace(marketplaceId, ctx.shopContext);
         expect.fail('Should have thrown 404');
       } catch (e) {
         expect(e).toBeInstanceOf(ApiError);
@@ -157,7 +166,7 @@ describe('Marketplaces (e2e)', () => {
 
   describe('Shop isolation', () => {
     let otherCtx: TestContext;
-    const isolatedMarketplaceId = `MP-ISOLATED-${Date.now()}`;
+    const isolatedMarketplaceCode = `MP-ISOLATED-${Date.now()}`;
 
     beforeAll(async () => {
       // Create another tenant/shop/user
@@ -169,7 +178,7 @@ describe('Marketplaces (e2e)', () => {
 
       // Create marketplace in first shop
       await ctx.client.createMarketplace(
-        { id: isolatedMarketplaceId, title: 'Isolated' },
+        { code: isolatedMarketplaceCode, title: 'Isolated' },
         ctx.shopContext,
       );
     });
@@ -182,13 +191,19 @@ describe('Marketplaces (e2e)', () => {
 
     it('should not see marketplaces from other shops', async () => {
       const marketplaces = await otherCtx.client.getMarketplaces(otherCtx.shopContext);
-      const found = marketplaces.find((m) => m.id === isolatedMarketplaceId);
+      const found = marketplaces.find((m) => m.code === isolatedMarketplaceCode);
       expect(found).toBeUndefined();
     });
 
     it('should not access marketplace from other shop', async () => {
+      // Get the marketplace ID from the first shop
+      const marketplaces = await ctx.client.getMarketplaces(ctx.shopContext);
+      const marketplace = marketplaces.find((m) => m.code === normalizeId(isolatedMarketplaceCode));
+      expect(marketplace).toBeDefined();
+      if (!marketplace) throw new Error('Marketplace not found');
+
       try {
-        await otherCtx.client.getMarketplace(isolatedMarketplaceId, otherCtx.shopContext);
+        await otherCtx.client.getMarketplace(marketplace.id, otherCtx.shopContext);
         expect.fail('Should have thrown 404');
       } catch (e) {
         expect(e).toBeInstanceOf(ApiError);
@@ -198,21 +213,21 @@ describe('Marketplaces (e2e)', () => {
 
     it('should allow same marketplace code in different shops', async () => {
       const marketplace = await otherCtx.client.createMarketplace(
-        { id: isolatedMarketplaceId, title: 'Same Code Different Shop' },
+        { code: isolatedMarketplaceCode, title: 'Same Code Different Shop' },
         otherCtx.shopContext,
       );
-      expect(marketplace.id).toBe(normalizeId(isolatedMarketplaceId));
+      expect(marketplace.code).toBe(normalizeId(isolatedMarketplaceCode));
       expect(marketplace.shop_id).toBe(otherCtx.shop.id);
     });
   });
 
   describe('Import/Export endpoints', () => {
     it('importMarketplacesJson - should import marketplaces from JSON', async () => {
-      const id1 = `IMPORT-JSON-1-${Date.now()}`;
-      const id2 = `IMPORT-JSON-2-${Date.now()}`;
+      const code1 = `IMPORT-JSON-1-${Date.now()}`;
+      const code2 = `IMPORT-JSON-2-${Date.now()}`;
       const items = [
-        { id: id1, title: 'Import JSON Marketplace 1' },
-        { id: id2, title: 'Import JSON Marketplace 2' },
+        { code: code1, title: 'Import JSON Marketplace 1' },
+        { code: code2, title: 'Import JSON Marketplace 2' },
       ];
 
       const result = await ctx.client.importMarketplacesJson(items, ctx.shopContext);
@@ -222,31 +237,40 @@ describe('Marketplaces (e2e)', () => {
       expect(result.errors).toEqual([]);
 
       const marketplaces = await ctx.client.getMarketplaces(ctx.shopContext);
-      const ids = marketplaces.map((m) => m.id);
-      expect(ids).toContain(normalizeId(id1));
-      expect(ids).toContain(normalizeId(id2));
+      const codes = marketplaces.map((m) => m.code);
+      expect(codes).toContain(normalizeId(code1));
+      expect(codes).toContain(normalizeId(code2));
     });
 
     it('importMarketplacesJson - should upsert existing marketplaces', async () => {
-      const id = `UPSERT-JSON-${Date.now()}`;
+      const code = `UPSERT-JSON-${Date.now()}`;
 
-      await ctx.client.importMarketplacesJson([{ id, title: 'Original Title' }], ctx.shopContext);
+      const created = await ctx.client.importMarketplacesJson(
+        [{ code, title: 'Original Title' }],
+        ctx.shopContext,
+      );
+      expect(created.created).toBe(1);
+
       const result = await ctx.client.importMarketplacesJson(
-        [{ id, title: 'Updated Title' }],
+        [{ code, title: 'Updated Title' }],
         ctx.shopContext,
       );
 
       expect(result.created).toBe(0);
       expect(result.updated).toBe(1);
 
-      const marketplace = await ctx.client.getMarketplace(id, ctx.shopContext);
+      // Find by code in the list
+      const marketplaces = await ctx.client.getMarketplaces(ctx.shopContext);
+      const marketplace = marketplaces.find((m) => m.code === normalizeId(code));
+      expect(marketplace).toBeDefined();
+      if (!marketplace) throw new Error('Marketplace not found');
       expect(marketplace.title).toBe('Updated Title');
     });
 
     it('importMarketplacesCsv - should import marketplaces from CSV', async () => {
-      const id1 = `IMPORT-CSV-1-${Date.now()}`;
-      const id2 = `IMPORT-CSV-2-${Date.now()}`;
-      const csvContent = `id,title\n${id1},Import CSV Marketplace 1\n${id2},Import CSV Marketplace 2`;
+      const code1 = `IMPORT-CSV-1-${Date.now()}`;
+      const code2 = `IMPORT-CSV-2-${Date.now()}`;
+      const csvContent = `code,title\n${code1},Import CSV Marketplace 1\n${code2},Import CSV Marketplace 2`;
 
       const result = await ctx.client.importMarketplacesCsv(csvContent, ctx.shopContext);
 
@@ -254,19 +278,19 @@ describe('Marketplaces (e2e)', () => {
       expect(result.updated).toBe(0);
 
       const marketplaces = await ctx.client.getMarketplaces(ctx.shopContext);
-      const ids = marketplaces.map((m) => m.id);
-      expect(ids).toContain(normalizeId(id1));
-      expect(ids).toContain(normalizeId(id2));
+      const codes = marketplaces.map((m) => m.code);
+      expect(codes).toContain(normalizeId(code1));
+      expect(codes).toContain(normalizeId(code2));
     });
 
     it('exportMarketplacesJson - should export marketplaces in import format', async () => {
-      const id1 = `EXPORT-MP-1-${Date.now()}`;
-      const id2 = `EXPORT-MP-2-${Date.now()}`;
+      const code1 = `EXPORT-MP-1-${Date.now()}`;
+      const code2 = `EXPORT-MP-2-${Date.now()}`;
 
       await ctx.client.importMarketplacesJson(
         [
-          { id: id1, title: 'Export Test Marketplace 1' },
-          { id: id2, title: 'Export Test Marketplace 2' },
+          { code: code1, title: 'Export Test Marketplace 1' },
+          { code: code2, title: 'Export Test Marketplace 2' },
         ],
         ctx.shopContext,
       );
@@ -274,22 +298,22 @@ describe('Marketplaces (e2e)', () => {
       const exported = await ctx.client.exportMarketplacesJson(ctx.shopContext);
 
       expect(Array.isArray(exported)).toBe(true);
-      const exportedIds = exported.map((m) => m.id);
-      expect(exportedIds).toContain(normalizeId(id1));
-      expect(exportedIds).toContain(normalizeId(id2));
+      const exportedCodes = exported.map((m) => m.code);
+      expect(exportedCodes).toContain(normalizeId(code1));
+      expect(exportedCodes).toContain(normalizeId(code2));
 
-      const item = exported.find((m) => m.id === normalizeId(id1));
-      expect(item).toEqual({ id: normalizeId(id1), title: 'Export Test Marketplace 1' });
+      const item = exported.find((m) => m.code === normalizeId(code1));
+      expect(item).toEqual({ code: normalizeId(code1), title: 'Export Test Marketplace 1' });
     });
 
     it('exportMarketplacesCsv - should export marketplaces in CSV format', async () => {
-      const id1 = `CSV-EXPORT-MP-1-${Date.now()}`;
-      const id2 = `CSV-EXPORT-MP-2-${Date.now()}`;
+      const code1 = `CSV-EXPORT-MP-1-${Date.now()}`;
+      const code2 = `CSV-EXPORT-MP-2-${Date.now()}`;
 
       await ctx.client.importMarketplacesJson(
         [
-          { id: id1, title: 'CSV Export Test 1' },
-          { id: id2, title: 'CSV Export Test 2' },
+          { code: code1, title: 'CSV Export Test 1' },
+          { code: code2, title: 'CSV Export Test 2' },
         ],
         ctx.shopContext,
       );
@@ -298,9 +322,9 @@ describe('Marketplaces (e2e)', () => {
 
       expect(typeof csv).toBe('string');
       const lines = csv.split('\n');
-      expect(lines[0]).toBe('id,title');
-      expect(lines.some((line) => line.includes(normalizeId(id1)))).toBe(true);
-      expect(lines.some((line) => line.includes(normalizeId(id2)))).toBe(true);
+      expect(lines[0]).toBe('code,title');
+      expect(lines.some((line) => line.includes(normalizeId(code1)))).toBe(true);
+      expect(lines.some((line) => line.includes(normalizeId(code2)))).toBe(true);
     });
 
     it('getMarketplaceExamplesJson - should return example marketplaces', async () => {
@@ -308,7 +332,7 @@ describe('Marketplaces (e2e)', () => {
 
       expect(Array.isArray(examples)).toBe(true);
       expect(examples.length).toBeGreaterThan(0);
-      expect(examples[0]).toHaveProperty('id');
+      expect(examples[0]).toHaveProperty('code');
       expect(examples[0]).toHaveProperty('title');
     });
 
@@ -317,7 +341,7 @@ describe('Marketplaces (e2e)', () => {
 
       expect(typeof csv).toBe('string');
       const lines = csv.split('\n');
-      expect(lines[0]).toBe('id,title');
+      expect(lines[0]).toBe('code,title');
       expect(lines.length).toBeGreaterThan(1);
     });
   });

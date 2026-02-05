@@ -55,7 +55,7 @@ export class ShopsService {
     const skusDeleted = await this.skusService.deleteByShopId(id);
 
     // Delete marketplaces
-    const marketplacesDeleted = await this.marketplacesService.deleteByShopId(id);
+    const marketplacesDeleted = (await this.marketplacesService.deleteByShopId(id)) ?? 0;
 
     return { skusDeleted, salesHistoryDeleted, marketplacesDeleted };
   }

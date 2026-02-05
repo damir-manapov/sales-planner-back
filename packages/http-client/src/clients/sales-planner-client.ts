@@ -157,18 +157,18 @@ export class SalesPlannerClient {
   getSalesHistoryExampleCsv = () => this.salesHistory.getSalesHistoryExampleCsv();
   getMarketplaces = (ctx: Parameters<MarketplacesClient['getMarketplaces']>[0]) =>
     this.marketplaces.getMarketplaces(ctx);
-  getMarketplace = (id: string, ctx: Parameters<MarketplacesClient['getMarketplace']>[1]) =>
+  getMarketplace = (id: number, ctx: Parameters<MarketplacesClient['getMarketplace']>[1]) =>
     this.marketplaces.getMarketplace(id, ctx);
   createMarketplace = (
     dto: Parameters<MarketplacesClient['createMarketplace']>[0],
     ctx: Parameters<MarketplacesClient['createMarketplace']>[1],
   ) => this.marketplaces.createMarketplace(dto, ctx);
   updateMarketplace = (
-    id: string,
+    id: number,
     dto: Parameters<MarketplacesClient['updateMarketplace']>[1],
     ctx: Parameters<MarketplacesClient['updateMarketplace']>[2],
   ) => this.marketplaces.updateMarketplace(id, dto, ctx);
-  deleteMarketplace = (id: string, ctx: Parameters<MarketplacesClient['deleteMarketplace']>[1]) =>
+  deleteMarketplace = (id: number, ctx: Parameters<MarketplacesClient['deleteMarketplace']>[1]) =>
     this.marketplaces.deleteMarketplace(id, ctx);
   importMarketplacesJson = (
     items: Parameters<MarketplacesClient['importMarketplacesJson']>[0],
