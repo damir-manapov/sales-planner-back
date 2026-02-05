@@ -15,7 +15,8 @@ export default async function handler(req: express.Request, res: express.Respons
     app.enableCors();
 
     // Read version from package.json
-    const packageJson = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8')) as {
+    const packageJsonPath = join(__dirname, '..', 'package.json');
+    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8')) as {
       version: string;
     };
 
