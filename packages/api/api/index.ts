@@ -14,17 +14,23 @@ export default async function handler(req: express.Request, res: express.Respons
     const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
     app.enableCors();
 
-    // Read version from package.json
-    const packageJsonPath = join(__dirname, '..', 'package.json');
-    const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8')) as {
-      version: string;
-    };
+    // Read version from package.json with fallback
+    let version = '1.0.0';
+    try {
+      const packageJsonPath = join(__dirname, '..', 'package.json');
+      const packageJson = JSON.parse(readFileSync(packageJsonPath, 'utf-8')) as {
+        version: string;
+      };
+      version = packageJson.version;
+    } catch (error) {
+      console.warn('Could not read package.json, using default version');
+    }
 
     // Swagger setup
     const config = new DocumentBuilder()
       .setTitle('Sales Planner API')
       .setDescription('NestJS API for sales planning and management')
-      .setVersion(packageJson.version)
+      .setVersion(version)
       .addApiKey({ type: 'apiKey', name: 'x-api-key', in: 'header' }, 'apiKey')
       .build();
     const document = SwaggerModule.createDocument(app, config);
