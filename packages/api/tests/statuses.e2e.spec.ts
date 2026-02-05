@@ -20,7 +20,6 @@ describe('Statuses (e2e)', () => {
   let app: INestApplication;
   let baseUrl: string;
   let ctx: TestContext;
-  let statusId: number;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -68,11 +67,14 @@ describe('Statuses (e2e)', () => {
       expect(status.title).toBe(newStatus.title);
       expect(status.shop_id).toBe(ctx.shop.id);
       expect(status.tenant_id).toBe(ctx.tenant.id);
-
-      statusId = status.id;
     });
 
     it('should list statuses', async () => {
+      await ctx.client.createStatus(
+        { code: generateTestCode('status-list'), title: 'List Status' },
+        ctx.shopContext,
+      );
+
       const statuses = await ctx.client.getStatuses(ctx.shopContext);
 
       expect(Array.isArray(statuses)).toBe(true);
@@ -80,14 +82,36 @@ describe('Statuses (e2e)', () => {
     });
 
     it('should get status by id', async () => {
-      const status = await ctx.client.getStatus(statusId, ctx.shopContext);
+      const created = await ctx.client.createStatus(
+        { code: generateTestCode('status-get'), title: 'Get Status' },
+        ctx.shopContext,
+      );
 
-      expect(status.id).toBe(statusId);
+      const status = await ctx.client.getStatus(created.id, ctx.shopContext);
+
+      expect(status.id).toBe(created.id);
+    });
+
+    it('should get status by code', async () => {
+      const created = await ctx.client.createStatus(
+        { code: generateTestCode('status-get-code'), title: 'Get Status Code' },
+        ctx.shopContext,
+      );
+
+      const status = await ctx.client.getStatusByCode(created.code, ctx.shopContext);
+
+      expect(status.id).toBe(created.id);
+      expect(status.code).toBe(created.code);
     });
 
     it('should update status', async () => {
+      const created = await ctx.client.createStatus(
+        { code: generateTestCode('status-update'), title: 'To Update' },
+        ctx.shopContext,
+      );
+
       const status = await ctx.client.updateStatus(
-        statusId,
+        created.id,
         { title: 'Updated Status Title' },
         ctx.shopContext,
       );
@@ -113,8 +137,13 @@ describe('Statuses (e2e)', () => {
 
   describe('Delete operations', () => {
     it('should delete status', async () => {
-      await ctx.client.deleteStatus(statusId, ctx.shopContext);
-      await expectNotFound(() => ctx.client.getStatus(statusId, ctx.shopContext));
+      const toDelete = await ctx.client.createStatus(
+        { code: generateTestCode('status-delete'), title: 'Delete Status' },
+        ctx.shopContext,
+      );
+
+      await ctx.client.deleteStatus(toDelete.id, ctx.shopContext);
+      await expectNotFound(() => ctx.client.getStatus(toDelete.id, ctx.shopContext));
     });
   });
 
@@ -342,14 +371,12 @@ describe('Statuses (e2e)', () => {
         const roles = await ctx.getSystemClient().getRoles();
         const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
         if (!editorRole) throw new Error('Editor role not found');
-        {
-          await ctx.getSystemClient().createUserRole({
-            user_id: editorUserId,
-            role_id: editorRole.id,
-            tenant_id: ctx.tenant.id,
-            shop_id: ctx.shop.id,
-          });
-        }
+        await ctx.getSystemClient().createUserRole({
+          user_id: editorUserId,
+          role_id: editorRole.id,
+          tenant_id: ctx.tenant.id,
+          shop_id: ctx.shop.id,
+        });
       });
 
       afterAll(async () => {
@@ -426,14 +453,12 @@ describe('Statuses (e2e)', () => {
         const roles = await ctx.getSystemClient().getRoles();
         const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
         if (!viewerRole) throw new Error('Viewer role not found');
-        {
-          await ctx.getSystemClient().createUserRole({
-            user_id: viewerUserId,
-            role_id: viewerRole.id,
-            tenant_id: ctx.tenant.id,
-            shop_id: ctx.shop.id,
-          });
-        }
+        await ctx.getSystemClient().createUserRole({
+          user_id: viewerUserId,
+          role_id: viewerRole.id,
+          tenant_id: ctx.tenant.id,
+          shop_id: ctx.shop.id,
+        });
       });
 
       afterAll(async () => {

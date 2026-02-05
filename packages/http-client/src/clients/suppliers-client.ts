@@ -35,6 +35,10 @@ export class SuppliersClient extends ImportExportBaseClient {
     return this.request('GET', `/suppliers/${id}`, { params: ctx });
   }
 
+  async getSupplierByCode(code: string, ctx: ShopContextParams): Promise<Supplier> {
+    return this.request('GET', `/suppliers/code/${encodeURIComponent(code)}`, { params: ctx });
+  }
+
   async createSupplier(data: CreateSupplierDto, ctx: ShopContextParams): Promise<Supplier> {
     return this.request('POST', '/suppliers', { params: ctx, body: data });
   }

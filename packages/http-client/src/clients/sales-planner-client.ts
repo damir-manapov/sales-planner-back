@@ -83,6 +83,8 @@ export class SalesPlannerClient {
   deleteShopData = (id: number) => this.shops.deleteShopData(id);
   getSkus = (ctx: Parameters<SkusClient['getSkus']>[0]) => this.skus.getSkus(ctx);
   getSku = (id: number, ctx: Parameters<SkusClient['getSku']>[1]) => this.skus.getSku(id, ctx);
+  getSkuByCode = (code: string, ctx: Parameters<SkusClient['getSkuByCode']>[1]) =>
+    this.skus.getSkuByCode(code, ctx);
   createSku = (
     dto: Parameters<SkusClient['createSku']>[0],
     ctx: Parameters<SkusClient['createSku']>[1],
@@ -110,6 +112,8 @@ export class SalesPlannerClient {
   getBrands = (ctx: Parameters<BrandsClient['getBrands']>[0]) => this.brands.getBrands(ctx);
   getBrand = (id: number, ctx: Parameters<BrandsClient['getBrand']>[1]) =>
     this.brands.getBrand(id, ctx);
+  getBrandByCode = (code: string, ctx: Parameters<BrandsClient['getBrandByCode']>[1]) =>
+    this.brands.getBrandByCode(code, ctx);
   createBrand = (
     dto: Parameters<BrandsClient['createBrand']>[0],
     ctx: Parameters<BrandsClient['createBrand']>[1],
@@ -139,6 +143,8 @@ export class SalesPlannerClient {
     this.categories.getCategories(ctx);
   getCategory = (id: number, ctx: Parameters<CategoriesClient['getCategory']>[1]) =>
     this.categories.getCategory(id, ctx);
+  getCategoryByCode = (code: string, ctx: Parameters<CategoriesClient['getCategoryByCode']>[1]) =>
+    this.categories.getCategoryByCode(code, ctx);
   createCategory = (
     dto: Parameters<CategoriesClient['createCategory']>[0],
     ctx: Parameters<CategoriesClient['createCategory']>[1],
@@ -167,6 +173,8 @@ export class SalesPlannerClient {
   getGroups = (ctx: Parameters<GroupsClient['getGroups']>[0]) => this.groups.getGroups(ctx);
   getGroup = (id: number, ctx: Parameters<GroupsClient['getGroup']>[1]) =>
     this.groups.getGroup(id, ctx);
+  getGroupByCode = (code: string, ctx: Parameters<GroupsClient['getGroupByCode']>[1]) =>
+    this.groups.getGroupByCode(code, ctx);
   createGroup = (
     dto: Parameters<GroupsClient['createGroup']>[0],
     ctx: Parameters<GroupsClient['createGroup']>[1],
@@ -196,6 +204,8 @@ export class SalesPlannerClient {
     this.statuses.getStatuses(ctx);
   getStatus = (id: number, ctx: Parameters<StatusesClient['getStatus']>[1]) =>
     this.statuses.getStatus(id, ctx);
+  getStatusByCode = (code: string, ctx: Parameters<StatusesClient['getStatusByCode']>[1]) =>
+    this.statuses.getStatusByCode(code, ctx);
   createStatus = (
     dto: Parameters<StatusesClient['createStatus']>[0],
     ctx: Parameters<StatusesClient['createStatus']>[1],
@@ -225,6 +235,8 @@ export class SalesPlannerClient {
     this.suppliers.getSuppliers(ctx);
   getSupplier = (id: number, ctx: Parameters<SuppliersClient['getSupplier']>[1]) =>
     this.suppliers.getSupplier(id, ctx);
+  getSupplierByCode = (code: string, ctx: Parameters<SuppliersClient['getSupplierByCode']>[1]) =>
+    this.suppliers.getSupplierByCode(code, ctx);
   createSupplier = (
     dto: Parameters<SuppliersClient['createSupplier']>[0],
     ctx: Parameters<SuppliersClient['createSupplier']>[1],
@@ -291,6 +303,10 @@ export class SalesPlannerClient {
     this.marketplaces.getMarketplaces(ctx);
   getMarketplace = (id: number, ctx: Parameters<MarketplacesClient['getMarketplace']>[1]) =>
     this.marketplaces.getMarketplace(id, ctx);
+  getMarketplaceByCode = (
+    code: string,
+    ctx: Parameters<MarketplacesClient['getMarketplaceByCode']>[1],
+  ) => this.marketplaces.getMarketplaceByCode(code, ctx);
   createMarketplace = (
     dto: Parameters<MarketplacesClient['createMarketplace']>[0],
     ctx: Parameters<MarketplacesClient['createMarketplace']>[1],

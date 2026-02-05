@@ -56,6 +56,21 @@ export class GroupsController {
     return this.groupsService.findByShopId(ctx.shopId);
   }
 
+  @Get('code/:code')
+  @RequireReadAccess()
+  async findByCode(
+    @Req() _req: AuthenticatedRequest,
+    @ShopContext() ctx: ShopContextType,
+    @Param('code') code: string,
+  ): Promise<Group> {
+    const group = await this.groupsService.findByCodeAndShop(code, ctx.shopId);
+    if (!group || group.tenant_id !== ctx.tenantId) {
+      throw new NotFoundException(`Group with code ${code} not found`);
+    }
+
+    return group;
+  }
+
   @Get('export/json')
   @RequireReadAccess()
   async exportJson(

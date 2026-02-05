@@ -18,6 +18,10 @@ export class GroupsClient extends ImportExportBaseClient {
     return this.request('GET', `/groups/${id}`, { params: ctx });
   }
 
+  async getGroupByCode(code: string, ctx: ShopContextParams): Promise<Group> {
+    return this.request('GET', `/groups/code/${encodeURIComponent(code)}`, { params: ctx });
+  }
+
   async createGroup(dto: CreateGroupRequest, ctx: ShopContextParams): Promise<Group> {
     return this.request('POST', '/groups', { body: dto, params: ctx });
   }

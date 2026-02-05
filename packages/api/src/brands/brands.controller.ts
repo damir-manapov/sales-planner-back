@@ -56,6 +56,21 @@ export class BrandsController {
     return this.brandsService.findByShopId(ctx.shopId);
   }
 
+  @Get('code/:code')
+  @RequireReadAccess()
+  async findByCode(
+    @Req() _req: AuthenticatedRequest,
+    @ShopContext() ctx: ShopContextType,
+    @Param('code') code: string,
+  ): Promise<Brand> {
+    const brand = await this.brandsService.findByCodeAndShop(code, ctx.shopId);
+    if (!brand || brand.tenant_id !== ctx.tenantId) {
+      throw new NotFoundException(`Brand with code ${code} not found`);
+    }
+
+    return brand;
+  }
+
   @Get('export/json')
   @RequireReadAccess()
   async exportJson(

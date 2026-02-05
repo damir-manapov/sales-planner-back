@@ -18,6 +18,10 @@ export class SkusClient extends ImportExportBaseClient {
     return this.request('GET', `/skus/${id}`, { params: ctx });
   }
 
+  async getSkuByCode(code: string, ctx: ShopContextParams): Promise<Sku> {
+    return this.request('GET', `/skus/code/${encodeURIComponent(code)}`, { params: ctx });
+  }
+
   async createSku(dto: CreateSkuRequest, ctx: ShopContextParams): Promise<Sku> {
     return this.request('POST', '/skus', { body: dto, params: ctx });
   }

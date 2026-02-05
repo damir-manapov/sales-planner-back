@@ -20,7 +20,6 @@ describe('Groups (e2e)', () => {
   let app: INestApplication;
   let baseUrl: string;
   let ctx: TestContext;
-  let groupId: number;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -68,11 +67,14 @@ describe('Groups (e2e)', () => {
       expect(group.title).toBe(newGroup.title);
       expect(group.shop_id).toBe(ctx.shop.id);
       expect(group.tenant_id).toBe(ctx.tenant.id);
-
-      groupId = group.id;
     });
 
     it('should list groups', async () => {
+      await ctx.client.createGroup(
+        { code: generateTestCode('group-list'), title: 'List Group' },
+        ctx.shopContext,
+      );
+
       const groups = await ctx.client.getGroups(ctx.shopContext);
 
       expect(Array.isArray(groups)).toBe(true);
@@ -80,14 +82,36 @@ describe('Groups (e2e)', () => {
     });
 
     it('should get group by id', async () => {
-      const group = await ctx.client.getGroup(groupId, ctx.shopContext);
+      const created = await ctx.client.createGroup(
+        { code: generateTestCode('group-get'), title: 'Get Group' },
+        ctx.shopContext,
+      );
 
-      expect(group.id).toBe(groupId);
+      const group = await ctx.client.getGroup(created.id, ctx.shopContext);
+
+      expect(group.id).toBe(created.id);
+    });
+
+    it('should get group by code', async () => {
+      const created = await ctx.client.createGroup(
+        { code: generateTestCode('group-get-code'), title: 'Get Group Code' },
+        ctx.shopContext,
+      );
+
+      const group = await ctx.client.getGroupByCode(created.code, ctx.shopContext);
+
+      expect(group.id).toBe(created.id);
+      expect(group.code).toBe(created.code);
     });
 
     it('should update group', async () => {
+      const created = await ctx.client.createGroup(
+        { code: generateTestCode('group-update'), title: 'To Update' },
+        ctx.shopContext,
+      );
+
       const group = await ctx.client.updateGroup(
-        groupId,
+        created.id,
         { title: 'Updated Group Title' },
         ctx.shopContext,
       );
@@ -107,8 +131,13 @@ describe('Groups (e2e)', () => {
 
   describe('Delete operations', () => {
     it('should delete group', async () => {
-      await ctx.client.deleteGroup(groupId, ctx.shopContext);
-      await expectNotFound(() => ctx.client.getGroup(groupId, ctx.shopContext));
+      const toDelete = await ctx.client.createGroup(
+        { code: generateTestCode('group-delete'), title: 'Delete Group' },
+        ctx.shopContext,
+      );
+
+      await ctx.client.deleteGroup(toDelete.id, ctx.shopContext);
+      await expectNotFound(() => ctx.client.getGroup(toDelete.id, ctx.shopContext));
     });
   });
 

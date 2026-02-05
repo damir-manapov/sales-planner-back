@@ -57,6 +57,21 @@ export class MarketplacesController {
     return this.marketplacesService.findByShopId(ctx.shopId);
   }
 
+  @Get('code/:code')
+  @RequireReadAccess()
+  async findByCode(
+    @Req() _req: AuthenticatedRequest,
+    @ShopContext() ctx: ShopContextType,
+    @Param('code') code: string,
+  ): Promise<Marketplace> {
+    const marketplace = await this.marketplacesService.findByCodeAndShop(code, ctx.shopId);
+    if (!marketplace || marketplace.tenant_id !== ctx.tenantId) {
+      throw new NotFoundException(`Marketplace with code ${code} not found`);
+    }
+
+    return marketplace;
+  }
+
   @Get('export/json')
   @RequireReadAccess()
   async exportJson(

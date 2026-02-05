@@ -152,13 +152,11 @@ describe('User Roles (e2e)', () => {
       const roles = await ctx.getSystemClient().getRoles();
       const tenantAdminRole = roles.find((r) => r.name === ROLE_NAMES.TENANT_ADMIN);
       if (!tenantAdminRole) throw new Error('Tenant Admin role not found');
-      {
-        await ctx.getSystemClient().createUserRole({
-          user_id: tenantAdminUserId,
-          role_id: tenantAdminRole.id,
-          tenant_id: ctx.tenant.id,
-        });
-      }
+      await ctx.getSystemClient().createUserRole({
+        user_id: tenantAdminUserId,
+        role_id: tenantAdminRole.id,
+        tenant_id: ctx.tenant.id,
+      });
 
       // Create target user
       const targetUser = await ctx.getSystemClient().createUser({

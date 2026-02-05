@@ -20,7 +20,6 @@ describe('Marketplaces (e2e)', () => {
   let app: INestApplication;
   let baseUrl: string;
   let ctx: TestContext;
-  let marketplaceId: number;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -68,11 +67,14 @@ describe('Marketplaces (e2e)', () => {
       expect(marketplace.title).toBe(newMarketplace.title);
       expect(marketplace.shop_id).toBe(ctx.shop.id);
       expect(marketplace.tenant_id).toBe(ctx.tenant.id);
-
-      marketplaceId = marketplace.id;
     });
 
     it('should list marketplaces', async () => {
+      await ctx.client.createMarketplace(
+        { code: generateTestCode('marketplace-list'), title: 'List Marketplace' },
+        ctx.shopContext,
+      );
+
       const marketplaces = await ctx.client.getMarketplaces(ctx.shopContext);
 
       expect(Array.isArray(marketplaces)).toBe(true);
@@ -84,14 +86,36 @@ describe('Marketplaces (e2e)', () => {
     });
 
     it('should get marketplace by id', async () => {
-      const marketplace = await ctx.client.getMarketplace(marketplaceId, ctx.shopContext);
+      const created = await ctx.client.createMarketplace(
+        { code: generateTestCode('marketplace-get'), title: 'Get Marketplace' },
+        ctx.shopContext,
+      );
 
-      expect(marketplace.id).toBe(marketplaceId);
+      const marketplace = await ctx.client.getMarketplace(created.id, ctx.shopContext);
+
+      expect(marketplace.id).toBe(created.id);
+    });
+
+    it('should get marketplace by code', async () => {
+      const created = await ctx.client.createMarketplace(
+        { code: generateTestCode('marketplace-get-code'), title: 'Get Marketplace Code' },
+        ctx.shopContext,
+      );
+
+      const marketplace = await ctx.client.getMarketplaceByCode(created.code, ctx.shopContext);
+
+      expect(marketplace.id).toBe(created.id);
+      expect(marketplace.code).toBe(created.code);
     });
 
     it('should update marketplace', async () => {
+      const created = await ctx.client.createMarketplace(
+        { code: generateTestCode('marketplace-update'), title: 'To Update' },
+        ctx.shopContext,
+      );
+
       const marketplace = await ctx.client.updateMarketplace(
-        marketplaceId,
+        created.id,
         { title: 'Updated Marketplace Title' },
         ctx.shopContext,
       );
@@ -121,8 +145,13 @@ describe('Marketplaces (e2e)', () => {
 
   describe('Delete operations', () => {
     it('should delete marketplace', async () => {
-      await ctx.client.deleteMarketplace(marketplaceId, ctx.shopContext);
-      await expectNotFound(() => ctx.client.getMarketplace(marketplaceId, ctx.shopContext));
+      const toDelete = await ctx.client.createMarketplace(
+        { code: generateTestCode('marketplace-delete'), title: 'Delete Marketplace' },
+        ctx.shopContext,
+      );
+
+      await ctx.client.deleteMarketplace(toDelete.id, ctx.shopContext);
+      await expectNotFound(() => ctx.client.getMarketplace(toDelete.id, ctx.shopContext));
     });
   });
 

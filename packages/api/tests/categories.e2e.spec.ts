@@ -20,7 +20,6 @@ describe('Categories (e2e)', () => {
   let app: INestApplication;
   let baseUrl: string;
   let ctx: TestContext;
-  let categoryId: number;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -68,11 +67,14 @@ describe('Categories (e2e)', () => {
       expect(category.title).toBe(newCategory.title);
       expect(category.shop_id).toBe(ctx.shop.id);
       expect(category.tenant_id).toBe(ctx.tenant.id);
-
-      categoryId = category.id;
     });
 
     it('should list categories', async () => {
+      await ctx.client.createCategory(
+        { code: generateTestCode('category-list'), title: 'List Category' },
+        ctx.shopContext,
+      );
+
       const categories = await ctx.client.getCategories(ctx.shopContext);
 
       expect(Array.isArray(categories)).toBe(true);
@@ -80,14 +82,36 @@ describe('Categories (e2e)', () => {
     });
 
     it('should get category by id', async () => {
-      const category = await ctx.client.getCategory(categoryId, ctx.shopContext);
+      const created = await ctx.client.createCategory(
+        { code: generateTestCode('category-get'), title: 'Get Category' },
+        ctx.shopContext,
+      );
 
-      expect(category.id).toBe(categoryId);
+      const category = await ctx.client.getCategory(created.id, ctx.shopContext);
+
+      expect(category.id).toBe(created.id);
+    });
+
+    it('should get category by code', async () => {
+      const created = await ctx.client.createCategory(
+        { code: generateTestCode('category-get-code'), title: 'Get Category Code' },
+        ctx.shopContext,
+      );
+
+      const category = await ctx.client.getCategoryByCode(created.code, ctx.shopContext);
+
+      expect(category.id).toBe(created.id);
+      expect(category.code).toBe(created.code);
     });
 
     it('should update category', async () => {
+      const created = await ctx.client.createCategory(
+        { code: generateTestCode('category-update'), title: 'To Update' },
+        ctx.shopContext,
+      );
+
       const category = await ctx.client.updateCategory(
-        categoryId,
+        created.id,
         { title: 'Updated Category Title' },
         ctx.shopContext,
       );
@@ -113,8 +137,13 @@ describe('Categories (e2e)', () => {
 
   describe('Delete operations', () => {
     it('should delete category', async () => {
-      await ctx.client.deleteCategory(categoryId, ctx.shopContext);
-      await expectNotFound(() => ctx.client.getCategory(categoryId, ctx.shopContext));
+      const toDelete = await ctx.client.createCategory(
+        { code: generateTestCode('category-delete'), title: 'Delete Category' },
+        ctx.shopContext,
+      );
+
+      await ctx.client.deleteCategory(toDelete.id, ctx.shopContext);
+      await expectNotFound(() => ctx.client.getCategory(toDelete.id, ctx.shopContext));
     });
   });
 

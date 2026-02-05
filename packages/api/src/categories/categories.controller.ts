@@ -56,6 +56,21 @@ export class CategoriesController {
     return this.categoriesService.findByShopId(ctx.shopId);
   }
 
+  @Get('code/:code')
+  @RequireReadAccess()
+  async findByCode(
+    @Req() _req: AuthenticatedRequest,
+    @ShopContext() ctx: ShopContextType,
+    @Param('code') code: string,
+  ): Promise<Category> {
+    const category = await this.categoriesService.findByCodeAndShop(code, ctx.shopId);
+    if (!category || category.tenant_id !== ctx.tenantId) {
+      throw new NotFoundException(`Category with code ${code} not found`);
+    }
+
+    return category;
+  }
+
   @Get('export/json')
   @RequireReadAccess()
   async exportJson(

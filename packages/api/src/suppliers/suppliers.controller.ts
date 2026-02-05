@@ -56,6 +56,21 @@ export class SuppliersController {
     return this.suppliersService.findByShopId(ctx.shopId);
   }
 
+  @Get('code/:code')
+  @RequireReadAccess()
+  async findByCode(
+    @Req() _req: AuthenticatedRequest,
+    @ShopContext() ctx: ShopContextType,
+    @Param('code') code: string,
+  ): Promise<Supplier> {
+    const supplier = await this.suppliersService.findByCodeAndShop(code, ctx.shopId);
+    if (!supplier || supplier.tenant_id !== ctx.tenantId) {
+      throw new NotFoundException(`Supplier with code ${code} not found`);
+    }
+
+    return supplier;
+  }
+
   @Get('export/json')
   @RequireReadAccess()
   async exportJson(

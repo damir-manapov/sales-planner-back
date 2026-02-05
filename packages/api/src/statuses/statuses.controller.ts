@@ -56,6 +56,21 @@ export class StatusesController {
     return this.statusesService.findByShopId(ctx.shopId);
   }
 
+  @Get('code/:code')
+  @RequireReadAccess()
+  async findByCode(
+    @Req() _req: AuthenticatedRequest,
+    @ShopContext() ctx: ShopContextType,
+    @Param('code') code: string,
+  ): Promise<Status> {
+    const status = await this.statusesService.findByCodeAndShop(code, ctx.shopId);
+    if (!status || status.tenant_id !== ctx.tenantId) {
+      throw new NotFoundException(`Status with code ${code} not found`);
+    }
+
+    return status;
+  }
+
   @Get('export/json')
   @RequireReadAccess()
   async exportJson(

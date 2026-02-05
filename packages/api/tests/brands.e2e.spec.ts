@@ -20,7 +20,6 @@ describe('Brands (e2e)', () => {
   let app: INestApplication;
   let baseUrl: string;
   let ctx: TestContext;
-  let brandId: number;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -68,11 +67,14 @@ describe('Brands (e2e)', () => {
       expect(brand.title).toBe(newBrand.title);
       expect(brand.shop_id).toBe(ctx.shop.id);
       expect(brand.tenant_id).toBe(ctx.tenant.id);
-
-      brandId = brand.id;
     });
 
     it('should list brands', async () => {
+      await ctx.client.createBrand(
+        { code: generateTestCode('brand-list'), title: 'List Brand' },
+        ctx.shopContext,
+      );
+
       const brands = await ctx.client.getBrands(ctx.shopContext);
 
       expect(Array.isArray(brands)).toBe(true);
@@ -80,14 +82,36 @@ describe('Brands (e2e)', () => {
     });
 
     it('should get brand by id', async () => {
-      const brand = await ctx.client.getBrand(brandId, ctx.shopContext);
+      const created = await ctx.client.createBrand(
+        { code: generateTestCode('brand-get'), title: 'Get Brand' },
+        ctx.shopContext,
+      );
 
-      expect(brand.id).toBe(brandId);
+      const brand = await ctx.client.getBrand(created.id, ctx.shopContext);
+
+      expect(brand.id).toBe(created.id);
+    });
+
+    it('should get brand by code', async () => {
+      const created = await ctx.client.createBrand(
+        { code: generateTestCode('brand-get-code'), title: 'Get Brand Code' },
+        ctx.shopContext,
+      );
+
+      const brand = await ctx.client.getBrandByCode(created.code, ctx.shopContext);
+
+      expect(brand.id).toBe(created.id);
+      expect(brand.code).toBe(created.code);
     });
 
     it('should update brand', async () => {
+      const created = await ctx.client.createBrand(
+        { code: generateTestCode('brand-update'), title: 'To Update' },
+        ctx.shopContext,
+      );
+
       const brand = await ctx.client.updateBrand(
-        brandId,
+        created.id,
         { title: 'Updated Brand Title' },
         ctx.shopContext,
       );
@@ -107,8 +131,13 @@ describe('Brands (e2e)', () => {
 
   describe('Delete operations', () => {
     it('should delete brand', async () => {
-      await ctx.client.deleteBrand(brandId, ctx.shopContext);
-      await expectNotFound(() => ctx.client.getBrand(brandId, ctx.shopContext));
+      const toDelete = await ctx.client.createBrand(
+        { code: generateTestCode('brand-delete'), title: 'Delete Brand' },
+        ctx.shopContext,
+      );
+
+      await ctx.client.deleteBrand(toDelete.id, ctx.shopContext);
+      await expectNotFound(() => ctx.client.getBrand(toDelete.id, ctx.shopContext));
     });
   });
 

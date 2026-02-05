@@ -20,7 +20,6 @@ describe('Suppliers (e2e)', () => {
   let app: INestApplication;
   let baseUrl: string;
   let ctx: TestContext;
-  let supplierId: number;
 
   beforeAll(async () => {
     const moduleFixture: TestingModule = await Test.createTestingModule({
@@ -68,11 +67,14 @@ describe('Suppliers (e2e)', () => {
       expect(supplier.title).toBe(newSupplier.title);
       expect(supplier.shop_id).toBe(ctx.shop.id);
       expect(supplier.tenant_id).toBe(ctx.tenant.id);
-
-      supplierId = supplier.id;
     });
 
     it('should list suppliers', async () => {
+      await ctx.client.createSupplier(
+        { code: generateTestCode('supplier-list'), title: 'List Supplier' },
+        ctx.shopContext,
+      );
+
       const suppliers = await ctx.client.getSuppliers(ctx.shopContext);
 
       expect(Array.isArray(suppliers)).toBe(true);
@@ -80,14 +82,36 @@ describe('Suppliers (e2e)', () => {
     });
 
     it('should get supplier by id', async () => {
-      const supplier = await ctx.client.getSupplier(supplierId, ctx.shopContext);
+      const created = await ctx.client.createSupplier(
+        { code: generateTestCode('supplier-get'), title: 'Get Supplier' },
+        ctx.shopContext,
+      );
 
-      expect(supplier.id).toBe(supplierId);
+      const supplier = await ctx.client.getSupplier(created.id, ctx.shopContext);
+
+      expect(supplier.id).toBe(created.id);
+    });
+
+    it('should get supplier by code', async () => {
+      const created = await ctx.client.createSupplier(
+        { code: generateTestCode('supplier-get-code'), title: 'Get Supplier Code' },
+        ctx.shopContext,
+      );
+
+      const supplier = await ctx.client.getSupplierByCode(created.code, ctx.shopContext);
+
+      expect(supplier.id).toBe(created.id);
+      expect(supplier.code).toBe(created.code);
     });
 
     it('should update supplier', async () => {
+      const created = await ctx.client.createSupplier(
+        { code: generateTestCode('supplier-update'), title: 'To Update' },
+        ctx.shopContext,
+      );
+
       const supplier = await ctx.client.updateSupplier(
-        supplierId,
+        created.id,
         { title: 'Updated Supplier Title' },
         ctx.shopContext,
       );
@@ -117,8 +141,13 @@ describe('Suppliers (e2e)', () => {
 
   describe('Delete operations', () => {
     it('should delete supplier', async () => {
-      await ctx.client.deleteSupplier(supplierId, ctx.shopContext);
-      await expectNotFound(() => ctx.client.getSupplier(supplierId, ctx.shopContext));
+      const toDelete = await ctx.client.createSupplier(
+        { code: generateTestCode('supplier-delete'), title: 'Delete Supplier' },
+        ctx.shopContext,
+      );
+
+      await ctx.client.deleteSupplier(toDelete.id, ctx.shopContext);
+      await expectNotFound(() => ctx.client.getSupplier(toDelete.id, ctx.shopContext));
     });
   });
 
@@ -323,14 +352,12 @@ describe('Suppliers (e2e)', () => {
         const roles = await ctx.getSystemClient().getRoles();
         const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
         if (!editorRole) throw new Error('Editor role not found');
-        {
-          await ctx.getSystemClient().createUserRole({
-            user_id: editorUserId,
-            role_id: editorRole.id,
-            tenant_id: ctx.tenant.id,
-            shop_id: ctx.shop.id,
-          });
-        }
+        await ctx.getSystemClient().createUserRole({
+          user_id: editorUserId,
+          role_id: editorRole.id,
+          tenant_id: ctx.tenant.id,
+          shop_id: ctx.shop.id,
+        });
       });
 
       afterAll(async () => {
@@ -407,14 +434,12 @@ describe('Suppliers (e2e)', () => {
         const roles = await ctx.getSystemClient().getRoles();
         const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
         if (!viewerRole) throw new Error('Viewer role not found');
-        {
-          await ctx.getSystemClient().createUserRole({
-            user_id: viewerUserId,
-            role_id: viewerRole.id,
-            tenant_id: ctx.tenant.id,
-            shop_id: ctx.shop.id,
-          });
-        }
+        await ctx.getSystemClient().createUserRole({
+          user_id: viewerUserId,
+          role_id: viewerRole.id,
+          tenant_id: ctx.tenant.id,
+          shop_id: ctx.shop.id,
+        });
       });
 
       afterAll(async () => {

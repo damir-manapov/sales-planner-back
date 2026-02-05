@@ -17,6 +17,10 @@ export class MarketplacesClient extends ImportExportBaseClient {
     return this.request('GET', `/marketplaces/${id}`, { params: ctx });
   }
 
+  async getMarketplaceByCode(code: string, ctx: ShopContextParams): Promise<Marketplace> {
+    return this.request('GET', `/marketplaces/code/${encodeURIComponent(code)}`, { params: ctx });
+  }
+
   async createMarketplace(
     dto: CreateMarketplaceRequest,
     ctx: ShopContextParams,

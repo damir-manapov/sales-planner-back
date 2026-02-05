@@ -56,6 +56,21 @@ export class SkusController {
     return this.skusService.findByShopId(ctx.shopId);
   }
 
+  @Get('code/:code')
+  @RequireReadAccess()
+  async findByCode(
+    @Req() _req: AuthenticatedRequest,
+    @ShopContext() ctx: ShopContextType,
+    @Param('code') code: string,
+  ): Promise<Sku> {
+    const sku = await this.skusService.findByCodeAndShop(code, ctx.shopId);
+    if (!sku || sku.tenant_id !== ctx.tenantId) {
+      throw new NotFoundException(`SKU with code ${code} not found`);
+    }
+
+    return sku;
+  }
+
   @Get('export/json')
   @RequireReadAccess()
   async exportJson(

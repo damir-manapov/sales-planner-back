@@ -18,6 +18,10 @@ export class CategoriesClient extends ImportExportBaseClient {
     return this.request('GET', `/categories/${id}`, { params: ctx });
   }
 
+  async getCategoryByCode(code: string, ctx: ShopContextParams): Promise<Category> {
+    return this.request('GET', `/categories/code/${encodeURIComponent(code)}`, { params: ctx });
+  }
+
   async createCategory(dto: CreateCategoryRequest, ctx: ShopContextParams): Promise<Category> {
     return this.request('POST', '/categories', { body: dto, params: ctx });
   }

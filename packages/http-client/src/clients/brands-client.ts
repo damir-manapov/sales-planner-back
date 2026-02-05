@@ -18,6 +18,10 @@ export class BrandsClient extends ImportExportBaseClient {
     return this.request('GET', `/brands/${id}`, { params: ctx });
   }
 
+  async getBrandByCode(code: string, ctx: ShopContextParams): Promise<Brand> {
+    return this.request('GET', `/brands/code/${encodeURIComponent(code)}`, { params: ctx });
+  }
+
   async createBrand(dto: CreateBrandRequest, ctx: ShopContextParams): Promise<Brand> {
     return this.request('POST', '/brands', { body: dto, params: ctx });
   }

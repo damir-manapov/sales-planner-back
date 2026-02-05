@@ -18,6 +18,10 @@ export class StatusesClient extends ImportExportBaseClient {
     return this.request('GET', `/statuses/${id}`, { params: ctx });
   }
 
+  async getStatusByCode(code: string, ctx: ShopContextParams): Promise<Status> {
+    return this.request('GET', `/statuses/code/${encodeURIComponent(code)}`, { params: ctx });
+  }
+
   async createStatus(dto: CreateStatusRequest, ctx: ShopContextParams): Promise<Status> {
     return this.request('POST', '/statuses', { body: dto, params: ctx });
   }
