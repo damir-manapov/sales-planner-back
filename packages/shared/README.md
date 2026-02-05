@@ -53,7 +53,7 @@ export type CreateUserRequest = CreateUserDto;
 ```typescript
 import type { 
   // Entities
-  User, Tenant, Shop, Sku, Brand, Category, Group, Status,
+  User, Tenant, Shop, Sku, Brand, Category, Group, Status, Supplier,
   SalesHistory, Role, UserRole, ApiKey, Marketplace,
 
   // Request types (HTTP layer)
@@ -63,6 +63,7 @@ import type {
   CreateCategoryRequest, UpdateCategoryRequest,
   CreateGroupRequest, UpdateGroupRequest,
   CreateStatusRequest, UpdateStatusRequest,
+  CreateSupplierRequest, UpdateSupplierRequest,
   CreateSalesHistoryRequest, UpdateSalesHistoryRequest,
 
   // DTO types (Service layer)
@@ -72,11 +73,12 @@ import type {
   CreateCategoryDto, UpdateCategoryDto,
   CreateGroupDto, UpdateGroupDto,
   CreateStatusDto, UpdateStatusDto,
+  CreateSupplierDto, UpdateSupplierDto,
   CreateSalesHistoryDto, UpdateSalesHistoryDto,
 
   // Import types
   ImportSkuItem, ImportBrandItem, ImportCategoryItem, ImportGroupItem, ImportStatusItem,
-  ImportSalesHistoryItem, ImportMarketplaceItem,
+  ImportSupplierItem, ImportSalesHistoryItem, ImportMarketplaceItem,
 
   // Query types
   ShopContextParams, PeriodQuery,

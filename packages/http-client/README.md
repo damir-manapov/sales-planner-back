@@ -64,6 +64,10 @@ await client.groups.importGroupsJson(items, { tenantId, shopId });
 const statuses = await client.statuses.getStatuses({ tenantId, shopId });
 await client.statuses.importStatusesJson(items, { tenantId, shopId });
 
+// Suppliers with import/export
+const suppliers = await client.suppliers.getSuppliers({ tenantId, shopId });
+await client.suppliers.importSuppliersJson({ suppliers: items }, { tenantId, shopId });
+
 // Sales History
 const history = await client.salesHistory.getSalesHistory(
   { tenantId, shopId },
@@ -75,7 +79,7 @@ const marketplaces = await client.marketplaces.getMarketplaces({ tenantId });
 
 // Entity Metadata (for UI documentation)
 const metadata = await client.metadata.getEntitiesMetadata();
-// Returns field definitions for brands, categories, groups, statuses, marketplaces, skus, sales history
+// Returns field definitions for brands, categories, groups, statuses, suppliers, marketplaces, skus, sales history
 ```
 
 **Benefits:**
@@ -96,7 +100,7 @@ const skus = await client.getSkus({ tenantId, shopId });
 
 ## Import/Export Pattern
 
-Resources that support bulk operations (SKUs, Brands, Categories, Groups, Statuses, Sales History, Marketplaces) follow a consistent pattern:
+Resources that support bulk operations (SKUs, Brands, Categories, Groups, Statuses, Suppliers, Sales History, Marketplaces) follow a consistent pattern:
 
 ```typescript
 // Import from JSON
