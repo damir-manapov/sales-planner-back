@@ -1,10 +1,18 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
+import { SalesPlannerClient } from '@sales-planner/http-client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { normalizeCode } from '../src/lib/normalize-code.js';
 import { TestContext } from './test-context.js';
-import { generateUniqueId, generateTestCode, expectNotFound, expectConflict } from './test-helpers.js';
+import {
+  generateUniqueId,
+  generateTestCode,
+  expectNotFound,
+  expectConflict,
+  expectForbidden,
+  cleanupUser,
+} from './test-helpers.js';
 
 describe('Marketplaces (e2e)', () => {
   let app: INestApplication;
@@ -321,6 +329,108 @@ describe('Marketplaces (e2e)', () => {
       const lines = csv.split('\n');
       expect(lines[0]).toBe('code,title');
       expect(lines.length).toBeGreaterThan(1);
+    });
+  });
+
+  describe('Viewer role access', () => {
+    let viewerUserId: number;
+    let viewerClient: SalesPlannerClient;
+
+    beforeAll(async () => {
+      // Create viewer user
+      const viewerUser = await ctx.getSystemClient().createUser({
+        email: `viewer-${generateUniqueId()}@example.com`,
+        name: 'Viewer User',
+      });
+      viewerUserId = viewerUser.id;
+      const viewerApiKey = await ctx.getSystemClient().createApiKey({
+        user_id: viewerUserId,
+        name: 'Viewer Key',
+      });
+
+      viewerClient = new SalesPlannerClient({ baseUrl, apiKey: viewerApiKey.key });
+
+      // Assign viewer role
+      const roles = await ctx.getSystemClient().getRoles();
+      const viewerRole = roles.find((r) => r.name === 'viewer');
+      if (viewerRole) {
+        await ctx.getSystemClient().createUserRole({
+          user_id: viewerUserId,
+          role_id: viewerRole.id,
+          tenant_id: ctx.tenant.id,
+          shop_id: ctx.shop.id,
+        });
+      }
+    });
+
+    afterAll(async () => {
+      if (viewerUserId) {
+        await cleanupUser(app, viewerUserId);
+      }
+    });
+
+    it('viewer should be able to list marketplaces', async () => {
+      const marketplaces = await viewerClient.getMarketplaces(ctx.shopContext);
+      expect(Array.isArray(marketplaces)).toBe(true);
+    });
+
+    it('viewer should be able to get single marketplace', async () => {
+      const marketplaces = await viewerClient.getMarketplaces(ctx.shopContext);
+      if (marketplaces.length > 0) {
+        // biome-ignore lint/style/noNonNullAssertion: length check ensures element exists
+        const firstMarketplace = marketplaces[0]!;
+        const marketplace = await viewerClient.getMarketplace(firstMarketplace.id, ctx.shopContext);
+        expect(marketplace.id).toBe(firstMarketplace.id);
+      }
+    });
+
+    it('viewer should NOT be able to create marketplace', async () => {
+      await expectForbidden(() =>
+        viewerClient.createMarketplace(
+          { code: 'viewer-mp', title: 'Should Fail' },
+          ctx.shopContext,
+        ),
+      );
+    });
+
+    it('viewer should NOT be able to update marketplace', async () => {
+      const marketplaces = await viewerClient.getMarketplaces(ctx.shopContext);
+      if (marketplaces.length > 0) {
+        // biome-ignore lint/style/noNonNullAssertion: length check ensures element exists
+        const firstMarketplace = marketplaces[0]!;
+        await expectForbidden(() =>
+          viewerClient.updateMarketplace(
+            firstMarketplace.id,
+            { title: 'Should Fail' },
+            ctx.shopContext,
+          ),
+        );
+      }
+    });
+
+    it('viewer should NOT be able to delete marketplace', async () => {
+      const marketplaces = await viewerClient.getMarketplaces(ctx.shopContext);
+      if (marketplaces.length > 0) {
+        // biome-ignore lint/style/noNonNullAssertion: length check ensures element exists
+        const firstMarketplace = marketplaces[0]!;
+        await expectForbidden(() =>
+          viewerClient.deleteMarketplace(firstMarketplace.id, ctx.shopContext),
+        );
+      }
+    });
+
+    it('viewer should be able to export marketplaces', async () => {
+      const exported = await viewerClient.exportMarketplacesJson(ctx.shopContext);
+      expect(Array.isArray(exported)).toBe(true);
+    });
+
+    it('viewer should NOT be able to import marketplaces', async () => {
+      await expectForbidden(() =>
+        viewerClient.importMarketplacesJson(
+          [{ code: 'test', title: 'Should Fail' }],
+          ctx.shopContext,
+        ),
+      );
     });
   });
 });
