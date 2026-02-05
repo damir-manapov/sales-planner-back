@@ -1,5 +1,11 @@
 # @sales-planner/api
 
+## 0.4.4
+
+### Patch Changes
+
+- Add code normalization for brands and marketplaces (normalizeId: removes spaces, transliterates Cyrillic, converts to camelCase)
+
 ## 0.4.3
 
 ### Patch Changes
