@@ -240,6 +240,20 @@ describe('Sales History (e2e)', () => {
       );
     });
 
+    it('should return 403 when creating for other tenant', async () => {
+      await expectForbidden(() =>
+        ctx.client.createSalesHistory(
+          {
+            sku_id: skuId,
+            period: generateTestPeriod(),
+            quantity: 50,
+            marketplace_id: marketplaceId,
+          },
+          { shop_id: ctx.shop.id, tenant_id: otherCtx.tenant.id },
+        ),
+      );
+    });
+
     it('should return 404 when getting resource from other tenant', async () => {
       const otherRecord = await otherCtx.client.createSalesHistory(
         {
@@ -428,6 +442,28 @@ describe('Sales History (e2e)', () => {
       expect(lines[0]).toBe('marketplace,period,sku,quantity');
       expect(lines.length).toBeGreaterThan(1);
     });
+
+    it('should import sales history from CSV with semicolons', async () => {
+      const csvSkuCode = generateTestCode('CSV-SEMI');
+      const normalizedSkuCode = normalizeSkuCode(csvSkuCode);
+      const marketplaceCode = generateTestCode('MP-SEMI');
+      const testPeriod = generateTestPeriod();
+      const csvContent = `marketplace;period;sku;quantity\n${marketplaceCode};${testPeriod};${csvSkuCode};85`;
+
+      const result = await ctx.client.importSalesHistoryCsv(csvContent, ctx.shopContext);
+
+      expect(result).toHaveProperty('created');
+      expect(result.created).toBeGreaterThanOrEqual(1);
+
+      const exported = await ctx.client.exportSalesHistoryJson(ctx.shopContext, {
+        period_from: testPeriod,
+        period_to: testPeriod,
+      });
+
+      const imported = exported.find((r) => r.sku === normalizedSkuCode && r.period === testPeriod);
+      expect(imported).toBeDefined();
+      expect(imported?.quantity).toBe(85);
+    });
   });
 
   describe('Example downloads', () => {
@@ -488,6 +524,15 @@ describe('Sales History (e2e)', () => {
       it('editor should list sales history', async () => {
         const records = await editorClient.getSalesHistory(ctx.shopContext);
         expect(Array.isArray(records)).toBe(true);
+      });
+
+      it('editor should get sales history by id', async () => {
+        const records = await editorClient.getSalesHistory(ctx.shopContext);
+        if (records.length === 0) throw new Error('Expected at least one record for editor');
+        const firstRecord = records[0];
+        if (!firstRecord) throw new Error('Expected record');
+        const record = await editorClient.getSalesHistoryItem(firstRecord.id, ctx.shopContext);
+        expect(record.id).toBe(firstRecord.id);
       });
 
       it('editor should create sales history', async () => {
