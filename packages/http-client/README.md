@@ -1,6 +1,6 @@
 # @sales-planner/http-client
 
-TypeScript HTTP client for the Sales Planner API with full type safety. Provides both namespaced and flat API styles for flexible integration.
+TypeScript HTTP client for the Sales Planner API with full type safety.
 
 ## Installation
 
@@ -25,11 +25,7 @@ const health = await client.getHealth();
 console.log(health); // { status: 'ok', version: '1.0.0' }
 ```
 
-### API Styles
-
-The client supports two complementary API styles:
-
-#### 1. **Namespaced API** (Recommended)
+### Namespaced Sub-Clients
 
 Access resources through domain-specific sub-clients:
 
@@ -81,22 +77,6 @@ const marketplaces = await client.marketplaces.getMarketplaces({ tenantId });
 // Entity Metadata (for UI documentation)
 const metadata = await client.metadata.getEntitiesMetadata();
 // Returns field definitions for brands, categories, groups, statuses, suppliers, marketplaces, skus, sales history
-```
-
-**Benefits:**
-- Clear domain separation
-- IDE autocomplete by domain
-- Easier to discover related methods
-
-#### 2. **Flat API** (Backward Compatible)
-
-Access all methods directly on the client:
-
-```typescript
-// Backward compatible with existing code
-const users = await client.getUsers();
-const user = await client.getUser(1);
-const skus = await client.getSkus({ tenantId, shopId });
 ```
 
 ## Import/Export Pattern
@@ -271,16 +251,107 @@ Note: Import endpoints accept marketplace codes for convenience, but the API int
 - `code` (optional): String, 1-100 characters
 - `title` (optional): String, 1-200 characters
 
+## Available Sub-Clients
+
+Each sub-client is accessed via `client.<subClient>.<method>()`.
+
+### `client.me`
+- `getMe()` - Get current user with roles and tenants
+
+### `client.users`
+- `getUsers()`, `getUser(id)` - System admin or tenant admin (filtered by their tenants)
+- `createUser(dto)`, `deleteUser(id)` - Tenant admin or higher
+
+### `client.tenants`
+- `getTenants()`, `getTenant(id)` - All authenticated users
+- `createTenant(dto)` - System admin only
+- `updateTenant(id, dto)`, `deleteTenant(id)` - Authenticated users (validation happens server-side)
+- `createTenantWithShopAndUser(dto)` - System admin only
+
+### `client.shops`
+- `getShops(tenantId?)`, `getShop(id)`, `createShop(dto)`, `updateShop(id, dto)`, `deleteShop(id)` - Requires tenant access
+- `deleteShopData(id)` - Delete all data (SKUs, sales history) for a shop
+
+### `client.skus`
+- `getSkus(ctx)`, `getSku(id, ctx)`, `getSkuByCode(code, ctx)` - Requires read access (viewer or higher)
+- `createSku(dto, ctx)`, `updateSku(id, dto, ctx)`, `deleteSku(id, ctx)` - Requires write access (editor or higher)
+- `importJson(items, ctx)`, `importCsv(csvContent, ctx)` - Requires write access
+- `exportJson(ctx)`, `exportCsv(ctx)` - Requires read access
+- `getExampleJson()`, `getExampleCsv()` - Get import format examples (no auth required)
+
+### `client.brands`
+- `getBrands(ctx)`, `getBrand(id, ctx)`, `getBrandByCode(code, ctx)` - Requires read access (viewer or higher)
+- `createBrand(dto, ctx)`, `updateBrand(id, dto, ctx)`, `deleteBrand(id, ctx)` - Requires write access (editor or higher)
+- `importJson(items, ctx)`, `importCsv(csvContent, ctx)` - Requires write access (bulk upsert by code)
+- `exportJson(ctx)`, `exportCsv(ctx)` - Requires read access
+- `getExampleJson()`, `getExampleCsv()` - Get import format examples (no auth required)
+
+### `client.categories`
+- `getCategories(ctx)`, `getCategory(id, ctx)`, `getCategoryByCode(code, ctx)` - Requires read access (viewer or higher)
+- `createCategory(dto, ctx)`, `updateCategory(id, dto, ctx)`, `deleteCategory(id, ctx)` - Requires write access (editor or higher)
+- `importJson(items, ctx)`, `importCsv(csvContent, ctx)` - Requires write access (bulk upsert by code)
+- `exportJson(ctx)`, `exportCsv(ctx)` - Requires read access
+- `getExampleJson()`, `getExampleCsv()` - Get import format examples (no auth required)
+
+### `client.groups`
+- `getGroups(ctx)`, `getGroup(id, ctx)`, `getGroupByCode(code, ctx)` - Requires read access (viewer or higher)
+- `createGroup(dto, ctx)`, `updateGroup(id, dto, ctx)`, `deleteGroup(id, ctx)` - Requires write access (editor or higher)
+- `importJson(items, ctx)`, `importCsv(csvContent, ctx)` - Requires write access (bulk upsert by code)
+- `exportJson(ctx)`, `exportCsv(ctx)` - Requires read access
+- `getExampleJson()`, `getExampleCsv()` - Get import format examples (no auth required)
+
+### `client.statuses`
+- `getStatuses(ctx)`, `getStatus(id, ctx)`, `getStatusByCode(code, ctx)` - Requires read access (viewer or higher)
+- `createStatus(dto, ctx)`, `updateStatus(id, dto, ctx)`, `deleteStatus(id, ctx)` - Requires write access (editor or higher)
+- `importJson(items, ctx)`, `importCsv(csvContent, ctx)` - Requires write access (bulk upsert by code)
+- `exportJson(ctx)`, `exportCsv(ctx)` - Requires read access
+- `getExampleJson()`, `getExampleCsv()` - Get import format examples (no auth required)
+
+### `client.suppliers`
+- `getSuppliers(ctx)`, `getSupplier(id, ctx)`, `getSupplierByCode(code, ctx)` - Requires read access (viewer or higher)
+- `createSupplier(dto, ctx)`, `updateSupplier(id, dto, ctx)`, `deleteSupplier(id, ctx)` - Requires write access (editor or higher)
+- `importJson(items, ctx)`, `importCsv(csvContent, ctx)` - Requires write access (bulk upsert by code)
+- `exportJson(ctx)`, `exportCsv(ctx)` - Requires read access
+- `getExampleJson()`, `getExampleCsv()` - Get import format examples (no auth required)
+
+### `client.salesHistory`
+- `getSalesHistory(ctx, query?)`, `getSalesHistoryItem(id, ctx)` - Requires read access (viewer or higher)
+- `createSalesHistory(dto, ctx)`, `updateSalesHistory(id, dto, ctx)`, `deleteSalesHistory(id, ctx)` - Requires write access (editor or higher)
+- `importJson(items, ctx)`, `importCsv(csvContent, ctx)` - Requires write access
+- `exportJson(ctx, query?)`, `exportCsv(ctx, query?)` - Requires read access
+- `getExampleJson()`, `getExampleCsv()` - Get import format examples (no auth required)
+
+### `client.roles`
+- `getRoles()`, `getRole(id)` - System admin only
+- `createRole(dto)`, `updateRole(id, dto)`, `deleteRole(id)` - System admin only
+
+### `client.userRoles`
+- `getUserRoles(query)`, `getUserRole(id)` - View roles for tenant
+- `createUserRole(dto)`, `deleteUserRole(id)` - Tenant admin or higher for their tenant
+
+### `client.apiKeys`
+- `getApiKeys()`, `createApiKey(dto)`, `deleteApiKey(id)` - System admin only
+
+### `client.marketplaces`
+- `getMarketplaces(ctx)`, `getMarketplace(id, ctx)`, `getMarketplaceByCode(code, ctx)` - Requires read access
+- `createMarketplace(dto, ctx)`, `updateMarketplace(id, dto, ctx)`, `deleteMarketplace(id, ctx)` - Requires write access (editor or higher)
+- `importJson(items, ctx)`, `importCsv(csvContent, ctx)` - Requires write access
+- `exportJson(ctx)`, `exportCsv(ctx)` - Requires read access
+
+### `client.metadata`
+- `getEntitiesMetadata()` - Get field definitions for all entities (no auth required)
+
 ## Error Handling
 
 ```typescript
-import { ApiError } from '@sales-planner/http-client';
+import { SalesPlannerClient, ApiError } from '@sales-planner/http-client';
 
 try {
-  await client.users.getUser(999);
+  const user = await client.users.getUser(999);
 } catch (error) {
   if (error instanceof ApiError) {
-    console.error(`API Error ${error.status}: ${error.message}`);
+    console.log(error.status); // 404
+    console.log(error.message); // "User not found"
   }
 }
 ```
@@ -290,113 +361,6 @@ Common HTTP status codes:
 - `404 Not Found` - Resource not found
 - `403 Forbidden` - Insufficient permissions
 - `400 Bad Request` - Validation error
-
-```typescript
-try {
-  await client.createUser({ email: 'user@example.com', name: 'John' });
-} catch (error) {
-  if (error.response?.status === 409) {
-    console.error('User with this email already exists');
-  }
-}
-```
-
-## Available Methods
-
-### Authentication
-- `getMe()` - Get current user with roles and tenants
-
-### Users
-- `getUsers()`, `getUser(id)` - System admin or tenant admin (filtered by their tenants)
-- `createUser(dto)`, `deleteUser(id)` - Tenant admin or higher
-
-### Tenants
-- `getTenants()`, `getTenant(id)` - All authenticated users
-- `createTenant(dto)` - System admin only
-- `updateTenant(id, dto)`, `deleteTenant(id)` - Authenticated users (validation happens server-side)
-- `createTenantWithShopAndUser(dto)` - System admin only
-
-### Shops
-- `getShops(tenantId?)`, `getShop(id)`, `createShop(dto)`, `updateShop(id, dto)`, `deleteShop(id)` - Requires tenant access
-- `deleteShopData(id)` - Delete all data (SKUs, sales history) for a shop
-
-### SKUs
-- `getSkus(ctx)`, `getSku(id, ctx)`, `getSkuByCode(code, ctx)` - Requires read access (viewer or higher)
-- `createSku(dto, ctx)`, `updateSku(id, dto, ctx)`, `deleteSku(id, ctx)` - Requires write access (editor or higher)
-- `importJson(items, ctx)`, `importCsv(csvContent, ctx)` - Requires write access
-- `exportJson(ctx)`, `exportCsv(ctx)` - Requires read access
-- `getExampleJson()`, `getExampleCsv()` - Get import format examples (no auth required)
-
-### Brands
-- `getBrands(ctx)`, `getBrand(id, ctx)`, `getBrandByCode(code, ctx)` - Requires read access (viewer or higher)
-- `createBrand(dto, ctx)`, `updateBrand(id, dto, ctx)`, `deleteBrand(id, ctx)` - Requires write access (editor or higher)
-- `importJson(items, ctx)`, `importCsv(csvContent, ctx)` - Requires write access (bulk upsert by code)
-- `exportJson(ctx)`, `exportCsv(ctx)` - Requires read access
-- `getExampleJson()`, `getExampleCsv()` - Get import format examples (no auth required)
-
-### Categories
-- `getCategories(ctx)`, `getCategory(id, ctx)`, `getCategoryByCode(code, ctx)` - Requires read access (viewer or higher)
-- `createCategory(dto, ctx)`, `updateCategory(id, dto, ctx)`, `deleteCategory(id, ctx)` - Requires write access (editor or higher)
-- `importJson(items, ctx)`, `importCsv(csvContent, ctx)` - Requires write access (bulk upsert by code)
-- `exportJson(ctx)`, `exportCsv(ctx)` - Requires read access
-- `getExampleJson()`, `getExampleCsv()` - Get import format examples (no auth required)
-
-### Groups
-- `getGroups(ctx)`, `getGroup(id, ctx)`, `getGroupByCode(code, ctx)` - Requires read access (viewer or higher)
-- `createGroup(dto, ctx)`, `updateGroup(id, dto, ctx)`, `deleteGroup(id, ctx)` - Requires write access (editor or higher)
-- `importJson(items, ctx)`, `importCsv(csvContent, ctx)` - Requires write access (bulk upsert by code)
-- `exportJson(ctx)`, `exportCsv(ctx)` - Requires read access
-- `getExampleJson()`, `getExampleCsv()` - Get import format examples (no auth required)
-
-### Statuses
-- `getStatuses(ctx)`, `getStatus(id, ctx)`, `getStatusByCode(code, ctx)` - Requires read access (viewer or higher)
-- `createStatus(dto, ctx)`, `updateStatus(id, dto, ctx)`, `deleteStatus(id, ctx)` - Requires write access (editor or higher)
-- `importJson(items, ctx)`, `importCsv(csvContent, ctx)` - Requires write access (bulk upsert by code)
-- `exportJson(ctx)`, `exportCsv(ctx)` - Requires read access
-- `getExampleJson()`, `getExampleCsv()` - Get import format examples (no auth required)
-
-### Suppliers
-- `getSuppliers(ctx)`, `getSupplier(id, ctx)`, `getSupplierByCode(code, ctx)` - Requires read access (viewer or higher)
-- `createSupplier(dto, ctx)`, `updateSupplier(id, dto, ctx)`, `deleteSupplier(id, ctx)` - Requires write access (editor or higher)
-- `importJson(items, ctx)`, `importCsv(csvContent, ctx)` - Requires write access (bulk upsert by code)
-- `exportJson(ctx)`, `exportCsv(ctx)` - Requires read access
-- `getExampleJson()`, `getExampleCsv()` - Get import format examples (no auth required)
-
-### Sales History
-- `getSalesHistory(ctx, query?)`, `getSalesHistoryItem(id, ctx)` - Requires read access (viewer or higher)
-- `createSalesHistory(dto, ctx)`, `updateSalesHistory(id, dto, ctx)`, `deleteSalesHistory(id, ctx)` - Requires write access (editor or higher)
-- `importJson(items, ctx)`, `importCsv(csvContent, ctx)` - Requires write access
-- `exportJson(ctx, query?)`, `exportCsv(ctx, query?)` - Requires read access
-- `getExampleJson()`, `getExampleCsv()` - Get import format examples (no auth required)
-
-### Roles & User Roles
-- `getRoles()`, `getRole(id)` - System admin only
-- `createRole(dto)`, `updateRole(id, dto)`, `deleteRole(id)` - System admin only
-- `createUserRole(dto)`, `deleteUserRole(id)` - Tenant admin or higher for their tenant
-
-### API Keys
-- `getApiKeys()`, `createApiKey(dto)`, `deleteApiKey(id)` - System admin only
-
-### Marketplaces
-- `getMarketplaces(ctx)`, `getMarketplace(id, ctx)`, `getMarketplaceByCode(code, ctx)` - Requires read access
-- `createMarketplace(dto, ctx)`, `updateMarketplace(id, dto, ctx)`, `deleteMarketplace(id, ctx)` - Requires write access (editor or higher)
-- `importJson(items, ctx)`, `importCsv(csvContent, ctx)` - Requires write access
-- `exportJson(ctx)`, `exportCsv(ctx)` - Requires read access
-
-## Error Handling
-
-```typescript
-import { SalesPlannerClient, ApiError } from '@sales-planner/http-client';
-
-try {
-  const user = await client.getUser(999);
-} catch (error) {
-  if (error instanceof ApiError) {
-    console.log(error.status); // 404
-    console.log(error.message); // "User not found"
-  }
-}
-```
 
 ## Types
 
