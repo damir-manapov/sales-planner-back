@@ -60,6 +60,10 @@ const history = await client.salesHistory.getSalesHistory(
 
 // Marketplaces
 const marketplaces = await client.marketplaces.getMarketplaces({ tenantId });
+
+// Entity Metadata (for UI documentation)
+const metadata = await client.metadata.getEntitiesMetadata();
+// Returns field definitions for brands, marketplaces, skus, sales history
 ```
 
 **Benefits:**

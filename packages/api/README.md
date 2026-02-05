@@ -46,6 +46,11 @@ Swagger UI provides:
   - Import converts marketplace codes to IDs, export converts IDs to codes
   - Proper file download headers for exports
 - **Me** - Get current user data with roles and tenants
+- **Metadata** - Entity metadata API for UI documentation
+  - **GET /metadata/entities** - Returns metadata describing all entities (brands, marketplaces, skus, sales history) managed by shop admin
+  - Includes field definitions (name, type, description, required, examples)
+  - Excludes technical fields, only shows user-visible fields from export operations
+  - Used by UI for documentation and dynamic form generation
 - **Bootstrap** - Auto-creates systemAdmin user and seeds default roles on startup
 - **Swagger/OpenAPI** - Interactive API documentation with try-it-out functionality
 - **Request Validation** - Zod-based schema validation with type sync to `@sales-planner/shared`
