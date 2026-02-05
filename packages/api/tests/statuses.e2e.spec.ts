@@ -187,6 +187,12 @@ describe('Statuses (e2e)', () => {
       );
 
       await expectNotFound(() => ctx.client.getStatus(otherStatus.id, ctx.shopContext));
+      await expectForbidden(() =>
+        ctx.client.getStatusByCode(otherStatus.code, {
+          shop_id: ctx.shop.id,
+          tenant_id: otherCtx.tenant.id,
+        }),
+      );
     });
 
     it('should allow same code in different tenants', async () => {
@@ -396,6 +402,15 @@ describe('Statuses (e2e)', () => {
         expect(status).toHaveProperty('id');
       });
 
+      it('editor should get status by code', async () => {
+        const statuses = await editorClient.getStatuses(ctx.shopContext);
+        if (statuses.length === 0) throw new Error('Expected at least one status for editor');
+        const firstStatus = statuses[0];
+        if (!firstStatus) throw new Error('Expected status');
+        const status = await editorClient.getStatusByCode(firstStatus.code, ctx.shopContext);
+        expect(status.id).toBe(firstStatus.id);
+      });
+
       it('editor should update status', async () => {
         const statuses = await editorClient.getStatuses(ctx.shopContext);
         if (statuses.length > 0) {
@@ -478,6 +493,15 @@ describe('Statuses (e2e)', () => {
           const status = await viewerClient.getStatus(firstStatus.id, ctx.shopContext);
           expect(status.id).toBe(firstStatus.id);
         }
+      });
+
+      it('viewer should get status by code', async () => {
+        const statuses = await viewerClient.getStatuses(ctx.shopContext);
+        if (statuses.length === 0) throw new Error('Expected at least one status for viewer');
+        const firstStatus = statuses[0];
+        if (!firstStatus) throw new Error('Expected status');
+        const status = await viewerClient.getStatusByCode(firstStatus.code, ctx.shopContext);
+        expect(status.id).toBe(firstStatus.id);
       });
 
       it('viewer should NOT create status', async () => {

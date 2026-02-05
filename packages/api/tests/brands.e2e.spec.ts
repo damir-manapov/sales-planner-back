@@ -183,6 +183,12 @@ describe('Brands (e2e)', () => {
 
       // Try to access it from main context
       await expectNotFound(() => ctx.client.getBrand(otherBrand.id, ctx.shopContext));
+      await expectForbidden(() =>
+        ctx.client.getBrandByCode(otherBrand.code, {
+          shop_id: ctx.shop.id,
+          tenant_id: otherCtx.tenant.id,
+        }),
+      );
     });
 
     it('should allow same code in different tenants', async () => {
@@ -394,6 +400,15 @@ describe('Brands (e2e)', () => {
         expect(brand).toHaveProperty('id');
       });
 
+      it('editor should get brand by code', async () => {
+        const brands = await editorClient.getBrands(ctx.shopContext);
+        if (brands.length === 0) throw new Error('Expected at least one brand for editor');
+        const firstBrand = brands[0];
+        if (!firstBrand) throw new Error('Expected brand');
+        const brand = await editorClient.getBrandByCode(firstBrand.code, ctx.shopContext);
+        expect(brand.id).toBe(firstBrand.id);
+      });
+
       it('editor should update brand', async () => {
         const brands = await editorClient.getBrands(ctx.shopContext);
         if (brands.length > 0) {
@@ -478,6 +493,15 @@ describe('Brands (e2e)', () => {
           const brand = await viewerClient.getBrand(firstBrand.id, ctx.shopContext);
           expect(brand.id).toBe(firstBrand.id);
         }
+      });
+
+      it('viewer should get brand by code', async () => {
+        const brands = await viewerClient.getBrands(ctx.shopContext);
+        if (brands.length === 0) throw new Error('Expected at least one brand for viewer');
+        const firstBrand = brands[0];
+        if (!firstBrand) throw new Error('Expected brand');
+        const brand = await viewerClient.getBrandByCode(firstBrand.code, ctx.shopContext);
+        expect(brand.id).toBe(firstBrand.id);
       });
 
       it('viewer should NOT create brand', async () => {

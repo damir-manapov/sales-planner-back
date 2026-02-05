@@ -191,6 +191,12 @@ describe('Suppliers (e2e)', () => {
       );
 
       await expectNotFound(() => ctx.client.getSupplier(otherSupplier.id, ctx.shopContext));
+      await expectForbidden(() =>
+        ctx.client.getSupplierByCode(otherSupplier.code, {
+          shop_id: ctx.shop.id,
+          tenant_id: otherCtx.tenant.id,
+        }),
+      );
     });
 
     it('should allow same code in different tenants', async () => {
@@ -377,6 +383,15 @@ describe('Suppliers (e2e)', () => {
         expect(supplier).toHaveProperty('id');
       });
 
+      it('editor should get supplier by code', async () => {
+        const suppliers = await editorClient.getSuppliers(ctx.shopContext);
+        if (suppliers.length === 0) throw new Error('Expected at least one supplier for editor');
+        const firstSupplier = suppliers[0];
+        if (!firstSupplier) throw new Error('Expected supplier');
+        const supplier = await editorClient.getSupplierByCode(firstSupplier.code, ctx.shopContext);
+        expect(supplier.id).toBe(firstSupplier.id);
+      });
+
       it('editor should update supplier', async () => {
         const suppliers = await editorClient.getSuppliers(ctx.shopContext);
         if (suppliers.length > 0) {
@@ -459,6 +474,15 @@ describe('Suppliers (e2e)', () => {
           const supplier = await viewerClient.getSupplier(firstSupplier.id, ctx.shopContext);
           expect(supplier.id).toBe(firstSupplier.id);
         }
+      });
+
+      it('viewer should get supplier by code', async () => {
+        const suppliers = await viewerClient.getSuppliers(ctx.shopContext);
+        if (suppliers.length === 0) throw new Error('Expected at least one supplier for viewer');
+        const firstSupplier = suppliers[0];
+        if (!firstSupplier) throw new Error('Expected supplier');
+        const supplier = await viewerClient.getSupplierByCode(firstSupplier.code, ctx.shopContext);
+        expect(supplier.id).toBe(firstSupplier.id);
       });
 
       it('viewer should NOT create supplier', async () => {

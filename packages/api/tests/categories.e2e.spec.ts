@@ -187,6 +187,12 @@ describe('Categories (e2e)', () => {
       );
 
       await expectNotFound(() => ctx.client.getCategory(otherCategory.id, ctx.shopContext));
+      await expectForbidden(() =>
+        ctx.client.getCategoryByCode(otherCategory.code, {
+          shop_id: ctx.shop.id,
+          tenant_id: otherCtx.tenant.id,
+        }),
+      );
     });
 
     it('should allow same code in different tenants', async () => {
@@ -398,6 +404,15 @@ describe('Categories (e2e)', () => {
         expect(category).toHaveProperty('id');
       });
 
+      it('editor should get category by code', async () => {
+        const categories = await editorClient.getCategories(ctx.shopContext);
+        if (categories.length === 0) throw new Error('Expected at least one category for editor');
+        const firstCategory = categories[0];
+        if (!firstCategory) throw new Error('Expected category');
+        const category = await editorClient.getCategoryByCode(firstCategory.code, ctx.shopContext);
+        expect(category.id).toBe(firstCategory.id);
+      });
+
       it('editor should update category', async () => {
         const categories = await editorClient.getCategories(ctx.shopContext);
         if (categories.length > 0) {
@@ -472,6 +487,15 @@ describe('Categories (e2e)', () => {
       it('viewer should list categories', async () => {
         const categories = await viewerClient.getCategories(ctx.shopContext);
         expect(Array.isArray(categories)).toBe(true);
+      });
+
+      it('viewer should get category by code', async () => {
+        const categories = await viewerClient.getCategories(ctx.shopContext);
+        if (categories.length === 0) throw new Error('Expected at least one category for viewer');
+        const firstCategory = categories[0];
+        if (!firstCategory) throw new Error('Expected category');
+        const category = await viewerClient.getCategoryByCode(firstCategory.code, ctx.shopContext);
+        expect(category.id).toBe(firstCategory.id);
       });
 
       it('viewer should get category by id', async () => {

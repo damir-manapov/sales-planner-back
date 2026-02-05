@@ -181,6 +181,12 @@ describe('Groups (e2e)', () => {
       );
 
       await expectNotFound(() => ctx.client.getGroup(otherGroup.id, ctx.shopContext));
+      await expectForbidden(() =>
+        ctx.client.getGroupByCode(otherGroup.code, {
+          shop_id: ctx.shop.id,
+          tenant_id: otherCtx.tenant.id,
+        }),
+      );
     });
 
     it('should allow same code in different tenants', async () => {
@@ -392,6 +398,15 @@ describe('Groups (e2e)', () => {
         expect(group).toHaveProperty('id');
       });
 
+      it('editor should get group by code', async () => {
+        const groups = await editorClient.getGroups(ctx.shopContext);
+        if (groups.length === 0) throw new Error('Expected at least one group for editor');
+        const firstGroup = groups[0];
+        if (!firstGroup) throw new Error('Expected group');
+        const group = await editorClient.getGroupByCode(firstGroup.code, ctx.shopContext);
+        expect(group.id).toBe(firstGroup.id);
+      });
+
       it('editor should update group', async () => {
         const groups = await editorClient.getGroups(ctx.shopContext);
         if (groups.length > 0) {
@@ -466,6 +481,15 @@ describe('Groups (e2e)', () => {
       it('viewer should list groups', async () => {
         const groups = await viewerClient.getGroups(ctx.shopContext);
         expect(Array.isArray(groups)).toBe(true);
+      });
+
+      it('viewer should get group by code', async () => {
+        const groups = await viewerClient.getGroups(ctx.shopContext);
+        if (groups.length === 0) throw new Error('Expected at least one group for viewer');
+        const firstGroup = groups[0];
+        if (!firstGroup) throw new Error('Expected group');
+        const group = await viewerClient.getGroupByCode(firstGroup.code, ctx.shopContext);
+        expect(group.id).toBe(firstGroup.id);
       });
 
       it('viewer should get group by id', async () => {
