@@ -1,4 +1,4 @@
-import type { User, CreateUserDto } from '@sales-planner/shared';
+import type { User, CreateUserRequest } from '@sales-planner/shared';
 import { BaseClient } from './base-client.js';
 
 export class UsersClient extends BaseClient {
@@ -10,8 +10,8 @@ export class UsersClient extends BaseClient {
     return this.request('GET', `/users/${id}`);
   }
 
-  async createUser(dto: CreateUserDto): Promise<User> {
-    return this.request('POST', '/users', { body: dto });
+  async createUser(request: CreateUserRequest): Promise<User> {
+    return this.request('POST', '/users', { body: request });
   }
 
   async deleteUser(id: number): Promise<void> {

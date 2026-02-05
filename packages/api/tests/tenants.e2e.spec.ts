@@ -48,23 +48,23 @@ describe('Tenants (e2e)', () => {
     userClient = testUserSetup.client;
 
     // Create system admin user
-    const adminUser = await ctx.getSystemClient().createUser({
+    const adminUser = await ctx.getSystemClient().users.createUser({
       email: `admin-test-${generateUniqueId()}@example.com`,
       name: 'System Admin',
     });
     systemAdminUserId = adminUser.id;
-    const adminApiKey = await ctx.getSystemClient().createApiKey({
+    const adminApiKey = await ctx.getSystemClient().apiKeys.createApiKey({
       user_id: systemAdminUserId,
       name: 'Admin Key',
     });
 
     // Get systemAdmin role and assign it
-    const roles = await ctx.getSystemClient().getRoles();
+    const roles = await ctx.getSystemClient().roles.getRoles();
     const sysAdminRole = roles.find((r) => r.name === ROLE_NAMES.SYSTEM_ADMIN);
     if (sysAdminRole) {
       await ctx
         .getSystemClient()
-        .createUserRole({ user_id: systemAdminUserId, role_id: sysAdminRole.id });
+        .userRoles.createUserRole({ user_id: systemAdminUserId, role_id: sysAdminRole.id });
     }
 
     // Create adminClient that uses the created admin's API key
@@ -83,19 +83,19 @@ describe('Tenants (e2e)', () => {
     it('POST /tenants - should return 401 without API key', async () => {
       const noAuthClient = new SalesPlannerClient({ baseUrl, apiKey: '' });
 
-      await expectUnauthorized(() => noAuthClient.createTenant({ title: 'Test Tenant' }));
+      await expectUnauthorized(() => noAuthClient.tenants.createTenant({ title: 'Test Tenant' }));
     });
 
     it('POST /tenants - should return 401 with invalid API key', async () => {
       const invalidClient = new SalesPlannerClient({ baseUrl, apiKey: 'invalid-key' });
 
-      await expectUnauthorized(() => invalidClient.createTenant({ title: 'Test Tenant' }));
+      await expectUnauthorized(() => invalidClient.tenants.createTenant({ title: 'Test Tenant' }));
     });
 
     it('GET /tenants - should return 401 without API key', async () => {
       const noAuthClient = new SalesPlannerClient({ baseUrl, apiKey: '' });
 
-      await expectUnauthorized(() => noAuthClient.getTenants());
+      await expectUnauthorized(() => noAuthClient.tenants.getTenants());
     });
   });
 
@@ -106,7 +106,7 @@ describe('Tenants (e2e)', () => {
         owner_id: ctx.user.id,
       };
 
-      const tenant = await adminClient.createTenant(newTenant);
+      const tenant = await adminClient.tenants.createTenant(newTenant);
 
       expect(tenant).toHaveProperty('id');
       expect(tenant.title).toBe(newTenant.title);
@@ -118,7 +118,7 @@ describe('Tenants (e2e)', () => {
 
     it('POST /tenants - should not allow non-admin to create tenant', async () => {
       await expectForbidden(() =>
-        userClient.createTenant({
+        userClient.tenants.createTenant({
           title: `Test Tenant ${generateUniqueId()}`,
           owner_id: ctx.user.id,
         }),
@@ -126,7 +126,7 @@ describe('Tenants (e2e)', () => {
     });
 
     it('GET /tenants - should return all tenants', async () => {
-      const tenants = await userClient.getTenants();
+      const tenants = await userClient.tenants.getTenants();
 
       expect(Array.isArray(tenants)).toBe(true);
       expect(tenants.length).toBeGreaterThan(0);
@@ -137,54 +137,54 @@ describe('Tenants (e2e)', () => {
     });
 
     it('GET /tenants/:id - should return created tenant', async () => {
-      const tenant = await userClient.getTenant(createdTenantId);
+      const tenant = await userClient.tenants.getTenant(createdTenantId);
 
       expect(tenant.id).toBe(createdTenantId);
       expect(tenant.created_by).toBe(systemAdminUserId);
     });
 
     it('GET /tenants/:id - should return 404 for non-existent tenant', async () => {
-      await expectNotFound(() => userClient.getTenant(999999));
+      await expectNotFound(() => userClient.tenants.getTenant(999999));
     });
 
     it('PUT /tenants/:id - should update tenant', async () => {
       const updatedData = { title: `Updated Tenant ${generateUniqueId()}` };
 
-      const tenant = await userClient.updateTenant(createdTenantId, updatedData);
+      const tenant = await userClient.tenants.updateTenant(createdTenantId, updatedData);
 
       expect(tenant.title).toBe(updatedData.title);
       expect(tenant.created_by).toBe(systemAdminUserId); // Should remain unchanged
     });
 
     it('GET /tenants/:id - should return updated tenant', async () => {
-      const tenant = await userClient.getTenant(createdTenantId);
+      const tenant = await userClient.tenants.getTenant(createdTenantId);
       expect(tenant.id).toBe(createdTenantId);
     });
 
     it('DELETE /tenants/:id - should delete tenant', async () => {
-      await userClient.deleteTenant(createdTenantId);
+      await userClient.tenants.deleteTenant(createdTenantId);
 
       // Verify tenant is deleted
-      await expectNotFound(() => userClient.getTenant(createdTenantId));
+      await expectNotFound(() => userClient.tenants.getTenant(createdTenantId));
     });
   });
 
   describe('created_by tracking', () => {
     it('should track different users creating different tenants', async () => {
       // Create second user
-      const user2 = await ctx.getSystemClient().createUser({
+      const user2 = await ctx.getSystemClient().users.createUser({
         email: `tenant-test2-${generateUniqueId()}@example.com`,
         name: 'Tenant Test User 2',
       });
 
       // Create tenant for first user (by admin user)
-      const tenant1 = await adminClient.createTenant({
+      const tenant1 = await adminClient.tenants.createTenant({
         title: `Tenant by User 1 ${generateUniqueId()}`,
         owner_id: ctx.user.id,
       });
 
       // Create tenant for second user (by admin user)
-      const tenant2 = await adminClient.createTenant({
+      const tenant2 = await adminClient.tenants.createTenant({
         title: `Tenant by User 2 ${generateUniqueId()}`,
         owner_id: user2.id,
       });
@@ -197,14 +197,14 @@ describe('Tenants (e2e)', () => {
 
       // Cleanup
       await cleanupUser(app, user2.id);
-      await adminClient.deleteTenant(tenant1.id);
+      await adminClient.tenants.deleteTenant(tenant1.id);
     });
   });
 
   describe('Create tenant with shop', () => {
     it('POST /tenants/with-shop-and-user - should return 403 for non-systemAdmin', async () => {
       await expectForbidden(() =>
-        userClient.createTenantWithShopAndUser({
+        userClient.tenants.createTenantWithShopAndUser({
           tenantTitle: 'Test Company',
           userEmail: `owner-${generateUniqueId()}@test.com`,
           userName: 'Test Owner',
@@ -219,7 +219,7 @@ describe('Tenants (e2e)', () => {
         userName: 'E2E Test Owner',
       };
 
-      const result = await ctx.getSystemClient().createTenantWithShopAndUser(requestData);
+      const result = await ctx.getSystemClient().tenants.createTenantWithShopAndUser(requestData);
 
       expect(result).toHaveProperty('tenant');
       expect(result).toHaveProperty('shop');
@@ -244,7 +244,7 @@ describe('Tenants (e2e)', () => {
 
       // Test that the generated API key works
       const newClient = new SalesPlannerClient({ baseUrl, apiKey: result.apiKey });
-      const me = await newClient.getMe();
+      const me = await newClient.me.getMe();
 
       expect(me.id).toBe(result.user.id);
 
@@ -266,8 +266,8 @@ describe('Tenants (e2e)', () => {
       expect(tenant?.shops[0]?.title).toBe(requestData.tenantTitle);
 
       // Cleanup
-      await ctx.getSystemClient().deleteTenant(result.tenant.id);
-      await ctx.getSystemClient().deleteUser(result.user.id);
+      await ctx.getSystemClient().tenants.deleteTenant(result.tenant.id);
+      await ctx.getSystemClient().users.deleteUser(result.user.id);
     });
   });
 });

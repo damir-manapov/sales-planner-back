@@ -14,7 +14,7 @@ interface AlenaTenantArgs {
 }
 
 const __dirname = import.meta.dirname;
-const SKUS_CSV = readFileSync(join(__dirname, 'skus.csv'), 'utf-8');
+const SKUS_CSV = readFileSync(join(__dirname, 'original/skus.csv'), 'utf-8');
 const SALES_HISTORY_CSV = readFileSync(join(__dirname, 'original/historyOfSales.csv'), 'utf-8');
 const BRANDS_CSV = readFileSync(join(__dirname, 'original/brands.csv'), 'utf-8');
 const CATEGORIES_CSV = readFileSync(join(__dirname, 'original/categories.csv'), 'utf-8');
@@ -49,7 +49,7 @@ async function createAlenaTenant(args: AlenaTenantArgs) {
 
     // Step 2: Clear existing shop data
     console.log('🧹 Step 2: Clearing existing shop data...');
-    const deleteResult = await userClient.deleteShopData(setup.shop.id);
+    const deleteResult = await userClient.shops.deleteShopData(setup.shop.id);
     console.log(
       `   ✅ Deleted ${deleteResult.skusDeleted} SKUs and ${deleteResult.salesHistoryDeleted} sales records`,
     );
@@ -59,43 +59,43 @@ async function createAlenaTenant(args: AlenaTenantArgs) {
 
     // Step 3: Import brands from CSV
     console.log('🏷️  Step 3: Importing brands from CSV...');
-    const brandsResult = await userClient.importBrandsCsv(BRANDS_CSV, ctx);
+    const brandsResult = await userClient.brands.importCsv(ctx, BRANDS_CSV);
     console.log(`   ✅ Created ${brandsResult.created} brands`);
     console.log('');
 
     // Step 4: Import categories from CSV
     console.log('📂 Step 4: Importing categories from CSV...');
-    const categoriesResult = await userClient.importCategoriesCsv(CATEGORIES_CSV, ctx);
+    const categoriesResult = await userClient.categories.importCsv(ctx, CATEGORIES_CSV);
     console.log(`   ✅ Created ${categoriesResult.created} categories`);
     console.log('');
 
     // Step 5: Import groups from CSV
     console.log('📦 Step 5: Importing groups from CSV...');
-    const groupsResult = await userClient.importGroupsCsv(GROUPS_CSV, ctx);
+    const groupsResult = await userClient.groups.importCsv(ctx, GROUPS_CSV);
     console.log(`   ✅ Created ${groupsResult.created} groups`);
     console.log('');
 
     // Step 6: Import statuses from CSV
     console.log('🏷️  Step 6: Importing statuses from CSV...');
-    const statusesResult = await userClient.importStatusesCsv(STATUSES_CSV, ctx);
+    const statusesResult = await userClient.statuses.importCsv(ctx, STATUSES_CSV);
     console.log(`   ✅ Created ${statusesResult.created} statuses`);
     console.log('');
 
     // Step 7: Import suppliers from CSV
     console.log('🚚 Step 7: Importing suppliers from CSV...');
-    const suppliersResult = await userClient.importSuppliersCsv(SUPPLIERS_CSV, ctx);
+    const suppliersResult = await userClient.suppliers.importCsv(ctx, SUPPLIERS_CSV);
     console.log(`   ✅ Created ${suppliersResult.created} suppliers`);
     console.log('');
 
     // Step 8: Import SKUs from CSV
     console.log('💐 Step 8: Importing products from CSV...');
-    const skusResult = await userClient.importSkusCsv(SKUS_CSV, ctx);
+    const skusResult = await userClient.skus.importCsv(ctx, SKUS_CSV);
     console.log(`   ✅ Created ${skusResult.created} products`);
     console.log('');
 
     // Step 9: Import sales history from CSV
     console.log('📈 Step 9: Importing sales history from CSV...');
-    const salesResult = await userClient.importSalesHistoryCsv(SALES_HISTORY_CSV, ctx);
+    const salesResult = await userClient.salesHistory.importCsv(ctx, SALES_HISTORY_CSV);
     console.log(`   ✅ Created ${salesResult.created} sales records`);
     console.log('');
 

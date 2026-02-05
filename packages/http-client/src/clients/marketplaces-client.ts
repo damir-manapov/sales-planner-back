@@ -1,6 +1,7 @@
 import type {
   Marketplace,
   CreateMarketplaceRequest,
+  UpdateMarketplaceRequest,
   ImportMarketplaceItem,
   MarketplaceExportItem,
   ImportResult,
@@ -13,38 +14,38 @@ export class MarketplacesClient extends ImportExportBaseClient {
     return this.request('GET', '/marketplaces', { params: ctx });
   }
 
-  async getMarketplace(id: number, ctx: ShopContextParams): Promise<Marketplace> {
+  async getMarketplace(ctx: ShopContextParams, id: number): Promise<Marketplace> {
     return this.request('GET', `/marketplaces/${id}`, { params: ctx });
   }
 
-  async getMarketplaceByCode(code: string, ctx: ShopContextParams): Promise<Marketplace> {
+  async getMarketplaceByCode(ctx: ShopContextParams, code: string): Promise<Marketplace> {
     return this.request('GET', `/marketplaces/code/${encodeURIComponent(code)}`, { params: ctx });
   }
 
   async createMarketplace(
-    dto: CreateMarketplaceRequest,
     ctx: ShopContextParams,
+    request: CreateMarketplaceRequest,
   ): Promise<Marketplace> {
-    return this.request('POST', '/marketplaces', { body: dto, params: ctx });
+    return this.request('POST', '/marketplaces', { body: request, params: ctx });
   }
 
   async updateMarketplace(
-    id: number,
-    dto: Partial<CreateMarketplaceRequest>,
     ctx: ShopContextParams,
+    id: number,
+    request: UpdateMarketplaceRequest,
   ): Promise<Marketplace> {
-    return this.request('PUT', `/marketplaces/${id}`, { body: dto, params: ctx });
+    return this.request('PUT', `/marketplaces/${id}`, { body: request, params: ctx });
   }
 
-  async deleteMarketplace(id: number, ctx: ShopContextParams): Promise<void> {
+  async deleteMarketplace(ctx: ShopContextParams, id: number): Promise<void> {
     return this.request('DELETE', `/marketplaces/${id}`, { params: ctx });
   }
 
-  async importJson(items: ImportMarketplaceItem[], ctx: ShopContextParams): Promise<ImportResult> {
+  async importJson(ctx: ShopContextParams, items: ImportMarketplaceItem[]): Promise<ImportResult> {
     return this.request('POST', '/marketplaces/import/json', { body: items, params: ctx });
   }
 
-  async importCsv(csvContent: string, ctx: ShopContextParams): Promise<ImportResult> {
+  async importCsv(ctx: ShopContextParams, csvContent: string): Promise<ImportResult> {
     return this.uploadCsv('/marketplaces/import/csv', csvContent, ctx);
   }
 

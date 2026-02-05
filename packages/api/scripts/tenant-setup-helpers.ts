@@ -52,14 +52,14 @@ export async function getOrCreateTenant(
 ): Promise<TenantSetup> {
   console.log('🔍 Checking if tenant already exists...');
 
-  const users = await adminClient.getUsers();
-  const existingUser = users.find((u) => u.email === config.userEmail);
+  const users = await adminClient.users.getUsers();
+  const existingUser = users.find((u: { email: string }) => u.email === config.userEmail);
 
   if (existingUser) {
     console.log(`   ℹ️  User ${config.userEmail} already exists (ID: ${existingUser.id})`);
 
     // Get user's API key
-    const apiKeys = await adminClient.getApiKeys(existingUser.id);
+    const apiKeys = await adminClient.apiKeys.getApiKeys(existingUser.id);
     const firstApiKey = apiKeys[0];
     if (!firstApiKey) {
       console.error('❌ User has no API key');
@@ -68,7 +68,7 @@ export async function getOrCreateTenant(
 
     // Get user's tenants via /me
     const userClient = new Client({ baseUrl: apiUrl, apiKey: firstApiKey.key });
-    const me = await userClient.getMe();
+    const me = await userClient.me.getMe();
 
     const existingTenant = me.tenants.find(
       (t: { title: string }) => t.title === config.tenantTitle,
@@ -96,7 +96,7 @@ export async function getOrCreateTenant(
 
   // Create new tenant, shop, and user
   console.log('   📦 Creating new tenant, shop, and admin user...');
-  const setup = await adminClient.createTenantWithShopAndUser({
+  const setup = await adminClient.tenants.createTenantWithShopAndUser({
     tenantTitle: config.tenantTitle,
     shopTitle: config.shopTitle,
     userEmail: config.userEmail,

@@ -25,6 +25,7 @@ The package provides two type variants for each operation:
 export interface CreateSkuRequest {
   code: string;
   title: string;
+  title2?: string;  // optional extended title
   // shop_id, tenant_id omitted - injected by API
 }
 ```
@@ -34,6 +35,7 @@ export interface CreateSkuRequest {
 export interface CreateSkuDto {
   code: string;
   title: string;
+  title2?: string;
   shop_id: number;
   tenant_id: number;
 }

@@ -20,3 +20,4 @@ export interface CreateTenantWithShopDto {
   userEmail: string;
   userName: string;
 }
+export type CreateTenantWithShopRequest = CreateTenantWithShopDto;

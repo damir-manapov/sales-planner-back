@@ -1,4 +1,9 @@
-import type { Shop, CreateShopDto, DeleteDataResult } from '@sales-planner/shared';
+import type {
+  Shop,
+  CreateShopRequest,
+  UpdateShopRequest,
+  DeleteDataResult,
+} from '@sales-planner/shared';
 import { BaseClient } from './base-client.js';
 
 export class ShopsClient extends BaseClient {
@@ -10,12 +15,12 @@ export class ShopsClient extends BaseClient {
     return this.request('GET', `/shops/${id}`);
   }
 
-  async createShop(dto: CreateShopDto): Promise<Shop> {
-    return this.request('POST', '/shops', { body: dto });
+  async createShop(request: CreateShopRequest): Promise<Shop> {
+    return this.request('POST', '/shops', { body: request });
   }
 
-  async updateShop(id: number, dto: Partial<CreateShopDto>): Promise<Shop> {
-    return this.request('PUT', `/shops/${id}`, { body: dto });
+  async updateShop(id: number, request: UpdateShopRequest): Promise<Shop> {
+    return this.request('PUT', `/shops/${id}`, { body: request });
   }
 
   async deleteShop(id: number): Promise<void> {

@@ -94,9 +94,10 @@ export class SkusController {
       'code',
       'title',
       'category',
+      'title2',
       'group',
-      'status',
       'supplier',
+      'status',
     ]);
   }
 

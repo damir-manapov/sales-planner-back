@@ -1,7 +1,7 @@
 import type {
   Group,
   CreateGroupRequest,
-  UpdateGroupDto,
+  UpdateGroupRequest,
   ImportGroupItem,
   GroupExportItem,
   ImportResult,
@@ -14,32 +14,36 @@ export class GroupsClient extends ImportExportBaseClient {
     return this.request('GET', '/groups', { params: ctx });
   }
 
-  async getGroup(id: number, ctx: ShopContextParams): Promise<Group> {
+  async getGroup(ctx: ShopContextParams, id: number): Promise<Group> {
     return this.request('GET', `/groups/${id}`, { params: ctx });
   }
 
-  async getGroupByCode(code: string, ctx: ShopContextParams): Promise<Group> {
+  async getGroupByCode(ctx: ShopContextParams, code: string): Promise<Group> {
     return this.request('GET', `/groups/code/${encodeURIComponent(code)}`, { params: ctx });
   }
 
-  async createGroup(dto: CreateGroupRequest, ctx: ShopContextParams): Promise<Group> {
-    return this.request('POST', '/groups', { body: dto, params: ctx });
+  async createGroup(ctx: ShopContextParams, request: CreateGroupRequest): Promise<Group> {
+    return this.request('POST', '/groups', { body: request, params: ctx });
   }
 
-  async updateGroup(id: number, dto: UpdateGroupDto, ctx: ShopContextParams): Promise<Group> {
-    return this.request('PUT', `/groups/${id}`, { body: dto, params: ctx });
+  async updateGroup(
+    ctx: ShopContextParams,
+    id: number,
+    request: UpdateGroupRequest,
+  ): Promise<Group> {
+    return this.request('PUT', `/groups/${id}`, { body: request, params: ctx });
   }
 
-  async deleteGroup(id: number, ctx: ShopContextParams): Promise<void> {
+  async deleteGroup(ctx: ShopContextParams, id: number): Promise<void> {
     return this.request('DELETE', `/groups/${id}`, { params: ctx });
   }
 
   // Import/Export methods
-  async importJson(items: ImportGroupItem[], ctx: ShopContextParams): Promise<ImportResult> {
+  async importJson(ctx: ShopContextParams, items: ImportGroupItem[]): Promise<ImportResult> {
     return this.request('POST', '/groups/import/json', { body: items, params: ctx });
   }
 
-  async importCsv(csvContent: string, ctx: ShopContextParams): Promise<ImportResult> {
+  async importCsv(ctx: ShopContextParams, csvContent: string): Promise<ImportResult> {
     return this.uploadCsv('/groups/import/csv', csvContent, ctx);
   }
 

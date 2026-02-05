@@ -62,7 +62,10 @@ describe('Shops E2E', () => {
 
   describe('Shop CRUD', () => {
     it('POST /shops - tenant owner should create shop', async () => {
-      const shop = await ctx.client.shops.createShop({ title: 'Test Shop', tenant_id: ctx.tenant.id });
+      const shop = await ctx.client.shops.createShop({
+        title: 'Test Shop',
+        tenant_id: ctx.tenant.id,
+      });
 
       expect(shop.title).toBe('Test Shop');
       expect(shop.tenant_id).toBe(ctx.tenant.id);
@@ -107,25 +110,25 @@ describe('Shops E2E', () => {
 
     beforeAll(async () => {
       // Create tenant admin user
-      const adminUser = await ctx.getSystemClient().createUser({
+      const adminUser = await ctx.getSystemClient().users.createUser({
         email: `tenant-admin-${generateUniqueId()}@example.com`,
         name: 'Tenant Admin User',
       });
       tenantAdminUserId = adminUser.id;
-      const adminApiKey = await ctx.getSystemClient().createApiKey({
+      const adminApiKey = await ctx.getSystemClient().apiKeys.createApiKey({
         user_id: tenantAdminUserId,
         name: 'Admin Key',
       });
 
       // Get tenantAdmin role and assign it
-      const roles = await ctx.getSystemClient().getRoles();
+      const roles = await ctx.getSystemClient().roles.getRoles();
       const tenantAdminRole = roles.find((r) => r.name === ROLE_NAMES.TENANT_ADMIN);
       if (!tenantAdminRole) throw new Error('Tenant Admin role not found');
-        await ctx.getSystemClient().userRoles.createUserRole({
-          user_id: tenantAdminUserId,
-          role_id: tenantAdminRole.id,
-          tenant_id: ctx.tenant.id,
-        });
+      await ctx.getSystemClient().userRoles.createUserRole({
+        user_id: tenantAdminUserId,
+        role_id: tenantAdminRole.id,
+        tenant_id: ctx.tenant.id,
+      });
 
       tenantAdminClient = new SalesPlannerClient({ baseUrl, apiKey: adminApiKey.key });
     });
@@ -171,7 +174,7 @@ describe('Shops E2E', () => {
 
     beforeAll(async () => {
       // Create another user with their own tenant
-      const otherSetup = await ctx.getSystemClient().createTenantWithShopAndUser({
+      const otherSetup = await ctx.getSystemClient().tenants.createTenantWithShopAndUser({
         tenantTitle: `Other Tenant ${generateUniqueId()}`,
         userEmail: `other-user-${generateUniqueId()}@example.com`,
         userName: 'Other User',
@@ -202,7 +205,9 @@ describe('Shops E2E', () => {
     });
 
     it('PUT /shops/:id - should return 403 when updating shop in other tenant', async () => {
-      await expectForbidden(() => otherClient.shops.updateShop(testShopId, { title: 'Hacked Shop' }));
+      await expectForbidden(() =>
+        otherClient.shops.updateShop(testShopId, { title: 'Hacked Shop' }),
+      );
     });
 
     it('DELETE /shops/:id - should return 403 when deleting shop in other tenant', async () => {
@@ -229,22 +234,16 @@ describe('Shops E2E', () => {
       const marketplace2 = generateTestCode('OZON');
       const testPeriod = generateTestPeriod();
 
-      await ctx.client.skus.importJson(
-        [
-          { code: sku1Code, title: 'Test SKU 1' },
-          { code: sku2Code, title: 'Test SKU 2' },
-        ],
-        dataShopContext(),
-      );
+      await ctx.client.skus.importJson(dataShopContext(), [
+        { code: sku1Code, title: 'Test SKU 1' },
+        { code: sku2Code, title: 'Test SKU 2' },
+      ]);
 
       // Import sales history
-      await ctx.client.salesHistory.importJson(
-        [
-          { marketplace: marketplace1, period: testPeriod, sku: sku1Code, quantity: 100 },
-          { marketplace: marketplace2, period: testPeriod, sku: sku2Code, quantity: 200 },
-        ],
-        dataShopContext(),
-      );
+      await ctx.client.salesHistory.importJson(dataShopContext(), [
+        { marketplace: marketplace1, period: testPeriod, sku: sku1Code, quantity: 100 },
+        { marketplace: marketplace2, period: testPeriod, sku: sku2Code, quantity: 200 },
+      ]);
     });
 
     it('DELETE /shops/:id/data - should delete shop data', async () => {
@@ -281,19 +280,19 @@ describe('Shops E2E', () => {
       let editorClient: SalesPlannerClient;
 
       beforeAll(async () => {
-        const editorUser = await ctx.getSystemClient().createUser({
+        const editorUser = await ctx.getSystemClient().users.createUser({
           email: `editor-${generateUniqueId()}@example.com`,
           name: 'Editor User',
         });
         editorUserId = editorUser.id;
 
-        const editorApiKey = await ctx.getSystemClient().createApiKey({
+        const editorApiKey = await ctx.getSystemClient().apiKeys.createApiKey({
           user_id: editorUserId,
           name: 'Editor Key',
         });
         editorClient = new SalesPlannerClient({ baseUrl, apiKey: editorApiKey.key });
 
-        const roles = await ctx.getSystemClient().getRoles();
+        const roles = await ctx.getSystemClient().roles.getRoles();
         const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
         if (!editorRole) throw new Error('Editor role not found');
         await ctx.getSystemClient().userRoles.createUserRole({
@@ -341,19 +340,19 @@ describe('Shops E2E', () => {
       let viewerClient: SalesPlannerClient;
 
       beforeAll(async () => {
-        const viewerUser = await ctx.getSystemClient().createUser({
+        const viewerUser = await ctx.getSystemClient().users.createUser({
           email: `viewer-${generateUniqueId()}@example.com`,
           name: 'Viewer User',
         });
         viewerUserId = viewerUser.id;
 
-        const viewerApiKey = await ctx.getSystemClient().createApiKey({
+        const viewerApiKey = await ctx.getSystemClient().apiKeys.createApiKey({
           user_id: viewerUserId,
           name: 'Viewer Key',
         });
         viewerClient = new SalesPlannerClient({ baseUrl, apiKey: viewerApiKey.key });
 
-        const roles = await ctx.getSystemClient().getRoles();
+        const roles = await ctx.getSystemClient().roles.getRoles();
         const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
         if (!viewerRole) throw new Error('Viewer role not found');
         await ctx.getSystemClient().userRoles.createUserRole({

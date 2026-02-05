@@ -1,66 +1,48 @@
-import type { Supplier, ShopContextParams } from '@sales-planner/shared';
+import type {
+  Supplier,
+  CreateSupplierRequest,
+  UpdateSupplierRequest,
+  ImportSupplierItem,
+  SupplierExportItem,
+  ImportResult,
+  ShopContextParams,
+} from '@sales-planner/shared';
 import { ImportExportBaseClient } from './import-export-base-client.js';
-
-export interface CreateSupplierDto {
-  code: string;
-  title: string;
-}
-
-export interface UpdateSupplierDto {
-  code?: string;
-  title?: string;
-}
-
-export interface SupplierExportItem {
-  code: string;
-  title: string;
-}
-
-export interface ImportSupplierItem {
-  code: string;
-  title: string;
-}
-
-export interface ImportResult {
-  created: number;
-  updated: number;
-  errors: Array<{ row: number; error: string }>;
-}
 
 export class SuppliersClient extends ImportExportBaseClient {
   async getSuppliers(ctx: ShopContextParams): Promise<Supplier[]> {
     return this.request('GET', '/suppliers', { params: ctx });
   }
 
-  async getSupplier(id: number, ctx: ShopContextParams): Promise<Supplier> {
+  async getSupplier(ctx: ShopContextParams, id: number): Promise<Supplier> {
     return this.request('GET', `/suppliers/${id}`, { params: ctx });
   }
 
-  async getSupplierByCode(code: string, ctx: ShopContextParams): Promise<Supplier> {
+  async getSupplierByCode(ctx: ShopContextParams, code: string): Promise<Supplier> {
     return this.request('GET', `/suppliers/code/${encodeURIComponent(code)}`, { params: ctx });
   }
 
-  async createSupplier(data: CreateSupplierDto, ctx: ShopContextParams): Promise<Supplier> {
-    return this.request('POST', '/suppliers', { params: ctx, body: data });
+  async createSupplier(ctx: ShopContextParams, request: CreateSupplierRequest): Promise<Supplier> {
+    return this.request('POST', '/suppliers', { params: ctx, body: request });
   }
 
   async updateSupplier(
-    id: number,
-    data: UpdateSupplierDto,
     ctx: ShopContextParams,
+    id: number,
+    request: UpdateSupplierRequest,
   ): Promise<Supplier> {
-    return this.request('PUT', `/suppliers/${id}`, { params: ctx, body: data });
+    return this.request('PUT', `/suppliers/${id}`, { params: ctx, body: request });
   }
 
-  async deleteSupplier(id: number, ctx: ShopContextParams): Promise<{ success: boolean }> {
+  async deleteSupplier(ctx: ShopContextParams, id: number): Promise<void> {
     return this.request('DELETE', `/suppliers/${id}`, { params: ctx });
   }
 
-  async importJson(items: ImportSupplierItem[], ctx: ShopContextParams): Promise<ImportResult> {
+  async importJson(ctx: ShopContextParams, items: ImportSupplierItem[]): Promise<ImportResult> {
     return this.request('POST', '/suppliers/import/json', { params: ctx, body: items });
   }
 
-  async importCsv(csvContent: string, ctx: ShopContextParams): Promise<ImportResult> {
+  async importCsv(ctx: ShopContextParams, csvContent: string): Promise<ImportResult> {
     return this.uploadCsv('/suppliers/import/csv', csvContent, ctx);
   }
 

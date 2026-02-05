@@ -60,7 +60,7 @@ describe('Categories (e2e)', () => {
   describe('CRUD operations', () => {
     it('should create category', async () => {
       const newCategory = { code: generateTestCode('category'), title: 'Test Category' };
-      const category = await ctx.client.categories.createCategory(newCategory, ctx.shopContext);
+      const category = await ctx.client.categories.createCategory(ctx.shopContext, newCategory);
 
       expect(category).toHaveProperty('id');
       expect(category.code).toBe(normalizeCode(newCategory.code));
@@ -70,10 +70,10 @@ describe('Categories (e2e)', () => {
     });
 
     it('should list categories', async () => {
-      await ctx.client.categories.createCategory(
-        { code: generateTestCode('category-list'), title: 'List Category' },
-        ctx.shopContext,
-      );
+      await ctx.client.categories.createCategory(ctx.shopContext, {
+        code: generateTestCode('category-list'),
+        title: 'List Category',
+      });
 
       const categories = await ctx.client.categories.getCategories(ctx.shopContext);
 
@@ -82,68 +82,66 @@ describe('Categories (e2e)', () => {
     });
 
     it('should get category by id', async () => {
-      const created = await ctx.client.categories.createCategory(
-        { code: generateTestCode('category-get'), title: 'Get Category' },
-        ctx.shopContext,
-      );
+      const created = await ctx.client.categories.createCategory(ctx.shopContext, {
+        code: generateTestCode('category-get'),
+        title: 'Get Category',
+      });
 
-      const category = await ctx.client.categories.getCategory(created.id, ctx.shopContext);
+      const category = await ctx.client.categories.getCategory(ctx.shopContext, created.id);
 
       expect(category.id).toBe(created.id);
     });
 
     it('should get category by code', async () => {
-      const created = await ctx.client.categories.createCategory(
-        { code: generateTestCode('category-get-code'), title: 'Get Category Code' },
-        ctx.shopContext,
-      );
+      const created = await ctx.client.categories.createCategory(ctx.shopContext, {
+        code: generateTestCode('category-get-code'),
+        title: 'Get Category Code',
+      });
 
-      const category = await ctx.client.categories.getCategoryByCode(created.code, ctx.shopContext);
+      const category = await ctx.client.categories.getCategoryByCode(ctx.shopContext, created.code);
 
       expect(category.id).toBe(created.id);
       expect(category.code).toBe(created.code);
     });
 
     it('should update category', async () => {
-      const created = await ctx.client.categories.createCategory(
-        { code: generateTestCode('category-update'), title: 'To Update' },
-        ctx.shopContext,
-      );
+      const created = await ctx.client.categories.createCategory(ctx.shopContext, {
+        code: generateTestCode('category-update'),
+        title: 'To Update',
+      });
 
-      const category = await ctx.client.categories.updateCategory(
-        created.id,
-        { title: 'Updated Category Title' },
-        ctx.shopContext,
-      );
+      const category = await ctx.client.categories.updateCategory(ctx.shopContext, created.id, {
+        title: 'Updated Category Title',
+      });
 
       expect(category.title).toBe('Updated Category Title');
     });
 
     it('should return 409 on duplicate code', async () => {
       const duplicateCode = generateTestCode('category');
-      await ctx.client.categories.createCategory(
-        { code: duplicateCode, title: 'First Category' },
-        ctx.shopContext,
-      );
+      await ctx.client.categories.createCategory(ctx.shopContext, {
+        code: duplicateCode,
+        title: 'First Category',
+      });
 
       await expectConflict(() =>
-        ctx.client.categories.createCategory(
-          { code: duplicateCode, title: 'Duplicate Category' },
-          ctx.shopContext,
-        ),
+        ctx.client.categories.createCategory(ctx.shopContext, {
+          code: duplicateCode,
+          title: 'Duplicate Category',
+        }),
       );
     });
   });
 
   describe('Delete operations', () => {
     it('should delete category', async () => {
-      const toDelete = await ctx.client.categories.createCategory(
-        { code: generateTestCode('category-delete'), title: 'Delete Category' },
-        ctx.shopContext,
-      );
+      const toDelete = await ctx.client.categories.createCategory(ctx.shopContext, {
+        code: generateTestCode('category-delete'),
+        title: 'Delete Category',
+      });
 
-      await ctx.client.categories.deleteCategory(toDelete.id, ctx.shopContext);
-      await expectNotFound(() => ctx.client.categories.getCategory(toDelete.id, ctx.shopContext));
+      await ctx.client.categories.deleteCategory(ctx.shopContext, toDelete.id);
+      await expectNotFound(() => ctx.client.categories.getCategory(ctx.shopContext, toDelete.id));
     });
   });
 
@@ -174,38 +172,43 @@ describe('Categories (e2e)', () => {
     it('should return 403 when creating for other tenant', async () => {
       await expectForbidden(() =>
         ctx.client.categories.createCategory(
-          { code: 'forbidden-category', title: 'Should Fail' },
           { shop_id: ctx.shop.id, tenant_id: otherCtx.tenant.id },
+          { code: 'forbidden-category', title: 'Should Fail' },
         ),
       );
     });
 
     it('should return 404 when getting resource from other tenant', async () => {
-      const otherCategory = await otherCtx.client.categories.createCategory(
-        { code: generateTestCode('other'), title: 'Other Category' },
-        otherCtx.shopContext,
-      );
+      const otherCategory = await otherCtx.client.categories.createCategory(otherCtx.shopContext, {
+        code: generateTestCode('other'),
+        title: 'Other Category',
+      });
 
-      await expectNotFound(() => ctx.client.categories.getCategory(otherCategory.id, ctx.shopContext));
+      await expectNotFound(() =>
+        ctx.client.categories.getCategory(ctx.shopContext, otherCategory.id),
+      );
       await expectForbidden(() =>
-        ctx.client.categories.getCategoryByCode(otherCategory.code, {
-          shop_id: ctx.shop.id,
-          tenant_id: otherCtx.tenant.id,
-        }),
+        ctx.client.categories.getCategoryByCode(
+          {
+            shop_id: ctx.shop.id,
+            tenant_id: otherCtx.tenant.id,
+          },
+          otherCategory.code,
+        ),
       );
     });
 
     it('should allow same code in different tenants', async () => {
       const sharedCode = generateTestCode('shared');
 
-      const category1 = await ctx.client.categories.createCategory(
-        { code: sharedCode, title: 'Category in Tenant 1' },
-        ctx.shopContext,
-      );
-      const category2 = await otherCtx.client.categories.createCategory(
-        { code: sharedCode, title: 'Category in Tenant 2' },
-        otherCtx.shopContext,
-      );
+      const category1 = await ctx.client.categories.createCategory(ctx.shopContext, {
+        code: sharedCode,
+        title: 'Category in Tenant 1',
+      });
+      const category2 = await otherCtx.client.categories.createCategory(otherCtx.shopContext, {
+        code: sharedCode,
+        title: 'Category in Tenant 2',
+      });
 
       expect(category1.code).toBe(normalizeCode(sharedCode));
       expect(category2.code).toBe(normalizeCode(sharedCode));
@@ -222,7 +225,7 @@ describe('Categories (e2e)', () => {
         { code: code2, title: 'Import JSON Category 2' },
       ];
 
-      const result = await ctx.client.categories.importJson(items, ctx.shopContext);
+      const result = await ctx.client.categories.importJson(ctx.shopContext, items);
 
       expect(result.created).toBe(2);
       expect(result.updated).toBe(0);
@@ -237,11 +240,10 @@ describe('Categories (e2e)', () => {
     it('should upsert existing categories on import', async () => {
       const code = generateTestCode('upsert-json');
 
-      await ctx.client.categories.importJson([{ code, title: 'Original Title' }], ctx.shopContext);
-      const result = await ctx.client.categories.importJson(
-        [{ code, title: 'Updated Title' }],
-        ctx.shopContext,
-      );
+      await ctx.client.categories.importJson(ctx.shopContext, [{ code, title: 'Original Title' }]);
+      const result = await ctx.client.categories.importJson(ctx.shopContext, [
+        { code, title: 'Updated Title' },
+      ]);
 
       expect(result.created).toBe(0);
       expect(result.updated).toBe(1);
@@ -252,7 +254,7 @@ describe('Categories (e2e)', () => {
       const code2 = generateTestCode('import-csv-2');
       const csvContent = `code,title\n${code1},Import CSV Category 1\n${code2},Import CSV Category 2`;
 
-      const result = await ctx.client.categories.importCsv(csvContent, ctx.shopContext);
+      const result = await ctx.client.categories.importCsv(ctx.shopContext, csvContent);
 
       expect(result.created).toBe(2);
       expect(result.updated).toBe(0);
@@ -268,7 +270,7 @@ describe('Categories (e2e)', () => {
       const code2 = generateTestCode('import-semi-2');
       const csvContent = `code;title\n${code1};Import Semicolon Category 1\n${code2};Import Semicolon Category 2`;
 
-      const result = await ctx.client.categories.importCsv(csvContent, ctx.shopContext);
+      const result = await ctx.client.categories.importCsv(ctx.shopContext, csvContent);
 
       expect(result.created).toBe(2);
       expect(result.updated).toBe(0);
@@ -282,7 +284,7 @@ describe('Categories (e2e)', () => {
     it('should handle Cyrillic characters in CSV', async () => {
       const csvContent = `code;title\nmavyko;Мавико\nmarshall;MARSHALL\nmazda;Mazda`;
 
-      const result = await ctx.client.categories.importCsv(csvContent, ctx.shopContext);
+      const result = await ctx.client.categories.importCsv(ctx.shopContext, csvContent);
 
       expect(result.created).toBe(3);
       expect(result.updated).toBe(0);
@@ -297,13 +299,10 @@ describe('Categories (e2e)', () => {
       const code1 = generateTestCode('export-category-1');
       const code2 = generateTestCode('export-category-2');
 
-      await ctx.client.categories.importJson(
-        [
-          { code: code1, title: 'Export Test Category 1' },
-          { code: code2, title: 'Export Test Category 2' },
-        ],
-        ctx.shopContext,
-      );
+      await ctx.client.categories.importJson(ctx.shopContext, [
+        { code: code1, title: 'Export Test Category 1' },
+        { code: code2, title: 'Export Test Category 2' },
+      ]);
 
       const exported = await ctx.client.categories.exportJson(ctx.shopContext);
 
@@ -320,13 +319,10 @@ describe('Categories (e2e)', () => {
       const code1 = generateTestCode('csv-export-category-1');
       const code2 = generateTestCode('csv-export-category-2');
 
-      await ctx.client.categories.importJson(
-        [
-          { code: code1, title: 'CSV Export Test 1' },
-          { code: code2, title: 'CSV Export Test 2' },
-        ],
-        ctx.shopContext,
-      );
+      await ctx.client.categories.importJson(ctx.shopContext, [
+        { code: code1, title: 'CSV Export Test 1' },
+        { code: code2, title: 'CSV Export Test 2' },
+      ]);
 
       const csv = await ctx.client.categories.exportCsv(ctx.shopContext);
 
@@ -362,27 +358,27 @@ describe('Categories (e2e)', () => {
       let editorClient: SalesPlannerClient;
 
       beforeAll(async () => {
-        const editorUser = await ctx.getSystemClient().createUser({
+        const editorUser = await ctx.getSystemClient().users.createUser({
           email: `editor-${generateUniqueId()}@example.com`,
           name: 'Editor User',
         });
         editorUserId = editorUser.id;
 
-        const editorApiKey = await ctx.getSystemClient().createApiKey({
+        const editorApiKey = await ctx.getSystemClient().apiKeys.createApiKey({
           user_id: editorUserId,
           name: 'Editor Key',
         });
         editorClient = new SalesPlannerClient({ baseUrl, apiKey: editorApiKey.key });
 
-        const roles = await ctx.getSystemClient().getRoles();
+        const roles = await ctx.getSystemClient().roles.getRoles();
         const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
         if (!editorRole) throw new Error('Editor role not found');
-          await ctx.getSystemClient().userRoles.createUserRole({
-            user_id: editorUserId,
-            role_id: editorRole.id,
-            tenant_id: ctx.tenant.id,
-            shop_id: ctx.shop.id,
-          });
+        await ctx.getSystemClient().userRoles.createUserRole({
+          user_id: editorUserId,
+          role_id: editorRole.id,
+          tenant_id: ctx.tenant.id,
+          shop_id: ctx.shop.id,
+        });
       });
 
       afterAll(async () => {
@@ -395,10 +391,10 @@ describe('Categories (e2e)', () => {
       });
 
       it('editor should create category', async () => {
-        const category = await editorClient.categories.createCategory(
-          { code: generateTestCode('editor-category'), title: 'Editor Category' },
-          ctx.shopContext,
-        );
+        const category = await editorClient.categories.createCategory(ctx.shopContext, {
+          code: generateTestCode('editor-category'),
+          title: 'Editor Category',
+        });
         expect(category).toHaveProperty('id');
       });
 
@@ -407,7 +403,10 @@ describe('Categories (e2e)', () => {
         if (categories.length === 0) throw new Error('Expected at least one category for editor');
         const firstCategory = categories[0];
         if (!firstCategory) throw new Error('Expected category');
-        const category = await editorClient.categories.getCategoryByCode(firstCategory.code, ctx.shopContext);
+        const category = await editorClient.categories.getCategoryByCode(
+          ctx.shopContext,
+          firstCategory.code,
+        );
         expect(category.id).toBe(firstCategory.id);
       });
 
@@ -417,28 +416,29 @@ describe('Categories (e2e)', () => {
           const firstCategory = categories[0];
           if (!firstCategory) throw new Error('Expected category');
           const updated = await editorClient.categories.updateCategory(
+            ctx.shopContext,
             firstCategory.id,
             { title: 'Editor Updated' },
-            ctx.shopContext,
           );
           expect(updated.title).toBe('Editor Updated');
         }
       });
 
       it('editor should delete category', async () => {
-        const category = await editorClient.categories.createCategory(
-          { code: generateTestCode('editor-delete'), title: 'To Delete' },
-          ctx.shopContext,
+        const category = await editorClient.categories.createCategory(ctx.shopContext, {
+          code: generateTestCode('editor-delete'),
+          title: 'To Delete',
+        });
+        await editorClient.categories.deleteCategory(ctx.shopContext, category.id);
+        await expectNotFound(() =>
+          editorClient.categories.getCategory(ctx.shopContext, category.id),
         );
-        await editorClient.categories.deleteCategory(category.id, ctx.shopContext);
-        await expectNotFound(() => editorClient.categories.getCategory(category.id, ctx.shopContext));
       });
 
       it('editor should import categories', async () => {
-        const result = await editorClient.categories.importJson(
-          [{ code: generateTestCode('editor-import'), title: 'Editor Import' }],
-          ctx.shopContext,
-        );
+        const result = await editorClient.categories.importJson(ctx.shopContext, [
+          { code: generateTestCode('editor-import'), title: 'Editor Import' },
+        ]);
         expect(result.created).toBe(1);
       });
 
@@ -453,27 +453,27 @@ describe('Categories (e2e)', () => {
       let viewerClient: SalesPlannerClient;
 
       beforeAll(async () => {
-        const viewerUser = await ctx.getSystemClient().createUser({
+        const viewerUser = await ctx.getSystemClient().users.createUser({
           email: `viewer-${generateUniqueId()}@example.com`,
           name: 'Viewer User',
         });
         viewerUserId = viewerUser.id;
 
-        const viewerApiKey = await ctx.getSystemClient().createApiKey({
+        const viewerApiKey = await ctx.getSystemClient().apiKeys.createApiKey({
           user_id: viewerUserId,
           name: 'Viewer Key',
         });
         viewerClient = new SalesPlannerClient({ baseUrl, apiKey: viewerApiKey.key });
 
-        const roles = await ctx.getSystemClient().getRoles();
+        const roles = await ctx.getSystemClient().roles.getRoles();
         const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
         if (!viewerRole) throw new Error('Viewer role not found');
-          await ctx.getSystemClient().userRoles.createUserRole({
-            user_id: viewerUserId,
-            role_id: viewerRole.id,
-            tenant_id: ctx.tenant.id,
-            shop_id: ctx.shop.id,
-          });
+        await ctx.getSystemClient().userRoles.createUserRole({
+          user_id: viewerUserId,
+          role_id: viewerRole.id,
+          tenant_id: ctx.tenant.id,
+          shop_id: ctx.shop.id,
+        });
       });
 
       afterAll(async () => {
@@ -490,7 +490,10 @@ describe('Categories (e2e)', () => {
         if (categories.length === 0) throw new Error('Expected at least one category for viewer');
         const firstCategory = categories[0];
         if (!firstCategory) throw new Error('Expected category');
-        const category = await viewerClient.categories.getCategoryByCode(firstCategory.code, ctx.shopContext);
+        const category = await viewerClient.categories.getCategoryByCode(
+          ctx.shopContext,
+          firstCategory.code,
+        );
         expect(category.id).toBe(firstCategory.id);
       });
 
@@ -499,17 +502,20 @@ describe('Categories (e2e)', () => {
         if (categories.length > 0) {
           const firstCategory = categories[0];
           if (!firstCategory) throw new Error('Expected category');
-          const category = await viewerClient.categories.getCategory(firstCategory.id, ctx.shopContext);
+          const category = await viewerClient.categories.getCategory(
+            ctx.shopContext,
+            firstCategory.id,
+          );
           expect(category.id).toBe(firstCategory.id);
         }
       });
 
       it('viewer should NOT create category', async () => {
         await expectForbidden(() =>
-          viewerClient.categories.createCategory(
-            { code: 'viewer-category', title: 'Should Fail' },
-            ctx.shopContext,
-          ),
+          viewerClient.categories.createCategory(ctx.shopContext, {
+            code: 'viewer-category',
+            title: 'Should Fail',
+          }),
         );
       });
 
@@ -519,11 +525,9 @@ describe('Categories (e2e)', () => {
           const firstCategory = categories[0];
           if (!firstCategory) throw new Error('Expected category');
           await expectForbidden(() =>
-            viewerClient.categories.updateCategory(
-              firstCategory.id,
-              { title: 'Should Fail' },
-              ctx.shopContext,
-            ),
+            viewerClient.categories.updateCategory(ctx.shopContext, firstCategory.id, {
+              title: 'Should Fail',
+            }),
           );
         }
       });
@@ -534,7 +538,7 @@ describe('Categories (e2e)', () => {
           const firstCategory = categories[0];
           if (!firstCategory) throw new Error('Expected category');
           await expectForbidden(() =>
-            viewerClient.categories.deleteCategory(firstCategory.id, ctx.shopContext),
+            viewerClient.categories.deleteCategory(ctx.shopContext, firstCategory.id),
           );
         }
       });
@@ -546,10 +550,9 @@ describe('Categories (e2e)', () => {
 
       it('viewer should NOT import categories', async () => {
         await expectForbidden(() =>
-          viewerClient.categories.importJson(
-            [{ code: 'test', title: 'Should Fail' }],
-            ctx.shopContext,
-          ),
+          viewerClient.categories.importJson(ctx.shopContext, [
+            { code: 'test', title: 'Should Fail' },
+          ]),
         );
       });
     });

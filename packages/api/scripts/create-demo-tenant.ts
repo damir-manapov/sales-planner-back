@@ -97,7 +97,7 @@ async function createDemoTenant(args: DemoTenantArgs) {
 
     // Step 2: Clear existing shop data
     console.log('🧹 Step 2: Clearing existing shop data...');
-    const deleteResult = await userClient.deleteShopData(setup.shop.id);
+    const deleteResult = await userClient.shops.deleteShopData(setup.shop.id);
     console.log(
       `   ✅ Deleted ${deleteResult.skusDeleted} SKUs and ${deleteResult.salesHistoryDeleted} sales records`,
     );
@@ -107,13 +107,13 @@ async function createDemoTenant(args: DemoTenantArgs) {
 
     // Step 3: Import brands
     console.log(`🏷️  Step 3: Importing ${DEMO_BRANDS.length} brands...`);
-    const brandsResult = await userClient.importBrandsJson(DEMO_BRANDS, ctx);
+    const brandsResult = await userClient.brands.importJson(ctx, DEMO_BRANDS);
     console.log(`   ✅ Created ${brandsResult.created} brands`);
     console.log('');
 
     // Step 5: Import sales history
     console.log(`📈 Step 5: Importing ${DEMO_SALES_DATA.length} sales history records...`);
-    const salesResult = await userClient.importSalesHistoryJson(DEMO_SALES_DATA, ctx);
+    const salesResult = await userClient.salesHistory.importJson(ctx, DEMO_SALES_DATA);
     console.log(`   ✅ Created ${salesResult.created} sales records`);
     console.log('');
 

@@ -1,6 +1,10 @@
 import { Injectable } from '@nestjs/common';
 import type { Sku, SkuExportItem, SkuImportResult } from '@sales-planner/shared';
-import { BaseEntityService } from '../common/index.js';
+import {
+  BaseEntityService,
+  DuplicateResourceException,
+  isUniqueViolation,
+} from '../common/index.js';
 import { DatabaseService } from '../database/index.js';
 import { normalizeSkuCode, normalizeCode } from '../lib/index.js';
 import { CategoriesService } from '../categories/categories.service.js';
@@ -37,6 +41,78 @@ export class SkusService extends BaseEntityService<Sku, CreateSkuDto, UpdateSkuD
 
   protected validateImportItem(item: unknown) {
     return ImportSkuItemSchema.safeParse(item);
+  }
+
+  /**
+   * Override create to handle title2 and relationship IDs
+   */
+  async create(dto: CreateSkuDto): Promise<Sku> {
+    try {
+      const result = await this.db
+        .insertInto('skus')
+        .values({
+          code: this.normalizeCode(dto.code),
+          title: dto.title,
+          title2: dto.title2 ?? null,
+          shop_id: dto.shop_id,
+          tenant_id: dto.tenant_id,
+          category_id: dto.category_id ?? null,
+          group_id: dto.group_id ?? null,
+          status_id: dto.status_id ?? null,
+          supplier_id: dto.supplier_id ?? null,
+          updated_at: new Date(),
+        })
+        .returningAll()
+        .executeTakeFirstOrThrow();
+
+      return result as Sku;
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw new DuplicateResourceException('sku', dto.code, 'this shop');
+      }
+      throw error;
+    }
+  }
+
+  /**
+   * Override update to handle title2 and relationship IDs
+   */
+  async update(id: number, dto: UpdateSkuDto): Promise<Sku | undefined> {
+    // Build update object, only including fields that were provided
+    const updateData: Record<string, unknown> = {
+      updated_at: new Date(),
+    };
+
+    if (dto.code !== undefined) {
+      updateData.code = this.normalizeCode(dto.code);
+    }
+    if (dto.title !== undefined) {
+      updateData.title = dto.title;
+    }
+    if (dto.title2 !== undefined) {
+      updateData.title2 = dto.title2;
+    }
+    if (dto.category_id !== undefined) {
+      updateData.category_id = dto.category_id;
+    }
+    if (dto.group_id !== undefined) {
+      updateData.group_id = dto.group_id;
+    }
+    if (dto.status_id !== undefined) {
+      updateData.status_id = dto.status_id;
+    }
+    if (dto.supplier_id !== undefined) {
+      updateData.supplier_id = dto.supplier_id;
+    }
+
+    const result = await this.db
+      .updateTable('skus')
+      .set(updateData)
+      .where('id', '=', id)
+      .returningAll()
+      .executeTakeFirst();
+
+    return result as Sku | undefined;
   }
 
   async bulkUpsert(items: unknown[], shopId: number, tenantId: number): Promise<SkuImportResult> {
@@ -139,6 +215,7 @@ export class SkusService extends BaseEntityService<Sku, CreateSkuDto, UpdateSkuD
         preparedItems.map((item) => ({
           code: this.normalizeCode(item.code),
           title: item.title,
+          title2: item.title2 ?? null,
           shop_id: shopId,
           tenant_id: tenantId,
           category_id: item.category_id,
@@ -151,6 +228,7 @@ export class SkusService extends BaseEntityService<Sku, CreateSkuDto, UpdateSkuD
       .onConflict((oc) =>
         oc.columns(['code', 'shop_id']).doUpdateSet((eb) => ({
           title: eb.ref('excluded.title'),
+          title2: eb.ref('excluded.title2'),
           category_id: eb.ref('excluded.category_id'),
           group_id: eb.ref('excluded.group_id'),
           status_id: eb.ref('excluded.status_id'),
@@ -194,6 +272,7 @@ export class SkusService extends BaseEntityService<Sku, CreateSkuDto, UpdateSkuD
       .select([
         'skus.code',
         'skus.title',
+        'skus.title2',
         'categories.code as category',
         'groups.code as group',
         'statuses.code as status',
@@ -206,6 +285,7 @@ export class SkusService extends BaseEntityService<Sku, CreateSkuDto, UpdateSkuD
     return skus.map((sku) => ({
       code: sku.code,
       title: sku.title,
+      title2: sku.title2 ?? undefined,
       category: sku.category ?? undefined,
       group: sku.group ?? undefined,
       status: sku.status ?? undefined,

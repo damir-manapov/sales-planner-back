@@ -1,4 +1,4 @@
-import type { Role, CreateRoleDto } from '@sales-planner/shared';
+import type { Role, CreateRoleRequest, UpdateRoleRequest } from '@sales-planner/shared';
 import { BaseClient } from './base-client.js';
 
 export class RolesClient extends BaseClient {
@@ -10,12 +10,12 @@ export class RolesClient extends BaseClient {
     return this.request('GET', `/roles/${id}`);
   }
 
-  async createRole(dto: CreateRoleDto): Promise<Role> {
-    return this.request('POST', '/roles', { body: dto });
+  async createRole(request: CreateRoleRequest): Promise<Role> {
+    return this.request('POST', '/roles', { body: request });
   }
 
-  async updateRole(id: number, dto: Partial<CreateRoleDto>): Promise<Role> {
-    return this.request('PUT', `/roles/${id}`, { body: dto });
+  async updateRole(id: number, request: UpdateRoleRequest): Promise<Role> {
+    return this.request('PUT', `/roles/${id}`, { body: request });
   }
 
   async deleteRole(id: number): Promise<void> {

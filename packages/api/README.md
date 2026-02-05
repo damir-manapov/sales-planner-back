@@ -53,6 +53,7 @@ Swagger UI provides:
   - Import/Export: JSON and CSV support
   - Example endpoints for download templates
 - **SKUs** - SKU management linked to shops (unique code per shop)
+  - Fields: code, title, title2 (optional extended title)
   - Supports classification via brand_code, category_code, group_code, status_code, supplier_code (all optional)
   - Import/Export: JSON and CSV file upload support
   - Proper file download headers for exports
@@ -161,6 +162,7 @@ The API uses a three-layer type system for type safety and clear separation of c
 export interface CreateSkuRequest {
   code: string;
   title: string;
+  title2?: string;  // optional extended title
   // shop_id, tenant_id omitted - injected by @ShopContext decorator
 }
 
@@ -168,6 +170,7 @@ export interface CreateSkuRequest {
 export interface CreateSkuDto {
   code: string;
   title: string;
+  title2?: string;
   shop_id: number;
   tenant_id: number;
 }

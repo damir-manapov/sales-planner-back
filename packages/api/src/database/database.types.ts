@@ -216,6 +216,7 @@ export interface Skus {
   supplier_id: number | null;
   tenant_id: number;
   title: string;
+  title2: string | null;
   updated_at: Generated<Timestamp>;
 }
 

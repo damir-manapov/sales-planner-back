@@ -1,7 +1,7 @@
 import type {
   SalesHistory,
   CreateSalesHistoryRequest,
-  UpdateSalesHistoryDto,
+  UpdateSalesHistoryRequest,
   ImportSalesHistoryItem,
   SalesHistoryExportItem,
   SalesHistoryImportResult,
@@ -15,37 +15,37 @@ export class SalesHistoryClient extends ImportExportBaseClient {
     return this.request('GET', '/sales-history', { params: { ...ctx, ...query } });
   }
 
-  async getSalesHistoryItem(id: number, ctx: ShopContextParams): Promise<SalesHistory> {
+  async getSalesHistoryItem(ctx: ShopContextParams, id: number): Promise<SalesHistory> {
     return this.request('GET', `/sales-history/${id}`, { params: ctx });
   }
 
   async createSalesHistory(
-    dto: CreateSalesHistoryRequest,
     ctx: ShopContextParams,
+    request: CreateSalesHistoryRequest,
   ): Promise<SalesHistory> {
-    return this.request('POST', '/sales-history', { body: dto, params: ctx });
+    return this.request('POST', '/sales-history', { body: request, params: ctx });
   }
 
   async updateSalesHistory(
-    id: number,
-    dto: UpdateSalesHistoryDto,
     ctx: ShopContextParams,
+    id: number,
+    request: UpdateSalesHistoryRequest,
   ): Promise<SalesHistory> {
-    return this.request('PUT', `/sales-history/${id}`, { body: dto, params: ctx });
+    return this.request('PUT', `/sales-history/${id}`, { body: request, params: ctx });
   }
 
-  async deleteSalesHistory(id: number, ctx: ShopContextParams): Promise<void> {
+  async deleteSalesHistory(ctx: ShopContextParams, id: number): Promise<void> {
     return this.request('DELETE', `/sales-history/${id}`, { params: ctx });
   }
 
   async importJson(
-    items: ImportSalesHistoryItem[],
     ctx: ShopContextParams,
+    items: ImportSalesHistoryItem[],
   ): Promise<SalesHistoryImportResult> {
     return this.request('POST', '/sales-history/import/json', { body: items, params: ctx });
   }
 
-  async importCsv(csvContent: string, ctx: ShopContextParams): Promise<SalesHistoryImportResult> {
+  async importCsv(ctx: ShopContextParams, csvContent: string): Promise<SalesHistoryImportResult> {
     return this.uploadCsv('/sales-history/import/csv', csvContent, ctx);
   }
 

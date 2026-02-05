@@ -48,17 +48,17 @@ describe('Sales History (e2e)', () => {
 
     // Create a test SKU
     skuCode = generateTestCode('SKU-SALES');
-    const sku = await ctx.client.skus.createSku(
-      { code: skuCode, title: 'Test SKU for Sales' },
-      ctx.shopContext,
-    );
+    const sku = await ctx.client.skus.createSku(ctx.shopContext, {
+      code: skuCode,
+      title: 'Test SKU for Sales',
+    });
     skuId = sku.id;
 
     // Create a test marketplace
-    const marketplace = await ctx.client.marketplaces.createMarketplace(
-      { code: generateTestCode('WB'), title: 'Wildberries' },
-      ctx.shopContext,
-    );
+    const marketplace = await ctx.client.marketplaces.createMarketplace(ctx.shopContext, {
+      code: generateTestCode('WB'),
+      title: 'Wildberries',
+    });
     marketplaceId = marketplace.id;
   });
 
@@ -82,10 +82,12 @@ describe('Sales History (e2e)', () => {
   describe('CRUD operations', () => {
     it('should create sales history record', async () => {
       const testPeriod = generateTestPeriod();
-      const record = await ctx.client.salesHistory.createSalesHistory(
-        { sku_id: skuId, period: testPeriod, quantity: 100, marketplace_id: marketplaceId },
-        ctx.shopContext,
-      );
+      const record = await ctx.client.salesHistory.createSalesHistory(ctx.shopContext, {
+        sku_id: skuId,
+        period: testPeriod,
+        quantity: 100,
+        marketplace_id: marketplaceId,
+      });
 
       expect(record).toHaveProperty('id');
       expect(record.sku_id).toBe(skuId);
@@ -109,23 +111,22 @@ describe('Sales History (e2e)', () => {
       const [periodFrom, periodTo] = generateTestPeriodRange();
 
       const rangeTestMarketplace = await ctx.client.marketplaces.createMarketplace(
-        { code: generateTestCode('MP-RANGE'), title: 'Range Test MP' },
         ctx.shopContext,
+        { code: generateTestCode('MP-RANGE'), title: 'Range Test MP' },
       );
 
-      await ctx.client.salesHistory.createSalesHistory(
-        {
-          sku_id: skuId,
-          period: periodFrom,
-          quantity: 50,
-          marketplace_id: rangeTestMarketplace.id,
-        },
-        ctx.shopContext,
-      );
-      await ctx.client.salesHistory.createSalesHistory(
-        { sku_id: skuId, period: periodTo, quantity: 60, marketplace_id: rangeTestMarketplace.id },
-        ctx.shopContext,
-      );
+      await ctx.client.salesHistory.createSalesHistory(ctx.shopContext, {
+        sku_id: skuId,
+        period: periodFrom,
+        quantity: 50,
+        marketplace_id: rangeTestMarketplace.id,
+      });
+      await ctx.client.salesHistory.createSalesHistory(ctx.shopContext, {
+        sku_id: skuId,
+        period: periodTo,
+        quantity: 60,
+        marketplace_id: rangeTestMarketplace.id,
+      });
 
       const records = await ctx.client.salesHistory.getSalesHistory(ctx.shopContext, {
         period_from: periodFrom,
@@ -139,16 +140,19 @@ describe('Sales History (e2e)', () => {
     });
 
     it('should get sales history by id', async () => {
-      const record = await ctx.client.salesHistory.getSalesHistoryItem(salesHistoryId, ctx.shopContext);
+      const record = await ctx.client.salesHistory.getSalesHistoryItem(
+        ctx.shopContext,
+        salesHistoryId,
+      );
 
       expect(record.id).toBe(salesHistoryId);
     });
 
     it('should update sales history', async () => {
       const record = await ctx.client.salesHistory.updateSalesHistory(
+        ctx.shopContext,
         salesHistoryId,
         { quantity: 150 },
-        ctx.shopContext,
       );
 
       expect(record.quantity).toBe(150);
@@ -157,10 +161,12 @@ describe('Sales History (e2e)', () => {
     it('should reject invalid period format', async () => {
       await expectApiError(
         () =>
-          ctx.client.salesHistory.createSalesHistory(
-            { sku_id: skuId, period: '2026-13', quantity: 50, marketplace_id: marketplaceId },
-            ctx.shopContext,
-          ),
+          ctx.client.salesHistory.createSalesHistory(ctx.shopContext, {
+            sku_id: skuId,
+            period: '2026-13',
+            quantity: 50,
+            marketplace_id: marketplaceId,
+          }),
         400,
       );
     });
@@ -168,10 +174,12 @@ describe('Sales History (e2e)', () => {
     it('should reject invalid period string', async () => {
       await expectApiError(
         () =>
-          ctx.client.salesHistory.createSalesHistory(
-            { sku_id: skuId, period: '2026-1', quantity: 50, marketplace_id: marketplaceId },
-            ctx.shopContext,
-          ),
+          ctx.client.salesHistory.createSalesHistory(ctx.shopContext, {
+            sku_id: skuId,
+            period: '2026-1',
+            quantity: 50,
+            marketplace_id: marketplaceId,
+          }),
         400,
       );
     });
@@ -185,20 +193,26 @@ describe('Sales History (e2e)', () => {
         marketplace_id: marketplaceId,
       };
 
-      await ctx.client.salesHistory.createSalesHistory(duplicateEntry, ctx.shopContext);
+      await ctx.client.salesHistory.createSalesHistory(ctx.shopContext, duplicateEntry);
 
-      await expectConflict(() => ctx.client.salesHistory.createSalesHistory(duplicateEntry, ctx.shopContext));
+      await expectConflict(() =>
+        ctx.client.salesHistory.createSalesHistory(ctx.shopContext, duplicateEntry),
+      );
     });
 
     it('should return 404 for non-existent record', async () => {
-      await expectNotFound(() => ctx.client.salesHistory.getSalesHistoryItem(999999, ctx.shopContext));
+      await expectNotFound(() =>
+        ctx.client.salesHistory.getSalesHistoryItem(ctx.shopContext, 999999),
+      );
     });
   });
 
   describe('Delete operations', () => {
     it('should delete sales history', async () => {
-      await ctx.client.salesHistory.deleteSalesHistory(salesHistoryId, ctx.shopContext);
-      await expectNotFound(() => ctx.client.salesHistory.getSalesHistoryItem(salesHistoryId, ctx.shopContext));
+      await ctx.client.salesHistory.deleteSalesHistory(ctx.shopContext, salesHistoryId);
+      await expectNotFound(() =>
+        ctx.client.salesHistory.getSalesHistoryItem(ctx.shopContext, salesHistoryId),
+      );
     });
   });
 
@@ -214,15 +228,15 @@ describe('Sales History (e2e)', () => {
         userName: 'Other Tenant User',
       });
 
-      const otherSku = await otherCtx.client.skus.createSku(
-        { code: generateTestCode('OTHER-SKU'), title: 'Other SKU' },
-        otherCtx.shopContext,
-      );
+      const otherSku = await otherCtx.client.skus.createSku(otherCtx.shopContext, {
+        code: generateTestCode('OTHER-SKU'),
+        title: 'Other SKU',
+      });
       otherSkuId = otherSku.id;
 
       const otherMarketplace = await otherCtx.client.marketplaces.createMarketplace(
-        { code: generateTestCode('OTHER-MP'), title: 'Other Marketplace' },
         otherCtx.shopContext,
+        { code: generateTestCode('OTHER-MP'), title: 'Other Marketplace' },
       );
       otherMarketplaceId = otherMarketplace.id;
     });
@@ -243,29 +257,31 @@ describe('Sales History (e2e)', () => {
     it('should return 403 when creating for other tenant', async () => {
       await expectForbidden(() =>
         ctx.client.salesHistory.createSalesHistory(
+          { shop_id: ctx.shop.id, tenant_id: otherCtx.tenant.id },
           {
             sku_id: skuId,
             period: generateTestPeriod(),
             quantity: 50,
             marketplace_id: marketplaceId,
           },
-          { shop_id: ctx.shop.id, tenant_id: otherCtx.tenant.id },
         ),
       );
     });
 
     it('should return 404 when getting resource from other tenant', async () => {
       const otherRecord = await otherCtx.client.salesHistory.createSalesHistory(
+        otherCtx.shopContext,
         {
           sku_id: otherSkuId,
           period: generateTestPeriod(),
           quantity: 50,
           marketplace_id: otherMarketplaceId,
         },
-        otherCtx.shopContext,
       );
 
-      await expectNotFound(() => ctx.client.salesHistory.getSalesHistoryItem(otherRecord.id, ctx.shopContext));
+      await expectNotFound(() =>
+        ctx.client.salesHistory.getSalesHistoryItem(ctx.shopContext, otherRecord.id),
+      );
     });
   });
 
@@ -274,13 +290,10 @@ describe('Sales History (e2e)', () => {
       const marketplaceCode = generateTestCode('WB');
       const [period1, period2] = generateTestPeriodRange();
 
-      const result = await ctx.client.salesHistory.importJson(
-        [
-          { marketplace: marketplaceCode, period: period1, sku: skuCode, quantity: 80 },
-          { marketplace: marketplaceCode, period: period2, sku: skuCode, quantity: 90 },
-        ],
-        ctx.shopContext,
-      );
+      const result = await ctx.client.salesHistory.importJson(ctx.shopContext, [
+        { marketplace: marketplaceCode, period: period1, sku: skuCode, quantity: 80 },
+        { marketplace: marketplaceCode, period: period2, sku: skuCode, quantity: 90 },
+      ]);
 
       expect(result.created).toBe(2);
       expect(result.updated).toBe(0);
@@ -291,15 +304,13 @@ describe('Sales History (e2e)', () => {
       const marketplaceCode = generateTestCode('WB-UPSERT');
       const testPeriod = generateTestPeriod();
 
-      await ctx.client.salesHistory.importJson(
-        [{ marketplace: marketplaceCode, period: testPeriod, sku: skuCode, quantity: 80 }],
-        ctx.shopContext,
-      );
+      await ctx.client.salesHistory.importJson(ctx.shopContext, [
+        { marketplace: marketplaceCode, period: testPeriod, sku: skuCode, quantity: 80 },
+      ]);
 
-      const result = await ctx.client.salesHistory.importJson(
-        [{ marketplace: marketplaceCode, period: testPeriod, sku: skuCode, quantity: 100 }],
-        ctx.shopContext,
-      );
+      const result = await ctx.client.salesHistory.importJson(ctx.shopContext, [
+        { marketplace: marketplaceCode, period: testPeriod, sku: skuCode, quantity: 100 },
+      ]);
 
       expect(result.created).toBe(0);
       expect(result.updated).toBe(1);
@@ -311,10 +322,9 @@ describe('Sales History (e2e)', () => {
       const marketplaceCode = generateTestCode('WB-AUTO');
       const testPeriod = generateTestPeriod();
 
-      const result = await ctx.client.salesHistory.importJson(
-        [{ marketplace: marketplaceCode, period: testPeriod, sku: newSkuCode, quantity: 50 }],
-        ctx.shopContext,
-      );
+      const result = await ctx.client.salesHistory.importJson(ctx.shopContext, [
+        { marketplace: marketplaceCode, period: testPeriod, sku: newSkuCode, quantity: 50 },
+      ]);
 
       expect(result.created).toBe(1);
       expect(result.skus_created).toBe(1);
@@ -328,19 +338,18 @@ describe('Sales History (e2e)', () => {
 
     it('should auto-create missing marketplaces on import', async () => {
       const uniqueSku = generateTestCode('SKU-MP-TEST');
-      await ctx.client.skus.createSku(
-        { code: uniqueSku, title: 'Test SKU for MP auto-creation' },
-        ctx.shopContext,
-      );
+      await ctx.client.skus.createSku(ctx.shopContext, {
+        code: uniqueSku,
+        title: 'Test SKU for MP auto-creation',
+      });
 
       const uniqueMarketplace = generateTestCode('MP');
       const normalizedMarketplace = normalizeCode(uniqueMarketplace);
       const testPeriod = generateTestPeriod();
 
-      const result = await ctx.client.salesHistory.importJson(
-        [{ marketplace: uniqueMarketplace, period: testPeriod, sku: uniqueSku, quantity: 30 }],
-        ctx.shopContext,
-      );
+      const result = await ctx.client.salesHistory.importJson(ctx.shopContext, [
+        { marketplace: uniqueMarketplace, period: testPeriod, sku: uniqueSku, quantity: 30 },
+      ]);
 
       expect(result.created).toBe(1);
       expect(result.marketplaces_created).toBe(1);
@@ -360,7 +369,7 @@ describe('Sales History (e2e)', () => {
       const testPeriod = generateTestPeriod();
       const csvContent = `marketplace,period,sku,quantity\n${marketplaceCode},${testPeriod},${csvSkuCode},75`;
 
-      const result = await ctx.client.salesHistory.importCsv(csvContent, ctx.shopContext);
+      const result = await ctx.client.salesHistory.importCsv(ctx.shopContext, csvContent);
 
       expect(result).toHaveProperty('created');
       expect(result.created).toBeGreaterThanOrEqual(1);
@@ -385,15 +394,13 @@ describe('Sales History (e2e)', () => {
       const normalizedMarketplace = normalizeCode(marketplaceCode);
       const testPeriod = generateTestPeriod();
 
-      await ctx.client.skus.importJson(
-        [{ code: exportSkuCode, title: 'Export Test SKU' }],
-        ctx.shopContext,
-      );
+      await ctx.client.skus.importJson(ctx.shopContext, [
+        { code: exportSkuCode, title: 'Export Test SKU' },
+      ]);
 
-      await ctx.client.salesHistory.importJson(
-        [{ marketplace: marketplaceCode, period: testPeriod, sku: exportSkuCode, quantity: 100 }],
-        ctx.shopContext,
-      );
+      await ctx.client.salesHistory.importJson(ctx.shopContext, [
+        { marketplace: marketplaceCode, period: testPeriod, sku: exportSkuCode, quantity: 100 },
+      ]);
 
       const exported = await ctx.client.salesHistory.exportJson(ctx.shopContext);
 
@@ -416,10 +423,9 @@ describe('Sales History (e2e)', () => {
       const exportSkuCode = generateTestCode('FILTER-TEST');
       const marketplaceCode = generateTestCode('MP-FILTER');
 
-      await ctx.client.salesHistory.importJson(
-        [{ marketplace: marketplaceCode, period: testPeriod, sku: exportSkuCode, quantity: 50 }],
-        ctx.shopContext,
-      );
+      await ctx.client.salesHistory.importJson(ctx.shopContext, [
+        { marketplace: marketplaceCode, period: testPeriod, sku: exportSkuCode, quantity: 50 },
+      ]);
 
       const exported = await ctx.client.salesHistory.exportJson(ctx.shopContext, {
         period_from: testPeriod,
@@ -450,7 +456,7 @@ describe('Sales History (e2e)', () => {
       const testPeriod = generateTestPeriod();
       const csvContent = `marketplace;period;sku;quantity\n${marketplaceCode};${testPeriod};${csvSkuCode};85`;
 
-      const result = await ctx.client.salesHistory.importCsv(csvContent, ctx.shopContext);
+      const result = await ctx.client.salesHistory.importCsv(ctx.shopContext, csvContent);
 
       expect(result).toHaveProperty('created');
       expect(result.created).toBeGreaterThanOrEqual(1);
@@ -492,27 +498,27 @@ describe('Sales History (e2e)', () => {
       let editorClient: SalesPlannerClient;
 
       beforeAll(async () => {
-        const editorUser = await ctx.getSystemClient().createUser({
+        const editorUser = await ctx.getSystemClient().users.createUser({
           email: `editor-${generateUniqueId()}@example.com`,
           name: 'Editor User',
         });
         editorUserId = editorUser.id;
 
-        const editorApiKey = await ctx.getSystemClient().createApiKey({
+        const editorApiKey = await ctx.getSystemClient().apiKeys.createApiKey({
           user_id: editorUserId,
           name: 'Editor Key',
         });
         editorClient = new SalesPlannerClient({ baseUrl, apiKey: editorApiKey.key });
 
-        const roles = await ctx.getSystemClient().getRoles();
+        const roles = await ctx.getSystemClient().roles.getRoles();
         const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
         if (!editorRole) throw new Error('Editor role not found');
-          await ctx.getSystemClient().userRoles.createUserRole({
-            user_id: editorUserId,
-            role_id: editorRole.id,
-            tenant_id: ctx.tenant.id,
-            shop_id: ctx.shop.id,
-          });
+        await ctx.getSystemClient().userRoles.createUserRole({
+          user_id: editorUserId,
+          role_id: editorRole.id,
+          tenant_id: ctx.tenant.id,
+          shop_id: ctx.shop.id,
+        });
       });
 
       afterAll(async () => {
@@ -529,29 +535,29 @@ describe('Sales History (e2e)', () => {
         if (records.length === 0) throw new Error('Expected at least one record for editor');
         const firstRecord = records[0];
         if (!firstRecord) throw new Error('Expected record');
-        const record = await editorClient.salesHistory.getSalesHistoryItem(firstRecord.id, ctx.shopContext);
+        const record = await editorClient.salesHistory.getSalesHistoryItem(
+          ctx.shopContext,
+          firstRecord.id,
+        );
         expect(record.id).toBe(firstRecord.id);
       });
 
       it('editor should create sales history', async () => {
-        const editorMp = await editorClient.marketplaces.createMarketplace(
-          { code: generateTestCode('EDITOR-MP'), title: 'Editor Marketplace' },
-          ctx.shopContext,
-        );
-        const editorSku = await editorClient.skus.createSku(
-          { code: generateTestCode('EDITOR-SKU'), title: 'Editor SKU' },
-          ctx.shopContext,
-        );
+        const editorMp = await editorClient.marketplaces.createMarketplace(ctx.shopContext, {
+          code: generateTestCode('EDITOR-MP'),
+          title: 'Editor Marketplace',
+        });
+        const editorSku = await editorClient.skus.createSku(ctx.shopContext, {
+          code: generateTestCode('EDITOR-SKU'),
+          title: 'Editor SKU',
+        });
 
-        const record = await editorClient.salesHistory.createSalesHistory(
-          {
-            sku_id: editorSku.id,
-            period: generateTestPeriod(),
-            quantity: 50,
-            marketplace_id: editorMp.id,
-          },
-          ctx.shopContext,
-        );
+        const record = await editorClient.salesHistory.createSalesHistory(ctx.shopContext, {
+          sku_id: editorSku.id,
+          period: generateTestPeriod(),
+          quantity: 50,
+          marketplace_id: editorMp.id,
+        });
         expect(record).toHaveProperty('id');
       });
 
@@ -561,48 +567,44 @@ describe('Sales History (e2e)', () => {
           const firstRecord = records[0];
           if (!firstRecord) throw new Error('Expected record');
           const updated = await editorClient.salesHistory.updateSalesHistory(
+            ctx.shopContext,
             firstRecord.id,
             { quantity: 999 },
-            ctx.shopContext,
           );
           expect(updated.quantity).toBe(999);
         }
       });
 
       it('editor should delete sales history', async () => {
-        const editorMp = await editorClient.marketplaces.createMarketplace(
-          { code: generateTestCode('EDITOR-DEL-MP'), title: 'Delete Test MP' },
-          ctx.shopContext,
+        const editorMp = await editorClient.marketplaces.createMarketplace(ctx.shopContext, {
+          code: generateTestCode('EDITOR-DEL-MP'),
+          title: 'Delete Test MP',
+        });
+        const editorSku = await editorClient.skus.createSku(ctx.shopContext, {
+          code: generateTestCode('EDITOR-DEL-SKU'),
+          title: 'Delete Test SKU',
+        });
+        const record = await editorClient.salesHistory.createSalesHistory(ctx.shopContext, {
+          sku_id: editorSku.id,
+          period: generateTestPeriod(),
+          quantity: 10,
+          marketplace_id: editorMp.id,
+        });
+        await editorClient.salesHistory.deleteSalesHistory(ctx.shopContext, record.id);
+        await expectNotFound(() =>
+          editorClient.salesHistory.getSalesHistoryItem(ctx.shopContext, record.id),
         );
-        const editorSku = await editorClient.skus.createSku(
-          { code: generateTestCode('EDITOR-DEL-SKU'), title: 'Delete Test SKU' },
-          ctx.shopContext,
-        );
-        const record = await editorClient.salesHistory.createSalesHistory(
-          {
-            sku_id: editorSku.id,
-            period: generateTestPeriod(),
-            quantity: 10,
-            marketplace_id: editorMp.id,
-          },
-          ctx.shopContext,
-        );
-        await editorClient.salesHistory.deleteSalesHistory(record.id, ctx.shopContext);
-        await expectNotFound(() => editorClient.salesHistory.getSalesHistoryItem(record.id, ctx.shopContext));
       });
 
       it('editor should import sales history', async () => {
-        const result = await editorClient.salesHistory.importJson(
-          [
-            {
-              marketplace: generateTestCode('EDITOR-IMP'),
-              period: generateTestPeriod(),
-              sku: skuCode,
-              quantity: 20,
-            },
-          ],
-          ctx.shopContext,
-        );
+        const result = await editorClient.salesHistory.importJson(ctx.shopContext, [
+          {
+            marketplace: generateTestCode('EDITOR-IMP'),
+            period: generateTestPeriod(),
+            sku: skuCode,
+            quantity: 20,
+          },
+        ]);
         expect(result.created).toBe(1);
       });
 
@@ -618,46 +620,43 @@ describe('Sales History (e2e)', () => {
       let testRecordId: number;
 
       beforeAll(async () => {
-        const viewerUser = await ctx.getSystemClient().createUser({
+        const viewerUser = await ctx.getSystemClient().users.createUser({
           email: `viewer-${generateUniqueId()}@example.com`,
           name: 'Viewer User',
         });
         viewerUserId = viewerUser.id;
 
-        const viewerApiKey = await ctx.getSystemClient().createApiKey({
+        const viewerApiKey = await ctx.getSystemClient().apiKeys.createApiKey({
           user_id: viewerUserId,
           name: 'Viewer Key',
         });
         viewerClient = new SalesPlannerClient({ baseUrl, apiKey: viewerApiKey.key });
 
-        const roles = await ctx.getSystemClient().getRoles();
+        const roles = await ctx.getSystemClient().roles.getRoles();
         const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
         if (!viewerRole) throw new Error('Viewer role not found');
-          await ctx.getSystemClient().userRoles.createUserRole({
-            user_id: viewerUserId,
-            role_id: viewerRole.id,
-            tenant_id: ctx.tenant.id,
-            shop_id: ctx.shop.id,
-          });
+        await ctx.getSystemClient().userRoles.createUserRole({
+          user_id: viewerUserId,
+          role_id: viewerRole.id,
+          tenant_id: ctx.tenant.id,
+          shop_id: ctx.shop.id,
+        });
 
         // Create a test record for viewer tests
-        const viewerMp = await ctx.client.marketplaces.createMarketplace(
-          { code: generateTestCode('VIEWER-MP'), title: 'Viewer Test MP' },
-          ctx.shopContext,
-        );
-        const viewerSku = await ctx.client.skus.createSku(
-          { code: generateTestCode('VIEWER-SKU'), title: 'Viewer Test SKU' },
-          ctx.shopContext,
-        );
-        const record = await ctx.client.salesHistory.createSalesHistory(
-          {
-            sku_id: viewerSku.id,
-            period: generateTestPeriod(),
-            quantity: 25,
-            marketplace_id: viewerMp.id,
-          },
-          ctx.shopContext,
-        );
+        const viewerMp = await ctx.client.marketplaces.createMarketplace(ctx.shopContext, {
+          code: generateTestCode('VIEWER-MP'),
+          title: 'Viewer Test MP',
+        });
+        const viewerSku = await ctx.client.skus.createSku(ctx.shopContext, {
+          code: generateTestCode('VIEWER-SKU'),
+          title: 'Viewer Test SKU',
+        });
+        const record = await ctx.client.salesHistory.createSalesHistory(ctx.shopContext, {
+          sku_id: viewerSku.id,
+          period: generateTestPeriod(),
+          quantity: 25,
+          marketplace_id: viewerMp.id,
+        });
         testRecordId = record.id;
       });
 
@@ -671,32 +670,36 @@ describe('Sales History (e2e)', () => {
       });
 
       it('viewer should get sales history by id', async () => {
-        const record = await viewerClient.salesHistory.getSalesHistoryItem(testRecordId, ctx.shopContext);
+        const record = await viewerClient.salesHistory.getSalesHistoryItem(
+          ctx.shopContext,
+          testRecordId,
+        );
         expect(record.id).toBe(testRecordId);
       });
 
       it('viewer should NOT create sales history', async () => {
         await expectForbidden(() =>
-          viewerClient.salesHistory.createSalesHistory(
-            {
-              sku_id: skuId,
-              period: generateTestPeriod(),
-              quantity: 50,
-              marketplace_id: marketplaceId,
-            },
-            ctx.shopContext,
-          ),
+          viewerClient.salesHistory.createSalesHistory(ctx.shopContext, {
+            sku_id: skuId,
+            period: generateTestPeriod(),
+            quantity: 50,
+            marketplace_id: marketplaceId,
+          }),
         );
       });
 
       it('viewer should NOT update sales history', async () => {
         await expectForbidden(() =>
-          viewerClient.salesHistory.updateSalesHistory(testRecordId, { quantity: 999 }, ctx.shopContext),
+          viewerClient.salesHistory.updateSalesHistory(ctx.shopContext, testRecordId, {
+            quantity: 999,
+          }),
         );
       });
 
       it('viewer should NOT delete sales history', async () => {
-        await expectForbidden(() => viewerClient.salesHistory.deleteSalesHistory(testRecordId, ctx.shopContext));
+        await expectForbidden(() =>
+          viewerClient.salesHistory.deleteSalesHistory(ctx.shopContext, testRecordId),
+        );
       });
 
       it('viewer should export sales history', async () => {
@@ -706,10 +709,9 @@ describe('Sales History (e2e)', () => {
 
       it('viewer should NOT import sales history', async () => {
         await expectForbidden(() =>
-          viewerClient.salesHistory.importJson(
-            [{ marketplace: 'test', period: '2026-01', sku: 'test', quantity: 10 }],
-            ctx.shopContext,
-          ),
+          viewerClient.salesHistory.importJson(ctx.shopContext, [
+            { marketplace: 'test', period: '2026-01', sku: 'test', quantity: 10 },
+          ]),
         );
       });
     });

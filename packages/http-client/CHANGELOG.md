@@ -1,5 +1,20 @@
 # @sales-planner/http-client
 
+## 0.13.0
+
+### Minor Changes
+
+- 4aa02b4: refactor(http-client): remove flat API, use namespaced sub-clients only
+
+  BREAKING CHANGE: Flat API methods removed from SalesPlannerClient.
+  Use namespaced sub-clients instead (e.g., client.skus.getSkus() instead of client.getSkus()).
+
+### Patch Changes
+
+- Add title2 field to SKU, update READMEs with ctx-first API convention
+- Updated dependencies
+  - @sales-planner/shared@0.11.1
+
 ## 0.12.0
 
 ### Minor Changes

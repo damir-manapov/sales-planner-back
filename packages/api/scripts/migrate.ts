@@ -28,6 +28,18 @@ async function migrate() {
     ssl: ssl ? { rejectUnauthorized: false } : undefined,
   });
 
+  // Ensure migrations table exists
+  await pool.query(`
+    CREATE TABLE IF NOT EXISTS migrations (
+      name VARCHAR(255) PRIMARY KEY,
+      applied_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+    )
+  `);
+
+  // Get already applied migrations
+  const { rows: applied } = await pool.query('SELECT name FROM migrations');
+  const appliedSet = new Set(applied.map((r: { name: string }) => r.name));
+
   const migrationsDir = path.join(__dirname, '..', 'migrations');
   const files = fs
     .readdirSync(migrationsDir)
@@ -35,9 +47,14 @@ async function migrate() {
     .sort();
 
   for (const file of files) {
+    if (appliedSet.has(file)) {
+      console.log(`⏭️  Skipping ${file} (already applied)`);
+      continue;
+    }
     const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf-8');
     console.log(`Running migration: ${file}`);
     await pool.query(sql);
+    await pool.query('INSERT INTO migrations (name) VALUES ($1)', [file]);
     console.log(`✅ ${file} completed`);
   }
 

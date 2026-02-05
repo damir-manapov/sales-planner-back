@@ -1,7 +1,7 @@
 import type {
   Category,
   CreateCategoryRequest,
-  UpdateCategoryDto,
+  UpdateCategoryRequest,
   ImportCategoryItem,
   CategoryExportItem,
   ImportResult,
@@ -14,36 +14,36 @@ export class CategoriesClient extends ImportExportBaseClient {
     return this.request('GET', '/categories', { params: ctx });
   }
 
-  async getCategory(id: number, ctx: ShopContextParams): Promise<Category> {
+  async getCategory(ctx: ShopContextParams, id: number): Promise<Category> {
     return this.request('GET', `/categories/${id}`, { params: ctx });
   }
 
-  async getCategoryByCode(code: string, ctx: ShopContextParams): Promise<Category> {
+  async getCategoryByCode(ctx: ShopContextParams, code: string): Promise<Category> {
     return this.request('GET', `/categories/code/${encodeURIComponent(code)}`, { params: ctx });
   }
 
-  async createCategory(dto: CreateCategoryRequest, ctx: ShopContextParams): Promise<Category> {
-    return this.request('POST', '/categories', { body: dto, params: ctx });
+  async createCategory(ctx: ShopContextParams, request: CreateCategoryRequest): Promise<Category> {
+    return this.request('POST', '/categories', { body: request, params: ctx });
   }
 
   async updateCategory(
-    id: number,
-    dto: UpdateCategoryDto,
     ctx: ShopContextParams,
+    id: number,
+    request: UpdateCategoryRequest,
   ): Promise<Category> {
-    return this.request('PUT', `/categories/${id}`, { body: dto, params: ctx });
+    return this.request('PUT', `/categories/${id}`, { body: request, params: ctx });
   }
 
-  async deleteCategory(id: number, ctx: ShopContextParams): Promise<void> {
+  async deleteCategory(ctx: ShopContextParams, id: number): Promise<void> {
     return this.request('DELETE', `/categories/${id}`, { params: ctx });
   }
 
   // Import/Export methods
-  async importJson(items: ImportCategoryItem[], ctx: ShopContextParams): Promise<ImportResult> {
+  async importJson(ctx: ShopContextParams, items: ImportCategoryItem[]): Promise<ImportResult> {
     return this.request('POST', '/categories/import/json', { body: items, params: ctx });
   }
 
-  async importCsv(csvContent: string, ctx: ShopContextParams): Promise<ImportResult> {
+  async importCsv(ctx: ShopContextParams, csvContent: string): Promise<ImportResult> {
     return this.uploadCsv('/categories/import/csv', csvContent, ctx);
   }
 

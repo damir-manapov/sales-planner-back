@@ -1,7 +1,7 @@
 import type {
   Sku,
   CreateSkuRequest,
-  UpdateSkuDto,
+  UpdateSkuRequest,
   ImportSkuItem,
   SkuExportItem,
   SkuImportResult,
@@ -14,31 +14,31 @@ export class SkusClient extends ImportExportBaseClient {
     return this.request('GET', '/skus', { params: ctx });
   }
 
-  async getSku(id: number, ctx: ShopContextParams): Promise<Sku> {
+  async getSku(ctx: ShopContextParams, id: number): Promise<Sku> {
     return this.request('GET', `/skus/${id}`, { params: ctx });
   }
 
-  async getSkuByCode(code: string, ctx: ShopContextParams): Promise<Sku> {
+  async getSkuByCode(ctx: ShopContextParams, code: string): Promise<Sku> {
     return this.request('GET', `/skus/code/${encodeURIComponent(code)}`, { params: ctx });
   }
 
-  async createSku(dto: CreateSkuRequest, ctx: ShopContextParams): Promise<Sku> {
-    return this.request('POST', '/skus', { body: dto, params: ctx });
+  async createSku(ctx: ShopContextParams, request: CreateSkuRequest): Promise<Sku> {
+    return this.request('POST', '/skus', { body: request, params: ctx });
   }
 
-  async updateSku(id: number, dto: UpdateSkuDto, ctx: ShopContextParams): Promise<Sku> {
-    return this.request('PUT', `/skus/${id}`, { body: dto, params: ctx });
+  async updateSku(ctx: ShopContextParams, id: number, request: UpdateSkuRequest): Promise<Sku> {
+    return this.request('PUT', `/skus/${id}`, { body: request, params: ctx });
   }
 
-  async deleteSku(id: number, ctx: ShopContextParams): Promise<void> {
+  async deleteSku(ctx: ShopContextParams, id: number): Promise<void> {
     return this.request('DELETE', `/skus/${id}`, { params: ctx });
   }
 
-  async importJson(items: ImportSkuItem[], ctx: ShopContextParams): Promise<SkuImportResult> {
+  async importJson(ctx: ShopContextParams, items: ImportSkuItem[]): Promise<SkuImportResult> {
     return this.request('POST', '/skus/import/json', { body: items, params: ctx });
   }
 
-  async importCsv(csvContent: string, ctx: ShopContextParams): Promise<SkuImportResult> {
+  async importCsv(ctx: ShopContextParams, csvContent: string): Promise<SkuImportResult> {
     return this.uploadCsv('/skus/import/csv', csvContent, ctx);
   }
 

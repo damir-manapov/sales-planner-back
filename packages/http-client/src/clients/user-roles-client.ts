@@ -1,4 +1,8 @@
-import type { CreateUserRoleDto, GetUserRolesQuery, UserRoleResponse } from '@sales-planner/shared';
+import type {
+  CreateUserRoleRequest,
+  GetUserRolesQuery,
+  UserRoleResponse,
+} from '@sales-planner/shared';
 import { BaseClient } from './base-client.js';
 
 export class UserRolesClient extends BaseClient {
@@ -15,8 +19,8 @@ export class UserRolesClient extends BaseClient {
     return this.request('GET', `/user-roles/${id}`);
   }
 
-  async createUserRole(dto: CreateUserRoleDto): Promise<UserRoleResponse> {
-    return this.request('POST', '/user-roles', { body: dto });
+  async createUserRole(request: CreateUserRoleRequest): Promise<UserRoleResponse> {
+    return this.request('POST', '/user-roles', { body: request });
   }
 
   async deleteUserRole(id: number): Promise<void> {

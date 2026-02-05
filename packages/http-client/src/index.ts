@@ -22,6 +22,7 @@ export type {
   CreateSkuDto,
   CreateSkuRequest,
   UpdateSkuDto,
+  UpdateSkuRequest,
   ImportSkuItem,
   CreateSalesHistoryDto,
   CreateSalesHistoryRequest,

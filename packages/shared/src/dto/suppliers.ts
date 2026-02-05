@@ -17,3 +17,8 @@ export interface UpdateSupplierDto {
 }
 
 export type UpdateSupplierRequest = UpdateSupplierDto;
+
+export interface ImportSupplierItem {
+  code: string;
+  title: string;
+}

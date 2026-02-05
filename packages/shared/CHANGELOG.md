@@ -1,5 +1,11 @@
 # @sales-planner/shared
 
+## 0.11.1
+
+### Patch Changes
+
+- Add title2 field to SKU, update READMEs with ctx-first API convention
+
 ## 0.11.0
 
 ### Minor Changes

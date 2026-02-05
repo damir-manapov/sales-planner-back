@@ -1,4 +1,4 @@
-import type { ApiKey, CreateApiKeyDto } from '@sales-planner/shared';
+import type { ApiKey, CreateApiKeyRequest } from '@sales-planner/shared';
 import { BaseClient } from './base-client.js';
 
 export class ApiKeysClient extends BaseClient {
@@ -6,8 +6,8 @@ export class ApiKeysClient extends BaseClient {
     return this.request('GET', '/api-keys', { params: { user_id: userId } });
   }
 
-  async createApiKey(dto: CreateApiKeyDto): Promise<ApiKey> {
-    return this.request('POST', '/api-keys', { body: dto });
+  async createApiKey(request: CreateApiKeyRequest): Promise<ApiKey> {
+    return this.request('POST', '/api-keys', { body: request });
   }
 
   async deleteApiKey(id: number): Promise<void> {

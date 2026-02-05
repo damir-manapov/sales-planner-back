@@ -1,6 +1,7 @@
 export interface SkuExportItem {
   code: string;
   title: string;
+  title2?: string;
   category?: string;
   group?: string;
   status?: string;

@@ -1,7 +1,7 @@
 import type {
   Brand,
   CreateBrandRequest,
-  UpdateBrandDto,
+  UpdateBrandRequest,
   ImportBrandItem,
   BrandExportItem,
   ImportResult,
@@ -14,31 +14,35 @@ export class BrandsClient extends ImportExportBaseClient {
     return this.request('GET', '/brands', { params: ctx });
   }
 
-  async getBrand(id: number, ctx: ShopContextParams): Promise<Brand> {
+  async getBrand(ctx: ShopContextParams, id: number): Promise<Brand> {
     return this.request('GET', `/brands/${id}`, { params: ctx });
   }
 
-  async getBrandByCode(code: string, ctx: ShopContextParams): Promise<Brand> {
+  async getBrandByCode(ctx: ShopContextParams, code: string): Promise<Brand> {
     return this.request('GET', `/brands/code/${encodeURIComponent(code)}`, { params: ctx });
   }
 
-  async createBrand(dto: CreateBrandRequest, ctx: ShopContextParams): Promise<Brand> {
-    return this.request('POST', '/brands', { body: dto, params: ctx });
+  async createBrand(ctx: ShopContextParams, request: CreateBrandRequest): Promise<Brand> {
+    return this.request('POST', '/brands', { body: request, params: ctx });
   }
 
-  async updateBrand(id: number, dto: UpdateBrandDto, ctx: ShopContextParams): Promise<Brand> {
-    return this.request('PUT', `/brands/${id}`, { body: dto, params: ctx });
+  async updateBrand(
+    ctx: ShopContextParams,
+    id: number,
+    request: UpdateBrandRequest,
+  ): Promise<Brand> {
+    return this.request('PUT', `/brands/${id}`, { body: request, params: ctx });
   }
 
-  async deleteBrand(id: number, ctx: ShopContextParams): Promise<void> {
+  async deleteBrand(ctx: ShopContextParams, id: number): Promise<void> {
     return this.request('DELETE', `/brands/${id}`, { params: ctx });
   }
 
-  async importJson(items: ImportBrandItem[], ctx: ShopContextParams): Promise<ImportResult> {
+  async importJson(ctx: ShopContextParams, items: ImportBrandItem[]): Promise<ImportResult> {
     return this.request('POST', '/brands/import/json', { body: items, params: ctx });
   }
 
-  async importCsv(csvContent: string, ctx: ShopContextParams): Promise<ImportResult> {
+  async importCsv(ctx: ShopContextParams, csvContent: string): Promise<ImportResult> {
     return this.uploadCsv('/brands/import/csv', csvContent, ctx);
   }
 
