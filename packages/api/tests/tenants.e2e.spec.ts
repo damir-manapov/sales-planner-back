@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { SalesPlannerClient } from '@sales-planner/http-client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
+import { ROLE_NAMES } from '../src/common/constants.js';
 import { TestContext } from './test-context.js';
 import {
   cleanupUser,
@@ -59,7 +60,7 @@ describe('Tenants (e2e)', () => {
 
     // Get systemAdmin role and assign it
     const roles = await ctx.getSystemClient().getRoles();
-    const sysAdminRole = roles.find((r) => r.name === 'systemAdmin');
+    const sysAdminRole = roles.find((r) => r.name === ROLE_NAMES.SYSTEM_ADMIN);
     if (sysAdminRole) {
       await ctx
         .getSystemClient()
@@ -250,7 +251,7 @@ describe('Tenants (e2e)', () => {
       // Verify user has tenantAdmin role for the created tenant
       const hasTenantAdminRole = me.roles.some(
         (r) =>
-          r.role_name === 'tenantAdmin' && r.tenant_id === result.tenant.id && r.shop_id === null,
+          r.role_name === ROLE_NAMES.TENANT_ADMIN && r.tenant_id === result.tenant.id && r.shop_id === null,
       );
       expect(hasTenantAdminRole).toBe(true);
 

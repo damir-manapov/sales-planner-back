@@ -3,16 +3,17 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { SalesPlannerClient } from '@sales-planner/http-client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
+import { ROLE_NAMES } from '../src/common/constants.js';
 import { normalizeCode } from '../src/lib/normalize-code.js';
 import { TestContext } from './test-context.js';
 import {
   cleanupUser,
-  generateUniqueId,
-  generateTestCode,
-  expectUnauthorized,
+  expectConflict,
   expectForbidden,
   expectNotFound,
-  expectConflict,
+  expectUnauthorized,
+  generateTestCode,
+  generateUniqueId,
 } from './test-helpers.js';
 
 describe('Brands (e2e)', () => {
@@ -58,7 +59,7 @@ describe('Brands (e2e)', () => {
   });
 
   describe('CRUD operations', () => {
-    it('createBrand - should create brand', async () => {
+    it('should create brand', async () => {
       const newBrand = { code: generateTestCode('brand'), title: 'Test Brand' };
       const brand = await ctx.client.createBrand(newBrand, ctx.shopContext);
 
@@ -71,20 +72,20 @@ describe('Brands (e2e)', () => {
       brandId = brand.id;
     });
 
-    it('getBrands - should return brands for shop and tenant', async () => {
+    it('should list brands', async () => {
       const brands = await ctx.client.getBrands(ctx.shopContext);
 
       expect(Array.isArray(brands)).toBe(true);
       expect(brands.length).toBeGreaterThan(0);
     });
 
-    it('getBrand - should return brand by id', async () => {
+    it('should get brand by id', async () => {
       const brand = await ctx.client.getBrand(brandId, ctx.shopContext);
 
       expect(brand.id).toBe(brandId);
     });
 
-    it('updateBrand - should update brand', async () => {
+    it('should update brand', async () => {
       const brand = await ctx.client.updateBrand(
         brandId,
         { title: 'Updated Brand Title' },
@@ -94,93 +95,87 @@ describe('Brands (e2e)', () => {
       expect(brand.title).toBe('Updated Brand Title');
     });
 
-    it('createBrand - should return 409 on duplicate code in same shop', async () => {
+    it('should return 409 on duplicate code', async () => {
       const duplicateCode = generateTestCode('brand');
       await ctx.client.createBrand({ code: duplicateCode, title: 'First Brand' }, ctx.shopContext);
 
       await expectConflict(() =>
-        ctx.client.createBrand(
-          { code: duplicateCode, title: 'Duplicate Brand' },
-          ctx.shopContext,
-        ),
+        ctx.client.createBrand({ code: duplicateCode, title: 'Duplicate Brand' }, ctx.shopContext),
       );
-    });
-  });
-
-  describe('Tenant-based access control', () => {
-    it('should return 403 for wrong tenant', async () => {
-      // Create another user with their own tenant
-      const otherSetup = await ctx.getSystemClient().createTenantWithShopAndUser({
-        tenantTitle: `Other Tenant ${generateUniqueId()}`,
-        userEmail: `other-${generateUniqueId()}@example.com`,
-        userName: 'Other User',
-      });
-
-      await expectForbidden(() =>
-        ctx.client.getBrands({
-          shop_id: otherSetup.shop.id,
-          tenant_id: otherSetup.tenant.id,
-        }),
-      );
-
-      await cleanupUser(app, otherSetup.user.id);
-    });
-
-    it('should return 403 when creating brand for wrong tenant', async () => {
-      const otherSetup = await ctx.getSystemClient().createTenantWithShopAndUser({
-        tenantTitle: `Other Tenant ${generateUniqueId()}`,
-        userEmail: `other2-${generateUniqueId()}@example.com`,
-        userName: 'Other User 2',
-      });
-
-      await expectForbidden(() =>
-        ctx.client.createBrand(
-          { code: 'forbidden-brand', title: 'Should Fail' },
-          { shop_id: ctx.shop.id, tenant_id: otherSetup.tenant.id },
-        ),
-      );
-
-      await cleanupUser(app, otherSetup.user.id);
-    });
-
-    it('should return 404 for brand in wrong tenant', async () => {
-      const otherSetup = await ctx.getSystemClient().createTenantWithShopAndUser({
-        tenantTitle: `Other Tenant ${generateUniqueId()}`,
-        userEmail: `other3-${generateUniqueId()}@example.com`,
-        userName: 'Other User 3',
-      });
-
-      // Give test user access to the other tenant
-      const roles = await ctx.getSystemClient().getRoles();
-      const tenantAdminRole = roles.find((r) => r.name === 'tenantAdmin');
-      if (tenantAdminRole) {
-        await ctx.getSystemClient().createUserRole({
-          user_id: ctx.user.id,
-          role_id: tenantAdminRole.id,
-          tenant_id: otherSetup.tenant.id,
-        });
-      }
-
-      await expectNotFound(() =>
-        ctx.client.getBrand(brandId, {
-          shop_id: otherSetup.shop.id,
-          tenant_id: otherSetup.tenant.id,
-        }),
-      );
-
-      await cleanupUser(app, otherSetup.user.id);
     });
   });
 
   describe('Delete operations', () => {
-    it('deleteBrand - should delete brand', async () => {
+    it('should delete brand', async () => {
       await ctx.client.deleteBrand(brandId, ctx.shopContext);
       await expectNotFound(() => ctx.client.getBrand(brandId, ctx.shopContext));
     });
   });
 
-  describe('Import endpoints', () => {
-    it('importBrandsJson - should import brands from JSON', async () => {
+  describe('Tenant-based access control', () => {
+    let otherCtx: TestContext;
+
+    beforeAll(async () => {
+      otherCtx = await TestContext.create(app, baseUrl, {
+        tenantTitle: `Other Tenant ${generateUniqueId()}`,
+        userEmail: `other-tenant-${generateUniqueId()}@example.com`,
+        userName: 'Other Tenant User',
+      });
+    });
+
+    afterAll(async () => {
+      if (otherCtx) await otherCtx.dispose();
+    });
+
+    it('should return 403 when accessing other tenant', async () => {
+      await expectForbidden(() =>
+        ctx.client.getBrands({
+          shop_id: otherCtx.shop.id,
+          tenant_id: otherCtx.tenant.id,
+        }),
+      );
+    });
+
+    it('should return 403 when creating for other tenant', async () => {
+      await expectForbidden(() =>
+        ctx.client.createBrand(
+          { code: 'forbidden-brand', title: 'Should Fail' },
+          { shop_id: ctx.shop.id, tenant_id: otherCtx.tenant.id },
+        ),
+      );
+    });
+
+    it('should return 404 when getting resource from other tenant', async () => {
+      // Create a brand in other tenant
+      const otherBrand = await otherCtx.client.createBrand(
+        { code: generateTestCode('other'), title: 'Other Brand' },
+        otherCtx.shopContext,
+      );
+
+      // Try to access it from main context
+      await expectNotFound(() => ctx.client.getBrand(otherBrand.id, ctx.shopContext));
+    });
+
+    it('should allow same code in different tenants', async () => {
+      const sharedCode = generateTestCode('shared');
+
+      const brand1 = await ctx.client.createBrand(
+        { code: sharedCode, title: 'Brand in Tenant 1' },
+        ctx.shopContext,
+      );
+      const brand2 = await otherCtx.client.createBrand(
+        { code: sharedCode, title: 'Brand in Tenant 2' },
+        otherCtx.shopContext,
+      );
+
+      expect(brand1.code).toBe(normalizeCode(sharedCode));
+      expect(brand2.code).toBe(normalizeCode(sharedCode));
+      expect(brand1.tenant_id).not.toBe(brand2.tenant_id);
+    });
+  });
+
+  describe('Import/Export', () => {
+    it('should import brands from JSON', async () => {
       const code1 = generateTestCode('import-json-1');
       const code2 = generateTestCode('import-json-2');
       const items = [
@@ -200,7 +195,7 @@ describe('Brands (e2e)', () => {
       expect(codes).toContain(normalizeCode(code2));
     });
 
-    it('importBrandsJson - should upsert existing brands', async () => {
+    it('should upsert existing brands on import', async () => {
       const code = generateTestCode('upsert-json');
 
       await ctx.client.importBrandsJson([{ code, title: 'Original Title' }], ctx.shopContext);
@@ -213,7 +208,7 @@ describe('Brands (e2e)', () => {
       expect(result.updated).toBe(1);
     });
 
-    it('importBrandsCsv - should import brands from CSV with commas', async () => {
+    it('should import brands from CSV with commas', async () => {
       const code1 = generateTestCode('import-csv-1');
       const code2 = generateTestCode('import-csv-2');
       const csvContent = `code,title\n${code1},Import CSV Brand 1\n${code2},Import CSV Brand 2`;
@@ -229,7 +224,7 @@ describe('Brands (e2e)', () => {
       expect(codes).toContain(normalizeCode(code2));
     });
 
-    it('importBrandsCsv - should import brands from CSV with semicolons', async () => {
+    it('should import brands from CSV with semicolons', async () => {
       const code1 = generateTestCode('import-semi-1');
       const code2 = generateTestCode('import-semi-2');
       const csvContent = `code;title\n${code1};Import Semicolon Brand 1\n${code2};Import Semicolon Brand 2`;
@@ -245,7 +240,7 @@ describe('Brands (e2e)', () => {
       expect(codes).toContain(normalizeCode(code2));
     });
 
-    it('importBrandsCsv - should handle Cyrillic characters with semicolons', async () => {
+    it('should handle Cyrillic characters in CSV', async () => {
       const csvContent = `code;title\nmavyko;Мавико\nmarshall;MARSHALL\nmazda;Mazda`;
 
       const result = await ctx.client.importBrandsCsv(csvContent, ctx.shopContext);
@@ -259,7 +254,7 @@ describe('Brands (e2e)', () => {
       expect(mavyko?.title).toBe('Мавико');
     });
 
-    it('exportBrandsJson - should export brands in import format', async () => {
+    it('should export brands to JSON', async () => {
       const code1 = generateTestCode('export-brand-1');
       const code2 = generateTestCode('export-brand-2');
 
@@ -282,7 +277,7 @@ describe('Brands (e2e)', () => {
       expect(item).toEqual({ code: normalizeCode(code1), title: 'Export Test Brand 1' });
     });
 
-    it('exportBrandsCsv - should export brands in CSV format', async () => {
+    it('should export brands to CSV', async () => {
       const code1 = generateTestCode('csv-export-brand-1');
       const code2 = generateTestCode('csv-export-brand-2');
 
@@ -304,100 +299,176 @@ describe('Brands (e2e)', () => {
     });
   });
 
-  describe('Viewer role access', () => {
-    let viewerUserId: number;
-    let viewerClient: SalesPlannerClient;
+  describe('Role-based access', () => {
+    describe('Editor role', () => {
+      let editorUserId: number;
+      let editorClient: SalesPlannerClient;
 
-    beforeAll(async () => {
-      // Create viewer user
-      const viewerUser = await ctx.getSystemClient().createUser({
-        email: `viewer-${generateUniqueId()}@example.com`,
-        name: 'Viewer User',
-      });
-      viewerUserId = viewerUser.id;
-      const viewerApiKey = await ctx.getSystemClient().createApiKey({
-        user_id: viewerUserId,
-        name: 'Viewer Key',
-      });
-
-      viewerClient = new SalesPlannerClient({ baseUrl, apiKey: viewerApiKey.key });
-
-      // Assign viewer role
-      const roles = await ctx.getSystemClient().getRoles();
-      const viewerRole = roles.find((r) => r.name === 'viewer');
-      if (viewerRole) {
-        await ctx.getSystemClient().createUserRole({
-          user_id: viewerUserId,
-          role_id: viewerRole.id,
-          tenant_id: ctx.tenant.id,
-          shop_id: ctx.shop.id,
+      beforeAll(async () => {
+        const editorUser = await ctx.getSystemClient().createUser({
+          email: `editor-${generateUniqueId()}@example.com`,
+          name: 'Editor User',
         });
-      }
-    });
+        editorUserId = editorUser.id;
 
-    afterAll(async () => {
-      if (viewerUserId) {
-        await cleanupUser(app, viewerUserId);
-      }
-    });
+        const editorApiKey = await ctx.getSystemClient().createApiKey({
+          user_id: editorUserId,
+          name: 'Editor Key',
+        });
+        editorClient = new SalesPlannerClient({ baseUrl, apiKey: editorApiKey.key });
 
-    it('viewer should be able to list brands', async () => {
-      const brands = await viewerClient.getBrands(ctx.shopContext);
+        const roles = await ctx.getSystemClient().getRoles();
+        const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
+        if (editorRole) {
+          await ctx.getSystemClient().createUserRole({
+            user_id: editorUserId,
+            role_id: editorRole.id,
+            tenant_id: ctx.tenant.id,
+            shop_id: ctx.shop.id,
+          });
+        }
+      });
 
-      expect(Array.isArray(brands)).toBe(true);
-    });
+      afterAll(async () => {
+        if (editorUserId) await cleanupUser(app, editorUserId);
+      });
 
-    it('viewer should be able to get single brand', async () => {
-      const brands = await viewerClient.getBrands(ctx.shopContext);
-      if (brands.length > 0) {
-        // biome-ignore lint/style/noNonNullAssertion: length check ensures element exists
-        const firstBrand = brands[0]!;
-        const brand = await viewerClient.getBrand(firstBrand.id, ctx.shopContext);
-        expect(brand.id).toBe(firstBrand.id);
-      }
-    });
+      it('editor should list brands', async () => {
+        const brands = await editorClient.getBrands(ctx.shopContext);
+        expect(Array.isArray(brands)).toBe(true);
+      });
 
-    it('viewer should NOT be able to create brand', async () => {
-      await expectForbidden(() =>
-        viewerClient.createBrand(
-          { code: 'viewer-brand', title: 'Should Fail' },
+      it('editor should create brand', async () => {
+        const brand = await editorClient.createBrand(
+          { code: generateTestCode('editor-brand'), title: 'Editor Brand' },
           ctx.shopContext,
-        ),
-      );
-    });
-
-    it('viewer should NOT be able to update brand', async () => {
-      const brands = await viewerClient.getBrands(ctx.shopContext);
-      if (brands.length > 0) {
-        // biome-ignore lint/style/noNonNullAssertion: length check ensures element exists
-        const firstBrand = brands[0]!;
-        await expectForbidden(() =>
-          viewerClient.updateBrand(firstBrand.id, { title: 'Should Fail' }, ctx.shopContext),
         );
-      }
-    });
+        expect(brand).toHaveProperty('id');
+      });
 
-    it('viewer should NOT be able to delete brand', async () => {
-      const brands = await viewerClient.getBrands(ctx.shopContext);
-      if (brands.length > 0) {
-        // biome-ignore lint/style/noNonNullAssertion: length check ensures element exists
-        const firstBrand = brands[0]!;
-        await expectForbidden(() => viewerClient.deleteBrand(firstBrand.id, ctx.shopContext));
-      }
-    });
+      it('editor should update brand', async () => {
+        const brands = await editorClient.getBrands(ctx.shopContext);
+        if (brands.length > 0) {
+          const firstBrand = brands[0]!;
+          const updated = await editorClient.updateBrand(
+            firstBrand.id,
+            { title: 'Editor Updated' },
+            ctx.shopContext,
+          );
+          expect(updated.title).toBe('Editor Updated');
+        }
+      });
 
-    it('viewer should be able to export brands', async () => {
-      const exported = await viewerClient.exportBrandsJson(ctx.shopContext);
-      expect(Array.isArray(exported)).toBe(true);
-    });
-
-    it('viewer should NOT be able to import brands', async () => {
-      await expectForbidden(() =>
-        viewerClient.importBrandsJson(
-          [{ code: 'test', title: 'Should Fail' }],
+      it('editor should delete brand', async () => {
+        const brand = await editorClient.createBrand(
+          { code: generateTestCode('editor-delete'), title: 'To Delete' },
           ctx.shopContext,
-        ),
-      );
+        );
+        await editorClient.deleteBrand(brand.id, ctx.shopContext);
+        await expectNotFound(() => editorClient.getBrand(brand.id, ctx.shopContext));
+      });
+
+      it('editor should import brands', async () => {
+        const result = await editorClient.importBrandsJson(
+          [{ code: generateTestCode('editor-import'), title: 'Editor Import' }],
+          ctx.shopContext,
+        );
+        expect(result.created).toBe(1);
+      });
+
+      it('editor should export brands', async () => {
+        const exported = await editorClient.exportBrandsJson(ctx.shopContext);
+        expect(Array.isArray(exported)).toBe(true);
+      });
+    });
+
+    describe('Viewer role', () => {
+      let viewerUserId: number;
+      let viewerClient: SalesPlannerClient;
+
+      beforeAll(async () => {
+        const viewerUser = await ctx.getSystemClient().createUser({
+          email: `viewer-${generateUniqueId()}@example.com`,
+          name: 'Viewer User',
+        });
+        viewerUserId = viewerUser.id;
+
+        const viewerApiKey = await ctx.getSystemClient().createApiKey({
+          user_id: viewerUserId,
+          name: 'Viewer Key',
+        });
+        viewerClient = new SalesPlannerClient({ baseUrl, apiKey: viewerApiKey.key });
+
+        const roles = await ctx.getSystemClient().getRoles();
+        const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
+        if (viewerRole) {
+          await ctx.getSystemClient().createUserRole({
+            user_id: viewerUserId,
+            role_id: viewerRole.id,
+            tenant_id: ctx.tenant.id,
+            shop_id: ctx.shop.id,
+          });
+        }
+      });
+
+      afterAll(async () => {
+        if (viewerUserId) await cleanupUser(app, viewerUserId);
+      });
+
+      it('viewer should list brands', async () => {
+        const brands = await viewerClient.getBrands(ctx.shopContext);
+        expect(Array.isArray(brands)).toBe(true);
+      });
+
+      it('viewer should get brand by id', async () => {
+        const brands = await viewerClient.getBrands(ctx.shopContext);
+        if (brands.length > 0) {
+          const firstBrand = brands[0]!;
+          const brand = await viewerClient.getBrand(firstBrand.id, ctx.shopContext);
+          expect(brand.id).toBe(firstBrand.id);
+        }
+      });
+
+      it('viewer should NOT create brand', async () => {
+        await expectForbidden(() =>
+          viewerClient.createBrand(
+            { code: 'viewer-brand', title: 'Should Fail' },
+            ctx.shopContext,
+          ),
+        );
+      });
+
+      it('viewer should NOT update brand', async () => {
+        const brands = await viewerClient.getBrands(ctx.shopContext);
+        if (brands.length > 0) {
+          const firstBrand = brands[0]!;
+          await expectForbidden(() =>
+            viewerClient.updateBrand(firstBrand.id, { title: 'Should Fail' }, ctx.shopContext),
+          );
+        }
+      });
+
+      it('viewer should NOT delete brand', async () => {
+        const brands = await viewerClient.getBrands(ctx.shopContext);
+        if (brands.length > 0) {
+          const firstBrand = brands[0]!;
+          await expectForbidden(() => viewerClient.deleteBrand(firstBrand.id, ctx.shopContext));
+        }
+      });
+
+      it('viewer should export brands', async () => {
+        const exported = await viewerClient.exportBrandsJson(ctx.shopContext);
+        expect(Array.isArray(exported)).toBe(true);
+      });
+
+      it('viewer should NOT import brands', async () => {
+        await expectForbidden(() =>
+          viewerClient.importBrandsJson(
+            [{ code: 'test', title: 'Should Fail' }],
+            ctx.shopContext,
+          ),
+        );
+      });
     });
   });
 });

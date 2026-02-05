@@ -3,8 +3,17 @@ import { Test, type TestingModule } from '@nestjs/testing';
 import { SalesPlannerClient } from '@sales-planner/http-client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
+import { ROLE_NAMES } from '../src/common/constants.js';
 import { TestContext } from './test-context.js';
-import { cleanupUser, generateUniqueId, generateTestPeriod, generateTestCode, expectForbidden, expectNotFound } from './test-helpers.js';
+import {
+  cleanupUser,
+  expectForbidden,
+  expectNotFound,
+  expectUnauthorized,
+  generateTestCode,
+  generateTestPeriod,
+  generateUniqueId,
+} from './test-helpers.js';
 
 describe('Shops E2E', () => {
   let app: INestApplication;
@@ -37,6 +46,18 @@ describe('Shops E2E', () => {
   afterAll(async () => {
     if (ctx) await ctx.dispose();
     await app.close();
+  });
+
+  describe('Authentication', () => {
+    it('should return 401 without API key', async () => {
+      const noAuthClient = new SalesPlannerClient({ baseUrl, apiKey: '' });
+      await expectUnauthorized(() => noAuthClient.getShops());
+    });
+
+    it('should return 401 with invalid API key', async () => {
+      const badClient = new SalesPlannerClient({ baseUrl, apiKey: 'invalid-key' });
+      await expectUnauthorized(() => badClient.getShops());
+    });
   });
 
   describe('Shop CRUD', () => {
@@ -98,7 +119,7 @@ describe('Shops E2E', () => {
 
       // Get tenantAdmin role and assign it
       const roles = await ctx.getSystemClient().getRoles();
-      const tenantAdminRole = roles.find((r) => r.name === 'tenantAdmin');
+      const tenantAdminRole = roles.find((r) => r.name === ROLE_NAMES.TENANT_ADMIN);
       if (tenantAdminRole) {
         await ctx.getSystemClient().createUserRole({
           user_id: tenantAdminUserId,
@@ -250,6 +271,130 @@ describe('Shops E2E', () => {
       const shop = await ctx.getSystemClient().getShop(testShopId);
 
       expect(shop.id).toBe(testShopId);
+    });
+  });
+
+  describe('Role-based access', () => {
+    describe('Editor role', () => {
+      let editorUserId: number;
+      let editorClient: SalesPlannerClient;
+
+      beforeAll(async () => {
+        const editorUser = await ctx.getSystemClient().createUser({
+          email: `editor-${generateUniqueId()}@example.com`,
+          name: 'Editor User',
+        });
+        editorUserId = editorUser.id;
+
+        const editorApiKey = await ctx.getSystemClient().createApiKey({
+          user_id: editorUserId,
+          name: 'Editor Key',
+        });
+        editorClient = new SalesPlannerClient({ baseUrl, apiKey: editorApiKey.key });
+
+        const roles = await ctx.getSystemClient().getRoles();
+        const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
+        if (editorRole) {
+          await ctx.getSystemClient().createUserRole({
+            user_id: editorUserId,
+            role_id: editorRole.id,
+            tenant_id: ctx.tenant.id,
+            shop_id: testShopId,
+          });
+        }
+      });
+
+      afterAll(async () => {
+        if (editorUserId) await cleanupUser(app, editorUserId);
+      });
+
+      it('editor should list shops', async () => {
+        const shops = await editorClient.getShops();
+        expect(Array.isArray(shops)).toBe(true);
+        expect(shops.some((s) => s.id === testShopId)).toBe(true);
+      });
+
+      it('editor should get shop by id', async () => {
+        const shop = await editorClient.getShop(testShopId);
+        expect(shop.id).toBe(testShopId);
+      });
+
+      it('editor should NOT create shop', async () => {
+        await expectForbidden(() =>
+          editorClient.createShop({ title: 'Editor Shop', tenant_id: ctx.tenant.id }),
+        );
+      });
+
+      it('editor should NOT update shop', async () => {
+        await expectForbidden(() =>
+          editorClient.updateShop(testShopId, { title: 'Editor Updated' }),
+        );
+      });
+
+      it('editor should NOT delete shop', async () => {
+        await expectForbidden(() => editorClient.deleteShop(testShopId));
+      });
+    });
+
+    describe('Viewer role', () => {
+      let viewerUserId: number;
+      let viewerClient: SalesPlannerClient;
+
+      beforeAll(async () => {
+        const viewerUser = await ctx.getSystemClient().createUser({
+          email: `viewer-${generateUniqueId()}@example.com`,
+          name: 'Viewer User',
+        });
+        viewerUserId = viewerUser.id;
+
+        const viewerApiKey = await ctx.getSystemClient().createApiKey({
+          user_id: viewerUserId,
+          name: 'Viewer Key',
+        });
+        viewerClient = new SalesPlannerClient({ baseUrl, apiKey: viewerApiKey.key });
+
+        const roles = await ctx.getSystemClient().getRoles();
+        const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
+        if (viewerRole) {
+          await ctx.getSystemClient().createUserRole({
+            user_id: viewerUserId,
+            role_id: viewerRole.id,
+            tenant_id: ctx.tenant.id,
+            shop_id: testShopId,
+          });
+        }
+      });
+
+      afterAll(async () => {
+        if (viewerUserId) await cleanupUser(app, viewerUserId);
+      });
+
+      it('viewer should list shops', async () => {
+        const shops = await viewerClient.getShops();
+        expect(Array.isArray(shops)).toBe(true);
+        expect(shops.some((s) => s.id === testShopId)).toBe(true);
+      });
+
+      it('viewer should get shop by id', async () => {
+        const shop = await viewerClient.getShop(testShopId);
+        expect(shop.id).toBe(testShopId);
+      });
+
+      it('viewer should NOT create shop', async () => {
+        await expectForbidden(() =>
+          viewerClient.createShop({ title: 'Viewer Shop', tenant_id: ctx.tenant.id }),
+        );
+      });
+
+      it('viewer should NOT update shop', async () => {
+        await expectForbidden(() =>
+          viewerClient.updateShop(testShopId, { title: 'Viewer Updated' }),
+        );
+      });
+
+      it('viewer should NOT delete shop', async () => {
+        await expectForbidden(() => viewerClient.deleteShop(testShopId));
+      });
     });
   });
 

@@ -5,10 +5,10 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { TestContext } from './test-context.js';
 import {
-  generateUniqueId,
-  expectUnauthorized,
-  expectNotFound,
   expectConflict,
+  expectNotFound,
+  expectUnauthorized,
+  generateUniqueId,
 } from './test-helpers.js';
 
 describe('Users (e2e)', () => {
@@ -41,64 +41,68 @@ describe('Users (e2e)', () => {
     await app.close();
   });
 
-  it('GET /users - should return users with system admin', async () => {
-    const users = await ctx.getSystemClient().getUsers();
-    expect(Array.isArray(users)).toBe(true);
-  });
-
-  it('POST /users - should create a user with system admin', async () => {
-    const newUser = {
-      email: `test-${generateUniqueId()}@example.com`,
-      name: 'Test User',
-    };
-
-    const user = await ctx.getSystemClient().createUser(newUser);
-
-    expect(user).toHaveProperty('id');
-    expect(user.email).toBe(newUser.email);
-    expect(user.name).toBe(newUser.name);
-
-    createdUserId = user.id;
-  });
-
-  it('GET /users/:id - should return created user with system admin', async () => {
-    const user = await ctx.getSystemClient().getUser(createdUserId);
-
-    expect(user.id).toBe(createdUserId);
-  });
-
-  it('GET /users/:id - should return 404 for non-existent user', async () => {
-    await expectNotFound(() => ctx.getSystemClient().getUser(999999));
-  });
-
-  it('DELETE /users/:id - should delete created user with system admin', async () => {
-    await ctx.getSystemClient().deleteUser(createdUserId);
-
-    // Verify user is deleted
-    await expectNotFound(() => ctx.getSystemClient().getUser(createdUserId));
-  });
-
-  it('POST /users - should return 409 on duplicate email', async () => {
-    const duplicateEmail = `duplicate-${generateUniqueId()}@example.com`;
-    await ctx.getSystemClient().createUser({
-      email: duplicateEmail,
-      name: 'First User',
+  describe('Authentication', () => {
+    it('should return 401 without API key', async () => {
+      const noAuthClient = new SalesPlannerClient({ baseUrl, apiKey: '' });
+      await expectUnauthorized(() => noAuthClient.getUsers());
     });
 
-    await expectConflict(() =>
-      ctx.getSystemClient().createUser({
+    it('should return 401 with invalid API key', async () => {
+      const badClient = new SalesPlannerClient({ baseUrl, apiKey: 'invalid-key' });
+      await expectUnauthorized(() => badClient.getUsers());
+    });
+  });
+
+  describe('CRUD operations', () => {
+    it('should list users with system admin', async () => {
+      const users = await ctx.getSystemClient().getUsers();
+      expect(Array.isArray(users)).toBe(true);
+    });
+
+    it('should create user with system admin', async () => {
+      const newUser = {
+        email: `test-${generateUniqueId()}@example.com`,
+        name: 'Test User',
+      };
+
+      const user = await ctx.getSystemClient().createUser(newUser);
+
+      expect(user).toHaveProperty('id');
+      expect(user.email).toBe(newUser.email);
+      expect(user.name).toBe(newUser.name);
+
+      createdUserId = user.id;
+    });
+
+    it('should get user by id with system admin', async () => {
+      const user = await ctx.getSystemClient().getUser(createdUserId);
+      expect(user.id).toBe(createdUserId);
+    });
+
+    it('should return 404 for non-existent user', async () => {
+      await expectNotFound(() => ctx.getSystemClient().getUser(999999));
+    });
+
+    it('should return 409 on duplicate email', async () => {
+      const duplicateEmail = `duplicate-${generateUniqueId()}@example.com`;
+      await ctx.getSystemClient().createUser({
         email: duplicateEmail,
-        name: 'Duplicate User',
-      }),
-    );
+        name: 'First User',
+      });
+
+      await expectConflict(() =>
+        ctx.getSystemClient().createUser({
+          email: duplicateEmail,
+          name: 'Duplicate User',
+        }),
+      );
+    });
   });
 
-  it('GET /users - should return 401 without API key', async () => {
-    const noAuthClient = new SalesPlannerClient({
-      baseUrl,
-      apiKey: '',
+  describe('Delete operations', () => {
+    it('should delete user with system admin', async () => {
+      await ctx.getSystemClient().deleteUser(createdUserId);
+      await expectNotFound(() => ctx.getSystemClient().getUser(createdUserId));
     });
-
-    await expectUnauthorized(() => noAuthClient.getUsers());
   });
 });

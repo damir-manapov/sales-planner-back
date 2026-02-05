@@ -15,6 +15,7 @@ import {
 } from '@nestjs/common';
 import type { DeleteDataResult } from '@sales-planner/shared';
 import {
+  hasReadAccess,
   hasTenantAccess,
   validateTenantAdminAccess,
   validateWriteAccess,
@@ -47,7 +48,7 @@ export class ShopsController {
       return this.shopsService.findAll();
     }
 
-    // Tenant admins/owners can only see shops in their tenants
+    // If tenantId is specified, check access
     if (tenantId) {
       const tid = Number(tenantId);
       if (!hasTenantAccess(req.user, tid)) {
@@ -58,17 +59,43 @@ export class ShopsController {
 
     // Return shops from all tenants user has access to
     const allShops: Shop[] = [];
+    const addedShopIds = new Set<number>();
+
+    // Include shops from owned tenants
     for (const tid of req.user.ownedTenantIds) {
       const shops = await this.shopsService.findByTenantId(tid);
-      allShops.push(...shops);
+      for (const shop of shops) {
+        if (!addedShopIds.has(shop.id)) {
+          allShops.push(shop);
+          addedShopIds.add(shop.id);
+        }
+      }
     }
-    // Also include tenants where user is admin
+
+    // Include shops from tenants where user is admin
     for (const tr of req.user.tenantRoles) {
       if (!req.user.ownedTenantIds.includes(tr.tenantId)) {
         const shops = await this.shopsService.findByTenantId(tr.tenantId);
-        allShops.push(...shops);
+        for (const shop of shops) {
+          if (!addedShopIds.has(shop.id)) {
+            allShops.push(shop);
+            addedShopIds.add(shop.id);
+          }
+        }
       }
     }
+
+    // Include shops where user has shop-level roles (editor/viewer)
+    for (const sr of req.user.shopRoles) {
+      if (!addedShopIds.has(sr.shopId)) {
+        const shop = await this.shopsService.findById(sr.shopId);
+        if (shop) {
+          allShops.push(shop);
+          addedShopIds.add(shop.id);
+        }
+      }
+    }
+
     return allShops;
   }
 
@@ -82,8 +109,13 @@ export class ShopsController {
       throw new NotFoundException(`Shop with id ${id} not found`);
     }
 
-    // Validate access
-    if (!req.user.isSystemAdmin && !hasTenantAccess(req.user, shop.tenant_id)) {
+    // System admins can access any shop
+    if (req.user.isSystemAdmin) {
+      return shop;
+    }
+
+    // Check tenant-level access (owner/admin) or shop-level access (editor/viewer)
+    if (!hasReadAccess(req.user, shop.id, shop.tenant_id)) {
       throw new ForbiddenException('Access to this shop is not allowed');
     }
 

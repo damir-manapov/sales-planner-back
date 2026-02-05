@@ -12,3 +12,9 @@ export interface PeriodQuery {
   period_from?: string; // YYYY-MM format
   period_to?: string; // YYYY-MM format
 }
+
+export interface GetUserRolesQuery {
+  userId?: number;
+  roleId?: number;
+  tenantId?: number;
+}

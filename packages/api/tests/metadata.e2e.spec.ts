@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { TestContext } from './test-context.js';
-import { generateUniqueId, generateTestCode } from './test-helpers.js';
+import { generateUniqueId } from './test-helpers.js';
 
 describe('Metadata (e2e)', () => {
   let app: INestApplication;

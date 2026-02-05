@@ -314,6 +314,9 @@ export class SalesPlannerClient {
   updateRole = (id: number, dto: Parameters<RolesClient['updateRole']>[1]) =>
     this.roles.updateRole(id, dto);
   deleteRole = (id: number) => this.roles.deleteRole(id);
+  getUserRoles = (query?: Parameters<UserRolesClient['getUserRoles']>[0]) =>
+    this.userRoles.getUserRoles(query);
+  getUserRole = (id: number) => this.userRoles.getUserRole(id);
   createUserRole = (dto: Parameters<UserRolesClient['createUserRole']>[0]) =>
     this.userRoles.createUserRole(dto);
   deleteUserRole = (id: number) => this.userRoles.deleteUserRole(id);

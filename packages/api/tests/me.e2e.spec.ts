@@ -5,7 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { ROLE_NAMES } from '../src/common/constants.js';
 import { TestContext } from './test-context.js';
-import { generateUniqueId, generateTestCode } from './test-helpers.js';
+import { generateUniqueId } from './test-helpers.js';
 
 describe('Me (e2e)', () => {
   let app: INestApplication;
