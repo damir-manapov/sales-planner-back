@@ -1,5 +1,11 @@
 # @sales-planner/shared
 
+## 0.11.0
+
+### Minor Changes
+
+- 64b3294: Add suppliers entity with full CRUD operations, CSV import/export, and SKU supplier_code field
+
 ## 0.10.0
 
 ### Minor Changes

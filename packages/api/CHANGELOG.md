@@ -1,5 +1,16 @@
 # @sales-planner/api
 
+## 0.7.0
+
+### Minor Changes
+
+- 64b3294: Add suppliers entity with full CRUD operations, CSV import/export, and SKU supplier_code field
+
+### Patch Changes
+
+- Updated dependencies [64b3294]
+  - @sales-planner/shared@0.11.0
+
 ## 0.6.0
 
 ### Minor Changes

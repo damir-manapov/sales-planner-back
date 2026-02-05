@@ -1,6 +1,6 @@
 {
   "name": "@sales-planner/http-client",
-  "version": "0.10.0",
+  "version": "0.11.0",
   "description": "HTTP client for Sales Planner API",
   "author": "Damir Manapov",
   "license": "MIT",
