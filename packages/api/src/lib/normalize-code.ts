@@ -81,27 +81,41 @@ function transliterate(text: string): string {
 }
 
 /**
+ * Splits text into words by separators and case changes
+ * Handles:
+ * - Explicit separators (underscores, hyphens)
+ * - Case changes (camelCase, PascalCase boundaries)
+ * - Number-to-letter boundaries
+ */
+export function splitIntoWords(text: string): string[] {
+  if (text.length === 0) return [];
+
+  // Split by explicit separators and case changes
+  // This regex splits on:
+  // - Underscores and hyphens: [_-]+
+  // - Boundaries between lowercase and uppercase letters: (?<=[a-z])(?=[A-Z])
+  // - Boundaries before uppercase letters that are followed by lowercase letters: (?=[A-Z][a-z])
+  // - Boundaries between numbers and uppercase letters: (?<=[0-9])(?=[A-Z])
+  const words = text
+    .split(/[_-]+|(?=[A-Z][a-z])|(?<=[a-z])(?=[A-Z])|(?<=[0-9])(?=[A-Z])/)
+    .filter(Boolean);
+
+  return words;
+}
+
+/**
  * Converts string to camelCase
- * Input is assumed to be already lowercase with no spaces
  */
 function toCamelCase(text: string): string {
-  // If no separators present, return as-is (already lowercase)
-  if (!/[_-]/.test(text)) {
-    return text;
-  }
-
-  // Split by separators and filter empty strings
-  const words = text.split(/[_-]+/).filter(Boolean);
+  const words = splitIntoWords(text);
 
   if (words.length === 0) return '';
-  if (words.length === 1) return words[0] || '';
 
-  // First word as-is (lowercase), rest with first letter uppercase
+  // First word lowercase, rest capitalized
   return words
-    .map((word, index) => {
-      if (index === 0) return word;
-      return word.length > 0 ? word.charAt(0).toUpperCase() + word.slice(1) : word;
-    })
+    .map((word, i) =>
+      i === 0 ? word.toLowerCase() : word.charAt(0).toUpperCase() + word.slice(1).toLowerCase(),
+    )
     .join('');
 }
 
@@ -120,8 +134,7 @@ export function normalizeCode(code: string): string {
   // Replace spaces with hyphens (preserving word boundaries), then transliterate
   const transliterated = transliterate(code.replace(/\s+/g, '-'));
 
-  // Convert to lowercase then camelCase
-  return toCamelCase(transliterated.toLowerCase());
+  return toCamelCase(transliterated);
 }
 
 /**

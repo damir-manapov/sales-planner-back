@@ -1,11 +1,19 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ApiError, SalesPlannerClient } from '@sales-planner/http-client';
+import { SalesPlannerClient } from '@sales-planner/http-client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { normalizeCode } from '../src/lib/normalize-code.js';
 import { TestContext } from './test-context.js';
-import { cleanupUser } from './test-helpers.js';
+import {
+  cleanupUser,
+  generateUniqueId,
+  generateTestCode,
+  expectUnauthorized,
+  expectForbidden,
+  expectNotFound,
+  expectConflict,
+} from './test-helpers.js';
 
 describe('Brands (e2e)', () => {
   let app: INestApplication;
@@ -26,8 +34,8 @@ describe('Brands (e2e)', () => {
     baseUrl = url.replace('[::1]', 'localhost');
 
     ctx = await TestContext.create(app, baseUrl, {
-      tenantTitle: `Test Tenant ${Date.now()}`,
-      userEmail: `brand-test-${Date.now()}@example.com`,
+      tenantTitle: `Test Tenant ${generateUniqueId()}`,
+      userEmail: `brand-test-${generateUniqueId()}@example.com`,
       userName: 'Brand Test User',
     });
   });
@@ -40,32 +48,18 @@ describe('Brands (e2e)', () => {
   describe('Authentication', () => {
     it('should return 401 without API key', async () => {
       const noAuthClient = new SalesPlannerClient({ baseUrl, apiKey: '' });
-
-      try {
-        await noAuthClient.getBrands(ctx.shopContext);
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(401);
-      }
+      await expectUnauthorized(() => noAuthClient.getBrands(ctx.shopContext));
     });
 
     it('should return 401 with invalid API key', async () => {
       const badClient = new SalesPlannerClient({ baseUrl, apiKey: 'invalid-key' });
-
-      try {
-        await badClient.getBrands(ctx.shopContext);
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(401);
-      }
+      await expectUnauthorized(() => badClient.getBrands(ctx.shopContext));
     });
   });
 
   describe('CRUD operations', () => {
     it('createBrand - should create brand', async () => {
-      const newBrand = { code: `brand-${Date.now()}`, title: 'Test Brand' };
+      const newBrand = { code: generateTestCode('brand'), title: 'Test Brand' };
       const brand = await ctx.client.createBrand(newBrand, ctx.shopContext);
 
       expect(brand).toHaveProperty('id');
@@ -101,19 +95,15 @@ describe('Brands (e2e)', () => {
     });
 
     it('createBrand - should return 409 on duplicate code in same shop', async () => {
-      const duplicateCode = `brand-${Date.now()}`;
+      const duplicateCode = generateTestCode('brand');
       await ctx.client.createBrand({ code: duplicateCode, title: 'First Brand' }, ctx.shopContext);
 
-      try {
-        await ctx.client.createBrand(
+      await expectConflict(() =>
+        ctx.client.createBrand(
           { code: duplicateCode, title: 'Duplicate Brand' },
           ctx.shopContext,
-        );
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(409);
-      }
+        ),
+      );
     });
   });
 
@@ -121,50 +111,42 @@ describe('Brands (e2e)', () => {
     it('should return 403 for wrong tenant', async () => {
       // Create another user with their own tenant
       const otherSetup = await ctx.getSystemClient().createTenantWithShopAndUser({
-        tenantTitle: `Other Tenant ${Date.now()}`,
-        userEmail: `other-${Date.now()}@example.com`,
+        tenantTitle: `Other Tenant ${generateUniqueId()}`,
+        userEmail: `other-${generateUniqueId()}@example.com`,
         userName: 'Other User',
       });
 
-      try {
-        await ctx.client.getBrands({
+      await expectForbidden(() =>
+        ctx.client.getBrands({
           shop_id: otherSetup.shop.id,
           tenant_id: otherSetup.tenant.id,
-        });
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(403);
-      }
+        }),
+      );
 
       await cleanupUser(app, otherSetup.user.id);
     });
 
     it('should return 403 when creating brand for wrong tenant', async () => {
       const otherSetup = await ctx.getSystemClient().createTenantWithShopAndUser({
-        tenantTitle: `Other Tenant ${Date.now()}`,
-        userEmail: `other2-${Date.now()}@example.com`,
+        tenantTitle: `Other Tenant ${generateUniqueId()}`,
+        userEmail: `other2-${generateUniqueId()}@example.com`,
         userName: 'Other User 2',
       });
 
-      try {
-        await ctx.client.createBrand(
+      await expectForbidden(() =>
+        ctx.client.createBrand(
           { code: 'forbidden-brand', title: 'Should Fail' },
           { shop_id: ctx.shop.id, tenant_id: otherSetup.tenant.id },
-        );
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(403);
-      }
+        ),
+      );
 
       await cleanupUser(app, otherSetup.user.id);
     });
 
     it('should return 404 for brand in wrong tenant', async () => {
       const otherSetup = await ctx.getSystemClient().createTenantWithShopAndUser({
-        tenantTitle: `Other Tenant ${Date.now()}`,
-        userEmail: `other3-${Date.now()}@example.com`,
+        tenantTitle: `Other Tenant ${generateUniqueId()}`,
+        userEmail: `other3-${generateUniqueId()}@example.com`,
         userName: 'Other User 3',
       });
 
@@ -179,16 +161,12 @@ describe('Brands (e2e)', () => {
         });
       }
 
-      try {
-        await ctx.client.getBrand(brandId, {
+      await expectNotFound(() =>
+        ctx.client.getBrand(brandId, {
           shop_id: otherSetup.shop.id,
           tenant_id: otherSetup.tenant.id,
-        });
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(404);
-      }
+        }),
+      );
 
       await cleanupUser(app, otherSetup.user.id);
     });
@@ -197,23 +175,14 @@ describe('Brands (e2e)', () => {
   describe('Delete operations', () => {
     it('deleteBrand - should delete brand', async () => {
       await ctx.client.deleteBrand(brandId, ctx.shopContext);
-
-      try {
-        await ctx.client.getBrand(brandId, ctx.shopContext);
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(404);
-      }
-
-      brandId = 0;
+      await expectNotFound(() => ctx.client.getBrand(brandId, ctx.shopContext));
     });
   });
 
   describe('Import endpoints', () => {
     it('importBrandsJson - should import brands from JSON', async () => {
-      const code1 = `import-json-1-${Date.now()}`;
-      const code2 = `import-json-2-${Date.now()}`;
+      const code1 = generateTestCode('import-json-1');
+      const code2 = generateTestCode('import-json-2');
       const items = [
         { code: code1, title: 'Import JSON Brand 1' },
         { code: code2, title: 'Import JSON Brand 2' },
@@ -232,7 +201,7 @@ describe('Brands (e2e)', () => {
     });
 
     it('importBrandsJson - should upsert existing brands', async () => {
-      const code = `upsert-json-${Date.now()}`;
+      const code = generateTestCode('upsert-json');
 
       await ctx.client.importBrandsJson([{ code, title: 'Original Title' }], ctx.shopContext);
       const result = await ctx.client.importBrandsJson(
@@ -245,8 +214,8 @@ describe('Brands (e2e)', () => {
     });
 
     it('importBrandsCsv - should import brands from CSV with commas', async () => {
-      const code1 = `import-csv-1-${Date.now()}`;
-      const code2 = `import-csv-2-${Date.now()}`;
+      const code1 = generateTestCode('import-csv-1');
+      const code2 = generateTestCode('import-csv-2');
       const csvContent = `code,title\n${code1},Import CSV Brand 1\n${code2},Import CSV Brand 2`;
 
       const result = await ctx.client.importBrandsCsv(csvContent, ctx.shopContext);
@@ -261,8 +230,8 @@ describe('Brands (e2e)', () => {
     });
 
     it('importBrandsCsv - should import brands from CSV with semicolons', async () => {
-      const code1 = `import-semi-1-${Date.now()}`;
-      const code2 = `import-semi-2-${Date.now()}`;
+      const code1 = generateTestCode('import-semi-1');
+      const code2 = generateTestCode('import-semi-2');
       const csvContent = `code;title\n${code1};Import Semicolon Brand 1\n${code2};Import Semicolon Brand 2`;
 
       const result = await ctx.client.importBrandsCsv(csvContent, ctx.shopContext);
@@ -291,8 +260,8 @@ describe('Brands (e2e)', () => {
     });
 
     it('exportBrandsJson - should export brands in import format', async () => {
-      const code1 = `export-brand-1-${Date.now()}`;
-      const code2 = `export-brand-2-${Date.now()}`;
+      const code1 = generateTestCode('export-brand-1');
+      const code2 = generateTestCode('export-brand-2');
 
       await ctx.client.importBrandsJson(
         [
@@ -314,8 +283,8 @@ describe('Brands (e2e)', () => {
     });
 
     it('exportBrandsCsv - should export brands in CSV format', async () => {
-      const code1 = `csv-export-brand-1-${Date.now()}`;
-      const code2 = `csv-export-brand-2-${Date.now()}`;
+      const code1 = generateTestCode('csv-export-brand-1');
+      const code2 = generateTestCode('csv-export-brand-2');
 
       await ctx.client.importBrandsJson(
         [
@@ -342,7 +311,7 @@ describe('Brands (e2e)', () => {
     beforeAll(async () => {
       // Create viewer user
       const viewerUser = await ctx.getSystemClient().createUser({
-        email: `viewer-${Date.now()}@example.com`,
+        email: `viewer-${generateUniqueId()}@example.com`,
         name: 'Viewer User',
       });
       viewerUserId = viewerUser.id;
@@ -389,16 +358,12 @@ describe('Brands (e2e)', () => {
     });
 
     it('viewer should NOT be able to create brand', async () => {
-      try {
-        await viewerClient.createBrand(
+      await expectForbidden(() =>
+        viewerClient.createBrand(
           { code: 'viewer-brand', title: 'Should Fail' },
           ctx.shopContext,
-        );
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(403);
-      }
+        ),
+      );
     });
 
     it('viewer should NOT be able to update brand', async () => {
@@ -406,13 +371,9 @@ describe('Brands (e2e)', () => {
       if (brands.length > 0) {
         // biome-ignore lint/style/noNonNullAssertion: length check ensures element exists
         const firstBrand = brands[0]!;
-        try {
-          await viewerClient.updateBrand(firstBrand.id, { title: 'Should Fail' }, ctx.shopContext);
-          expect.fail('Should have thrown ApiError');
-        } catch (error) {
-          expect(error).toBeInstanceOf(ApiError);
-          expect((error as ApiError).status).toBe(403);
-        }
+        await expectForbidden(() =>
+          viewerClient.updateBrand(firstBrand.id, { title: 'Should Fail' }, ctx.shopContext),
+        );
       }
     });
 
@@ -421,13 +382,7 @@ describe('Brands (e2e)', () => {
       if (brands.length > 0) {
         // biome-ignore lint/style/noNonNullAssertion: length check ensures element exists
         const firstBrand = brands[0]!;
-        try {
-          await viewerClient.deleteBrand(firstBrand.id, ctx.shopContext);
-          expect.fail('Should have thrown ApiError');
-        } catch (error) {
-          expect(error).toBeInstanceOf(ApiError);
-          expect((error as ApiError).status).toBe(403);
-        }
+        await expectForbidden(() => viewerClient.deleteBrand(firstBrand.id, ctx.shopContext));
       }
     });
 
@@ -437,16 +392,12 @@ describe('Brands (e2e)', () => {
     });
 
     it('viewer should NOT be able to import brands', async () => {
-      try {
-        await viewerClient.importBrandsJson(
+      await expectForbidden(() =>
+        viewerClient.importBrandsJson(
           [{ code: 'test', title: 'Should Fail' }],
           ctx.shopContext,
-        );
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(403);
-      }
+        ),
+      );
     });
   });
 });

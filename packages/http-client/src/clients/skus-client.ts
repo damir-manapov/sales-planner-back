@@ -4,7 +4,7 @@ import type {
   UpdateSkuDto,
   ImportSkuItem,
   SkuExportItem,
-  ImportResult,
+  SkuImportResult,
   ShopContextParams,
 } from '@sales-planner/shared';
 import { ImportExportBaseClient } from './import-export-base-client.js';
@@ -30,11 +30,11 @@ export class SkusClient extends ImportExportBaseClient {
     return this.request('DELETE', `/skus/${id}`, { params: ctx });
   }
 
-  async importSkusJson(items: ImportSkuItem[], ctx: ShopContextParams): Promise<ImportResult> {
+  async importSkusJson(items: ImportSkuItem[], ctx: ShopContextParams): Promise<SkuImportResult> {
     return this.request('POST', '/skus/import/json', { body: items, params: ctx });
   }
 
-  async importSkusCsv(csvContent: string, ctx: ShopContextParams): Promise<ImportResult> {
+  async importSkusCsv(csvContent: string, ctx: ShopContextParams): Promise<SkuImportResult> {
     return this.uploadCsv('/skus/import/csv', csvContent, ctx);
   }
 

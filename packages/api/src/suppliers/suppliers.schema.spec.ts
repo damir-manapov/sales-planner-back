@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { CreateSupplierSchema, ImportSupplierItemSchema, UpdateSupplierSchema } from './suppliers.schema.js';
+import {
+  CreateSupplierSchema,
+  ImportSupplierItemSchema,
+  UpdateSupplierSchema,
+} from './suppliers.schema.js';
 
 describe('Supplier Schemas', () => {
   describe('CreateSupplierSchema', () => {

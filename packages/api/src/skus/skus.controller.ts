@@ -25,12 +25,12 @@ import {
   type ShopContext as ShopContextType,
 } from '../auth/decorators.js';
 import {
-  type ImportResult,
   parseAndValidateImport,
   parseCsvImport,
   sendCsvExport,
   sendJsonExport,
   ZodValidationPipe,
+  type SkuImportResult,
 } from '../common/index.js';
 import {
   type CreateSkuRequest,
@@ -75,7 +75,14 @@ export class SkusController {
     @Res() res: ExpressResponse,
   ): Promise<void> {
     const items = await this.skusService.exportForShop(ctx.shopId);
-    sendCsvExport(res, items, 'skus.csv', ['code', 'title']);
+    sendCsvExport(res, items, 'skus.csv', [
+      'code',
+      'title',
+      'category',
+      'group',
+      'status',
+      'supplier',
+    ]);
   }
 
   @Get(':id')
@@ -171,7 +178,7 @@ export class SkusController {
     @ShopContext() ctx: ShopContextType,
     @Body() items?: ImportSkuItem[],
     @UploadedFile() file?: Express.Multer.File,
-  ): Promise<ImportResult> {
+  ): Promise<SkuImportResult> {
     const validatedData = parseAndValidateImport(file, items, ImportSkuItemSchema);
     return this.skusService.bulkUpsert(validatedData, ctx.shopId, ctx.tenantId);
   }
@@ -187,7 +194,8 @@ export class SkusController {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'CSV file with columns: code, title',
+          description:
+            'CSV file with columns: code, title, category (optional), group (optional), status (optional), supplier (optional)',
         },
       },
     },
@@ -196,14 +204,22 @@ export class SkusController {
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @UploadedFile() file?: Express.Multer.File,
-  ): Promise<ImportResult> {
-    const records = parseCsvImport<{ code: string; title: string }>(file, undefined, [
-      'code',
-      'title',
-    ]);
+  ): Promise<SkuImportResult> {
+    const records = parseCsvImport<{
+      code: string;
+      title: string;
+      category?: string;
+      group?: string;
+      status?: string;
+      supplier?: string;
+    }>(file, undefined, ['code', 'title']);
     const items: ImportSkuItem[] = records.map((record) => ({
       code: record.code,
       title: record.title,
+      category: record.category,
+      group: record.group,
+      status: record.status,
+      supplier: record.supplier,
     }));
     return this.skusService.bulkUpsert(items, ctx.shopId, ctx.tenantId);
   }

@@ -3,7 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { TestContext } from './test-context.js';
-import { cleanupUser } from './test-helpers.js';
+import { generateUniqueId, generateTestCode } from './test-helpers.js';
 
 describe('Metadata (e2e)', () => {
   let app: INestApplication;
@@ -23,16 +23,14 @@ describe('Metadata (e2e)', () => {
     baseUrl = url.replace('[::1]', 'localhost');
 
     ctx = await TestContext.create(app, baseUrl, {
-      tenantTitle: `Test Tenant ${Date.now()}`,
-      userEmail: `metadata-test-${Date.now()}@example.com`,
+      tenantTitle: `Test Tenant ${generateUniqueId()}`,
+      userEmail: `metadata-test-${generateUniqueId()}@example.com`,
       userName: 'Metadata Test User',
     });
   });
 
   afterAll(async () => {
-    if (ctx) {
-      await cleanupUser(app, ctx.user.id);
-    }
+    if (ctx) await ctx.dispose();
     await app?.close();
   });
 

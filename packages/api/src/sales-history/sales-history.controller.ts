@@ -31,8 +31,8 @@ import {
   sendCsvExport,
   sendJsonExport,
   ZodValidationPipe,
+  type SalesHistoryImportResult,
 } from '../common/index.js';
-import type { ImportResult } from '@sales-planner/shared';
 import { fromCsv } from '../lib/index.js';
 import {
   type CreateSalesHistoryRequest,
@@ -90,12 +90,7 @@ export class SalesHistoryController {
     // Validate query params
     PeriodQuerySchema.parse({ period_from: periodFrom, period_to: periodTo });
     const items = await this.salesHistoryService.exportForShop(ctx.shopId, periodFrom, periodTo);
-    sendCsvExport(res, items, 'sales-history.csv', [
-      'marketplace',
-      'period',
-      'sku',
-      'quantity',
-    ]);
+    sendCsvExport(res, items, 'sales-history.csv', ['marketplace', 'period', 'sku', 'quantity']);
   }
 
   @Get(':id')
@@ -219,7 +214,7 @@ export class SalesHistoryController {
     @ShopContext() ctx: ShopContextType,
     @Body() items?: ImportSalesHistoryItem[],
     @UploadedFile() file?: Express.Multer.File,
-  ): Promise<ImportResult> {
+  ): Promise<SalesHistoryImportResult> {
     const validatedData = parseAndValidateImport(file, items, ImportSalesHistoryItemSchema);
     return this.salesHistoryService.bulkUpsert(validatedData, ctx.shopId, ctx.tenantId);
   }
@@ -244,7 +239,7 @@ export class SalesHistoryController {
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @UploadedFile() file: Express.Multer.File,
-  ): Promise<ImportResult> {
+  ): Promise<SalesHistoryImportResult> {
     if (!file) {
       throw new BadRequestException('File is required');
     }

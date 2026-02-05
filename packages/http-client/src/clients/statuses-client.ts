@@ -50,11 +50,11 @@ export class StatusesClient extends ImportExportBaseClient {
     return this.requestText('GET', '/statuses/export/csv', { params: ctx });
   }
 
-  async getExampleStatusesJson(ctx: ShopContextParams): Promise<StatusExportItem[]> {
+  async getExampleStatusesJson(_ctx: ShopContextParams): Promise<StatusExportItem[]> {
     return this.requestPublic('GET', '/statuses/examples/json');
   }
 
-  async getExampleStatusesCsv(ctx: ShopContextParams): Promise<string> {
+  async getExampleStatusesCsv(_ctx: ShopContextParams): Promise<string> {
     return this.requestTextPublic('GET', '/statuses/examples/csv');
   }
 }

@@ -3,7 +3,11 @@ import type { Supplier } from '@sales-planner/shared';
 import { BaseEntityService } from '../common/index.js';
 import { DatabaseService } from '../database/index.js';
 import { normalizeCode } from '../lib/index.js';
-import type { CreateSupplierDto, ImportSupplierItem, UpdateSupplierDto } from './suppliers.schema.js';
+import type {
+  CreateSupplierDto,
+  ImportSupplierItem,
+  UpdateSupplierDto,
+} from './suppliers.schema.js';
 import { ImportSupplierItemSchema } from './suppliers.schema.js';
 
 export type { Supplier };

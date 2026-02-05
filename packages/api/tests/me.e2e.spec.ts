@@ -5,6 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { ROLE_NAMES } from '../src/common/constants.js';
 import { TestContext } from './test-context.js';
+import { generateUniqueId, generateTestCode } from './test-helpers.js';
 
 describe('Me (e2e)', () => {
   let app: INestApplication;
@@ -24,7 +25,7 @@ describe('Me (e2e)', () => {
     const url = await app.getUrl();
     baseUrl = url.replace('[::1]', 'localhost');
 
-    userEmail = `testuser-${Date.now()}@example.com`;
+    userEmail = `testuser-${generateUniqueId()}@example.com`;
     ctx = await TestContext.create(app, baseUrl, {
       userEmail,
       userName: 'Test User',

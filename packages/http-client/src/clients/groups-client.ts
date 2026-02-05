@@ -31,10 +31,7 @@ export class GroupsClient extends ImportExportBaseClient {
   }
 
   // Import/Export methods
-  async importGroupsJson(
-    items: ImportGroupItem[],
-    ctx: ShopContextParams,
-  ): Promise<ImportResult> {
+  async importGroupsJson(items: ImportGroupItem[], ctx: ShopContextParams): Promise<ImportResult> {
     return this.request('POST', '/groups/import/json', { body: items, params: ctx });
   }
 
@@ -50,11 +47,11 @@ export class GroupsClient extends ImportExportBaseClient {
     return this.requestText('GET', '/groups/export/csv', { params: ctx });
   }
 
-  async getExampleGroupsJson(ctx: ShopContextParams): Promise<GroupExportItem[]> {
+  async getExampleGroupsJson(_ctx: ShopContextParams): Promise<GroupExportItem[]> {
     return this.requestPublic('GET', '/groups/examples/json');
   }
 
-  async getExampleGroupsCsv(ctx: ShopContextParams): Promise<string> {
+  async getExampleGroupsCsv(_ctx: ShopContextParams): Promise<string> {
     return this.requestTextPublic('GET', '/groups/examples/csv');
   }
 }

@@ -1,7 +1,8 @@
 import type { ShopScopedEntity } from './base';
 
 export interface Sku extends ShopScopedEntity {
-  category_code?: string;
-  group_code?: string;
-  status_code?: string;
+  category_id?: number | null;
+  group_id?: number | null;
+  status_id?: number | null;
+  supplier_id?: number | null;
 }

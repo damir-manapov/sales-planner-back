@@ -22,7 +22,11 @@ export class CategoriesClient extends ImportExportBaseClient {
     return this.request('POST', '/categories', { body: dto, params: ctx });
   }
 
-  async updateCategory(id: number, dto: UpdateCategoryDto, ctx: ShopContextParams): Promise<Category> {
+  async updateCategory(
+    id: number,
+    dto: UpdateCategoryDto,
+    ctx: ShopContextParams,
+  ): Promise<Category> {
     return this.request('PUT', `/categories/${id}`, { body: dto, params: ctx });
   }
 
@@ -50,11 +54,11 @@ export class CategoriesClient extends ImportExportBaseClient {
     return this.requestText('GET', '/categories/export/csv', { params: ctx });
   }
 
-  async getExampleCategoriesJson(ctx: ShopContextParams): Promise<CategoryExportItem[]> {
+  async getExampleCategoriesJson(_ctx: ShopContextParams): Promise<CategoryExportItem[]> {
     return this.requestPublic('GET', '/categories/examples/json');
   }
 
-  async getExampleCategoriesCsv(ctx: ShopContextParams): Promise<string> {
+  async getExampleCategoriesCsv(_ctx: ShopContextParams): Promise<string> {
     return this.requestTextPublic('GET', '/categories/examples/csv');
   }
 }

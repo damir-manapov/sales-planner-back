@@ -1,5 +1,9 @@
 import { Injectable } from '@nestjs/common';
-import type { SalesHistory, SalesHistoryExportItem } from '@sales-planner/shared';
+import type {
+  SalesHistory,
+  SalesHistoryExportItem,
+  SalesHistoryImportResult,
+} from '@sales-planner/shared';
 import type { Selectable } from 'kysely';
 import { sql } from 'kysely';
 import { DuplicateResourceException, isUniqueViolation } from '../common/index.js';
@@ -171,13 +175,7 @@ export class SalesHistoryService {
     items: ImportSalesHistoryItem[],
     shopId: number,
     tenantId: number,
-  ): Promise<{
-    created: number;
-    updated: number;
-    skus_created: number;
-    marketplaces_created: number;
-    errors: string[];
-  }> {
+  ): Promise<SalesHistoryImportResult> {
     if (items.length === 0) {
       return { created: 0, updated: 0, skus_created: 0, marketplaces_created: 0, errors: [] };
     }
@@ -214,7 +212,8 @@ export class SalesHistoryService {
       tenantId,
     );
 
-    // Get marketplace code to ID mapping
+    // Get marketplace code to ID mapping (AFTER ensuring they exist)
+    // This ensures we capture any newly created marketplaces
     const marketplaces = await this.marketplacesService.findByShopId(shopId);
     const marketplaceCodeToId = new Map(marketplaces.map((m) => [m.code, m.id]));
 
@@ -225,7 +224,27 @@ export class SalesHistoryService {
       const normalizedSkuCode = normalizeSkuCode(item.sku);
       const normalizedMarketplaceCode = normalizeCode(item.marketplace);
       const skuId = skuCodeToId.get(normalizedSkuCode);
-      const marketplaceId = marketplaceCodeToId.get(normalizedMarketplaceCode);
+
+      // Try to find the marketplace ID by trying different normalization approaches
+      let marketplaceId = marketplaceCodeToId.get(normalizedMarketplaceCode);
+
+      // If not found, try the lowercase version (fallback for inconsistent normalization)
+      if (!marketplaceId) {
+        const lowercaseMarketplace = normalizedMarketplaceCode.toLowerCase();
+        marketplaceId = marketplaceCodeToId.get(lowercaseMarketplace);
+      }
+
+      // If still not found, try all available marketplace codes as a last resort
+      if (!marketplaceId) {
+        const originalLower = item.marketplace.toLowerCase();
+        for (const [code, id] of marketplaceCodeToId.entries()) {
+          if (code.toLowerCase() === originalLower.replace(/[^a-z0-9]/g, '')) {
+            marketplaceId = id;
+            break;
+          }
+        }
+      }
+
       if (skuId && marketplaceId) {
         validItems.push({
           ...item,

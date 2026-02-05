@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { CreateCategorySchema, ImportCategoryItemSchema, UpdateCategorySchema } from './categories.schema.js';
+import {
+  CreateCategorySchema,
+  ImportCategoryItemSchema,
+  UpdateCategorySchema,
+} from './categories.schema.js';
 
 describe('Category Schemas', () => {
   describe('CreateCategorySchema', () => {

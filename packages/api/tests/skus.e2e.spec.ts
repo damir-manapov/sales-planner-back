@@ -1,11 +1,19 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ApiError, SalesPlannerClient } from '@sales-planner/http-client';
+import { SalesPlannerClient } from '@sales-planner/http-client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { normalizeSkuCode } from '../src/lib/normalize-code.js';
 import { TestContext } from './test-context.js';
-import { cleanupUser } from './test-helpers.js';
+import {
+  cleanupUser,
+  expectConflict,
+  expectForbidden,
+  expectNotFound,
+  expectUnauthorized,
+  generateTestCode,
+  generateUniqueId,
+} from './test-helpers.js';
 
 describe('SKUs (e2e)', () => {
   let app: INestApplication;
@@ -26,8 +34,8 @@ describe('SKUs (e2e)', () => {
     baseUrl = url.replace('[::1]', 'localhost');
 
     ctx = await TestContext.create(app, baseUrl, {
-      tenantTitle: `Test Tenant ${Date.now()}`,
-      userEmail: `sku-test-${Date.now()}@example.com`,
+      tenantTitle: `Test Tenant ${generateUniqueId()}`,
+      userEmail: `sku-test-${generateUniqueId()}@example.com`,
       userName: 'SKU Test User',
     });
   });
@@ -41,31 +49,19 @@ describe('SKUs (e2e)', () => {
     it('should return 401 without API key', async () => {
       const noAuthClient = new SalesPlannerClient({ baseUrl, apiKey: '' });
 
-      try {
-        await noAuthClient.getSkus(ctx.shopContext);
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(401);
-      }
+      await expectUnauthorized(() => noAuthClient.getSkus(ctx.shopContext));
     });
 
     it('should return 401 with invalid API key', async () => {
       const badClient = new SalesPlannerClient({ baseUrl, apiKey: 'invalid-key' });
 
-      try {
-        await badClient.getSkus(ctx.shopContext);
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(401);
-      }
+      await expectUnauthorized(() => badClient.getSkus(ctx.shopContext));
     });
   });
 
   describe('CRUD operations', () => {
     it('createSku - should create SKU', async () => {
-      const newSku = { code: `SKU-${Date.now()}`, title: 'Test SKU' };
+      const newSku = { code: generateTestCode('SKU'), title: 'Test SKU' };
       const sku = await ctx.client.createSku(newSku, ctx.shopContext);
 
       expect(sku).toHaveProperty('id');
@@ -101,19 +97,12 @@ describe('SKUs (e2e)', () => {
     });
 
     it('createSku - should return 409 on duplicate code in same shop', async () => {
-      const duplicateCode = `SKU-${Date.now()}`;
+      const duplicateCode = generateTestCode('SKU');
       await ctx.client.createSku({ code: duplicateCode, title: 'First SKU' }, ctx.shopContext);
 
-      try {
-        await ctx.client.createSku(
-          { code: duplicateCode, title: 'Duplicate SKU' },
-          ctx.shopContext,
-        );
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(409);
-      }
+      await expectConflict(() =>
+        ctx.client.createSku({ code: duplicateCode, title: 'Duplicate SKU' }, ctx.shopContext),
+      );
     });
   });
 
@@ -121,50 +110,43 @@ describe('SKUs (e2e)', () => {
     it('should return 403 for wrong tenant', async () => {
       // Create another user with their own tenant
       const otherSetup = await ctx.getSystemClient().createTenantWithShopAndUser({
-        tenantTitle: `Other Tenant ${Date.now()}`,
-        userEmail: `other-${Date.now()}@example.com`,
+        tenantTitle: `Other Tenant ${generateUniqueId()}`,
+        userEmail: `other-${generateUniqueId()}@example.com`,
         userName: 'Other User',
       });
 
-      try {
-        await ctx.client.getSkus({
+      await expectForbidden(() =>
+        ctx.client.getSkus({
           shop_id: otherSetup.shop.id,
           tenant_id: otherSetup.tenant.id,
-        });
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(403);
-      }
+        }),
+      );
 
       await cleanupUser(app, otherSetup.user.id);
     });
 
     it('should return 403 when creating SKU for wrong tenant', async () => {
+      const uniqueId = generateUniqueId();
       const otherSetup = await ctx.getSystemClient().createTenantWithShopAndUser({
-        tenantTitle: `Other Tenant ${Date.now()}`,
-        userEmail: `other2-${Date.now()}@example.com`,
+        tenantTitle: `Other Tenant ${uniqueId}`,
+        userEmail: `other2-${uniqueId}@example.com`,
         userName: 'Other User 2',
       });
 
-      try {
-        await ctx.client.createSku(
+      await expectForbidden(() =>
+        ctx.client.createSku(
           { code: 'FORBIDDEN-SKU', title: 'Should Fail' },
           { shop_id: ctx.shop.id, tenant_id: otherSetup.tenant.id },
-        );
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(403);
-      }
+        ),
+      );
 
       await cleanupUser(app, otherSetup.user.id);
     });
 
     it('should return 404 for SKU in wrong tenant', async () => {
       const otherSetup = await ctx.getSystemClient().createTenantWithShopAndUser({
-        tenantTitle: `Other Tenant ${Date.now()}`,
-        userEmail: `other3-${Date.now()}@example.com`,
+        tenantTitle: `Other Tenant ${generateUniqueId()}`,
+        userEmail: `other3-${generateUniqueId()}@example.com`,
         userName: 'Other User 3',
       });
 
@@ -179,16 +161,12 @@ describe('SKUs (e2e)', () => {
         });
       }
 
-      try {
-        await ctx.client.getSku(skuId, {
+      await expectNotFound(() =>
+        ctx.client.getSku(skuId, {
           shop_id: otherSetup.shop.id,
           tenant_id: otherSetup.tenant.id,
-        });
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(404);
-      }
+        }),
+      );
 
       await cleanupUser(app, otherSetup.user.id);
     });
@@ -198,22 +176,14 @@ describe('SKUs (e2e)', () => {
     it('deleteSku - should delete SKU', async () => {
       await ctx.client.deleteSku(skuId, ctx.shopContext);
 
-      try {
-        await ctx.client.getSku(skuId, ctx.shopContext);
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(404);
-      }
-
-      skuId = 0;
+      await expectNotFound(() => ctx.client.getSku(skuId, ctx.shopContext));
     });
   });
 
   describe('Import endpoints', () => {
     it('importSkusJson - should import SKUs from JSON', async () => {
-      const code1 = `IMPORT-JSON-1-${Date.now()}`;
-      const code2 = `IMPORT-JSON-2-${Date.now()}`;
+      const code1 = generateTestCode('IMPORT-JSON-1');
+      const code2 = generateTestCode('IMPORT-JSON-2');
       const items = [
         { code: code1, title: 'Import JSON SKU 1' },
         { code: code2, title: 'Import JSON SKU 2' },
@@ -232,7 +202,7 @@ describe('SKUs (e2e)', () => {
     });
 
     it('importSkusJson - should upsert existing SKUs', async () => {
-      const code = `UPSERT-JSON-${Date.now()}`;
+      const code = generateTestCode('UPSERT-JSON');
 
       await ctx.client.importSkusJson([{ code, title: 'Original Title' }], ctx.shopContext);
       const result = await ctx.client.importSkusJson(
@@ -245,8 +215,8 @@ describe('SKUs (e2e)', () => {
     });
 
     it('importSkusCsv - should import SKUs from CSV', async () => {
-      const code1 = `IMPORT-CSV-1-${Date.now()}`;
-      const code2 = `IMPORT-CSV-2-${Date.now()}`;
+      const code1 = generateTestCode('IMPORT-CSV-1');
+      const code2 = generateTestCode('IMPORT-CSV-2');
       const csvContent = `code,title\n${code1},Import CSV SKU 1\n${code2},Import CSV SKU 2`;
 
       const result = await ctx.client.importSkusCsv(csvContent, ctx.shopContext);
@@ -260,9 +230,33 @@ describe('SKUs (e2e)', () => {
       expect(codes).toContain(normalizeSkuCode(code2));
     });
 
+    it('importSkusCsv - should auto-create related entities', async () => {
+      const code = generateTestCode('IMPORT-WITH-RELATIONS');
+      const category = generateTestCode('test-category');
+      const group = generateTestCode('test-group');
+      const status = generateTestCode('test-status');
+      const supplier = generateTestCode('test-supplier');
+      const csvContent = `code,title,category,group,status,supplier\n${code},SKU with Relations,${category},${group},${status},${supplier}`;
+
+      const result = await ctx.client.importSkusCsv(csvContent, ctx.shopContext);
+
+      expect(result.created).toBe(1);
+      expect(result.updated).toBe(0);
+      // Verify related entities were auto-created
+      expect(result).toHaveProperty('categories_created');
+      expect(result).toHaveProperty('groups_created');
+      expect(result).toHaveProperty('statuses_created');
+      expect(result).toHaveProperty('suppliers_created');
+
+      // Verify the SKU was created
+      const skus = await ctx.client.getSkus(ctx.shopContext);
+      const createdSku = skus.find((s) => s.code === normalizeSkuCode(code));
+      expect(createdSku).toBeDefined();
+    });
+
     it('exportSkusJson - should export SKUs in import format', async () => {
-      const code1 = `EXPORT-SKU-1-${Date.now()}`;
-      const code2 = `EXPORT-SKU-2-${Date.now()}`;
+      const code1 = generateTestCode('EXPORT-SKU-1');
+      const code2 = generateTestCode('EXPORT-SKU-2');
 
       await ctx.client.importSkusJson(
         [
@@ -280,12 +274,15 @@ describe('SKUs (e2e)', () => {
       expect(exportedCodes).toContain(normalizeSkuCode(code2));
 
       const item = exported.find((s) => s.code === normalizeSkuCode(code1));
-      expect(item).toEqual({ code: normalizeSkuCode(code1), title: 'Export Test SKU 1' });
+      expect(item).toMatchObject({ code: normalizeSkuCode(code1), title: 'Export Test SKU 1' });
+      // Optional fields may be present
+      expect(item).toHaveProperty('code');
+      expect(item).toHaveProperty('title');
     });
 
     it('exportSkusCsv - should export SKUs in CSV format', async () => {
-      const code1 = `CSV-EXPORT-SKU-1-${Date.now()}`;
-      const code2 = `CSV-EXPORT-SKU-2-${Date.now()}`;
+      const code1 = generateTestCode('CSV-EXPORT-SKU-1');
+      const code2 = generateTestCode('CSV-EXPORT-SKU-2');
 
       await ctx.client.importSkusJson(
         [
@@ -299,7 +296,7 @@ describe('SKUs (e2e)', () => {
 
       expect(typeof csv).toBe('string');
       const lines = csv.split('\n');
-      expect(lines[0]).toBe('code,title');
+      expect(lines[0]).toBe('code,title,category,group,status,supplier');
       expect(lines.some((line) => line.includes(normalizeSkuCode(code1)))).toBe(true);
       expect(lines.some((line) => line.includes(normalizeSkuCode(code2)))).toBe(true);
     });
@@ -312,7 +309,7 @@ describe('SKUs (e2e)', () => {
     beforeAll(async () => {
       // Create viewer user
       const viewerUser = await ctx.getSystemClient().createUser({
-        email: `viewer-${Date.now()}@example.com`,
+        email: `viewer-${generateUniqueId()}@example.com`,
         name: 'Viewer User',
       });
       viewerUserId = viewerUser.id;
@@ -349,29 +346,18 @@ describe('SKUs (e2e)', () => {
     });
 
     it('viewer should not be able to create SKUs', async () => {
-      try {
-        await viewerClient.createSku(
-          { code: 'VIEWER-CREATE', title: 'Should Fail' },
-          ctx.shopContext,
-        );
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(403);
-      }
+      await expectForbidden(() =>
+        viewerClient.createSku({ code: 'VIEWER-CREATE', title: 'Should Fail' }, ctx.shopContext),
+      );
     });
 
     it('viewer should not be able to import', async () => {
-      try {
-        await viewerClient.importSkusJson(
+      await expectForbidden(() =>
+        viewerClient.importSkusJson(
           [{ code: 'VIEWER-IMPORT', title: 'Should Fail' }],
           ctx.shopContext,
-        );
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(403);
-      }
+        ),
+      );
     });
   });
 
@@ -405,8 +391,8 @@ describe('SKUs (e2e)', () => {
     beforeAll(async () => {
       // Create tenant with owner
       const ownerSetup = await ctx.getSystemClient().createTenantWithShopAndUser({
-        tenantTitle: `Owner Tenant ${Date.now()}`,
-        userEmail: `owner-${Date.now()}@example.com`,
+        tenantTitle: `Owner Tenant ${generateUniqueId()}`,
+        userEmail: `owner-${generateUniqueId()}@example.com`,
         userName: 'Tenant Owner User',
       });
 
@@ -430,8 +416,9 @@ describe('SKUs (e2e)', () => {
     });
 
     it('tenant owner should have write access without explicit role', async () => {
+      const ownerSkuCode = generateTestCode('OWNER-SKU');
       const sku = await ownerClient.createSku(
-        { code: 'OWNER-SKU', title: 'Owner Created SKU' },
+        { code: ownerSkuCode, title: 'Owner Created SKU' },
         ownerCtx(),
       );
 
@@ -441,8 +428,9 @@ describe('SKUs (e2e)', () => {
     });
 
     it('tenant owner should be able to import', async () => {
+      const ownerImportCode = generateTestCode('OWNER-IMPORT');
       const result = await ownerClient.importSkusJson(
-        [{ code: 'OWNER-IMPORT-1', title: 'Owner Import 1' }],
+        [{ code: ownerImportCode, title: 'Owner Import 1' }],
         ownerCtx(),
       );
 
@@ -450,13 +438,7 @@ describe('SKUs (e2e)', () => {
     });
 
     it('tenant owner should NOT access other tenants', async () => {
-      try {
-        await ownerClient.getSkus(ctx.shopContext);
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(403);
-      }
+      await expectForbidden(() => ownerClient.getSkus(ctx.shopContext));
     });
   });
 });

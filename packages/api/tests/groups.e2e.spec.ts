@@ -1,11 +1,11 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ApiError, SalesPlannerClient } from '@sales-planner/http-client';
+import { SalesPlannerClient } from '@sales-planner/http-client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { normalizeCode } from '../src/lib/normalize-code.js';
 import { TestContext } from './test-context.js';
-import { cleanupUser } from './test-helpers.js';
+import { cleanupUser, generateUniqueId, generateTestCode, expectUnauthorized, expectForbidden, expectNotFound, expectConflict } from './test-helpers.js';
 
 describe('Groups (e2e)', () => {
   let app: INestApplication;
@@ -26,8 +26,8 @@ describe('Groups (e2e)', () => {
     baseUrl = url.replace('[::1]', 'localhost');
 
     ctx = await TestContext.create(app, baseUrl, {
-      tenantTitle: `Test Tenant ${Date.now()}`,
-      userEmail: `group-test-${Date.now()}@example.com`,
+      tenantTitle: `Test Tenant ${generateUniqueId()}`,
+      userEmail: `group-test-${generateUniqueId()}@example.com`,
       userName: 'Group Test User',
     });
   });
@@ -41,31 +41,19 @@ describe('Groups (e2e)', () => {
     it('should return 401 without API key', async () => {
       const noAuthClient = new SalesPlannerClient({ baseUrl, apiKey: '' });
 
-      try {
-        await noAuthClient.getGroups(ctx.shopContext);
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(401);
-      }
+      await expectUnauthorized(() => noAuthClient.getGroups(ctx.shopContext));
     });
 
     it('should return 401 with invalid API key', async () => {
       const badClient = new SalesPlannerClient({ baseUrl, apiKey: 'invalid-key' });
 
-      try {
-        await badClient.getGroups(ctx.shopContext);
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(401);
-      }
+      await expectUnauthorized(() => badClient.getGroups(ctx.shopContext));
     });
   });
 
   describe('CRUD operations', () => {
     it('createGroup - should create group', async () => {
-      const newGroup = { code: `group-${Date.now()}`, title: 'Test Group' };
+      const newGroup = { code: generateTestCode('group'), title: 'Test Group' };
       const group = await ctx.client.createGroup(newGroup, ctx.shopContext);
 
       expect(group).toHaveProperty('id');
@@ -101,19 +89,15 @@ describe('Groups (e2e)', () => {
     });
 
     it('createGroup - should return 409 on duplicate code in same shop', async () => {
-      const duplicateCode = `group-${Date.now()}`;
+      const duplicateCode = generateTestCode('group');
       await ctx.client.createGroup({ code: duplicateCode, title: 'First Group' }, ctx.shopContext);
 
-      try {
-        await ctx.client.createGroup(
+      await expectConflict(() =>
+        ctx.client.createGroup(
           { code: duplicateCode, title: 'Duplicate Group' },
           ctx.shopContext,
-        );
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(409);
-      }
+        ),
+      );
     });
   });
 
@@ -121,50 +105,42 @@ describe('Groups (e2e)', () => {
     it('should return 403 for wrong tenant', async () => {
       // Create another user with their own tenant
       const otherSetup = await ctx.getSystemClient().createTenantWithShopAndUser({
-        tenantTitle: `Other Tenant ${Date.now()}`,
-        userEmail: `other-${Date.now()}@example.com`,
+        tenantTitle: `Other Tenant ${generateUniqueId()}`,
+        userEmail: `other-${generateUniqueId()}@example.com`,
         userName: 'Other User',
       });
 
-      try {
-        await ctx.client.getGroups({
+      await expectForbidden(() =>
+        ctx.client.getGroups({
           shop_id: otherSetup.shop.id,
           tenant_id: otherSetup.tenant.id,
-        });
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(403);
-      }
+        }),
+      );
 
       await cleanupUser(app, otherSetup.user.id);
     });
 
     it('should return 403 when creating group for wrong tenant', async () => {
       const otherSetup = await ctx.getSystemClient().createTenantWithShopAndUser({
-        tenantTitle: `Other Tenant ${Date.now()}`,
-        userEmail: `other2-${Date.now()}@example.com`,
+        tenantTitle: `Other Tenant ${generateUniqueId()}`,
+        userEmail: `other2-${generateUniqueId()}@example.com`,
         userName: 'Other User 2',
       });
 
-      try {
-        await ctx.client.createGroup(
+      await expectForbidden(() =>
+        ctx.client.createGroup(
           { code: 'forbidden-group', title: 'Should Fail' },
           { shop_id: ctx.shop.id, tenant_id: otherSetup.tenant.id },
-        );
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(403);
-      }
+        ),
+      );
 
       await cleanupUser(app, otherSetup.user.id);
     });
 
     it('should return 404 for group in wrong tenant', async () => {
       const otherSetup = await ctx.getSystemClient().createTenantWithShopAndUser({
-        tenantTitle: `Other Tenant ${Date.now()}`,
-        userEmail: `other3-${Date.now()}@example.com`,
+        tenantTitle: `Other Tenant ${generateUniqueId()}`,
+        userEmail: `other3-${generateUniqueId()}@example.com`,
         userName: 'Other User 3',
       });
 
@@ -179,16 +155,12 @@ describe('Groups (e2e)', () => {
         });
       }
 
-      try {
-        await ctx.client.getGroup(groupId, {
+      await expectNotFound(() =>
+        ctx.client.getGroup(groupId, {
           shop_id: otherSetup.shop.id,
           tenant_id: otherSetup.tenant.id,
-        });
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(404);
-      }
+        }),
+      );
 
       await cleanupUser(app, otherSetup.user.id);
     });
@@ -198,22 +170,14 @@ describe('Groups (e2e)', () => {
     it('deleteGroup - should delete group', async () => {
       await ctx.client.deleteGroup(groupId, ctx.shopContext);
 
-      try {
-        await ctx.client.getGroup(groupId, ctx.shopContext);
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(404);
-      }
-
-      groupId = 0;
+      await expectNotFound(() => ctx.client.getGroup(groupId, ctx.shopContext));
     });
   });
 
   describe('Import endpoints', () => {
     it('importGroupsJson - should import groups from JSON', async () => {
-      const code1 = `import-json-1-${Date.now()}`;
-      const code2 = `import-json-2-${Date.now()}`;
+      const code1 = generateTestCode('import-json-1');
+      const code2 = generateTestCode('import-json-2');
       const items = [
         { code: code1, title: 'Import JSON Group 1' },
         { code: code2, title: 'Import JSON Group 2' },
@@ -232,7 +196,7 @@ describe('Groups (e2e)', () => {
     });
 
     it('importGroupsJson - should upsert existing groups', async () => {
-      const code = `upsert-json-${Date.now()}`;
+      const code = generateTestCode('upsert-json');
 
       await ctx.client.importGroupsJson([{ code, title: 'Original Title' }], ctx.shopContext);
       const result = await ctx.client.importGroupsJson(
@@ -245,8 +209,8 @@ describe('Groups (e2e)', () => {
     });
 
     it('importGroupsCsv - should import groups from CSV with commas', async () => {
-      const code1 = `import-csv-1-${Date.now()}`;
-      const code2 = `import-csv-2-${Date.now()}`;
+      const code1 = generateTestCode('import-csv-1');
+      const code2 = generateTestCode('import-csv-2');
       const csvContent = `code,title\n${code1},Import CSV Group 1\n${code2},Import CSV Group 2`;
 
       const result = await ctx.client.importGroupsCsv(csvContent, ctx.shopContext);
@@ -261,8 +225,8 @@ describe('Groups (e2e)', () => {
     });
 
     it('importGroupsCsv - should import groups from CSV with semicolons', async () => {
-      const code1 = `import-semi-1-${Date.now()}`;
-      const code2 = `import-semi-2-${Date.now()}`;
+      const code1 = generateTestCode('import-semi-1');
+      const code2 = generateTestCode('import-semi-2');
       const csvContent = `code;title\n${code1};Import Semicolon Group 1\n${code2};Import Semicolon Group 2`;
 
       const result = await ctx.client.importGroupsCsv(csvContent, ctx.shopContext);
@@ -291,8 +255,8 @@ describe('Groups (e2e)', () => {
     });
 
     it('exportGroupsJson - should export groups in import format', async () => {
-      const code1 = `export-group-1-${Date.now()}`;
-      const code2 = `export-group-2-${Date.now()}`;
+      const code1 = generateTestCode('export-group-1');
+      const code2 = generateTestCode('export-group-2');
 
       await ctx.client.importGroupsJson(
         [
@@ -314,8 +278,8 @@ describe('Groups (e2e)', () => {
     });
 
     it('exportGroupsCsv - should export groups in CSV format', async () => {
-      const code1 = `csv-export-group-1-${Date.now()}`;
-      const code2 = `csv-export-group-2-${Date.now()}`;
+      const code1 = generateTestCode('csv-export-group-1');
+      const code2 = generateTestCode('csv-export-group-2');
 
       await ctx.client.importGroupsJson(
         [
@@ -342,7 +306,7 @@ describe('Groups (e2e)', () => {
     beforeAll(async () => {
       // Create viewer user
       const viewerUser = await ctx.getSystemClient().createUser({
-        email: `viewer-${Date.now()}@example.com`,
+        email: `viewer-${generateUniqueId()}@example.com`,
         name: 'Viewer User',
       });
       viewerUserId = viewerUser.id;
@@ -389,16 +353,12 @@ describe('Groups (e2e)', () => {
     });
 
     it('viewer should NOT be able to create group', async () => {
-      try {
-        await viewerClient.createGroup(
+      await expectForbidden(() =>
+        viewerClient.createGroup(
           { code: 'viewer-group', title: 'Should Fail' },
           ctx.shopContext,
-        );
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(403);
-      }
+        ),
+      );
     });
 
     it('viewer should NOT be able to update group', async () => {
@@ -406,13 +366,9 @@ describe('Groups (e2e)', () => {
       if (groups.length > 0) {
         // biome-ignore lint/style/noNonNullAssertion: length check ensures element exists
         const firstGroup = groups[0]!;
-        try {
-          await viewerClient.updateGroup(firstGroup.id, { title: 'Should Fail' }, ctx.shopContext);
-          expect.fail('Should have thrown ApiError');
-        } catch (error) {
-          expect(error).toBeInstanceOf(ApiError);
-          expect((error as ApiError).status).toBe(403);
-        }
+        await expectForbidden(() =>
+          viewerClient.updateGroup(firstGroup.id, { title: 'Should Fail' }, ctx.shopContext),
+        );
       }
     });
 
@@ -421,13 +377,7 @@ describe('Groups (e2e)', () => {
       if (groups.length > 0) {
         // biome-ignore lint/style/noNonNullAssertion: length check ensures element exists
         const firstGroup = groups[0]!;
-        try {
-          await viewerClient.deleteGroup(firstGroup.id, ctx.shopContext);
-          expect.fail('Should have thrown ApiError');
-        } catch (error) {
-          expect(error).toBeInstanceOf(ApiError);
-          expect((error as ApiError).status).toBe(403);
-        }
+        await expectForbidden(() => viewerClient.deleteGroup(firstGroup.id, ctx.shopContext));
       }
     });
 
@@ -437,16 +387,12 @@ describe('Groups (e2e)', () => {
     });
 
     it('viewer should NOT be able to import groups', async () => {
-      try {
-        await viewerClient.importGroupsJson(
+      await expectForbidden(() =>
+        viewerClient.importGroupsJson(
           [{ code: 'test', title: 'Should Fail' }],
           ctx.shopContext,
-        );
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(403);
-      }
+        ),
+      );
     });
   });
 });

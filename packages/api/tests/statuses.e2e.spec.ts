@@ -1,13 +1,21 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ApiError, SalesPlannerClient } from '@sales-planner/http-client';
+import { SalesPlannerClient } from '@sales-planner/http-client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { normalizeCode } from '../src/lib/normalize-code.js';
 import { TestContext } from './test-context.js';
-import { cleanupUser } from './test-helpers.js';
+import {
+  cleanupUser,
+  expectConflict,
+  expectForbidden,
+  expectNotFound,
+  expectUnauthorized,
+  generateTestCode,
+  generateUniqueId,
+} from './test-helpers.js';
 
-describe('Statuss (e2e)', () => {
+describe('Statuses (e2e)', () => {
   let app: INestApplication;
   let baseUrl: string;
   let ctx: TestContext;
@@ -26,8 +34,8 @@ describe('Statuss (e2e)', () => {
     baseUrl = url.replace('[::1]', 'localhost');
 
     ctx = await TestContext.create(app, baseUrl, {
-      tenantTitle: `Test Tenant ${Date.now()}`,
-      userEmail: `status-test-${Date.now()}@example.com`,
+      tenantTitle: `Test Tenant ${generateUniqueId()}`,
+      userEmail: `status-test-${generateUniqueId()}@example.com`,
       userName: 'Status Test User',
     });
   });
@@ -41,31 +49,19 @@ describe('Statuss (e2e)', () => {
     it('should return 401 without API key', async () => {
       const noAuthClient = new SalesPlannerClient({ baseUrl, apiKey: '' });
 
-      try {
-        await noAuthClient.getStatuses(ctx.shopContext);
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(401);
-      }
+      await expectUnauthorized(() => noAuthClient.getStatuses(ctx.shopContext));
     });
 
     it('should return 401 with invalid API key', async () => {
       const badClient = new SalesPlannerClient({ baseUrl, apiKey: 'invalid-key' });
 
-      try {
-        await badClient.getStatuses(ctx.shopContext);
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(401);
-      }
+      await expectUnauthorized(() => badClient.getStatuses(ctx.shopContext));
     });
   });
 
   describe('CRUD operations', () => {
     it('createStatus - should create status', async () => {
-      const newStatus = { code: `status-${Date.now()}`, title: 'Test Status' };
+      const newStatus = { code: generateTestCode('status'), title: 'Test Status' };
       const status = await ctx.client.createStatus(newStatus, ctx.shopContext);
 
       expect(status).toHaveProperty('id');
@@ -101,19 +97,18 @@ describe('Statuss (e2e)', () => {
     });
 
     it('createStatus - should return 409 on duplicate code in same shop', async () => {
-      const duplicateCode = `status-${Date.now()}`;
-      await ctx.client.createStatus({ code: duplicateCode, title: 'First Status' }, ctx.shopContext);
+      const duplicateCode = generateTestCode('status');
+      await ctx.client.createStatus(
+        { code: duplicateCode, title: 'First Status' },
+        ctx.shopContext,
+      );
 
-      try {
-        await ctx.client.createStatus(
+      await expectConflict(() =>
+        ctx.client.createStatus(
           { code: duplicateCode, title: 'Duplicate Status' },
           ctx.shopContext,
-        );
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(409);
-      }
+        ),
+      );
     });
   });
 
@@ -121,50 +116,42 @@ describe('Statuss (e2e)', () => {
     it('should return 403 for wrong tenant', async () => {
       // Create another user with their own tenant
       const otherSetup = await ctx.getSystemClient().createTenantWithShopAndUser({
-        tenantTitle: `Other Tenant ${Date.now()}`,
-        userEmail: `other-${Date.now()}@example.com`,
+        tenantTitle: `Other Tenant ${generateUniqueId()}`,
+        userEmail: `other-${generateUniqueId()}@example.com`,
         userName: 'Other User',
       });
 
-      try {
-        await ctx.client.getStatuses({
+      await expectForbidden(() =>
+        ctx.client.getStatuses({
           shop_id: otherSetup.shop.id,
           tenant_id: otherSetup.tenant.id,
-        });
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(403);
-      }
+        }),
+      );
 
       await cleanupUser(app, otherSetup.user.id);
     });
 
     it('should return 403 when creating status for wrong tenant', async () => {
       const otherSetup = await ctx.getSystemClient().createTenantWithShopAndUser({
-        tenantTitle: `Other Tenant ${Date.now()}`,
-        userEmail: `other2-${Date.now()}@example.com`,
+        tenantTitle: `Other Tenant ${generateUniqueId()}`,
+        userEmail: `other2-${generateUniqueId()}@example.com`,
         userName: 'Other User 2',
       });
 
-      try {
-        await ctx.client.createStatus(
+      await expectForbidden(() =>
+        ctx.client.createStatus(
           { code: 'forbidden-status', title: 'Should Fail' },
           { shop_id: ctx.shop.id, tenant_id: otherSetup.tenant.id },
-        );
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(403);
-      }
+        ),
+      );
 
       await cleanupUser(app, otherSetup.user.id);
     });
 
     it('should return 404 for status in wrong tenant', async () => {
       const otherSetup = await ctx.getSystemClient().createTenantWithShopAndUser({
-        tenantTitle: `Other Tenant ${Date.now()}`,
-        userEmail: `other3-${Date.now()}@example.com`,
+        tenantTitle: `Other Tenant ${generateUniqueId()}`,
+        userEmail: `other3-${generateUniqueId()}@example.com`,
         userName: 'Other User 3',
       });
 
@@ -179,16 +166,12 @@ describe('Statuss (e2e)', () => {
         });
       }
 
-      try {
-        await ctx.client.getStatus(statusId, {
+      await expectNotFound(() =>
+        ctx.client.getStatus(statusId, {
           shop_id: otherSetup.shop.id,
           tenant_id: otherSetup.tenant.id,
-        });
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(404);
-      }
+        }),
+      );
 
       await cleanupUser(app, otherSetup.user.id);
     });
@@ -198,22 +181,14 @@ describe('Statuss (e2e)', () => {
     it('deleteStatus - should delete status', async () => {
       await ctx.client.deleteStatus(statusId, ctx.shopContext);
 
-      try {
-        await ctx.client.getStatus(statusId, ctx.shopContext);
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(404);
-      }
-
-      statusId = 0;
+      await expectNotFound(() => ctx.client.getStatus(statusId, ctx.shopContext));
     });
   });
 
   describe('Import endpoints', () => {
     it('importStatusesJson - should import statuses from JSON', async () => {
-      const code1 = `import-json-1-${Date.now()}`;
-      const code2 = `import-json-2-${Date.now()}`;
+      const code1 = generateTestCode('import-json-1');
+      const code2 = generateTestCode('import-json-2');
       const items = [
         { code: code1, title: 'Import JSON Status 1' },
         { code: code2, title: 'Import JSON Status 2' },
@@ -232,7 +207,7 @@ describe('Statuss (e2e)', () => {
     });
 
     it('importStatusesJson - should upsert existing statuses', async () => {
-      const code = `upsert-json-${Date.now()}`;
+      const code = generateTestCode('upsert-json');
 
       await ctx.client.importStatusesJson([{ code, title: 'Original Title' }], ctx.shopContext);
       const result = await ctx.client.importStatusesJson(
@@ -245,8 +220,8 @@ describe('Statuss (e2e)', () => {
     });
 
     it('importStatusesCsv - should import statuses from CSV with commas', async () => {
-      const code1 = `import-csv-1-${Date.now()}`;
-      const code2 = `import-csv-2-${Date.now()}`;
+      const code1 = generateTestCode('import-csv-1');
+      const code2 = generateTestCode('import-csv-2');
       const csvContent = `code,title\n${code1},Import CSV Status 1\n${code2},Import CSV Status 2`;
 
       const result = await ctx.client.importStatusesCsv(csvContent, ctx.shopContext);
@@ -261,8 +236,8 @@ describe('Statuss (e2e)', () => {
     });
 
     it('importStatusesCsv - should import statuses from CSV with semicolons', async () => {
-      const code1 = `import-semi-1-${Date.now()}`;
-      const code2 = `import-semi-2-${Date.now()}`;
+      const code1 = generateTestCode('import-semi-1');
+      const code2 = generateTestCode('import-semi-2');
       const csvContent = `code;title\n${code1};Import Semicolon Status 1\n${code2};Import Semicolon Status 2`;
 
       const result = await ctx.client.importStatusesCsv(csvContent, ctx.shopContext);
@@ -291,8 +266,8 @@ describe('Statuss (e2e)', () => {
     });
 
     it('exportStatusesJson - should export statuses in import format', async () => {
-      const code1 = `export-status-1-${Date.now()}`;
-      const code2 = `export-status-2-${Date.now()}`;
+      const code1 = generateTestCode('export-status-1');
+      const code2 = generateTestCode('export-status-2');
 
       await ctx.client.importStatusesJson(
         [
@@ -314,8 +289,8 @@ describe('Statuss (e2e)', () => {
     });
 
     it('exportStatusesCsv - should export statuses in CSV format', async () => {
-      const code1 = `csv-export-status-1-${Date.now()}`;
-      const code2 = `csv-export-status-2-${Date.now()}`;
+      const code1 = generateTestCode('csv-export-status-1');
+      const code2 = generateTestCode('csv-export-status-2');
 
       await ctx.client.importStatusesJson(
         [
@@ -342,7 +317,7 @@ describe('Statuss (e2e)', () => {
     beforeAll(async () => {
       // Create viewer user
       const viewerUser = await ctx.getSystemClient().createUser({
-        email: `viewer-${Date.now()}@example.com`,
+        email: `viewer-${generateUniqueId()}@example.com`,
         name: 'Viewer User',
       });
       viewerUserId = viewerUser.id;
@@ -389,16 +364,9 @@ describe('Statuss (e2e)', () => {
     });
 
     it('viewer should NOT be able to create status', async () => {
-      try {
-        await viewerClient.createStatus(
-          { code: 'viewer-status', title: 'Should Fail' },
-          ctx.shopContext,
-        );
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(403);
-      }
+      await expectForbidden(() =>
+        viewerClient.createStatus({ code: 'viewer-status', title: 'Should Fail' }, ctx.shopContext),
+      );
     });
 
     it('viewer should NOT be able to update status', async () => {
@@ -406,13 +374,9 @@ describe('Statuss (e2e)', () => {
       if (statuses.length > 0) {
         // biome-ignore lint/style/noNonNullAssertion: length check ensures element exists
         const firstStatus = statuses[0]!;
-        try {
-          await viewerClient.updateStatus(firstStatus.id, { title: 'Should Fail' }, ctx.shopContext);
-          expect.fail('Should have thrown ApiError');
-        } catch (error) {
-          expect(error).toBeInstanceOf(ApiError);
-          expect((error as ApiError).status).toBe(403);
-        }
+        await expectForbidden(() =>
+          viewerClient.updateStatus(firstStatus.id, { title: 'Should Fail' }, ctx.shopContext),
+        );
       }
     });
 
@@ -421,13 +385,7 @@ describe('Statuss (e2e)', () => {
       if (statuses.length > 0) {
         // biome-ignore lint/style/noNonNullAssertion: length check ensures element exists
         const firstStatus = statuses[0]!;
-        try {
-          await viewerClient.deleteStatus(firstStatus.id, ctx.shopContext);
-          expect.fail('Should have thrown ApiError');
-        } catch (error) {
-          expect(error).toBeInstanceOf(ApiError);
-          expect((error as ApiError).status).toBe(403);
-        }
+        await expectForbidden(() => viewerClient.deleteStatus(firstStatus.id, ctx.shopContext));
       }
     });
 
@@ -437,16 +395,9 @@ describe('Statuss (e2e)', () => {
     });
 
     it('viewer should NOT be able to import statuses', async () => {
-      try {
-        await viewerClient.importStatusesJson(
-          [{ code: 'test', title: 'Should Fail' }],
-          ctx.shopContext,
-        );
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(403);
-      }
+      await expectForbidden(() =>
+        viewerClient.importStatusesJson([{ code: 'test', title: 'Should Fail' }], ctx.shopContext),
+      );
     });
   });
 });

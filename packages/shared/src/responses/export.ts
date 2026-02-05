@@ -1,9 +1,10 @@
 export interface SkuExportItem {
   code: string;
   title: string;
-  category_code?: string;
-  group_code?: string;
-  status_code?: string;
+  category?: string;
+  group?: string;
+  status?: string;
+  supplier?: string;
 }
 
 export interface BrandExportItem {

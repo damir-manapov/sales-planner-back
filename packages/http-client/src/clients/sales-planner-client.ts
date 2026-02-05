@@ -186,7 +186,8 @@ export class SalesPlannerClient {
     this.groups.exportGroupsJson(ctx);
   exportGroupsCsv = (ctx: Parameters<GroupsClient['exportGroupsCsv']>[0]) =>
     this.groups.exportGroupsCsv(ctx);
-  getStatuses = (ctx: Parameters<StatusesClient['getStatuses']>[0]) => this.statuses.getStatuses(ctx);
+  getStatuses = (ctx: Parameters<StatusesClient['getStatuses']>[0]) =>
+    this.statuses.getStatuses(ctx);
   getStatus = (id: number, ctx: Parameters<StatusesClient['getStatus']>[1]) =>
     this.statuses.getStatus(id, ctx);
   createStatus = (
@@ -212,7 +213,8 @@ export class SalesPlannerClient {
     this.statuses.exportStatusesJson(ctx);
   exportStatusesCsv = (ctx: Parameters<StatusesClient['exportStatusesCsv']>[0]) =>
     this.statuses.exportStatusesCsv(ctx);
-  getSuppliers = (ctx: Parameters<SuppliersClient['getSuppliers']>[0]) => this.suppliers.getSuppliers(ctx);
+  getSuppliers = (ctx: Parameters<SuppliersClient['getSuppliers']>[0]) =>
+    this.suppliers.getSuppliers(ctx);
   getSupplier = (id: number, ctx: Parameters<SuppliersClient['getSupplier']>[1]) =>
     this.suppliers.getSupplier(id, ctx);
   createSupplier = (

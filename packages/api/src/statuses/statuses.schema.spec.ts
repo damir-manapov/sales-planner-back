@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { CreateStatusSchema, ImportStatusItemSchema, UpdateStatusSchema } from './statuses.schema.js';
+import {
+  CreateStatusSchema,
+  ImportStatusItemSchema,
+  UpdateStatusSchema,
+} from './statuses.schema.js';
 
 describe('Status Schemas', () => {
   describe('CreateStatusSchema', () => {

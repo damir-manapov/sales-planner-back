@@ -1,5 +1,46 @@
 import { describe, expect, it } from 'vitest';
-import { normalizeCode, normalizeSkuCode } from './normalize-code.js';
+import { normalizeCode, normalizeSkuCode, splitIntoWords } from './normalize-code.js';
+
+describe('splitIntoWords', () => {
+  it('should split by hyphens and underscores', () => {
+    expect(splitIntoWords('my-Tovar-01')).toEqual(['my', 'Tovar', '01']);
+    expect(splitIntoWords('SKU_CODE')).toEqual(['SKU', 'CODE']);
+    expect(splitIntoWords('test-hello_world')).toEqual(['test', 'hello', 'world']);
+  });
+
+  it('should split by case changes', () => {
+    expect(splitIntoWords('MixedCase')).toEqual(['Mixed', 'Case']);
+    expect(splitIntoWords('camelCase')).toEqual(['camel', 'Case']);
+    expect(splitIntoWords('PascalCase')).toEqual(['Pascal', 'Case']);
+  });
+
+  it('should split at number-to-letter boundaries', () => {
+    // Numbers followed by uppercase letters should split
+    expect(splitIntoWords('code123ABC')).toEqual(['code123', 'ABC']);
+    expect(splitIntoWords('test123Test')).toEqual(['test123', 'Test']);
+    // This is the problematic pattern from the e2e test
+    expect(splitIntoWords('Csv1770293098288E6eikimy2')).toEqual(['Csv1770293098288', 'E6eikimy2']);
+  });
+
+  it('should handle combined separators and case changes', () => {
+    expect(splitIntoWords('My-CamelCase_Example')).toEqual(['My', 'Camel', 'Case', 'Example']);
+  });
+
+  it('should handle single words', () => {
+    expect(splitIntoWords('word')).toEqual(['word']);
+    expect(splitIntoWords('WORD')).toEqual(['WORD']);
+    expect(splitIntoWords('Word')).toEqual(['Word']);
+  });
+
+  it('should handle numbers', () => {
+    expect(splitIntoWords('version123')).toEqual(['version123']);
+    expect(splitIntoWords('test-123-end')).toEqual(['test', '123', 'end']);
+  });
+
+  it('should handle empty string', () => {
+    expect(splitIntoWords('')).toEqual([]);
+  });
+});
 
 describe('normalizeCode', () => {
   it('should transliterate Cyrillic to Latin', () => {
@@ -71,6 +112,51 @@ describe('normalizeCode', () => {
     expect(normalizeCode('my sku code')).toBe('mySkuCode');
     expect(normalizeCode('SKU 001')).toBe('sku001');
   });
+
+  describe('idempotency', () => {
+    it('should be idempotent - applying multiple times yields same result', () => {
+      const testCases = [
+        // With separators
+        'SKU_CODE',
+        'my-sku',
+        'Товар-123',
+        'MY-SKU-CODE',
+        '  spaced  code  ',
+        'Щука',
+        'my--sku',
+        '-my-sku-',
+        'UPPER-CASE',
+        // Single words
+        'UPPERCASE',
+        '',
+        'lowercase',
+        'MixedCase',
+        'skuCode',
+        // Special characters
+        'sku@code',
+        'test.value',
+        'code123',
+        '@#$',
+        // Already normalized
+        'myProduct01',
+        'simpleword',
+        'mixed123',
+        // Numbers followed by uppercase (the e2e bug case)
+        'wbCsv1770293098288E6eikimy2',
+        'code123ABC',
+        'test123Test456End',
+      ];
+
+      testCases.forEach((input) => {
+        const normalized = normalizeCode(input);
+        const doubleNormalized = normalizeCode(normalized);
+        const tripleNormalized = normalizeCode(doubleNormalized);
+
+        expect(doubleNormalized).toBe(normalized);
+        expect(tripleNormalized).toBe(normalized);
+      });
+    });
+  });
 });
 
 describe('normalizeSkuCode', () => {
@@ -140,5 +226,55 @@ describe('normalizeSkuCode', () => {
     expect(normalizeSkuCode(' my sku ')).toBe('mysku');
     expect(normalizeSkuCode('  Tovar 123  ')).toBe('Tovar123');
     expect(normalizeSkuCode('My SKU 01')).toBe('MySKU01');
+  });
+
+  describe('idempotency', () => {
+    it('should be idempotent - applying multiple times yields same result', () => {
+      const testCases = [
+        // Basic cases
+        'SKU_CODE',
+        'my-sku',
+        'Товар-123',
+        'MY-SKU-CODE',
+        '  SKU-001  ',
+        'Щука',
+        'sku@code',
+        'my--sku',
+        '-my-sku-',
+        'mixed_Яблоко-123',
+        '',
+        'AlreadyNormalized',
+        'lowercase',
+        'UPPERCASE',
+        'CamelCase',
+        'snake_case',
+        'kebab-case',
+        // Complex cases
+        'Товар_SKU-123_яблоко',
+        'MY--COMPLEX__CODE  WITH   SPACES',
+        '___leading_trailing___',
+        'ЩУКА-ёлка_ЧАСЫ',
+        'mixed@special.chars-123',
+        '  Multiple   Spaces   Between   Words  ',
+        'Объект-with-soft-signs-мышь',
+        // Edge cases
+        'A',
+        'a',
+        '1',
+        '-',
+        '_',
+        'a-b',
+        'A_B',
+      ];
+
+      testCases.forEach((input) => {
+        const normalized = normalizeSkuCode(input);
+        const doubleNormalized = normalizeSkuCode(normalized);
+        const tripleNormalized = normalizeSkuCode(doubleNormalized);
+
+        expect(doubleNormalized).toBe(normalized);
+        expect(tripleNormalized).toBe(normalized);
+      });
+    });
   });
 });

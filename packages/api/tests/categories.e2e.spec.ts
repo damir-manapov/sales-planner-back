@@ -1,13 +1,21 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ApiError, SalesPlannerClient } from '@sales-planner/http-client';
+import { SalesPlannerClient } from '@sales-planner/http-client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { normalizeCode } from '../src/lib/normalize-code.js';
 import { TestContext } from './test-context.js';
-import { cleanupUser } from './test-helpers.js';
+import {
+  cleanupUser,
+  expectConflict,
+  expectForbidden,
+  expectNotFound,
+  expectUnauthorized,
+  generateTestCode,
+  generateUniqueId,
+} from './test-helpers.js';
 
-describe('Categorys (e2e)', () => {
+describe('Categories (e2e)', () => {
   let app: INestApplication;
   let baseUrl: string;
   let ctx: TestContext;
@@ -26,8 +34,8 @@ describe('Categorys (e2e)', () => {
     baseUrl = url.replace('[::1]', 'localhost');
 
     ctx = await TestContext.create(app, baseUrl, {
-      tenantTitle: `Test Tenant ${Date.now()}`,
-      userEmail: `category-test-${Date.now()}@example.com`,
+      tenantTitle: `Test Tenant ${generateUniqueId()}`,
+      userEmail: `category-test-${generateUniqueId()}@example.com`,
       userName: 'Category Test User',
     });
   });
@@ -41,31 +49,19 @@ describe('Categorys (e2e)', () => {
     it('should return 401 without API key', async () => {
       const noAuthClient = new SalesPlannerClient({ baseUrl, apiKey: '' });
 
-      try {
-        await noAuthClient.getCategories(ctx.shopContext);
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(401);
-      }
+      await expectUnauthorized(() => noAuthClient.getCategories(ctx.shopContext));
     });
 
     it('should return 401 with invalid API key', async () => {
       const badClient = new SalesPlannerClient({ baseUrl, apiKey: 'invalid-key' });
 
-      try {
-        await badClient.getCategories(ctx.shopContext);
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(401);
-      }
+      await expectUnauthorized(() => badClient.getCategories(ctx.shopContext));
     });
   });
 
   describe('CRUD operations', () => {
     it('createCategory - should create category', async () => {
-      const newCategory = { code: `category-${Date.now()}`, title: 'Test Category' };
+      const newCategory = { code: generateTestCode('category'), title: 'Test Category' };
       const category = await ctx.client.createCategory(newCategory, ctx.shopContext);
 
       expect(category).toHaveProperty('id');
@@ -101,70 +97,62 @@ describe('Categorys (e2e)', () => {
     });
 
     it('createCategory - should return 409 on duplicate code in same shop', async () => {
-      const duplicateCode = `category-${Date.now()}`;
-      await ctx.client.createCategory({ code: duplicateCode, title: 'First Category' }, ctx.shopContext);
+      const duplicateCode = generateTestCode('category');
+      await ctx.client.createCategory(
+        { code: duplicateCode, title: 'First Category' },
+        ctx.shopContext,
+      );
 
-      try {
-        await ctx.client.createCategory(
+      await expectConflict(() =>
+        ctx.client.createCategory(
           { code: duplicateCode, title: 'Duplicate Category' },
           ctx.shopContext,
-        );
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(409);
-      }
+        ),
+      );
     });
   });
 
   describe('Tenant-based access control', () => {
     it('should return 403 for wrong tenant', async () => {
       // Create another user with their own tenant
+      const uniqueId = generateUniqueId();
       const otherSetup = await ctx.getSystemClient().createTenantWithShopAndUser({
-        tenantTitle: `Other Tenant ${Date.now()}`,
-        userEmail: `other-${Date.now()}@example.com`,
+        tenantTitle: `Other Tenant ${uniqueId}`,
+        userEmail: `other-${uniqueId}@example.com`,
         userName: 'Other User',
       });
 
-      try {
-        await ctx.client.getCategories({
+      await expectForbidden(() =>
+        ctx.client.getCategories({
           shop_id: otherSetup.shop.id,
           tenant_id: otherSetup.tenant.id,
-        });
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(403);
-      }
+        }),
+      );
 
       await cleanupUser(app, otherSetup.user.id);
     });
 
     it('should return 403 when creating category for wrong tenant', async () => {
       const otherSetup = await ctx.getSystemClient().createTenantWithShopAndUser({
-        tenantTitle: `Other Tenant ${Date.now()}`,
-        userEmail: `other2-${Date.now()}@example.com`,
+        tenantTitle: `Other Tenant ${generateUniqueId()}`,
+        userEmail: `other2-${generateUniqueId()}@example.com`,
         userName: 'Other User 2',
       });
 
-      try {
-        await ctx.client.createCategory(
+      await expectForbidden(() =>
+        ctx.client.createCategory(
           { code: 'forbidden-category', title: 'Should Fail' },
           { shop_id: ctx.shop.id, tenant_id: otherSetup.tenant.id },
-        );
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(403);
-      }
+        ),
+      );
 
       await cleanupUser(app, otherSetup.user.id);
     });
 
     it('should return 404 for category in wrong tenant', async () => {
       const otherSetup = await ctx.getSystemClient().createTenantWithShopAndUser({
-        tenantTitle: `Other Tenant ${Date.now()}`,
-        userEmail: `other3-${Date.now()}@example.com`,
+        tenantTitle: `Other Tenant ${generateUniqueId()}`,
+        userEmail: `other3-${generateUniqueId()}@example.com`,
         userName: 'Other User 3',
       });
 
@@ -179,16 +167,12 @@ describe('Categorys (e2e)', () => {
         });
       }
 
-      try {
-        await ctx.client.getCategory(categoryId, {
+      await expectNotFound(() =>
+        ctx.client.getCategory(categoryId, {
           shop_id: otherSetup.shop.id,
           tenant_id: otherSetup.tenant.id,
-        });
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(404);
-      }
+        }),
+      );
 
       await cleanupUser(app, otherSetup.user.id);
     });
@@ -198,22 +182,14 @@ describe('Categorys (e2e)', () => {
     it('deleteCategory - should delete category', async () => {
       await ctx.client.deleteCategory(categoryId, ctx.shopContext);
 
-      try {
-        await ctx.client.getCategory(categoryId, ctx.shopContext);
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(404);
-      }
-
-      categoryId = 0;
+      await expectNotFound(() => ctx.client.getCategory(categoryId, ctx.shopContext));
     });
   });
 
   describe('Import endpoints', () => {
     it('importCategoriesJson - should import categories from JSON', async () => {
-      const code1 = `import-json-1-${Date.now()}`;
-      const code2 = `import-json-2-${Date.now()}`;
+      const code1 = generateTestCode('import-json-1');
+      const code2 = generateTestCode('import-json-2');
       const items = [
         { code: code1, title: 'Import JSON Category 1' },
         { code: code2, title: 'Import JSON Category 2' },
@@ -232,7 +208,7 @@ describe('Categorys (e2e)', () => {
     });
 
     it('importCategoriesJson - should upsert existing categories', async () => {
-      const code = `upsert-json-${Date.now()}`;
+      const code = generateTestCode('upsert-json');
 
       await ctx.client.importCategoriesJson([{ code, title: 'Original Title' }], ctx.shopContext);
       const result = await ctx.client.importCategoriesJson(
@@ -245,8 +221,8 @@ describe('Categorys (e2e)', () => {
     });
 
     it('importCategoriesCsv - should import categories from CSV with commas', async () => {
-      const code1 = `import-csv-1-${Date.now()}`;
-      const code2 = `import-csv-2-${Date.now()}`;
+      const code1 = generateTestCode('import-csv-1');
+      const code2 = generateTestCode('import-csv-2');
       const csvContent = `code,title\n${code1},Import CSV Category 1\n${code2},Import CSV Category 2`;
 
       const result = await ctx.client.importCategoriesCsv(csvContent, ctx.shopContext);
@@ -261,8 +237,8 @@ describe('Categorys (e2e)', () => {
     });
 
     it('importCategoriesCsv - should import categories from CSV with semicolons', async () => {
-      const code1 = `import-semi-1-${Date.now()}`;
-      const code2 = `import-semi-2-${Date.now()}`;
+      const code1 = generateTestCode('import-semi-1');
+      const code2 = generateTestCode('import-semi-2');
       const csvContent = `code;title\n${code1};Import Semicolon Category 1\n${code2};Import Semicolon Category 2`;
 
       const result = await ctx.client.importCategoriesCsv(csvContent, ctx.shopContext);
@@ -291,8 +267,8 @@ describe('Categorys (e2e)', () => {
     });
 
     it('exportCategoriesJson - should export categories in import format', async () => {
-      const code1 = `export-category-1-${Date.now()}`;
-      const code2 = `export-category-2-${Date.now()}`;
+      const code1 = generateTestCode('export-category-1');
+      const code2 = generateTestCode('export-category-2');
 
       await ctx.client.importCategoriesJson(
         [
@@ -314,8 +290,8 @@ describe('Categorys (e2e)', () => {
     });
 
     it('exportCategoriesCsv - should export categories in CSV format', async () => {
-      const code1 = `csv-export-category-1-${Date.now()}`;
-      const code2 = `csv-export-category-2-${Date.now()}`;
+      const code1 = generateTestCode('csv-export-category-1');
+      const code2 = generateTestCode('csv-export-category-2');
 
       await ctx.client.importCategoriesJson(
         [
@@ -342,7 +318,7 @@ describe('Categorys (e2e)', () => {
     beforeAll(async () => {
       // Create viewer user
       const viewerUser = await ctx.getSystemClient().createUser({
-        email: `viewer-${Date.now()}@example.com`,
+        email: `viewer-${generateUniqueId()}@example.com`,
         name: 'Viewer User',
       });
       viewerUserId = viewerUser.id;
@@ -389,16 +365,12 @@ describe('Categorys (e2e)', () => {
     });
 
     it('viewer should NOT be able to create category', async () => {
-      try {
-        await viewerClient.createCategory(
+      await expectForbidden(() =>
+        viewerClient.createCategory(
           { code: 'viewer-category', title: 'Should Fail' },
           ctx.shopContext,
-        );
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(403);
-      }
+        ),
+      );
     });
 
     it('viewer should NOT be able to update category', async () => {
@@ -406,13 +378,13 @@ describe('Categorys (e2e)', () => {
       if (categories.length > 0) {
         // biome-ignore lint/style/noNonNullAssertion: length check ensures element exists
         const firstCategory = categories[0]!;
-        try {
-          await viewerClient.updateCategory(firstCategory.id, { title: 'Should Fail' }, ctx.shopContext);
-          expect.fail('Should have thrown ApiError');
-        } catch (error) {
-          expect(error).toBeInstanceOf(ApiError);
-          expect((error as ApiError).status).toBe(403);
-        }
+        await expectForbidden(() =>
+          viewerClient.updateCategory(
+            firstCategory.id,
+            { title: 'Should Fail' },
+            ctx.shopContext,
+          ),
+        );
       }
     });
 
@@ -421,13 +393,9 @@ describe('Categorys (e2e)', () => {
       if (categories.length > 0) {
         // biome-ignore lint/style/noNonNullAssertion: length check ensures element exists
         const firstCategory = categories[0]!;
-        try {
-          await viewerClient.deleteCategory(firstCategory.id, ctx.shopContext);
-          expect.fail('Should have thrown ApiError');
-        } catch (error) {
-          expect(error).toBeInstanceOf(ApiError);
-          expect((error as ApiError).status).toBe(403);
-        }
+        await expectForbidden(() =>
+          viewerClient.deleteCategory(firstCategory.id, ctx.shopContext),
+        );
       }
     });
 
@@ -437,16 +405,12 @@ describe('Categorys (e2e)', () => {
     });
 
     it('viewer should NOT be able to import categories', async () => {
-      try {
-        await viewerClient.importCategoriesJson(
+      await expectForbidden(() =>
+        viewerClient.importCategoriesJson(
           [{ code: 'test', title: 'Should Fail' }],
           ctx.shopContext,
-        );
-        expect.fail('Should have thrown ApiError');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(403);
-      }
+        ),
+      );
     });
   });
 });

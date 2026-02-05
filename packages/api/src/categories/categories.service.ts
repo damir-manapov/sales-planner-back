@@ -3,7 +3,11 @@ import type { Category } from '@sales-planner/shared';
 import { BaseEntityService } from '../common/index.js';
 import { DatabaseService } from '../database/index.js';
 import { normalizeCode } from '../lib/index.js';
-import type { CreateCategoryDto, ImportCategoryItem, UpdateCategoryDto } from './categories.schema.js';
+import type {
+  CreateCategoryDto,
+  ImportCategoryItem,
+  UpdateCategoryDto,
+} from './categories.schema.js';
 import { ImportCategoryItemSchema } from './categories.schema.js';
 
 export type { Category };

@@ -1,10 +1,10 @@
 import { type INestApplication } from '@nestjs/common';
 import { Test, type TestingModule } from '@nestjs/testing';
-import { ApiError, SalesPlannerClient } from '@sales-planner/http-client';
+import { SalesPlannerClient } from '@sales-planner/http-client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { TestContext } from './test-context.js';
-import { cleanupUser } from './test-helpers.js';
+import { cleanupUser, generateUniqueId, generateTestPeriod, generateTestCode, expectForbidden, expectNotFound } from './test-helpers.js';
 
 describe('Shops E2E', () => {
   let app: INestApplication;
@@ -25,8 +25,8 @@ describe('Shops E2E', () => {
     baseUrl = url.replace('[::1]', 'localhost');
 
     ctx = await TestContext.create(app, baseUrl, {
-      tenantTitle: `Shops Test Tenant ${Date.now()}`,
-      userEmail: `shops-test-${Date.now()}@example.com`,
+      tenantTitle: `Shops Test Tenant ${generateUniqueId()}`,
+      userEmail: `shops-test-${generateUniqueId()}@example.com`,
       userName: 'Shops Test User',
     });
 
@@ -75,13 +75,7 @@ describe('Shops E2E', () => {
     });
 
     it('GET /shops/:id - should return 404 for non-existent shop', async () => {
-      try {
-        await ctx.client.getShop(999999);
-        expect.fail('Should have thrown');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(404);
-      }
+      await expectNotFound(() => ctx.client.getShop(999999));
     });
   });
 
@@ -93,7 +87,7 @@ describe('Shops E2E', () => {
     beforeAll(async () => {
       // Create tenant admin user
       const adminUser = await ctx.getSystemClient().createUser({
-        email: `tenant-admin-${Date.now()}@example.com`,
+        email: `tenant-admin-${generateUniqueId()}@example.com`,
         name: 'Tenant Admin User',
       });
       tenantAdminUserId = adminUser.id;
@@ -158,8 +152,8 @@ describe('Shops E2E', () => {
     beforeAll(async () => {
       // Create another user with their own tenant
       const otherSetup = await ctx.getSystemClient().createTenantWithShopAndUser({
-        tenantTitle: `Other Tenant ${Date.now()}`,
-        userEmail: `other-user-${Date.now()}@example.com`,
+        tenantTitle: `Other Tenant ${generateUniqueId()}`,
+        userEmail: `other-user-${generateUniqueId()}@example.com`,
         userName: 'Other User',
       });
 
@@ -174,53 +168,23 @@ describe('Shops E2E', () => {
     });
 
     it('GET /shops/:id - should return 403 for shop in other tenant', async () => {
-      try {
-        await otherClient.getShop(testShopId);
-        expect.fail('Should have thrown');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(403);
-      }
+      await expectForbidden(() => otherClient.getShop(testShopId));
     });
 
     it('GET /shops?tenantId=X - should return 403 for other tenant', async () => {
-      try {
-        await otherClient.getShops(ctx.tenant.id);
-        expect.fail('Should have thrown');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(403);
-      }
+      await expectForbidden(() => otherClient.getShops(ctx.tenant.id));
     });
 
     it('POST /shops - should return 403 when creating shop in other tenant', async () => {
-      try {
-        await otherClient.createShop({ title: 'Unauthorized Shop', tenant_id: ctx.tenant.id });
-        expect.fail('Should have thrown');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(403);
-      }
+      await expectForbidden(() => otherClient.createShop({ title: 'Unauthorized Shop', tenant_id: ctx.tenant.id }));
     });
 
     it('PUT /shops/:id - should return 403 when updating shop in other tenant', async () => {
-      try {
-        await otherClient.updateShop(testShopId, { title: 'Hacked Shop' });
-        expect.fail('Should have thrown');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(403);
-      }
+      await expectForbidden(() => otherClient.updateShop(testShopId, { title: 'Hacked Shop' }));
     });
 
     it('DELETE /shops/:id - should return 403 when deleting shop in other tenant', async () => {
-      try {
-        await otherClient.deleteShop(testShopId);
-        expect.fail('Should have thrown');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(403);
-      }
+      await expectForbidden(() => otherClient.deleteShop(testShopId));
     });
   });
 
@@ -231,16 +195,22 @@ describe('Shops E2E', () => {
     beforeAll(async () => {
       // Create a shop with data
       const shop = await ctx.client.createShop({
-        title: `Data Shop ${Date.now()}`,
+        title: `Data Shop ${generateUniqueId()}`,
         tenant_id: ctx.tenant.id,
       });
       dataShopId = shop.id;
 
       // Import some SKUs
+      const sku1Code = generateTestCode('DATA-SKU-1');
+      const sku2Code = generateTestCode('DATA-SKU-2');
+      const marketplace1 = generateTestCode('WB');
+      const marketplace2 = generateTestCode('OZON');
+      const testPeriod = generateTestPeriod();
+
       await ctx.client.importSkusJson(
         [
-          { code: 'DATA-SKU-1', title: 'Test SKU 1' },
-          { code: 'DATA-SKU-2', title: 'Test SKU 2' },
+          { code: sku1Code, title: 'Test SKU 1' },
+          { code: sku2Code, title: 'Test SKU 2' },
         ],
         dataShopContext(),
       );
@@ -248,8 +218,8 @@ describe('Shops E2E', () => {
       // Import sales history
       await ctx.client.importSalesHistoryJson(
         [
-          { marketplace: 'WB', period: '2025-01', sku: 'DATA-SKU-1', quantity: 100 },
-          { marketplace: 'OZON', period: '2025-01', sku: 'DATA-SKU-2', quantity: 200 },
+          { marketplace: marketplace1, period: testPeriod, sku: sku1Code, quantity: 100 },
+          { marketplace: marketplace2, period: testPeriod, sku: sku2Code, quantity: 200 },
         ],
         dataShopContext(),
       );
@@ -289,13 +259,7 @@ describe('Shops E2E', () => {
     });
 
     it('GET /shops/:id - should return 404 after deletion', async () => {
-      try {
-        await ctx.client.getShop(testShopId);
-        expect.fail('Should have thrown');
-      } catch (error) {
-        expect(error).toBeInstanceOf(ApiError);
-        expect((error as ApiError).status).toBe(404);
-      }
+      await expectNotFound(() => ctx.client.getShop(testShopId));
     });
   });
 });

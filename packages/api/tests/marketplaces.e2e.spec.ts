@@ -1,10 +1,10 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { ApiError } from '@sales-planner/http-client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { normalizeCode } from '../src/lib/normalize-code.js';
 import { TestContext } from './test-context.js';
+import { generateUniqueId, generateTestCode, expectNotFound, expectConflict } from './test-helpers.js';
 
 describe('Marketplaces (e2e)', () => {
   let app: INestApplication;
@@ -24,7 +24,7 @@ describe('Marketplaces (e2e)', () => {
     baseUrl = url.replace('[::1]', 'localhost');
 
     ctx = await TestContext.create(app, baseUrl, {
-      userEmail: `mp-test-${Date.now()}@example.com`,
+      userEmail: `mp-test-${generateUniqueId()}@example.com`,
       userName: 'Marketplace Test User',
     });
   });
@@ -49,7 +49,7 @@ describe('Marketplaces (e2e)', () => {
   });
 
   describe('POST /marketplaces', () => {
-    const testMarketplaceCode = `MP-CREATE-${Date.now()}`;
+    const testMarketplaceCode = generateTestCode('MP-CREATE');
 
     it("should create marketplace in the user's shop", async () => {
       const marketplace = await ctx.client.createMarketplace(
@@ -63,21 +63,17 @@ describe('Marketplaces (e2e)', () => {
     });
 
     it('should return 409 on duplicate marketplace code in same shop', async () => {
-      try {
-        await ctx.client.createMarketplace(
+      await expectConflict(() =>
+        ctx.client.createMarketplace(
           { code: testMarketplaceCode, title: 'Duplicate' },
           ctx.shopContext,
-        );
-        expect.fail('Should have thrown');
-      } catch (e) {
-        expect(e).toBeInstanceOf(ApiError);
-        expect((e as ApiError).status).toBe(409);
-      }
+        ),
+      );
     });
   });
 
   describe('GET /marketplaces/:id', () => {
-    const testMarketplaceCode = `MP-GET-${Date.now()}`;
+    const testMarketplaceCode = generateTestCode('MP-GET');
     let marketplaceId: number;
 
     beforeAll(async () => {
@@ -95,18 +91,12 @@ describe('Marketplaces (e2e)', () => {
     });
 
     it('should return 404 for non-existent marketplace', async () => {
-      try {
-        await ctx.client.getMarketplace(999999, ctx.shopContext);
-        expect.fail('Should have thrown 404');
-      } catch (e) {
-        expect(e).toBeInstanceOf(ApiError);
-        expect((e as ApiError).status).toBe(404);
-      }
+      await expectNotFound(() => ctx.client.getMarketplace(999999, ctx.shopContext));
     });
   });
 
   describe('PUT /marketplaces/:id', () => {
-    const testMarketplaceCode = `MP-UPDATE-${Date.now()}`;
+    const testMarketplaceCode = generateTestCode('MP-UPDATE');
     let marketplaceId: number;
 
     beforeAll(async () => {
@@ -128,18 +118,14 @@ describe('Marketplaces (e2e)', () => {
     });
 
     it('should return 404 for non-existent marketplace', async () => {
-      try {
-        await ctx.client.updateMarketplace(999999, { title: 'Updated' }, ctx.shopContext);
-        expect.fail('Should have thrown 404');
-      } catch (e) {
-        expect(e).toBeInstanceOf(ApiError);
-        expect((e as ApiError).status).toBe(404);
-      }
+      await expectNotFound(() =>
+        ctx.client.updateMarketplace(999999, { title: 'Updated' }, ctx.shopContext),
+      );
     });
   });
 
   describe('DELETE /marketplaces/:id', () => {
-    const testMarketplaceCode = `MP-DELETE-${Date.now()}`;
+    const testMarketplaceCode = generateTestCode('MP-DELETE');
     let marketplaceId: number;
 
     beforeAll(async () => {
@@ -154,25 +140,19 @@ describe('Marketplaces (e2e)', () => {
       await ctx.client.deleteMarketplace(marketplaceId, ctx.shopContext);
 
       // Verify it's deleted
-      try {
-        await ctx.client.getMarketplace(marketplaceId, ctx.shopContext);
-        expect.fail('Should have thrown 404');
-      } catch (e) {
-        expect(e).toBeInstanceOf(ApiError);
-        expect((e as ApiError).status).toBe(404);
-      }
+      await expectNotFound(() => ctx.client.getMarketplace(marketplaceId, ctx.shopContext));
     });
   });
 
   describe('Shop isolation', () => {
     let otherCtx: TestContext;
-    const isolatedMarketplaceCode = `MP-ISOLATED-${Date.now()}`;
+    const isolatedMarketplaceCode = generateTestCode('MP-ISOLATED');
 
     beforeAll(async () => {
       // Create another tenant/shop/user
       otherCtx = await TestContext.create(app, baseUrl, {
-        tenantTitle: `Other Tenant ${Date.now()}`,
-        userEmail: `mp-other-${Date.now()}@example.com`,
+        tenantTitle: `Other Tenant ${generateUniqueId()}`,
+        userEmail: `mp-other-${generateUniqueId()}@example.com`,
         userName: 'Other User',
       });
 
@@ -204,13 +184,9 @@ describe('Marketplaces (e2e)', () => {
       expect(marketplace).toBeDefined();
       if (!marketplace) throw new Error('Marketplace not found');
 
-      try {
-        await otherCtx.client.getMarketplace(marketplace.id, otherCtx.shopContext);
-        expect.fail('Should have thrown 404');
-      } catch (e) {
-        expect(e).toBeInstanceOf(ApiError);
-        expect((e as ApiError).status).toBe(404);
-      }
+      await expectNotFound(() =>
+        otherCtx.client.getMarketplace(marketplace.id, otherCtx.shopContext),
+      );
     });
 
     it('should allow same marketplace code in different shops', async () => {
@@ -225,8 +201,8 @@ describe('Marketplaces (e2e)', () => {
 
   describe('Import/Export endpoints', () => {
     it('importMarketplacesJson - should import marketplaces from JSON', async () => {
-      const code1 = `IMPORT-JSON-1-${Date.now()}`;
-      const code2 = `IMPORT-JSON-2-${Date.now()}`;
+      const code1 = generateTestCode('IMPORT-JSON-1');
+      const code2 = generateTestCode('IMPORT-JSON-2');
       const items = [
         { code: code1, title: 'Import JSON Marketplace 1' },
         { code: code2, title: 'Import JSON Marketplace 2' },
@@ -245,7 +221,7 @@ describe('Marketplaces (e2e)', () => {
     });
 
     it('importMarketplacesJson - should upsert existing marketplaces', async () => {
-      const code = `UPSERT-JSON-${Date.now()}`;
+      const code = generateTestCode('UPSERT-JSON');
 
       const created = await ctx.client.importMarketplacesJson(
         [{ code, title: 'Original Title' }],
@@ -270,8 +246,8 @@ describe('Marketplaces (e2e)', () => {
     });
 
     it('importMarketplacesCsv - should import marketplaces from CSV', async () => {
-      const code1 = `IMPORT-CSV-1-${Date.now()}`;
-      const code2 = `IMPORT-CSV-2-${Date.now()}`;
+      const code1 = generateTestCode('IMPORT-CSV-1');
+      const code2 = generateTestCode('IMPORT-CSV-2');
       const csvContent = `code,title\n${code1},Import CSV Marketplace 1\n${code2},Import CSV Marketplace 2`;
 
       const result = await ctx.client.importMarketplacesCsv(csvContent, ctx.shopContext);
@@ -286,8 +262,8 @@ describe('Marketplaces (e2e)', () => {
     });
 
     it('exportMarketplacesJson - should export marketplaces in import format', async () => {
-      const code1 = `EXPORT-MP-1-${Date.now()}`;
-      const code2 = `EXPORT-MP-2-${Date.now()}`;
+      const code1 = generateTestCode('EXPORT-MP-1');
+      const code2 = generateTestCode('EXPORT-MP-2');
 
       await ctx.client.importMarketplacesJson(
         [
@@ -309,8 +285,8 @@ describe('Marketplaces (e2e)', () => {
     });
 
     it('exportMarketplacesCsv - should export marketplaces in CSV format', async () => {
-      const code1 = `CSV-EXPORT-MP-1-${Date.now()}`;
-      const code2 = `CSV-EXPORT-MP-2-${Date.now()}`;
+      const code1 = generateTestCode('CSV-EXPORT-MP-1');
+      const code2 = generateTestCode('CSV-EXPORT-MP-2');
 
       await ctx.client.importMarketplacesJson(
         [

@@ -51,7 +51,10 @@ export class SuppliersClient extends ImportExportBaseClient {
     return this.request('DELETE', `/suppliers/${id}`, { params: ctx });
   }
 
-  async importSuppliersJson(data: ImportSuppliersJsonDto, ctx: ShopContextParams): Promise<ImportResult> {
+  async importSuppliersJson(
+    data: ImportSuppliersJsonDto,
+    ctx: ShopContextParams,
+  ): Promise<ImportResult> {
     return this.request('POST', '/suppliers/import/json', { params: ctx, body: data });
   }
 

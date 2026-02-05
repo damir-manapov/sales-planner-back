@@ -4,7 +4,7 @@ import type {
   UpdateSalesHistoryDto,
   ImportSalesHistoryItem,
   SalesHistoryExportItem,
-  ImportResult,
+  SalesHistoryImportResult,
   PeriodQuery,
   ShopContextParams,
 } from '@sales-planner/shared';
@@ -41,11 +41,14 @@ export class SalesHistoryClient extends ImportExportBaseClient {
   async importSalesHistoryJson(
     items: ImportSalesHistoryItem[],
     ctx: ShopContextParams,
-  ): Promise<ImportResult> {
+  ): Promise<SalesHistoryImportResult> {
     return this.request('POST', '/sales-history/import/json', { body: items, params: ctx });
   }
 
-  async importSalesHistoryCsv(csvContent: string, ctx: ShopContextParams): Promise<ImportResult> {
+  async importSalesHistoryCsv(
+    csvContent: string,
+    ctx: ShopContextParams,
+  ): Promise<SalesHistoryImportResult> {
     return this.uploadCsv('/sales-history/import/csv', csvContent, ctx);
   }
 
