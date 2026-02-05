@@ -9,3 +9,6 @@ export * from './responses/index.js';
 
 // Query types
 export * from './query.js';
+
+// Metadata
+export * from './metadata.js';

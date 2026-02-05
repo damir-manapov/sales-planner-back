@@ -1,5 +1,16 @@
 # @sales-planner/api
 
+## 0.5.0
+
+### Minor Changes
+
+- Add entity metadata API for UI documentation. Provides metadata about entities (brands, marketplaces, skus, sales history) including field definitions, types, and examples.
+
+### Patch Changes
+
+- Updated dependencies
+  - @sales-planner/shared@0.9.0
+
 ## 0.4.5
 
 ### Patch Changes

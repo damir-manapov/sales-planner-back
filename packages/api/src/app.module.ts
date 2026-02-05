@@ -10,6 +10,7 @@ import { databaseConfig } from './database/database.config.js';
 import { DatabaseModule } from './database/index.js';
 import { MarketplacesModule } from './marketplaces/index.js';
 import { MeModule } from './me/index.js';
+import { MetadataModule } from './metadata/index.js';
 import { RolesModule } from './roles/index.js';
 import { SalesHistoryModule } from './sales-history/index.js';
 import { ShopsModule } from './shops/index.js';
@@ -38,6 +39,7 @@ import { UsersModule } from './users/index.js';
     ApiKeysModule,
     BootstrapModule,
     MarketplacesModule,
+    MetadataModule,
     SkusModule,
     BrandsModule,
     SalesHistoryModule,

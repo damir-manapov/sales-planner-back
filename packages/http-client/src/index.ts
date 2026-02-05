@@ -42,4 +42,9 @@ export type {
   DeleteDataResult,
   SkuExportItem,
   SalesHistoryExportItem,
+  // Metadata types
+  EntityFieldMetadata,
+  EntityMetadata,
+  EntitiesMetadata,
+  FieldType,
 } from '@sales-planner/shared';

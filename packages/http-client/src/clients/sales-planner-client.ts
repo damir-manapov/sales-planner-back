@@ -1,6 +1,7 @@
 import type { ClientConfig } from './base-client.js';
 import { ApiError } from './base-client.js';
 import { MeClient } from './me-client.js';
+import { MetadataClient } from './metadata-client.js';
 import { UsersClient } from './users-client.js';
 import { TenantsClient } from './tenants-client.js';
 import { ShopsClient } from './shops-client.js';
@@ -17,6 +18,7 @@ export class SalesPlannerClient {
 
   // Sub-clients exposed as public properties
   readonly me: MeClient;
+  readonly metadata: MetadataClient;
   readonly users: UsersClient;
   readonly tenants: TenantsClient;
   readonly shops: ShopsClient;
@@ -31,6 +33,7 @@ export class SalesPlannerClient {
   constructor(config: ClientConfig) {
     this.baseUrl = config.baseUrl.replace(/\/$/, '');
     this.me = new MeClient(config);
+    this.metadata = new MetadataClient(config);
     this.users = new UsersClient(config);
     this.tenants = new TenantsClient(config);
     this.shops = new ShopsClient(config);
