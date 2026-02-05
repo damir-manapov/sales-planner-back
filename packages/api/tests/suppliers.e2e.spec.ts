@@ -48,19 +48,19 @@ describe('Suppliers (e2e)', () => {
   describe('Authentication', () => {
     it('should return 401 without API key', async () => {
       const noAuthClient = new SalesPlannerClient({ baseUrl, apiKey: '' });
-      await expectUnauthorized(() => noAuthClient.getSuppliers(ctx.shopContext));
+      await expectUnauthorized(() => noAuthClient.suppliers.getSuppliers(ctx.shopContext));
     });
 
     it('should return 401 with invalid API key', async () => {
       const badClient = new SalesPlannerClient({ baseUrl, apiKey: 'invalid-key' });
-      await expectUnauthorized(() => badClient.getSuppliers(ctx.shopContext));
+      await expectUnauthorized(() => badClient.suppliers.getSuppliers(ctx.shopContext));
     });
   });
 
   describe('CRUD operations', () => {
     it('should create supplier', async () => {
       const newSupplier = { code: generateTestCode('supplier'), title: 'Test Supplier' };
-      const supplier = await ctx.client.createSupplier(newSupplier, ctx.shopContext);
+      const supplier = await ctx.client.suppliers.createSupplier(newSupplier, ctx.shopContext);
 
       expect(supplier).toHaveProperty('id');
       expect(supplier.code).toBe(normalizeCode(newSupplier.code));
@@ -70,47 +70,47 @@ describe('Suppliers (e2e)', () => {
     });
 
     it('should list suppliers', async () => {
-      await ctx.client.createSupplier(
+      await ctx.client.suppliers.createSupplier(
         { code: generateTestCode('supplier-list'), title: 'List Supplier' },
         ctx.shopContext,
       );
 
-      const suppliers = await ctx.client.getSuppliers(ctx.shopContext);
+      const suppliers = await ctx.client.suppliers.getSuppliers(ctx.shopContext);
 
       expect(Array.isArray(suppliers)).toBe(true);
       expect(suppliers.length).toBeGreaterThan(0);
     });
 
     it('should get supplier by id', async () => {
-      const created = await ctx.client.createSupplier(
+      const created = await ctx.client.suppliers.createSupplier(
         { code: generateTestCode('supplier-get'), title: 'Get Supplier' },
         ctx.shopContext,
       );
 
-      const supplier = await ctx.client.getSupplier(created.id, ctx.shopContext);
+      const supplier = await ctx.client.suppliers.getSupplier(created.id, ctx.shopContext);
 
       expect(supplier.id).toBe(created.id);
     });
 
     it('should get supplier by code', async () => {
-      const created = await ctx.client.createSupplier(
+      const created = await ctx.client.suppliers.createSupplier(
         { code: generateTestCode('supplier-get-code'), title: 'Get Supplier Code' },
         ctx.shopContext,
       );
 
-      const supplier = await ctx.client.getSupplierByCode(created.code, ctx.shopContext);
+      const supplier = await ctx.client.suppliers.getSupplierByCode(created.code, ctx.shopContext);
 
       expect(supplier.id).toBe(created.id);
       expect(supplier.code).toBe(created.code);
     });
 
     it('should update supplier', async () => {
-      const created = await ctx.client.createSupplier(
+      const created = await ctx.client.suppliers.createSupplier(
         { code: generateTestCode('supplier-update'), title: 'To Update' },
         ctx.shopContext,
       );
 
-      const supplier = await ctx.client.updateSupplier(
+      const supplier = await ctx.client.suppliers.updateSupplier(
         created.id,
         { title: 'Updated Supplier Title' },
         ctx.shopContext,
@@ -121,13 +121,13 @@ describe('Suppliers (e2e)', () => {
 
     it('should return 409 on duplicate code', async () => {
       const duplicateCode = generateTestCode('supplier');
-      await ctx.client.createSupplier(
+      await ctx.client.suppliers.createSupplier(
         { code: duplicateCode, title: 'First Supplier' },
         ctx.shopContext,
       );
 
       await expectConflict(() =>
-        ctx.client.createSupplier(
+        ctx.client.suppliers.createSupplier(
           { code: duplicateCode, title: 'Duplicate Supplier' },
           ctx.shopContext,
         ),
@@ -135,19 +135,19 @@ describe('Suppliers (e2e)', () => {
     });
 
     it('should return 404 for non-existent supplier', async () => {
-      await expectNotFound(() => ctx.client.getSupplier(999999, ctx.shopContext));
+      await expectNotFound(() => ctx.client.suppliers.getSupplier(999999, ctx.shopContext));
     });
   });
 
   describe('Delete operations', () => {
     it('should delete supplier', async () => {
-      const toDelete = await ctx.client.createSupplier(
+      const toDelete = await ctx.client.suppliers.createSupplier(
         { code: generateTestCode('supplier-delete'), title: 'Delete Supplier' },
         ctx.shopContext,
       );
 
-      await ctx.client.deleteSupplier(toDelete.id, ctx.shopContext);
-      await expectNotFound(() => ctx.client.getSupplier(toDelete.id, ctx.shopContext));
+      await ctx.client.suppliers.deleteSupplier(toDelete.id, ctx.shopContext);
+      await expectNotFound(() => ctx.client.suppliers.getSupplier(toDelete.id, ctx.shopContext));
     });
   });
 
@@ -168,7 +168,7 @@ describe('Suppliers (e2e)', () => {
 
     it('should return 403 when accessing other tenant', async () => {
       await expectForbidden(() =>
-        ctx.client.getSuppliers({
+        ctx.client.suppliers.getSuppliers({
           shop_id: otherCtx.shop.id,
           tenant_id: otherCtx.tenant.id,
         }),
@@ -177,7 +177,7 @@ describe('Suppliers (e2e)', () => {
 
     it('should return 403 when creating for other tenant', async () => {
       await expectForbidden(() =>
-        ctx.client.createSupplier(
+        ctx.client.suppliers.createSupplier(
           { code: 'forbidden-supplier', title: 'Should Fail' },
           { shop_id: ctx.shop.id, tenant_id: otherCtx.tenant.id },
         ),
@@ -185,14 +185,14 @@ describe('Suppliers (e2e)', () => {
     });
 
     it('should return 404 when getting resource from other tenant', async () => {
-      const otherSupplier = await otherCtx.client.createSupplier(
+      const otherSupplier = await otherCtx.client.suppliers.createSupplier(
         { code: generateTestCode('other'), title: 'Other Supplier' },
         otherCtx.shopContext,
       );
 
-      await expectNotFound(() => ctx.client.getSupplier(otherSupplier.id, ctx.shopContext));
+      await expectNotFound(() => ctx.client.suppliers.getSupplier(otherSupplier.id, ctx.shopContext));
       await expectForbidden(() =>
-        ctx.client.getSupplierByCode(otherSupplier.code, {
+        ctx.client.suppliers.getSupplierByCode(otherSupplier.code, {
           shop_id: ctx.shop.id,
           tenant_id: otherCtx.tenant.id,
         }),
@@ -202,11 +202,11 @@ describe('Suppliers (e2e)', () => {
     it('should allow same code in different tenants', async () => {
       const sharedCode = generateTestCode('shared');
 
-      const supplier1 = await ctx.client.createSupplier(
+      const supplier1 = await ctx.client.suppliers.createSupplier(
         { code: sharedCode, title: 'Supplier in Tenant 1' },
         ctx.shopContext,
       );
-      const supplier2 = await otherCtx.client.createSupplier(
+      const supplier2 = await otherCtx.client.suppliers.createSupplier(
         { code: sharedCode, title: 'Supplier in Tenant 2' },
         otherCtx.shopContext,
       );
@@ -222,7 +222,7 @@ describe('Suppliers (e2e)', () => {
       const code1 = generateTestCode('import-json-1');
       const code2 = generateTestCode('import-json-2');
 
-      const result = await ctx.client.importSuppliersJson(
+      const result = await ctx.client.suppliers.importJson(
         [
           { code: code1, title: 'Import JSON Supplier 1' },
           { code: code2, title: 'Import JSON Supplier 2' },
@@ -234,7 +234,7 @@ describe('Suppliers (e2e)', () => {
       expect(result.updated).toBe(0);
       expect(result.errors).toHaveLength(0);
 
-      const suppliers = await ctx.client.getSuppliers(ctx.shopContext);
+      const suppliers = await ctx.client.suppliers.getSuppliers(ctx.shopContext);
       const codes = suppliers.map((s) => s.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
@@ -243,8 +243,8 @@ describe('Suppliers (e2e)', () => {
     it('should upsert existing suppliers on import', async () => {
       const code = generateTestCode('upsert-json');
 
-      await ctx.client.importSuppliersJson([{ code, title: 'Original Title' }], ctx.shopContext);
-      const result = await ctx.client.importSuppliersJson(
+      await ctx.client.suppliers.importJson([{ code, title: 'Original Title' }], ctx.shopContext);
+      const result = await ctx.client.suppliers.importJson(
         [{ code, title: 'Updated Title' }],
         ctx.shopContext,
       );
@@ -258,12 +258,12 @@ describe('Suppliers (e2e)', () => {
       const code2 = generateTestCode('import-csv-2');
       const csvContent = `code,title\n${code1},Import CSV Supplier 1\n${code2},Import CSV Supplier 2`;
 
-      const result = await ctx.client.importSuppliersCsv(csvContent, ctx.shopContext);
+      const result = await ctx.client.suppliers.importCsv(csvContent, ctx.shopContext);
 
       expect(result.created).toBe(2);
       expect(result.updated).toBe(0);
 
-      const suppliers = await ctx.client.getSuppliers(ctx.shopContext);
+      const suppliers = await ctx.client.suppliers.getSuppliers(ctx.shopContext);
       const codes = suppliers.map((s) => s.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
@@ -273,7 +273,7 @@ describe('Suppliers (e2e)', () => {
       const code1 = generateTestCode('export-supplier-1');
       const code2 = generateTestCode('export-supplier-2');
 
-      await ctx.client.importSuppliersJson(
+      await ctx.client.suppliers.importJson(
         [
           { code: code1, title: 'Export Test Supplier 1' },
           { code: code2, title: 'Export Test Supplier 2' },
@@ -281,7 +281,7 @@ describe('Suppliers (e2e)', () => {
         ctx.shopContext,
       );
 
-      const exported = await ctx.client.exportSuppliersJson(ctx.shopContext);
+      const exported = await ctx.client.suppliers.exportJson(ctx.shopContext);
 
       expect(Array.isArray(exported)).toBe(true);
       const exportedCodes = exported.map((s) => s.code);
@@ -293,7 +293,7 @@ describe('Suppliers (e2e)', () => {
       const code1 = generateTestCode('csv-export-supplier-1');
       const code2 = generateTestCode('csv-export-supplier-2');
 
-      await ctx.client.importSuppliersJson(
+      await ctx.client.suppliers.importJson(
         [
           { code: code1, title: 'CSV Export Test 1' },
           { code: code2, title: 'CSV Export Test 2' },
@@ -301,7 +301,7 @@ describe('Suppliers (e2e)', () => {
         ctx.shopContext,
       );
 
-      const csv = await ctx.client.exportSuppliersCsv(ctx.shopContext);
+      const csv = await ctx.client.suppliers.exportCsv(ctx.shopContext);
 
       expect(typeof csv).toBe('string');
       expect(csv).toContain('code,title');
@@ -312,7 +312,7 @@ describe('Suppliers (e2e)', () => {
 
   describe('Example downloads', () => {
     it('should return JSON example', async () => {
-      const examples = await ctx.client.getSupplierExamplesJson();
+      const examples = await ctx.client.suppliers.getExampleJson();
 
       expect(Array.isArray(examples)).toBe(true);
       expect(examples.length).toBeGreaterThan(0);
@@ -321,7 +321,7 @@ describe('Suppliers (e2e)', () => {
     });
 
     it('should return CSV example', async () => {
-      const csv = await ctx.client.getSupplierExamplesCsv();
+      const csv = await ctx.client.suppliers.getExampleCsv();
 
       expect(typeof csv).toBe('string');
       expect(csv).toContain('code,title');
@@ -349,7 +349,7 @@ describe('Suppliers (e2e)', () => {
         const roles = await ctx.getSystemClient().getRoles();
         const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
         if (!editorRole) throw new Error('Editor role not found');
-        await ctx.getSystemClient().createUserRole({
+        await ctx.getSystemClient().userRoles.createUserRole({
           user_id: editorUserId,
           role_id: editorRole.id,
           tenant_id: ctx.tenant.id,
@@ -362,12 +362,12 @@ describe('Suppliers (e2e)', () => {
       });
 
       it('editor should list suppliers', async () => {
-        const suppliers = await editorClient.getSuppliers(ctx.shopContext);
+        const suppliers = await editorClient.suppliers.getSuppliers(ctx.shopContext);
         expect(Array.isArray(suppliers)).toBe(true);
       });
 
       it('editor should create supplier', async () => {
-        const supplier = await editorClient.createSupplier(
+        const supplier = await editorClient.suppliers.createSupplier(
           { code: generateTestCode('editor-supplier'), title: 'Editor Supplier' },
           ctx.shopContext,
         );
@@ -375,20 +375,20 @@ describe('Suppliers (e2e)', () => {
       });
 
       it('editor should get supplier by code', async () => {
-        const suppliers = await editorClient.getSuppliers(ctx.shopContext);
+        const suppliers = await editorClient.suppliers.getSuppliers(ctx.shopContext);
         if (suppliers.length === 0) throw new Error('Expected at least one supplier for editor');
         const firstSupplier = suppliers[0];
         if (!firstSupplier) throw new Error('Expected supplier');
-        const supplier = await editorClient.getSupplierByCode(firstSupplier.code, ctx.shopContext);
+        const supplier = await editorClient.suppliers.getSupplierByCode(firstSupplier.code, ctx.shopContext);
         expect(supplier.id).toBe(firstSupplier.id);
       });
 
       it('editor should update supplier', async () => {
-        const suppliers = await editorClient.getSuppliers(ctx.shopContext);
+        const suppliers = await editorClient.suppliers.getSuppliers(ctx.shopContext);
         if (suppliers.length > 0) {
           const firstSupplier = suppliers[0];
           if (!firstSupplier) throw new Error('Expected supplier');
-          const updated = await editorClient.updateSupplier(
+          const updated = await editorClient.suppliers.updateSupplier(
             firstSupplier.id,
             { title: 'Editor Updated' },
             ctx.shopContext,
@@ -398,16 +398,16 @@ describe('Suppliers (e2e)', () => {
       });
 
       it('editor should delete supplier', async () => {
-        const supplier = await editorClient.createSupplier(
+        const supplier = await editorClient.suppliers.createSupplier(
           { code: generateTestCode('editor-delete'), title: 'To Delete' },
           ctx.shopContext,
         );
-        await editorClient.deleteSupplier(supplier.id, ctx.shopContext);
-        await expectNotFound(() => editorClient.getSupplier(supplier.id, ctx.shopContext));
+        await editorClient.suppliers.deleteSupplier(supplier.id, ctx.shopContext);
+        await expectNotFound(() => editorClient.suppliers.getSupplier(supplier.id, ctx.shopContext));
       });
 
       it('editor should import suppliers', async () => {
-        const result = await editorClient.importSuppliersJson(
+        const result = await editorClient.suppliers.importJson(
           [{ code: generateTestCode('editor-import'), title: 'Editor Import' }],
           ctx.shopContext,
         );
@@ -415,7 +415,7 @@ describe('Suppliers (e2e)', () => {
       });
 
       it('editor should export suppliers', async () => {
-        const exported = await editorClient.exportSuppliersJson(ctx.shopContext);
+        const exported = await editorClient.suppliers.exportJson(ctx.shopContext);
         expect(Array.isArray(exported)).toBe(true);
       });
     });
@@ -440,7 +440,7 @@ describe('Suppliers (e2e)', () => {
         const roles = await ctx.getSystemClient().getRoles();
         const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
         if (!viewerRole) throw new Error('Viewer role not found');
-        await ctx.getSystemClient().createUserRole({
+        await ctx.getSystemClient().userRoles.createUserRole({
           user_id: viewerUserId,
           role_id: viewerRole.id,
           tenant_id: ctx.tenant.id,
@@ -453,32 +453,32 @@ describe('Suppliers (e2e)', () => {
       });
 
       it('viewer should list suppliers', async () => {
-        const suppliers = await viewerClient.getSuppliers(ctx.shopContext);
+        const suppliers = await viewerClient.suppliers.getSuppliers(ctx.shopContext);
         expect(Array.isArray(suppliers)).toBe(true);
       });
 
       it('viewer should get supplier by id', async () => {
-        const suppliers = await viewerClient.getSuppliers(ctx.shopContext);
+        const suppliers = await viewerClient.suppliers.getSuppliers(ctx.shopContext);
         if (suppliers.length > 0) {
           const firstSupplier = suppliers[0];
           if (!firstSupplier) throw new Error('Expected supplier');
-          const supplier = await viewerClient.getSupplier(firstSupplier.id, ctx.shopContext);
+          const supplier = await viewerClient.suppliers.getSupplier(firstSupplier.id, ctx.shopContext);
           expect(supplier.id).toBe(firstSupplier.id);
         }
       });
 
       it('viewer should get supplier by code', async () => {
-        const suppliers = await viewerClient.getSuppliers(ctx.shopContext);
+        const suppliers = await viewerClient.suppliers.getSuppliers(ctx.shopContext);
         if (suppliers.length === 0) throw new Error('Expected at least one supplier for viewer');
         const firstSupplier = suppliers[0];
         if (!firstSupplier) throw new Error('Expected supplier');
-        const supplier = await viewerClient.getSupplierByCode(firstSupplier.code, ctx.shopContext);
+        const supplier = await viewerClient.suppliers.getSupplierByCode(firstSupplier.code, ctx.shopContext);
         expect(supplier.id).toBe(firstSupplier.id);
       });
 
       it('viewer should NOT create supplier', async () => {
         await expectForbidden(() =>
-          viewerClient.createSupplier(
+          viewerClient.suppliers.createSupplier(
             { code: 'viewer-supplier', title: 'Should Fail' },
             ctx.shopContext,
           ),
@@ -486,12 +486,12 @@ describe('Suppliers (e2e)', () => {
       });
 
       it('viewer should NOT update supplier', async () => {
-        const suppliers = await viewerClient.getSuppliers(ctx.shopContext);
+        const suppliers = await viewerClient.suppliers.getSuppliers(ctx.shopContext);
         if (suppliers.length > 0) {
           const firstSupplier = suppliers[0];
           if (!firstSupplier) throw new Error('Expected supplier');
           await expectForbidden(() =>
-            viewerClient.updateSupplier(
+            viewerClient.suppliers.updateSupplier(
               firstSupplier.id,
               { title: 'Should Fail' },
               ctx.shopContext,
@@ -501,24 +501,24 @@ describe('Suppliers (e2e)', () => {
       });
 
       it('viewer should NOT delete supplier', async () => {
-        const suppliers = await viewerClient.getSuppliers(ctx.shopContext);
+        const suppliers = await viewerClient.suppliers.getSuppliers(ctx.shopContext);
         if (suppliers.length > 0) {
           const firstSupplier = suppliers[0];
           if (!firstSupplier) throw new Error('Expected supplier');
           await expectForbidden(() =>
-            viewerClient.deleteSupplier(firstSupplier.id, ctx.shopContext),
+            viewerClient.suppliers.deleteSupplier(firstSupplier.id, ctx.shopContext),
           );
         }
       });
 
       it('viewer should export suppliers', async () => {
-        const exported = await viewerClient.exportSuppliersJson(ctx.shopContext);
+        const exported = await viewerClient.suppliers.exportJson(ctx.shopContext);
         expect(Array.isArray(exported)).toBe(true);
       });
 
       it('viewer should NOT import suppliers', async () => {
         await expectForbidden(() =>
-          viewerClient.importSuppliersJson(
+          viewerClient.suppliers.importJson(
             [{ code: 'test', title: 'Should Fail' }],
             ctx.shopContext,
           ),

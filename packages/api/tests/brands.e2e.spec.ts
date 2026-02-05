@@ -48,19 +48,19 @@ describe('Brands (e2e)', () => {
   describe('Authentication', () => {
     it('should return 401 without API key', async () => {
       const noAuthClient = new SalesPlannerClient({ baseUrl, apiKey: '' });
-      await expectUnauthorized(() => noAuthClient.getBrands(ctx.shopContext));
+      await expectUnauthorized(() => noAuthClient.brands.getBrands(ctx.shopContext));
     });
 
     it('should return 401 with invalid API key', async () => {
       const badClient = new SalesPlannerClient({ baseUrl, apiKey: 'invalid-key' });
-      await expectUnauthorized(() => badClient.getBrands(ctx.shopContext));
+      await expectUnauthorized(() => badClient.brands.getBrands(ctx.shopContext));
     });
   });
 
   describe('CRUD operations', () => {
     it('should create brand', async () => {
       const newBrand = { code: generateTestCode('brand'), title: 'Test Brand' };
-      const brand = await ctx.client.createBrand(newBrand, ctx.shopContext);
+      const brand = await ctx.client.brands.createBrand(newBrand, ctx.shopContext);
 
       expect(brand).toHaveProperty('id');
       expect(brand.code).toBe(normalizeCode(newBrand.code));
@@ -70,47 +70,47 @@ describe('Brands (e2e)', () => {
     });
 
     it('should list brands', async () => {
-      await ctx.client.createBrand(
+      await ctx.client.brands.createBrand(
         { code: generateTestCode('brand-list'), title: 'List Brand' },
         ctx.shopContext,
       );
 
-      const brands = await ctx.client.getBrands(ctx.shopContext);
+      const brands = await ctx.client.brands.getBrands(ctx.shopContext);
 
       expect(Array.isArray(brands)).toBe(true);
       expect(brands.length).toBeGreaterThan(0);
     });
 
     it('should get brand by id', async () => {
-      const created = await ctx.client.createBrand(
+      const created = await ctx.client.brands.createBrand(
         { code: generateTestCode('brand-get'), title: 'Get Brand' },
         ctx.shopContext,
       );
 
-      const brand = await ctx.client.getBrand(created.id, ctx.shopContext);
+      const brand = await ctx.client.brands.getBrand(created.id, ctx.shopContext);
 
       expect(brand.id).toBe(created.id);
     });
 
     it('should get brand by code', async () => {
-      const created = await ctx.client.createBrand(
+      const created = await ctx.client.brands.createBrand(
         { code: generateTestCode('brand-get-code'), title: 'Get Brand Code' },
         ctx.shopContext,
       );
 
-      const brand = await ctx.client.getBrandByCode(created.code, ctx.shopContext);
+      const brand = await ctx.client.brands.getBrandByCode(created.code, ctx.shopContext);
 
       expect(brand.id).toBe(created.id);
       expect(brand.code).toBe(created.code);
     });
 
     it('should update brand', async () => {
-      const created = await ctx.client.createBrand(
+      const created = await ctx.client.brands.createBrand(
         { code: generateTestCode('brand-update'), title: 'To Update' },
         ctx.shopContext,
       );
 
-      const brand = await ctx.client.updateBrand(
+      const brand = await ctx.client.brands.updateBrand(
         created.id,
         { title: 'Updated Brand Title' },
         ctx.shopContext,
@@ -121,23 +121,23 @@ describe('Brands (e2e)', () => {
 
     it('should return 409 on duplicate code', async () => {
       const duplicateCode = generateTestCode('brand');
-      await ctx.client.createBrand({ code: duplicateCode, title: 'First Brand' }, ctx.shopContext);
+      await ctx.client.brands.createBrand({ code: duplicateCode, title: 'First Brand' }, ctx.shopContext);
 
       await expectConflict(() =>
-        ctx.client.createBrand({ code: duplicateCode, title: 'Duplicate Brand' }, ctx.shopContext),
+        ctx.client.brands.createBrand({ code: duplicateCode, title: 'Duplicate Brand' }, ctx.shopContext),
       );
     });
   });
 
   describe('Delete operations', () => {
     it('should delete brand', async () => {
-      const toDelete = await ctx.client.createBrand(
+      const toDelete = await ctx.client.brands.createBrand(
         { code: generateTestCode('brand-delete'), title: 'Delete Brand' },
         ctx.shopContext,
       );
 
-      await ctx.client.deleteBrand(toDelete.id, ctx.shopContext);
-      await expectNotFound(() => ctx.client.getBrand(toDelete.id, ctx.shopContext));
+      await ctx.client.brands.deleteBrand(toDelete.id, ctx.shopContext);
+      await expectNotFound(() => ctx.client.brands.getBrand(toDelete.id, ctx.shopContext));
     });
   });
 
@@ -158,7 +158,7 @@ describe('Brands (e2e)', () => {
 
     it('should return 403 when accessing other tenant', async () => {
       await expectForbidden(() =>
-        ctx.client.getBrands({
+        ctx.client.brands.getBrands({
           shop_id: otherCtx.shop.id,
           tenant_id: otherCtx.tenant.id,
         }),
@@ -167,7 +167,7 @@ describe('Brands (e2e)', () => {
 
     it('should return 403 when creating for other tenant', async () => {
       await expectForbidden(() =>
-        ctx.client.createBrand(
+        ctx.client.brands.createBrand(
           { code: 'forbidden-brand', title: 'Should Fail' },
           { shop_id: ctx.shop.id, tenant_id: otherCtx.tenant.id },
         ),
@@ -176,15 +176,15 @@ describe('Brands (e2e)', () => {
 
     it('should return 404 when getting resource from other tenant', async () => {
       // Create a brand in other tenant
-      const otherBrand = await otherCtx.client.createBrand(
+      const otherBrand = await otherCtx.client.brands.createBrand(
         { code: generateTestCode('other'), title: 'Other Brand' },
         otherCtx.shopContext,
       );
 
       // Try to access it from main context
-      await expectNotFound(() => ctx.client.getBrand(otherBrand.id, ctx.shopContext));
+      await expectNotFound(() => ctx.client.brands.getBrand(otherBrand.id, ctx.shopContext));
       await expectForbidden(() =>
-        ctx.client.getBrandByCode(otherBrand.code, {
+        ctx.client.brands.getBrandByCode(otherBrand.code, {
           shop_id: ctx.shop.id,
           tenant_id: otherCtx.tenant.id,
         }),
@@ -194,11 +194,11 @@ describe('Brands (e2e)', () => {
     it('should allow same code in different tenants', async () => {
       const sharedCode = generateTestCode('shared');
 
-      const brand1 = await ctx.client.createBrand(
+      const brand1 = await ctx.client.brands.createBrand(
         { code: sharedCode, title: 'Brand in Tenant 1' },
         ctx.shopContext,
       );
-      const brand2 = await otherCtx.client.createBrand(
+      const brand2 = await otherCtx.client.brands.createBrand(
         { code: sharedCode, title: 'Brand in Tenant 2' },
         otherCtx.shopContext,
       );
@@ -218,13 +218,13 @@ describe('Brands (e2e)', () => {
         { code: code2, title: 'Import JSON Brand 2' },
       ];
 
-      const result = await ctx.client.importBrandsJson(items, ctx.shopContext);
+      const result = await ctx.client.brands.importJson(items, ctx.shopContext);
 
       expect(result.created).toBe(2);
       expect(result.updated).toBe(0);
       expect(result.errors).toEqual([]);
 
-      const brands = await ctx.client.getBrands(ctx.shopContext);
+      const brands = await ctx.client.brands.getBrands(ctx.shopContext);
       const codes = brands.map((b) => b.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
@@ -233,8 +233,8 @@ describe('Brands (e2e)', () => {
     it('should upsert existing brands on import', async () => {
       const code = generateTestCode('upsert-json');
 
-      await ctx.client.importBrandsJson([{ code, title: 'Original Title' }], ctx.shopContext);
-      const result = await ctx.client.importBrandsJson(
+      await ctx.client.brands.importJson([{ code, title: 'Original Title' }], ctx.shopContext);
+      const result = await ctx.client.brands.importJson(
         [{ code, title: 'Updated Title' }],
         ctx.shopContext,
       );
@@ -248,12 +248,12 @@ describe('Brands (e2e)', () => {
       const code2 = generateTestCode('import-csv-2');
       const csvContent = `code,title\n${code1},Import CSV Brand 1\n${code2},Import CSV Brand 2`;
 
-      const result = await ctx.client.importBrandsCsv(csvContent, ctx.shopContext);
+      const result = await ctx.client.brands.importCsv(csvContent, ctx.shopContext);
 
       expect(result.created).toBe(2);
       expect(result.updated).toBe(0);
 
-      const brands = await ctx.client.getBrands(ctx.shopContext);
+      const brands = await ctx.client.brands.getBrands(ctx.shopContext);
       const codes = brands.map((b) => b.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
@@ -264,12 +264,12 @@ describe('Brands (e2e)', () => {
       const code2 = generateTestCode('import-semi-2');
       const csvContent = `code;title\n${code1};Import Semicolon Brand 1\n${code2};Import Semicolon Brand 2`;
 
-      const result = await ctx.client.importBrandsCsv(csvContent, ctx.shopContext);
+      const result = await ctx.client.brands.importCsv(csvContent, ctx.shopContext);
 
       expect(result.created).toBe(2);
       expect(result.updated).toBe(0);
 
-      const brands = await ctx.client.getBrands(ctx.shopContext);
+      const brands = await ctx.client.brands.getBrands(ctx.shopContext);
       const codes = brands.map((b) => b.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
@@ -278,12 +278,12 @@ describe('Brands (e2e)', () => {
     it('should handle Cyrillic characters in CSV', async () => {
       const csvContent = `code;title\nmavyko;Мавико\nmarshall;MARSHALL\nmazda;Mazda`;
 
-      const result = await ctx.client.importBrandsCsv(csvContent, ctx.shopContext);
+      const result = await ctx.client.brands.importCsv(csvContent, ctx.shopContext);
 
       expect(result.created).toBe(3);
       expect(result.updated).toBe(0);
 
-      const brands = await ctx.client.getBrands(ctx.shopContext);
+      const brands = await ctx.client.brands.getBrands(ctx.shopContext);
       const mavyko = brands.find((b) => b.code === 'mavyko');
       expect(mavyko).toBeDefined();
       expect(mavyko?.title).toBe('Мавико');
@@ -293,7 +293,7 @@ describe('Brands (e2e)', () => {
       const code1 = generateTestCode('export-brand-1');
       const code2 = generateTestCode('export-brand-2');
 
-      await ctx.client.importBrandsJson(
+      await ctx.client.brands.importJson(
         [
           { code: code1, title: 'Export Test Brand 1' },
           { code: code2, title: 'Export Test Brand 2' },
@@ -301,7 +301,7 @@ describe('Brands (e2e)', () => {
         ctx.shopContext,
       );
 
-      const exported = await ctx.client.exportBrandsJson(ctx.shopContext);
+      const exported = await ctx.client.brands.exportJson(ctx.shopContext);
 
       expect(Array.isArray(exported)).toBe(true);
       const exportedCodes = exported.map((b) => b.code);
@@ -316,7 +316,7 @@ describe('Brands (e2e)', () => {
       const code1 = generateTestCode('csv-export-brand-1');
       const code2 = generateTestCode('csv-export-brand-2');
 
-      await ctx.client.importBrandsJson(
+      await ctx.client.brands.importJson(
         [
           { code: code1, title: 'CSV Export Test 1' },
           { code: code2, title: 'CSV Export Test 2' },
@@ -324,7 +324,7 @@ describe('Brands (e2e)', () => {
         ctx.shopContext,
       );
 
-      const csv = await ctx.client.exportBrandsCsv(ctx.shopContext);
+      const csv = await ctx.client.brands.exportCsv(ctx.shopContext);
 
       expect(typeof csv).toBe('string');
       const lines = csv.split('\n');
@@ -336,7 +336,7 @@ describe('Brands (e2e)', () => {
 
   describe('Example downloads', () => {
     it('should return JSON example', async () => {
-      const examples = await ctx.client.getBrandsExampleJson();
+      const examples = await ctx.client.brands.getExampleJson();
 
       expect(Array.isArray(examples)).toBe(true);
       expect(examples.length).toBeGreaterThan(0);
@@ -345,7 +345,7 @@ describe('Brands (e2e)', () => {
     });
 
     it('should return CSV example', async () => {
-      const csv = await ctx.client.getBrandsExampleCsv();
+      const csv = await ctx.client.brands.getExampleCsv();
 
       expect(typeof csv).toBe('string');
       expect(csv).toContain('code,title');
@@ -373,14 +373,12 @@ describe('Brands (e2e)', () => {
         const roles = await ctx.getSystemClient().getRoles();
         const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
         if (!editorRole) throw new Error('Editor role not found');
-        {
-          await ctx.getSystemClient().createUserRole({
+          await ctx.getSystemClient().userRoles.createUserRole({
             user_id: editorUserId,
             role_id: editorRole.id,
             tenant_id: ctx.tenant.id,
             shop_id: ctx.shop.id,
           });
-        }
       });
 
       afterAll(async () => {
@@ -388,12 +386,12 @@ describe('Brands (e2e)', () => {
       });
 
       it('editor should list brands', async () => {
-        const brands = await editorClient.getBrands(ctx.shopContext);
+        const brands = await editorClient.brands.getBrands(ctx.shopContext);
         expect(Array.isArray(brands)).toBe(true);
       });
 
       it('editor should create brand', async () => {
-        const brand = await editorClient.createBrand(
+        const brand = await editorClient.brands.createBrand(
           { code: generateTestCode('editor-brand'), title: 'Editor Brand' },
           ctx.shopContext,
         );
@@ -401,20 +399,20 @@ describe('Brands (e2e)', () => {
       });
 
       it('editor should get brand by code', async () => {
-        const brands = await editorClient.getBrands(ctx.shopContext);
+        const brands = await editorClient.brands.getBrands(ctx.shopContext);
         if (brands.length === 0) throw new Error('Expected at least one brand for editor');
         const firstBrand = brands[0];
         if (!firstBrand) throw new Error('Expected brand');
-        const brand = await editorClient.getBrandByCode(firstBrand.code, ctx.shopContext);
+        const brand = await editorClient.brands.getBrandByCode(firstBrand.code, ctx.shopContext);
         expect(brand.id).toBe(firstBrand.id);
       });
 
       it('editor should update brand', async () => {
-        const brands = await editorClient.getBrands(ctx.shopContext);
+        const brands = await editorClient.brands.getBrands(ctx.shopContext);
         if (brands.length > 0) {
           const firstBrand = brands[0];
           if (!firstBrand) throw new Error('Expected brand');
-          const updated = await editorClient.updateBrand(
+          const updated = await editorClient.brands.updateBrand(
             firstBrand.id,
             { title: 'Editor Updated' },
             ctx.shopContext,
@@ -424,16 +422,16 @@ describe('Brands (e2e)', () => {
       });
 
       it('editor should delete brand', async () => {
-        const brand = await editorClient.createBrand(
+        const brand = await editorClient.brands.createBrand(
           { code: generateTestCode('editor-delete'), title: 'To Delete' },
           ctx.shopContext,
         );
-        await editorClient.deleteBrand(brand.id, ctx.shopContext);
-        await expectNotFound(() => editorClient.getBrand(brand.id, ctx.shopContext));
+        await editorClient.brands.deleteBrand(brand.id, ctx.shopContext);
+        await expectNotFound(() => editorClient.brands.getBrand(brand.id, ctx.shopContext));
       });
 
       it('editor should import brands', async () => {
-        const result = await editorClient.importBrandsJson(
+        const result = await editorClient.brands.importJson(
           [{ code: generateTestCode('editor-import'), title: 'Editor Import' }],
           ctx.shopContext,
         );
@@ -441,7 +439,7 @@ describe('Brands (e2e)', () => {
       });
 
       it('editor should export brands', async () => {
-        const exported = await editorClient.exportBrandsJson(ctx.shopContext);
+        const exported = await editorClient.brands.exportJson(ctx.shopContext);
         expect(Array.isArray(exported)).toBe(true);
       });
     });
@@ -466,14 +464,12 @@ describe('Brands (e2e)', () => {
         const roles = await ctx.getSystemClient().getRoles();
         const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
         if (!viewerRole) throw new Error('Viewer role not found');
-        {
-          await ctx.getSystemClient().createUserRole({
+          await ctx.getSystemClient().userRoles.createUserRole({
             user_id: viewerUserId,
             role_id: viewerRole.id,
             tenant_id: ctx.tenant.id,
             shop_id: ctx.shop.id,
           });
-        }
       });
 
       afterAll(async () => {
@@ -481,63 +477,63 @@ describe('Brands (e2e)', () => {
       });
 
       it('viewer should list brands', async () => {
-        const brands = await viewerClient.getBrands(ctx.shopContext);
+        const brands = await viewerClient.brands.getBrands(ctx.shopContext);
         expect(Array.isArray(brands)).toBe(true);
       });
 
       it('viewer should get brand by id', async () => {
-        const brands = await viewerClient.getBrands(ctx.shopContext);
+        const brands = await viewerClient.brands.getBrands(ctx.shopContext);
         if (brands.length > 0) {
           const firstBrand = brands[0];
           if (!firstBrand) throw new Error('Expected brand');
-          const brand = await viewerClient.getBrand(firstBrand.id, ctx.shopContext);
+          const brand = await viewerClient.brands.getBrand(firstBrand.id, ctx.shopContext);
           expect(brand.id).toBe(firstBrand.id);
         }
       });
 
       it('viewer should get brand by code', async () => {
-        const brands = await viewerClient.getBrands(ctx.shopContext);
+        const brands = await viewerClient.brands.getBrands(ctx.shopContext);
         if (brands.length === 0) throw new Error('Expected at least one brand for viewer');
         const firstBrand = brands[0];
         if (!firstBrand) throw new Error('Expected brand');
-        const brand = await viewerClient.getBrandByCode(firstBrand.code, ctx.shopContext);
+        const brand = await viewerClient.brands.getBrandByCode(firstBrand.code, ctx.shopContext);
         expect(brand.id).toBe(firstBrand.id);
       });
 
       it('viewer should NOT create brand', async () => {
         await expectForbidden(() =>
-          viewerClient.createBrand({ code: 'viewer-brand', title: 'Should Fail' }, ctx.shopContext),
+          viewerClient.brands.createBrand({ code: 'viewer-brand', title: 'Should Fail' }, ctx.shopContext),
         );
       });
 
       it('viewer should NOT update brand', async () => {
-        const brands = await viewerClient.getBrands(ctx.shopContext);
+        const brands = await viewerClient.brands.getBrands(ctx.shopContext);
         if (brands.length > 0) {
           const firstBrand = brands[0];
           if (!firstBrand) throw new Error('Expected brand');
           await expectForbidden(() =>
-            viewerClient.updateBrand(firstBrand.id, { title: 'Should Fail' }, ctx.shopContext),
+            viewerClient.brands.updateBrand(firstBrand.id, { title: 'Should Fail' }, ctx.shopContext),
           );
         }
       });
 
       it('viewer should NOT delete brand', async () => {
-        const brands = await viewerClient.getBrands(ctx.shopContext);
+        const brands = await viewerClient.brands.getBrands(ctx.shopContext);
         if (brands.length > 0) {
           const firstBrand = brands[0];
           if (!firstBrand) throw new Error('Expected brand');
-          await expectForbidden(() => viewerClient.deleteBrand(firstBrand.id, ctx.shopContext));
+          await expectForbidden(() => viewerClient.brands.deleteBrand(firstBrand.id, ctx.shopContext));
         }
       });
 
       it('viewer should export brands', async () => {
-        const exported = await viewerClient.exportBrandsJson(ctx.shopContext);
+        const exported = await viewerClient.brands.exportJson(ctx.shopContext);
         expect(Array.isArray(exported)).toBe(true);
       });
 
       it('viewer should NOT import brands', async () => {
         await expectForbidden(() =>
-          viewerClient.importBrandsJson([{ code: 'test', title: 'Should Fail' }], ctx.shopContext),
+          viewerClient.brands.importJson([{ code: 'test', title: 'Should Fail' }], ctx.shopContext),
         );
       });
     });

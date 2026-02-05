@@ -43,7 +43,7 @@ describe('Me (e2e)', () => {
     const noAuthClient = new SalesPlannerClient({ baseUrl, apiKey: '' });
 
     try {
-      await noAuthClient.getMe();
+      await noAuthClient.me.getMe();
       expect.fail('Should have thrown');
     } catch (error) {
       expect(error).toBeInstanceOf(ApiError);
@@ -55,7 +55,7 @@ describe('Me (e2e)', () => {
     const invalidClient = new SalesPlannerClient({ baseUrl, apiKey: 'invalid-key' });
 
     try {
-      await invalidClient.getMe();
+      await invalidClient.me.getMe();
       expect.fail('Should have thrown');
     } catch (error) {
       expect(error).toBeInstanceOf(ApiError);
@@ -64,7 +64,7 @@ describe('Me (e2e)', () => {
   });
 
   it('GET /me - should return current user with roles and tenants', async () => {
-    const me = await ctx.client.getMe();
+    const me = await ctx.client.me.getMe();
 
     expect(me).toHaveProperty('id', ctx.user.id);
     expect(me).toHaveProperty('name', 'Test User');

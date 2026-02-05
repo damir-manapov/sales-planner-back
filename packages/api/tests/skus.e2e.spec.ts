@@ -48,19 +48,19 @@ describe('SKUs (e2e)', () => {
   describe('Authentication', () => {
     it('should return 401 without API key', async () => {
       const noAuthClient = new SalesPlannerClient({ baseUrl, apiKey: '' });
-      await expectUnauthorized(() => noAuthClient.getSkus(ctx.shopContext));
+      await expectUnauthorized(() => noAuthClient.skus.getSkus(ctx.shopContext));
     });
 
     it('should return 401 with invalid API key', async () => {
       const badClient = new SalesPlannerClient({ baseUrl, apiKey: 'invalid-key' });
-      await expectUnauthorized(() => badClient.getSkus(ctx.shopContext));
+      await expectUnauthorized(() => badClient.skus.getSkus(ctx.shopContext));
     });
   });
 
   describe('CRUD operations', () => {
     it('should create SKU', async () => {
       const newSku = { code: generateTestCode('SKU'), title: 'Test SKU' };
-      const sku = await ctx.client.createSku(newSku, ctx.shopContext);
+      const sku = await ctx.client.skus.createSku(newSku, ctx.shopContext);
 
       expect(sku).toHaveProperty('id');
       expect(sku.code).toBe(newSku.code);
@@ -70,47 +70,47 @@ describe('SKUs (e2e)', () => {
     });
 
     it('should list SKUs', async () => {
-      await ctx.client.createSku(
+      await ctx.client.skus.createSku(
         { code: generateTestCode('SKU-LIST'), title: 'List SKU' },
         ctx.shopContext,
       );
 
-      const skus = await ctx.client.getSkus(ctx.shopContext);
+      const skus = await ctx.client.skus.getSkus(ctx.shopContext);
 
       expect(Array.isArray(skus)).toBe(true);
       expect(skus.length).toBeGreaterThan(0);
     });
 
     it('should get SKU by id', async () => {
-      const created = await ctx.client.createSku(
+      const created = await ctx.client.skus.createSku(
         { code: generateTestCode('SKU-GET'), title: 'Get SKU' },
         ctx.shopContext,
       );
 
-      const sku = await ctx.client.getSku(created.id, ctx.shopContext);
+      const sku = await ctx.client.skus.getSku(created.id, ctx.shopContext);
 
       expect(sku.id).toBe(created.id);
     });
 
     it('should get SKU by code', async () => {
-      const created = await ctx.client.createSku(
+      const created = await ctx.client.skus.createSku(
         { code: generateTestCode('SKU-GET-CODE'), title: 'Get SKU Code' },
         ctx.shopContext,
       );
 
-      const sku = await ctx.client.getSkuByCode(created.code, ctx.shopContext);
+      const sku = await ctx.client.skus.getSkuByCode(created.code, ctx.shopContext);
 
       expect(sku.id).toBe(created.id);
       expect(sku.code).toBe(created.code);
     });
 
     it('should update SKU', async () => {
-      const created = await ctx.client.createSku(
+      const created = await ctx.client.skus.createSku(
         { code: generateTestCode('SKU-UPDATE'), title: 'To Update' },
         ctx.shopContext,
       );
 
-      const sku = await ctx.client.updateSku(
+      const sku = await ctx.client.skus.updateSku(
         created.id,
         { title: 'Updated SKU Title' },
         ctx.shopContext,
@@ -121,23 +121,23 @@ describe('SKUs (e2e)', () => {
 
     it('should return 409 on duplicate code', async () => {
       const duplicateCode = generateTestCode('SKU');
-      await ctx.client.createSku({ code: duplicateCode, title: 'First SKU' }, ctx.shopContext);
+      await ctx.client.skus.createSku({ code: duplicateCode, title: 'First SKU' }, ctx.shopContext);
 
       await expectConflict(() =>
-        ctx.client.createSku({ code: duplicateCode, title: 'Duplicate SKU' }, ctx.shopContext),
+        ctx.client.skus.createSku({ code: duplicateCode, title: 'Duplicate SKU' }, ctx.shopContext),
       );
     });
   });
 
   describe('Delete operations', () => {
     it('should delete SKU', async () => {
-      const toDelete = await ctx.client.createSku(
+      const toDelete = await ctx.client.skus.createSku(
         { code: generateTestCode('SKU-DELETE'), title: 'Delete SKU' },
         ctx.shopContext,
       );
 
-      await ctx.client.deleteSku(toDelete.id, ctx.shopContext);
-      await expectNotFound(() => ctx.client.getSku(toDelete.id, ctx.shopContext));
+      await ctx.client.skus.deleteSku(toDelete.id, ctx.shopContext);
+      await expectNotFound(() => ctx.client.skus.getSku(toDelete.id, ctx.shopContext));
     });
   });
 
@@ -158,7 +158,7 @@ describe('SKUs (e2e)', () => {
 
     it('should return 403 when accessing other tenant', async () => {
       await expectForbidden(() =>
-        ctx.client.getSkus({
+        ctx.client.skus.getSkus({
           shop_id: otherCtx.shop.id,
           tenant_id: otherCtx.tenant.id,
         }),
@@ -167,7 +167,7 @@ describe('SKUs (e2e)', () => {
 
     it('should return 403 when creating for other tenant', async () => {
       await expectForbidden(() =>
-        ctx.client.createSku(
+        ctx.client.skus.createSku(
           { code: 'FORBIDDEN-SKU', title: 'Should Fail' },
           { shop_id: ctx.shop.id, tenant_id: otherCtx.tenant.id },
         ),
@@ -175,14 +175,14 @@ describe('SKUs (e2e)', () => {
     });
 
     it('should return 404 when getting resource from other tenant', async () => {
-      const otherSku = await otherCtx.client.createSku(
+      const otherSku = await otherCtx.client.skus.createSku(
         { code: generateTestCode('OTHER'), title: 'Other SKU' },
         otherCtx.shopContext,
       );
 
-      await expectNotFound(() => ctx.client.getSku(otherSku.id, ctx.shopContext));
+      await expectNotFound(() => ctx.client.skus.getSku(otherSku.id, ctx.shopContext));
       await expectForbidden(() =>
-        ctx.client.getSkuByCode(otherSku.code, {
+        ctx.client.skus.getSkuByCode(otherSku.code, {
           shop_id: ctx.shop.id,
           tenant_id: otherCtx.tenant.id,
         }),
@@ -192,11 +192,11 @@ describe('SKUs (e2e)', () => {
     it('should allow same code in different tenants', async () => {
       const sharedCode = generateTestCode('SHARED');
 
-      const sku1 = await ctx.client.createSku(
+      const sku1 = await ctx.client.skus.createSku(
         { code: sharedCode, title: 'SKU in Tenant 1' },
         ctx.shopContext,
       );
-      const sku2 = await otherCtx.client.createSku(
+      const sku2 = await otherCtx.client.skus.createSku(
         { code: sharedCode, title: 'SKU in Tenant 2' },
         otherCtx.shopContext,
       );
@@ -216,12 +216,12 @@ describe('SKUs (e2e)', () => {
         { code: code2, title: 'Import JSON SKU 2' },
       ];
 
-      const result = await ctx.client.importSkusJson(items, ctx.shopContext);
+      const result = await ctx.client.skus.importJson(items, ctx.shopContext);
 
       expect(result.created).toBe(2);
       expect(result.updated).toBe(0);
       expect(result.errors).toEqual([]);
-      const skus = await ctx.client.getSkus(ctx.shopContext);
+      const skus = await ctx.client.skus.getSkus(ctx.shopContext);
       const codes = skus.map((s) => s.code);
       expect(codes).toContain(normalizeSkuCode(code1));
       expect(codes).toContain(normalizeSkuCode(code2));
@@ -234,9 +234,9 @@ describe('SKUs (e2e)', () => {
       const status = generateTestCode('sts-export');
       const supplier = generateTestCode('sup-export');
       const csvContent = `code,title,category,group,status,supplier\n${code},Export Relations,${category},${group},${status},${supplier}`;
-      await ctx.client.importSkusCsv(csvContent, ctx.shopContext);
+      await ctx.client.skus.importCsv(csvContent, ctx.shopContext);
 
-      const json = await ctx.client.exportSkusJson(ctx.shopContext);
+      const json = await ctx.client.skus.exportJson(ctx.shopContext);
       const exported = json.find((s) => s.code === normalizeSkuCode(code));
       expect(exported).toBeDefined();
       expect(exported?.category).toBe(normalizeCode(category));
@@ -244,7 +244,7 @@ describe('SKUs (e2e)', () => {
       expect(exported?.status).toBe(normalizeCode(status));
       expect(exported?.supplier).toBe(normalizeCode(supplier));
 
-      const csv = await ctx.client.exportSkusCsv(ctx.shopContext);
+      const csv = await ctx.client.skus.exportCsv(ctx.shopContext);
       const lines = csv.trim().split('\n');
       expect(lines.length).toBeGreaterThan(1);
       const body = lines.slice(1).join('\n');
@@ -260,7 +260,7 @@ describe('SKUs (e2e)', () => {
       const category = generateTestCode('partial-category');
       const csvContent = `code,title,category,group,status,supplier\n${code},Partial Relations,${category},,,`;
 
-      const result = await ctx.client.importSkusCsv(csvContent, ctx.shopContext);
+      const result = await ctx.client.skus.importCsv(csvContent, ctx.shopContext);
 
       expect(result.created).toBe(1);
       expect(result.updated).toBe(0);
@@ -269,7 +269,7 @@ describe('SKUs (e2e)', () => {
       expect(result.statuses_created).toBe(0);
       expect(result.suppliers_created).toBe(0);
 
-      const sku = (await ctx.client.getSkus(ctx.shopContext)).find(
+      const sku = (await ctx.client.skus.getSkus(ctx.shopContext)).find(
         (s) => s.code === normalizeSkuCode(code),
       );
       expect(sku).toBeDefined();
@@ -278,7 +278,7 @@ describe('SKUs (e2e)', () => {
       expect(sku?.status_id ?? null).toBeNull();
       expect(sku?.supplier_id ?? null).toBeNull();
 
-      const json = await ctx.client.exportSkusJson(ctx.shopContext);
+      const json = await ctx.client.skus.exportJson(ctx.shopContext);
       const exported = json.find((s) => s.code === normalizeSkuCode(code));
       expect(exported).toBeDefined();
       expect(exported?.category).toBe(normalizeCode(category));
@@ -286,7 +286,7 @@ describe('SKUs (e2e)', () => {
       expect(exported?.status ?? null).toBeNull();
       expect(exported?.supplier ?? null).toBeNull();
 
-      const csv = await ctx.client.exportSkusCsv(ctx.shopContext);
+      const csv = await ctx.client.skus.exportCsv(ctx.shopContext);
       const line = csv
         .trim()
         .split('\n')
@@ -300,8 +300,8 @@ describe('SKUs (e2e)', () => {
     it('should upsert existing SKUs on import', async () => {
       const code = generateTestCode('UPSERT-JSON');
 
-      await ctx.client.importSkusJson([{ code, title: 'Original Title' }], ctx.shopContext);
-      const result = await ctx.client.importSkusJson(
+      await ctx.client.skus.importJson([{ code, title: 'Original Title' }], ctx.shopContext);
+      const result = await ctx.client.skus.importJson(
         [{ code, title: 'Updated Title' }],
         ctx.shopContext,
       );
@@ -315,12 +315,12 @@ describe('SKUs (e2e)', () => {
       const code2 = generateTestCode('IMPORT-CSV-2');
       const csvContent = `code,title\n${code1},Import CSV SKU 1\n${code2},Import CSV SKU 2`;
 
-      const result = await ctx.client.importSkusCsv(csvContent, ctx.shopContext);
+      const result = await ctx.client.skus.importCsv(csvContent, ctx.shopContext);
 
       expect(result.created).toBe(2);
       expect(result.updated).toBe(0);
 
-      const skus = await ctx.client.getSkus(ctx.shopContext);
+      const skus = await ctx.client.skus.getSkus(ctx.shopContext);
       const codes = skus.map((s) => s.code);
       expect(codes).toContain(normalizeSkuCode(code1));
       expect(codes).toContain(normalizeSkuCode(code2));
@@ -330,7 +330,7 @@ describe('SKUs (e2e)', () => {
       const code = generateTestCode('IMPORT-NO-REL');
       const csvContent = `code,title\n${code},No Relations SKU`;
 
-      const result = await ctx.client.importSkusCsv(csvContent, ctx.shopContext);
+      const result = await ctx.client.skus.importCsv(csvContent, ctx.shopContext);
 
       expect(result.created).toBe(1);
       expect(result.updated).toBe(0);
@@ -339,7 +339,7 @@ describe('SKUs (e2e)', () => {
       expect(result.statuses_created).toBe(0);
       expect(result.suppliers_created).toBe(0);
 
-      const skus = await ctx.client.getSkus(ctx.shopContext);
+      const skus = await ctx.client.skus.getSkus(ctx.shopContext);
       const createdSku = skus.find((s) => s.code === normalizeSkuCode(code));
       expect(createdSku).toBeDefined();
       expect(createdSku?.category_id ?? null).toBeNull();
@@ -356,7 +356,7 @@ describe('SKUs (e2e)', () => {
       const supplier = generateTestCode('test-supplier');
       const csvContent = `code,title,category,group,status,supplier\n${code},SKU with Relations,${category},${group},${status},${supplier}`;
 
-      const result = await ctx.client.importSkusCsv(csvContent, ctx.shopContext);
+      const result = await ctx.client.skus.importCsv(csvContent, ctx.shopContext);
 
       expect(result.created).toBe(1);
       expect(result.updated).toBe(0);
@@ -365,7 +365,7 @@ describe('SKUs (e2e)', () => {
       expect(result.statuses_created).toBe(1);
       expect(result.suppliers_created).toBe(1);
 
-      const skus = await ctx.client.getSkus(ctx.shopContext);
+      const skus = await ctx.client.skus.getSkus(ctx.shopContext);
       const createdSku = skus.find((s) => s.code === normalizeSkuCode(code));
       expect(createdSku).toBeDefined();
       expect(createdSku?.category_id).toBeDefined();
@@ -373,13 +373,13 @@ describe('SKUs (e2e)', () => {
       expect(createdSku?.status_id).toBeDefined();
       expect(createdSku?.supplier_id).toBeDefined();
 
-      const categoryEntity = await ctx.client.getCategoryByCode(
+      const categoryEntity = await ctx.client.categories.getCategoryByCode(
         normalizeCode(category),
         ctx.shopContext,
       );
-      const groupEntity = await ctx.client.getGroupByCode(normalizeCode(group), ctx.shopContext);
-      const statusEntity = await ctx.client.getStatusByCode(normalizeCode(status), ctx.shopContext);
-      const supplierEntity = await ctx.client.getSupplierByCode(
+      const groupEntity = await ctx.client.groups.getGroupByCode(normalizeCode(group), ctx.shopContext);
+      const statusEntity = await ctx.client.statuses.getStatusByCode(normalizeCode(status), ctx.shopContext);
+      const supplierEntity = await ctx.client.suppliers.getSupplierByCode(
         normalizeCode(supplier),
         ctx.shopContext,
       );
@@ -397,8 +397,8 @@ describe('SKUs (e2e)', () => {
 
       const seedCode = generateTestCode('SEED-REL');
       const seedCsv = `code,title,category,group,status,supplier\n${seedCode},Seed SKU,${category},${group},${status},${supplier}`;
-      await ctx.client.importSkusCsv(seedCsv, ctx.shopContext);
-      const seedSku = (await ctx.client.getSkus(ctx.shopContext)).find(
+      await ctx.client.skus.importCsv(seedCsv, ctx.shopContext);
+      const seedSku = (await ctx.client.skus.getSkus(ctx.shopContext)).find(
         (s) => s.code === normalizeSkuCode(seedCode),
       );
       if (!seedSku) throw new Error('Seed SKU not created');
@@ -406,7 +406,7 @@ describe('SKUs (e2e)', () => {
       const code = generateTestCode('REUSE-REL');
       const csvContent = `code,title,category,group,status,supplier\n${code},Reuse Relations,${category},${group},${status},${supplier}`;
 
-      const result = await ctx.client.importSkusCsv(csvContent, ctx.shopContext);
+      const result = await ctx.client.skus.importCsv(csvContent, ctx.shopContext);
 
       expect(result.created).toBe(1);
       expect(result.updated).toBe(0);
@@ -415,7 +415,7 @@ describe('SKUs (e2e)', () => {
       expect(result.statuses_created).toBe(0);
       expect(result.suppliers_created).toBe(0);
 
-      const skus = await ctx.client.getSkus(ctx.shopContext);
+      const skus = await ctx.client.skus.getSkus(ctx.shopContext);
       const createdSku = skus.find((s) => s.code === normalizeSkuCode(code));
       expect(createdSku).toBeDefined();
       expect(createdSku?.category_id).toBe(seedSku.category_id);
@@ -436,10 +436,10 @@ describe('SKUs (e2e)', () => {
       const supplierB = generateTestCode('sup-b');
 
       const csvA = `code,title,category,group,status,supplier\n${code},With Relations A,${categoryA},${groupA},${statusA},${supplierA}`;
-      await ctx.client.importSkusCsv(csvA, ctx.shopContext);
+      await ctx.client.skus.importCsv(csvA, ctx.shopContext);
 
       const csvB = `code,title,category,group,status,supplier\n${code},With Relations B,${categoryB},${groupB},${statusB},${supplierB}`;
-      const result = await ctx.client.importSkusCsv(csvB, ctx.shopContext);
+      const result = await ctx.client.skus.importCsv(csvB, ctx.shopContext);
 
       expect(result.created).toBe(0);
       expect(result.updated).toBe(1);
@@ -448,15 +448,15 @@ describe('SKUs (e2e)', () => {
       expect(result.statuses_created).toBe(1);
       expect(result.suppliers_created).toBe(1);
 
-      const sku = (await ctx.client.getSkus(ctx.shopContext)).find(
+      const sku = (await ctx.client.skus.getSkus(ctx.shopContext)).find(
         (s) => s.code === normalizeSkuCode(code),
       );
       if (!sku) throw new Error('SKU not found after update');
 
-      const catB = await ctx.client.getCategoryByCode(normalizeCode(categoryB), ctx.shopContext);
-      const grpB = await ctx.client.getGroupByCode(normalizeCode(groupB), ctx.shopContext);
-      const stsB = await ctx.client.getStatusByCode(normalizeCode(statusB), ctx.shopContext);
-      const supB = await ctx.client.getSupplierByCode(normalizeCode(supplierB), ctx.shopContext);
+      const catB = await ctx.client.categories.getCategoryByCode(normalizeCode(categoryB), ctx.shopContext);
+      const grpB = await ctx.client.groups.getGroupByCode(normalizeCode(groupB), ctx.shopContext);
+      const stsB = await ctx.client.statuses.getStatusByCode(normalizeCode(statusB), ctx.shopContext);
+      const supB = await ctx.client.suppliers.getSupplierByCode(normalizeCode(supplierB), ctx.shopContext);
 
       expect(sku.category_id).toBe(catB.id);
       expect(sku.group_id).toBe(grpB.id);
@@ -468,7 +468,7 @@ describe('SKUs (e2e)', () => {
       const code1 = generateTestCode('EXPORT-SKU-1');
       const code2 = generateTestCode('EXPORT-SKU-2');
 
-      await ctx.client.importSkusJson(
+      await ctx.client.skus.importJson(
         [
           { code: code1, title: 'Export Test SKU 1' },
           { code: code2, title: 'Export Test SKU 2' },
@@ -476,7 +476,7 @@ describe('SKUs (e2e)', () => {
         ctx.shopContext,
       );
 
-      const exported = await ctx.client.exportSkusJson(ctx.shopContext);
+      const exported = await ctx.client.skus.exportJson(ctx.shopContext);
 
       expect(Array.isArray(exported)).toBe(true);
       const exportedCodes = exported.map((s) => s.code);
@@ -493,7 +493,7 @@ describe('SKUs (e2e)', () => {
       const code1 = generateTestCode('CSV-EXPORT-SKU-1');
       const code2 = generateTestCode('CSV-EXPORT-SKU-2');
 
-      await ctx.client.importSkusJson(
+      await ctx.client.skus.importJson(
         [
           { code: code1, title: 'CSV Export Test 1' },
           { code: code2, title: 'CSV Export Test 2' },
@@ -501,7 +501,7 @@ describe('SKUs (e2e)', () => {
         ctx.shopContext,
       );
 
-      const csv = await ctx.client.exportSkusCsv(ctx.shopContext);
+      const csv = await ctx.client.skus.exportCsv(ctx.shopContext);
 
       expect(typeof csv).toBe('string');
       const lines = csv.split('\n');
@@ -513,7 +513,7 @@ describe('SKUs (e2e)', () => {
 
   describe('Example downloads', () => {
     it('should return JSON example', async () => {
-      const example = await ctx.client.getSkusExampleJson();
+      const example = await ctx.client.skus.getExampleJson();
 
       expect(Array.isArray(example)).toBe(true);
       expect(example.length).toBeGreaterThan(0);
@@ -522,7 +522,7 @@ describe('SKUs (e2e)', () => {
     });
 
     it('should return CSV example', async () => {
-      const csv = await ctx.client.getSkusExampleCsv();
+      const csv = await ctx.client.skus.getExampleCsv();
 
       expect(typeof csv).toBe('string');
       expect(csv).toContain('code,title');
@@ -551,7 +551,7 @@ describe('SKUs (e2e)', () => {
         ownerShopId = ownerSetup.shop.id;
         ownerClient = new SalesPlannerClient({ baseUrl, apiKey: ownerSetup.apiKey });
 
-        await ownerClient.createSku(
+        await ownerClient.skus.createSku(
           { code: generateTestCode('OWNER-SEED'), title: 'Owner Seed SKU' },
           ownerCtx(),
         );
@@ -562,28 +562,28 @@ describe('SKUs (e2e)', () => {
       });
 
       it('tenant owner should have read access without explicit role', async () => {
-        const skus = await ownerClient.getSkus(ownerCtx());
+        const skus = await ownerClient.skus.getSkus(ownerCtx());
         expect(Array.isArray(skus)).toBe(true);
         if (skus.length === 0) throw new Error('Expected at least one SKU for owner');
         const first = skus[0];
         if (!first) throw new Error('Expected sku');
-        const sku = await ownerClient.getSkuByCode(first.code, ownerCtx());
+        const sku = await ownerClient.skus.getSkuByCode(first.code, ownerCtx());
         expect(sku.id).toBe(first.id);
       });
 
       it('tenant owner should have write access without explicit role', async () => {
         const ownerSkuCode = generateTestCode('OWNER-SKU');
-        const sku = await ownerClient.createSku(
+        const sku = await ownerClient.skus.createSku(
           { code: ownerSkuCode, title: 'Owner Created SKU' },
           ownerCtx(),
         );
         expect(sku).toHaveProperty('id');
-        await ownerClient.deleteSku(sku.id, ownerCtx());
+        await ownerClient.skus.deleteSku(sku.id, ownerCtx());
       });
 
       it('tenant owner should be able to import', async () => {
         const ownerImportCode = generateTestCode('OWNER-IMPORT');
-        const result = await ownerClient.importSkusJson(
+        const result = await ownerClient.skus.importJson(
           [{ code: ownerImportCode, title: 'Owner Import 1' }],
           ownerCtx(),
         );
@@ -591,13 +591,13 @@ describe('SKUs (e2e)', () => {
       });
 
       it('tenant owner should NOT access other tenants', async () => {
-        await expectForbidden(() => ownerClient.getSkus(ctx.shopContext));
-        const skus = await ctx.client.getSkus(ctx.shopContext);
+        await expectForbidden(() => ownerClient.skus.getSkus(ctx.shopContext));
+        const skus = await ctx.client.skus.getSkus(ctx.shopContext);
         if (skus.length === 0) throw new Error('Expected at least one SKU in target tenant');
         const target = skus[0];
         if (!target) throw new Error('Expected sku');
 
-        await expectForbidden(() => ownerClient.getSkuByCode(target.code, ctx.shopContext));
+        await expectForbidden(() => ownerClient.skus.getSkuByCode(target.code, ctx.shopContext));
       });
     });
 
@@ -621,7 +621,7 @@ describe('SKUs (e2e)', () => {
         const roles = await ctx.getSystemClient().getRoles();
         const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
         if (!editorRole) throw new Error('Editor role not found');
-        await ctx.getSystemClient().createUserRole({
+        await ctx.getSystemClient().userRoles.createUserRole({
           user_id: editorUserId,
           role_id: editorRole.id,
           tenant_id: ctx.tenant.id,
@@ -634,12 +634,12 @@ describe('SKUs (e2e)', () => {
       });
 
       it('editor should list SKUs', async () => {
-        const skus = await editorClient.getSkus(ctx.shopContext);
+        const skus = await editorClient.skus.getSkus(ctx.shopContext);
         expect(Array.isArray(skus)).toBe(true);
       });
 
       it('editor should create SKU', async () => {
-        const sku = await editorClient.createSku(
+        const sku = await editorClient.skus.createSku(
           { code: generateTestCode('EDITOR-SKU'), title: 'Editor SKU' },
           ctx.shopContext,
         );
@@ -647,11 +647,11 @@ describe('SKUs (e2e)', () => {
       });
 
       it('editor should update SKU', async () => {
-        const skus = await editorClient.getSkus(ctx.shopContext);
+        const skus = await editorClient.skus.getSkus(ctx.shopContext);
         if (skus.length === 0) throw new Error('Expected at least one SKU for editor update');
         const firstSku = skus[0];
         if (!firstSku) throw new Error('Expected sku');
-        const updated = await editorClient.updateSku(
+        const updated = await editorClient.skus.updateSku(
           firstSku.id,
           { title: 'Editor Updated' },
           ctx.shopContext,
@@ -660,16 +660,16 @@ describe('SKUs (e2e)', () => {
       });
 
       it('editor should delete SKU', async () => {
-        const sku = await editorClient.createSku(
+        const sku = await editorClient.skus.createSku(
           { code: generateTestCode('EDITOR-DELETE'), title: 'To Delete' },
           ctx.shopContext,
         );
-        await editorClient.deleteSku(sku.id, ctx.shopContext);
-        await expectNotFound(() => editorClient.getSku(sku.id, ctx.shopContext));
+        await editorClient.skus.deleteSku(sku.id, ctx.shopContext);
+        await expectNotFound(() => editorClient.skus.getSku(sku.id, ctx.shopContext));
       });
 
       it('editor should import SKUs', async () => {
-        const result = await editorClient.importSkusJson(
+        const result = await editorClient.skus.importJson(
           [{ code: generateTestCode('EDITOR-IMPORT'), title: 'Editor Import' }],
           ctx.shopContext,
         );
@@ -677,16 +677,16 @@ describe('SKUs (e2e)', () => {
       });
 
       it('editor should export SKUs', async () => {
-        const exported = await editorClient.exportSkusJson(ctx.shopContext);
+        const exported = await editorClient.skus.exportJson(ctx.shopContext);
         expect(Array.isArray(exported)).toBe(true);
       });
 
       it('editor should get SKU by code', async () => {
-        const skus = await editorClient.getSkus(ctx.shopContext);
+        const skus = await editorClient.skus.getSkus(ctx.shopContext);
         if (skus.length === 0) throw new Error('Expected at least one SKU for editor get-by-code');
         const firstSku = skus[0];
         if (!firstSku) throw new Error('Expected sku');
-        const sku = await editorClient.getSkuByCode(firstSku.code, ctx.shopContext);
+        const sku = await editorClient.skus.getSkuByCode(firstSku.code, ctx.shopContext);
         expect(sku.id).toBe(firstSku.id);
       });
     });
@@ -711,7 +711,7 @@ describe('SKUs (e2e)', () => {
         const roles = await ctx.getSystemClient().getRoles();
         const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
         if (!viewerRole) throw new Error('Viewer role not found');
-        await ctx.getSystemClient().createUserRole({
+        await ctx.getSystemClient().userRoles.createUserRole({
           user_id: viewerUserId,
           role_id: viewerRole.id,
           tenant_id: ctx.tenant.id,
@@ -724,62 +724,62 @@ describe('SKUs (e2e)', () => {
       });
 
       it('viewer should list SKUs', async () => {
-        const skus = await viewerClient.getSkus(ctx.shopContext);
+        const skus = await viewerClient.skus.getSkus(ctx.shopContext);
         expect(Array.isArray(skus)).toBe(true);
       });
 
       it('viewer should get SKU by id', async () => {
-        const skus = await viewerClient.getSkus(ctx.shopContext);
+        const skus = await viewerClient.skus.getSkus(ctx.shopContext);
         if (skus.length === 0) throw new Error('Expected at least one SKU for viewer get-by-id');
         const firstSku = skus[0];
         if (!firstSku) throw new Error('Expected sku');
-        const sku = await viewerClient.getSku(firstSku.id, ctx.shopContext);
+        const sku = await viewerClient.skus.getSku(firstSku.id, ctx.shopContext);
         expect(sku.id).toBe(firstSku.id);
       });
 
       it('viewer should get SKU by code', async () => {
-        const skus = await viewerClient.getSkus(ctx.shopContext);
+        const skus = await viewerClient.skus.getSkus(ctx.shopContext);
         if (skus.length === 0) throw new Error('Expected at least one SKU for viewer get-by-code');
         const firstSku = skus[0];
         if (!firstSku) throw new Error('Expected sku');
-        const sku = await viewerClient.getSkuByCode(firstSku.code, ctx.shopContext);
+        const sku = await viewerClient.skus.getSkuByCode(firstSku.code, ctx.shopContext);
         expect(sku.id).toBe(firstSku.id);
       });
 
       it('viewer should NOT create SKU', async () => {
         await expectForbidden(() =>
-          viewerClient.createSku({ code: 'VIEWER-CREATE', title: 'Should Fail' }, ctx.shopContext),
+          viewerClient.skus.createSku({ code: 'VIEWER-CREATE', title: 'Should Fail' }, ctx.shopContext),
         );
       });
 
       it('viewer should NOT update SKU', async () => {
-        const skus = await viewerClient.getSkus(ctx.shopContext);
+        const skus = await viewerClient.skus.getSkus(ctx.shopContext);
         if (skus.length > 0) {
           const firstSku = skus[0];
           if (!firstSku) throw new Error('Expected sku');
           await expectForbidden(() =>
-            viewerClient.updateSku(firstSku.id, { title: 'Should Fail' }, ctx.shopContext),
+            viewerClient.skus.updateSku(firstSku.id, { title: 'Should Fail' }, ctx.shopContext),
           );
         }
       });
 
       it('viewer should NOT delete SKU', async () => {
-        const skus = await viewerClient.getSkus(ctx.shopContext);
+        const skus = await viewerClient.skus.getSkus(ctx.shopContext);
         if (skus.length > 0) {
           const firstSku = skus[0];
           if (!firstSku) throw new Error('Expected sku');
-          await expectForbidden(() => viewerClient.deleteSku(firstSku.id, ctx.shopContext));
+          await expectForbidden(() => viewerClient.skus.deleteSku(firstSku.id, ctx.shopContext));
         }
       });
 
       it('viewer should export SKUs', async () => {
-        const exported = await viewerClient.exportSkusJson(ctx.shopContext);
+        const exported = await viewerClient.skus.exportJson(ctx.shopContext);
         expect(Array.isArray(exported)).toBe(true);
       });
 
       it('viewer should NOT import SKUs', async () => {
         await expectForbidden(() =>
-          viewerClient.importSkusJson(
+          viewerClient.skus.importJson(
             [{ code: 'VIEWER-IMPORT', title: 'Should Fail' }],
             ctx.shopContext,
           ),

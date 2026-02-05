@@ -48,19 +48,19 @@ describe('Groups (e2e)', () => {
   describe('Authentication', () => {
     it('should return 401 without API key', async () => {
       const noAuthClient = new SalesPlannerClient({ baseUrl, apiKey: '' });
-      await expectUnauthorized(() => noAuthClient.getGroups(ctx.shopContext));
+      await expectUnauthorized(() => noAuthClient.groups.getGroups(ctx.shopContext));
     });
 
     it('should return 401 with invalid API key', async () => {
       const badClient = new SalesPlannerClient({ baseUrl, apiKey: 'invalid-key' });
-      await expectUnauthorized(() => badClient.getGroups(ctx.shopContext));
+      await expectUnauthorized(() => badClient.groups.getGroups(ctx.shopContext));
     });
   });
 
   describe('CRUD operations', () => {
     it('should create group', async () => {
       const newGroup = { code: generateTestCode('group'), title: 'Test Group' };
-      const group = await ctx.client.createGroup(newGroup, ctx.shopContext);
+      const group = await ctx.client.groups.createGroup(newGroup, ctx.shopContext);
 
       expect(group).toHaveProperty('id');
       expect(group.code).toBe(normalizeCode(newGroup.code));
@@ -70,47 +70,47 @@ describe('Groups (e2e)', () => {
     });
 
     it('should list groups', async () => {
-      await ctx.client.createGroup(
+      await ctx.client.groups.createGroup(
         { code: generateTestCode('group-list'), title: 'List Group' },
         ctx.shopContext,
       );
 
-      const groups = await ctx.client.getGroups(ctx.shopContext);
+      const groups = await ctx.client.groups.getGroups(ctx.shopContext);
 
       expect(Array.isArray(groups)).toBe(true);
       expect(groups.length).toBeGreaterThan(0);
     });
 
     it('should get group by id', async () => {
-      const created = await ctx.client.createGroup(
+      const created = await ctx.client.groups.createGroup(
         { code: generateTestCode('group-get'), title: 'Get Group' },
         ctx.shopContext,
       );
 
-      const group = await ctx.client.getGroup(created.id, ctx.shopContext);
+      const group = await ctx.client.groups.getGroup(created.id, ctx.shopContext);
 
       expect(group.id).toBe(created.id);
     });
 
     it('should get group by code', async () => {
-      const created = await ctx.client.createGroup(
+      const created = await ctx.client.groups.createGroup(
         { code: generateTestCode('group-get-code'), title: 'Get Group Code' },
         ctx.shopContext,
       );
 
-      const group = await ctx.client.getGroupByCode(created.code, ctx.shopContext);
+      const group = await ctx.client.groups.getGroupByCode(created.code, ctx.shopContext);
 
       expect(group.id).toBe(created.id);
       expect(group.code).toBe(created.code);
     });
 
     it('should update group', async () => {
-      const created = await ctx.client.createGroup(
+      const created = await ctx.client.groups.createGroup(
         { code: generateTestCode('group-update'), title: 'To Update' },
         ctx.shopContext,
       );
 
-      const group = await ctx.client.updateGroup(
+      const group = await ctx.client.groups.updateGroup(
         created.id,
         { title: 'Updated Group Title' },
         ctx.shopContext,
@@ -121,23 +121,23 @@ describe('Groups (e2e)', () => {
 
     it('should return 409 on duplicate code', async () => {
       const duplicateCode = generateTestCode('group');
-      await ctx.client.createGroup({ code: duplicateCode, title: 'First Group' }, ctx.shopContext);
+      await ctx.client.groups.createGroup({ code: duplicateCode, title: 'First Group' }, ctx.shopContext);
 
       await expectConflict(() =>
-        ctx.client.createGroup({ code: duplicateCode, title: 'Duplicate Group' }, ctx.shopContext),
+        ctx.client.groups.createGroup({ code: duplicateCode, title: 'Duplicate Group' }, ctx.shopContext),
       );
     });
   });
 
   describe('Delete operations', () => {
     it('should delete group', async () => {
-      const toDelete = await ctx.client.createGroup(
+      const toDelete = await ctx.client.groups.createGroup(
         { code: generateTestCode('group-delete'), title: 'Delete Group' },
         ctx.shopContext,
       );
 
-      await ctx.client.deleteGroup(toDelete.id, ctx.shopContext);
-      await expectNotFound(() => ctx.client.getGroup(toDelete.id, ctx.shopContext));
+      await ctx.client.groups.deleteGroup(toDelete.id, ctx.shopContext);
+      await expectNotFound(() => ctx.client.groups.getGroup(toDelete.id, ctx.shopContext));
     });
   });
 
@@ -158,7 +158,7 @@ describe('Groups (e2e)', () => {
 
     it('should return 403 when accessing other tenant', async () => {
       await expectForbidden(() =>
-        ctx.client.getGroups({
+        ctx.client.groups.getGroups({
           shop_id: otherCtx.shop.id,
           tenant_id: otherCtx.tenant.id,
         }),
@@ -167,7 +167,7 @@ describe('Groups (e2e)', () => {
 
     it('should return 403 when creating for other tenant', async () => {
       await expectForbidden(() =>
-        ctx.client.createGroup(
+        ctx.client.groups.createGroup(
           { code: 'forbidden-group', title: 'Should Fail' },
           { shop_id: ctx.shop.id, tenant_id: otherCtx.tenant.id },
         ),
@@ -175,14 +175,14 @@ describe('Groups (e2e)', () => {
     });
 
     it('should return 404 when getting resource from other tenant', async () => {
-      const otherGroup = await otherCtx.client.createGroup(
+      const otherGroup = await otherCtx.client.groups.createGroup(
         { code: generateTestCode('other'), title: 'Other Group' },
         otherCtx.shopContext,
       );
 
-      await expectNotFound(() => ctx.client.getGroup(otherGroup.id, ctx.shopContext));
+      await expectNotFound(() => ctx.client.groups.getGroup(otherGroup.id, ctx.shopContext));
       await expectForbidden(() =>
-        ctx.client.getGroupByCode(otherGroup.code, {
+        ctx.client.groups.getGroupByCode(otherGroup.code, {
           shop_id: ctx.shop.id,
           tenant_id: otherCtx.tenant.id,
         }),
@@ -192,11 +192,11 @@ describe('Groups (e2e)', () => {
     it('should allow same code in different tenants', async () => {
       const sharedCode = generateTestCode('shared');
 
-      const group1 = await ctx.client.createGroup(
+      const group1 = await ctx.client.groups.createGroup(
         { code: sharedCode, title: 'Group in Tenant 1' },
         ctx.shopContext,
       );
-      const group2 = await otherCtx.client.createGroup(
+      const group2 = await otherCtx.client.groups.createGroup(
         { code: sharedCode, title: 'Group in Tenant 2' },
         otherCtx.shopContext,
       );
@@ -216,13 +216,13 @@ describe('Groups (e2e)', () => {
         { code: code2, title: 'Import JSON Group 2' },
       ];
 
-      const result = await ctx.client.importGroupsJson(items, ctx.shopContext);
+      const result = await ctx.client.groups.importJson(items, ctx.shopContext);
 
       expect(result.created).toBe(2);
       expect(result.updated).toBe(0);
       expect(result.errors).toEqual([]);
 
-      const groups = await ctx.client.getGroups(ctx.shopContext);
+      const groups = await ctx.client.groups.getGroups(ctx.shopContext);
       const codes = groups.map((g) => g.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
@@ -231,8 +231,8 @@ describe('Groups (e2e)', () => {
     it('should upsert existing groups on import', async () => {
       const code = generateTestCode('upsert-json');
 
-      await ctx.client.importGroupsJson([{ code, title: 'Original Title' }], ctx.shopContext);
-      const result = await ctx.client.importGroupsJson(
+      await ctx.client.groups.importJson([{ code, title: 'Original Title' }], ctx.shopContext);
+      const result = await ctx.client.groups.importJson(
         [{ code, title: 'Updated Title' }],
         ctx.shopContext,
       );
@@ -246,12 +246,12 @@ describe('Groups (e2e)', () => {
       const code2 = generateTestCode('import-csv-2');
       const csvContent = `code,title\n${code1},Import CSV Group 1\n${code2},Import CSV Group 2`;
 
-      const result = await ctx.client.importGroupsCsv(csvContent, ctx.shopContext);
+      const result = await ctx.client.groups.importCsv(csvContent, ctx.shopContext);
 
       expect(result.created).toBe(2);
       expect(result.updated).toBe(0);
 
-      const groups = await ctx.client.getGroups(ctx.shopContext);
+      const groups = await ctx.client.groups.getGroups(ctx.shopContext);
       const codes = groups.map((g) => g.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
@@ -262,12 +262,12 @@ describe('Groups (e2e)', () => {
       const code2 = generateTestCode('import-semi-2');
       const csvContent = `code;title\n${code1};Import Semicolon Group 1\n${code2};Import Semicolon Group 2`;
 
-      const result = await ctx.client.importGroupsCsv(csvContent, ctx.shopContext);
+      const result = await ctx.client.groups.importCsv(csvContent, ctx.shopContext);
 
       expect(result.created).toBe(2);
       expect(result.updated).toBe(0);
 
-      const groups = await ctx.client.getGroups(ctx.shopContext);
+      const groups = await ctx.client.groups.getGroups(ctx.shopContext);
       const codes = groups.map((g) => g.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
@@ -276,12 +276,12 @@ describe('Groups (e2e)', () => {
     it('should handle Cyrillic characters in CSV', async () => {
       const csvContent = `code;title\nmavyko;Мавико\nmarshall;MARSHALL\nmazda;Mazda`;
 
-      const result = await ctx.client.importGroupsCsv(csvContent, ctx.shopContext);
+      const result = await ctx.client.groups.importCsv(csvContent, ctx.shopContext);
 
       expect(result.created).toBe(3);
       expect(result.updated).toBe(0);
 
-      const groups = await ctx.client.getGroups(ctx.shopContext);
+      const groups = await ctx.client.groups.getGroups(ctx.shopContext);
       const mavyko = groups.find((g) => g.code === 'mavyko');
       expect(mavyko).toBeDefined();
       expect(mavyko?.title).toBe('Мавико');
@@ -291,7 +291,7 @@ describe('Groups (e2e)', () => {
       const code1 = generateTestCode('export-group-1');
       const code2 = generateTestCode('export-group-2');
 
-      await ctx.client.importGroupsJson(
+      await ctx.client.groups.importJson(
         [
           { code: code1, title: 'Export Test Group 1' },
           { code: code2, title: 'Export Test Group 2' },
@@ -299,7 +299,7 @@ describe('Groups (e2e)', () => {
         ctx.shopContext,
       );
 
-      const exported = await ctx.client.exportGroupsJson(ctx.shopContext);
+      const exported = await ctx.client.groups.exportJson(ctx.shopContext);
 
       expect(Array.isArray(exported)).toBe(true);
       const exportedCodes = exported.map((g) => g.code);
@@ -314,7 +314,7 @@ describe('Groups (e2e)', () => {
       const code1 = generateTestCode('csv-export-group-1');
       const code2 = generateTestCode('csv-export-group-2');
 
-      await ctx.client.importGroupsJson(
+      await ctx.client.groups.importJson(
         [
           { code: code1, title: 'CSV Export Test 1' },
           { code: code2, title: 'CSV Export Test 2' },
@@ -322,7 +322,7 @@ describe('Groups (e2e)', () => {
         ctx.shopContext,
       );
 
-      const csv = await ctx.client.exportGroupsCsv(ctx.shopContext);
+      const csv = await ctx.client.groups.exportCsv(ctx.shopContext);
 
       expect(typeof csv).toBe('string');
       const lines = csv.split('\n');
@@ -334,7 +334,7 @@ describe('Groups (e2e)', () => {
 
   describe('Example downloads', () => {
     it('should return JSON example', async () => {
-      const examples = await ctx.client.getGroupsExampleJson();
+      const examples = await ctx.client.groups.getExampleJson();
 
       expect(Array.isArray(examples)).toBe(true);
       expect(examples.length).toBeGreaterThan(0);
@@ -343,7 +343,7 @@ describe('Groups (e2e)', () => {
     });
 
     it('should return CSV example', async () => {
-      const csv = await ctx.client.getGroupsExampleCsv();
+      const csv = await ctx.client.groups.getExampleCsv();
 
       expect(typeof csv).toBe('string');
       expect(csv).toContain('code,title');
@@ -371,14 +371,12 @@ describe('Groups (e2e)', () => {
         const roles = await ctx.getSystemClient().getRoles();
         const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
         if (!editorRole) throw new Error('Editor role not found');
-        {
-          await ctx.getSystemClient().createUserRole({
+          await ctx.getSystemClient().userRoles.createUserRole({
             user_id: editorUserId,
             role_id: editorRole.id,
             tenant_id: ctx.tenant.id,
             shop_id: ctx.shop.id,
           });
-        }
       });
 
       afterAll(async () => {
@@ -386,12 +384,12 @@ describe('Groups (e2e)', () => {
       });
 
       it('editor should list groups', async () => {
-        const groups = await editorClient.getGroups(ctx.shopContext);
+        const groups = await editorClient.groups.getGroups(ctx.shopContext);
         expect(Array.isArray(groups)).toBe(true);
       });
 
       it('editor should create group', async () => {
-        const group = await editorClient.createGroup(
+        const group = await editorClient.groups.createGroup(
           { code: generateTestCode('editor-group'), title: 'Editor Group' },
           ctx.shopContext,
         );
@@ -399,20 +397,20 @@ describe('Groups (e2e)', () => {
       });
 
       it('editor should get group by code', async () => {
-        const groups = await editorClient.getGroups(ctx.shopContext);
+        const groups = await editorClient.groups.getGroups(ctx.shopContext);
         if (groups.length === 0) throw new Error('Expected at least one group for editor');
         const firstGroup = groups[0];
         if (!firstGroup) throw new Error('Expected group');
-        const group = await editorClient.getGroupByCode(firstGroup.code, ctx.shopContext);
+        const group = await editorClient.groups.getGroupByCode(firstGroup.code, ctx.shopContext);
         expect(group.id).toBe(firstGroup.id);
       });
 
       it('editor should update group', async () => {
-        const groups = await editorClient.getGroups(ctx.shopContext);
+        const groups = await editorClient.groups.getGroups(ctx.shopContext);
         if (groups.length > 0) {
           const firstGroup = groups[0];
           if (!firstGroup) throw new Error('Expected group');
-          const updated = await editorClient.updateGroup(
+          const updated = await editorClient.groups.updateGroup(
             firstGroup.id,
             { title: 'Editor Updated' },
             ctx.shopContext,
@@ -422,16 +420,16 @@ describe('Groups (e2e)', () => {
       });
 
       it('editor should delete group', async () => {
-        const group = await editorClient.createGroup(
+        const group = await editorClient.groups.createGroup(
           { code: generateTestCode('editor-delete'), title: 'To Delete' },
           ctx.shopContext,
         );
-        await editorClient.deleteGroup(group.id, ctx.shopContext);
-        await expectNotFound(() => editorClient.getGroup(group.id, ctx.shopContext));
+        await editorClient.groups.deleteGroup(group.id, ctx.shopContext);
+        await expectNotFound(() => editorClient.groups.getGroup(group.id, ctx.shopContext));
       });
 
       it('editor should import groups', async () => {
-        const result = await editorClient.importGroupsJson(
+        const result = await editorClient.groups.importJson(
           [{ code: generateTestCode('editor-import'), title: 'Editor Import' }],
           ctx.shopContext,
         );
@@ -439,7 +437,7 @@ describe('Groups (e2e)', () => {
       });
 
       it('editor should export groups', async () => {
-        const exported = await editorClient.exportGroupsJson(ctx.shopContext);
+        const exported = await editorClient.groups.exportJson(ctx.shopContext);
         expect(Array.isArray(exported)).toBe(true);
       });
     });
@@ -464,14 +462,12 @@ describe('Groups (e2e)', () => {
         const roles = await ctx.getSystemClient().getRoles();
         const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
         if (!viewerRole) throw new Error('Viewer role not found');
-        {
-          await ctx.getSystemClient().createUserRole({
+          await ctx.getSystemClient().userRoles.createUserRole({
             user_id: viewerUserId,
             role_id: viewerRole.id,
             tenant_id: ctx.tenant.id,
             shop_id: ctx.shop.id,
           });
-        }
       });
 
       afterAll(async () => {
@@ -479,63 +475,63 @@ describe('Groups (e2e)', () => {
       });
 
       it('viewer should list groups', async () => {
-        const groups = await viewerClient.getGroups(ctx.shopContext);
+        const groups = await viewerClient.groups.getGroups(ctx.shopContext);
         expect(Array.isArray(groups)).toBe(true);
       });
 
       it('viewer should get group by code', async () => {
-        const groups = await viewerClient.getGroups(ctx.shopContext);
+        const groups = await viewerClient.groups.getGroups(ctx.shopContext);
         if (groups.length === 0) throw new Error('Expected at least one group for viewer');
         const firstGroup = groups[0];
         if (!firstGroup) throw new Error('Expected group');
-        const group = await viewerClient.getGroupByCode(firstGroup.code, ctx.shopContext);
+        const group = await viewerClient.groups.getGroupByCode(firstGroup.code, ctx.shopContext);
         expect(group.id).toBe(firstGroup.id);
       });
 
       it('viewer should get group by id', async () => {
-        const groups = await viewerClient.getGroups(ctx.shopContext);
+        const groups = await viewerClient.groups.getGroups(ctx.shopContext);
         if (groups.length > 0) {
           const firstGroup = groups[0];
           if (!firstGroup) throw new Error('Expected group');
-          const group = await viewerClient.getGroup(firstGroup.id, ctx.shopContext);
+          const group = await viewerClient.groups.getGroup(firstGroup.id, ctx.shopContext);
           expect(group.id).toBe(firstGroup.id);
         }
       });
 
       it('viewer should NOT create group', async () => {
         await expectForbidden(() =>
-          viewerClient.createGroup({ code: 'viewer-group', title: 'Should Fail' }, ctx.shopContext),
+          viewerClient.groups.createGroup({ code: 'viewer-group', title: 'Should Fail' }, ctx.shopContext),
         );
       });
 
       it('viewer should NOT update group', async () => {
-        const groups = await viewerClient.getGroups(ctx.shopContext);
+        const groups = await viewerClient.groups.getGroups(ctx.shopContext);
         if (groups.length > 0) {
           const firstGroup = groups[0];
           if (!firstGroup) throw new Error('Expected group');
           await expectForbidden(() =>
-            viewerClient.updateGroup(firstGroup.id, { title: 'Should Fail' }, ctx.shopContext),
+            viewerClient.groups.updateGroup(firstGroup.id, { title: 'Should Fail' }, ctx.shopContext),
           );
         }
       });
 
       it('viewer should NOT delete group', async () => {
-        const groups = await viewerClient.getGroups(ctx.shopContext);
+        const groups = await viewerClient.groups.getGroups(ctx.shopContext);
         if (groups.length > 0) {
           const firstGroup = groups[0];
           if (!firstGroup) throw new Error('Expected group');
-          await expectForbidden(() => viewerClient.deleteGroup(firstGroup.id, ctx.shopContext));
+          await expectForbidden(() => viewerClient.groups.deleteGroup(firstGroup.id, ctx.shopContext));
         }
       });
 
       it('viewer should export groups', async () => {
-        const exported = await viewerClient.exportGroupsJson(ctx.shopContext);
+        const exported = await viewerClient.groups.exportJson(ctx.shopContext);
         expect(Array.isArray(exported)).toBe(true);
       });
 
       it('viewer should NOT import groups', async () => {
         await expectForbidden(() =>
-          viewerClient.importGroupsJson([{ code: 'test', title: 'Should Fail' }], ctx.shopContext),
+          viewerClient.groups.importJson([{ code: 'test', title: 'Should Fail' }], ctx.shopContext),
         );
       });
     });

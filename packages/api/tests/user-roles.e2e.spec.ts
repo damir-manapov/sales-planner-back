@@ -55,12 +55,12 @@ describe('User Roles (e2e)', () => {
   describe('Authentication', () => {
     it('should return 401 without API key', async () => {
       const noAuthClient = new SalesPlannerClient({ baseUrl, apiKey: '' });
-      await expectUnauthorized(() => noAuthClient.getUserRoles({ tenantId: ctx.tenant.id }));
+      await expectUnauthorized(() => noAuthClient.userRoles.getUserRoles({ tenantId: ctx.tenant.id }));
     });
 
     it('should return 401 with invalid API key', async () => {
       const badClient = new SalesPlannerClient({ baseUrl, apiKey: 'invalid-key' });
-      await expectUnauthorized(() => badClient.getUserRoles({ tenantId: ctx.tenant.id }));
+      await expectUnauthorized(() => badClient.userRoles.getUserRoles({ tenantId: ctx.tenant.id }));
     });
   });
 
@@ -82,13 +82,13 @@ describe('User Roles (e2e)', () => {
     });
 
     it('tenant owner should list user roles for their tenant', async () => {
-      const userRoles = await ctx.client.getUserRoles({ tenantId: ctx.tenant.id });
+      const userRoles = await ctx.client.userRoles.getUserRoles({ tenantId: ctx.tenant.id });
 
       expect(Array.isArray(userRoles)).toBe(true);
     });
 
     it('tenant owner should assign editor role to user in their tenant', async () => {
-      const userRole = await ctx.client.createUserRole({
+      const userRole = await ctx.client.userRoles.createUserRole({
         user_id: targetUserId,
         role_id: editorRoleId,
         tenant_id: ctx.tenant.id,
@@ -105,14 +105,14 @@ describe('User Roles (e2e)', () => {
     });
 
     it('tenant owner should get user role by id', async () => {
-      const userRole = await ctx.client.getUserRole(createdUserRoleId);
+      const userRole = await ctx.client.userRoles.getUserRole(createdUserRoleId);
 
       expect(userRole.id).toBe(createdUserRoleId);
       expect(userRole.user_id).toBe(targetUserId);
     });
 
     it('tenant owner should assign viewer role to same user', async () => {
-      const userRole = await ctx.client.createUserRole({
+      const userRole = await ctx.client.userRoles.createUserRole({
         user_id: targetUserId,
         role_id: viewerRoleId,
         tenant_id: ctx.tenant.id,
@@ -123,8 +123,8 @@ describe('User Roles (e2e)', () => {
     });
 
     it('tenant owner should delete user role', async () => {
-      await ctx.client.deleteUserRole(createdUserRoleId);
-      await expectNotFound(() => ctx.client.getUserRole(createdUserRoleId));
+      await ctx.client.userRoles.deleteUserRole(createdUserRoleId);
+      await expectNotFound(() => ctx.client.userRoles.getUserRole(createdUserRoleId));
     });
   });
 
@@ -152,7 +152,7 @@ describe('User Roles (e2e)', () => {
       const roles = await ctx.getSystemClient().getRoles();
       const tenantAdminRole = roles.find((r) => r.name === ROLE_NAMES.TENANT_ADMIN);
       if (!tenantAdminRole) throw new Error('Tenant Admin role not found');
-      await ctx.getSystemClient().createUserRole({
+      await ctx.getSystemClient().userRoles.createUserRole({
         user_id: tenantAdminUserId,
         role_id: tenantAdminRole.id,
         tenant_id: ctx.tenant.id,
@@ -172,13 +172,13 @@ describe('User Roles (e2e)', () => {
     });
 
     it('tenant admin should list user roles for their tenant', async () => {
-      const userRoles = await tenantAdminClient.getUserRoles({ tenantId: ctx.tenant.id });
+      const userRoles = await tenantAdminClient.userRoles.getUserRoles({ tenantId: ctx.tenant.id });
 
       expect(Array.isArray(userRoles)).toBe(true);
     });
 
     it('tenant admin should assign role to user in their tenant', async () => {
-      const userRole = await tenantAdminClient.createUserRole({
+      const userRole = await tenantAdminClient.userRoles.createUserRole({
         user_id: targetUserId,
         role_id: editorRoleId,
         tenant_id: ctx.tenant.id,
@@ -192,14 +192,14 @@ describe('User Roles (e2e)', () => {
     });
 
     it('tenant admin should get user role by id', async () => {
-      const userRole = await tenantAdminClient.getUserRole(adminCreatedRoleId);
+      const userRole = await tenantAdminClient.userRoles.getUserRole(adminCreatedRoleId);
 
       expect(userRole.id).toBe(adminCreatedRoleId);
     });
 
     it('tenant admin should delete user role in their tenant', async () => {
-      await tenantAdminClient.deleteUserRole(adminCreatedRoleId);
-      await expectNotFound(() => tenantAdminClient.getUserRole(adminCreatedRoleId));
+      await tenantAdminClient.userRoles.deleteUserRole(adminCreatedRoleId);
+      await expectNotFound(() => tenantAdminClient.userRoles.getUserRole(adminCreatedRoleId));
     });
   });
 
@@ -220,7 +220,7 @@ describe('User Roles (e2e)', () => {
         name: 'Other Target',
       });
 
-      const userRole = await otherCtx.client.createUserRole({
+      const userRole = await otherCtx.client.userRoles.createUserRole({
         user_id: targetUser.id,
         role_id: viewerRoleId,
         tenant_id: otherCtx.tenant.id,
@@ -234,11 +234,11 @@ describe('User Roles (e2e)', () => {
     });
 
     it('should return 403 when listing roles for other tenant', async () => {
-      await expectForbidden(() => ctx.client.getUserRoles({ tenantId: otherCtx.tenant.id }));
+      await expectForbidden(() => ctx.client.userRoles.getUserRoles({ tenantId: otherCtx.tenant.id }));
     });
 
     it('should return 403 when getting user role from other tenant', async () => {
-      await expectForbidden(() => ctx.client.getUserRole(otherUserRoleId));
+      await expectForbidden(() => ctx.client.userRoles.getUserRole(otherUserRoleId));
     });
 
     it('should return 403 when creating role in other tenant', async () => {
@@ -248,7 +248,7 @@ describe('User Roles (e2e)', () => {
       });
 
       await expectForbidden(() =>
-        ctx.client.createUserRole({
+        ctx.client.userRoles.createUserRole({
           user_id: targetUser.id,
           role_id: editorRoleId,
           tenant_id: otherCtx.tenant.id,
@@ -258,7 +258,7 @@ describe('User Roles (e2e)', () => {
     });
 
     it('should return 403 when deleting role from other tenant', async () => {
-      await expectForbidden(() => ctx.client.deleteUserRole(otherUserRoleId));
+      await expectForbidden(() => ctx.client.userRoles.deleteUserRole(otherUserRoleId));
     });
   });
 
@@ -282,7 +282,7 @@ describe('User Roles (e2e)', () => {
       });
       editorClient = new SalesPlannerClient({ baseUrl, apiKey: editorApiKey.key });
 
-      await ctx.getSystemClient().createUserRole({
+      await ctx.getSystemClient().userRoles.createUserRole({
         user_id: editorUserId,
         role_id: editorRoleId,
         tenant_id: ctx.tenant.id,
@@ -302,7 +302,7 @@ describe('User Roles (e2e)', () => {
       });
       viewerClient = new SalesPlannerClient({ baseUrl, apiKey: viewerApiKey.key });
 
-      await ctx.getSystemClient().createUserRole({
+      await ctx.getSystemClient().userRoles.createUserRole({
         user_id: viewerUserId,
         role_id: viewerRoleId,
         tenant_id: ctx.tenant.id,
@@ -316,7 +316,7 @@ describe('User Roles (e2e)', () => {
     });
 
     it('editor should NOT list user roles (requires tenant admin)', async () => {
-      await expectForbidden(() => editorClient.getUserRoles({ tenantId: ctx.tenant.id }));
+      await expectForbidden(() => editorClient.userRoles.getUserRoles({ tenantId: ctx.tenant.id }));
     });
 
     it('editor should NOT create user roles', async () => {
@@ -326,7 +326,7 @@ describe('User Roles (e2e)', () => {
       });
 
       await expectForbidden(() =>
-        editorClient.createUserRole({
+        editorClient.userRoles.createUserRole({
           user_id: targetUser.id,
           role_id: viewerRoleId,
           tenant_id: ctx.tenant.id,
@@ -336,7 +336,7 @@ describe('User Roles (e2e)', () => {
     });
 
     it('viewer should NOT list user roles (requires tenant admin)', async () => {
-      await expectForbidden(() => viewerClient.getUserRoles({ tenantId: ctx.tenant.id }));
+      await expectForbidden(() => viewerClient.userRoles.getUserRoles({ tenantId: ctx.tenant.id }));
     });
 
     it('viewer should NOT create user roles', async () => {
@@ -346,7 +346,7 @@ describe('User Roles (e2e)', () => {
       });
 
       await expectForbidden(() =>
-        viewerClient.createUserRole({
+        viewerClient.userRoles.createUserRole({
           user_id: targetUser.id,
           role_id: viewerRoleId,
           tenant_id: ctx.tenant.id,
@@ -373,13 +373,13 @@ describe('User Roles (e2e)', () => {
     });
 
     it('system admin should list all user roles', async () => {
-      const userRoles = await ctx.getSystemClient().getUserRoles();
+      const userRoles = await ctx.getSystemClient().userRoles.getUserRoles();
 
       expect(Array.isArray(userRoles)).toBe(true);
     });
 
     it('system admin should list user roles by tenant', async () => {
-      const userRoles = await ctx.getSystemClient().getUserRoles({ tenantId: ctx.tenant.id });
+      const userRoles = await ctx.getSystemClient().userRoles.getUserRoles({ tenantId: ctx.tenant.id });
 
       expect(Array.isArray(userRoles)).toBe(true);
       userRoles.forEach((ur) => {
@@ -388,7 +388,7 @@ describe('User Roles (e2e)', () => {
     });
 
     it('system admin should create user role', async () => {
-      const userRole = await ctx.getSystemClient().createUserRole({
+      const userRole = await ctx.getSystemClient().userRoles.createUserRole({
         user_id: targetUserId,
         role_id: editorRoleId,
         tenant_id: ctx.tenant.id,
@@ -400,8 +400,8 @@ describe('User Roles (e2e)', () => {
     });
 
     it('system admin should delete user role', async () => {
-      await ctx.getSystemClient().deleteUserRole(systemCreatedRoleId);
-      await expectNotFound(() => ctx.getSystemClient().getUserRole(systemCreatedRoleId));
+      await ctx.getSystemClient().userRoles.deleteUserRole(systemCreatedRoleId);
+      await expectNotFound(() => ctx.getSystemClient().userRoles.getUserRole(systemCreatedRoleId));
     });
   });
 });
