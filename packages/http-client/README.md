@@ -136,17 +136,25 @@ const brandExample = await client.brands.getBrandsExampleCsv();
 
 ### Sales History
 
-**Create/Import:**
+**Create:**
+- `sku_id` (required): Number, must reference existing SKU
+- `period` (required): String, format `YYYY-MM` (e.g., "2026-01")
+- `quantity` (required): Number, integer
+- `marketplace_id` (required): Number, must reference existing marketplace
+
+**Import (CSV/JSON):**
 - `sku_code` (required): String, must match existing SKU or will be auto-created
 - `period` (required): String, format `YYYY-MM` (e.g., "2026-01")
 - `quantity` (required): Number, integer
-- `marketplace` (required): String, must match existing marketplace code or will be auto-created
+- `marketplace` (required): String (marketplace code), must match existing marketplace or will be auto-created
+
+Note: Import endpoints accept marketplace codes for convenience, but the API internally uses numeric marketplace IDs. Export also returns marketplace codes.
 
 **Update:**
 - `sku_id` (optional): Number
 - `period` (optional): String, format `YYYY-MM`
 - `quantity` (optional): Number
-- `marketplace` (optional): String
+- `marketplace_id` (optional): Number
 
 ### Users
 

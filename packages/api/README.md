@@ -23,7 +23,9 @@ Swagger UI provides:
 - **Roles** - Role-based access control (viewer, editor, tenantAdmin, systemAdmin)
 - **User-Roles** - Assign roles to users (per shop or per tenant)
 - **API Keys** - API keys with optional expiration, linked to users
-- **Marketplaces** - Marketplace management (numeric IDs, shop-scoped with unique codes, managed by shop editors like brands)
+- **Marketplaces** - Marketplace management with numeric IDs (shop-scoped with unique codes, managed by shop editors like brands)
+  - Uses numeric IDs for referential integrity (like SKUs)
+  - Import/export uses marketplace codes for user convenience
 - **Brands** - Brand management linked to shops (unique code per shop)
   - **CRUD Operations**: Full create, read, update, delete with access control
   - **Import/Export**: Supports both JSON and CSV formats
@@ -37,10 +39,11 @@ Swagger UI provides:
 - **SKUs** - SKU management linked to shops (unique code per shop)
   - Import/Export: JSON and CSV file upload support
   - Proper file download headers for exports
-- **Sales History** - Monthly sales data per SKU (shop-level entity with marketplace)
-  - Import/Export: JSON and CSV file upload support with marketplace column
-  - Auto-creates missing SKUs and marketplaces during import
-  - Marketplace field is required
+- **Sales History** - Monthly sales data per SKU (shop-level entity with numeric marketplace_id)
+  - Create endpoint requires numeric `marketplace_id` (foreign key to marketplaces table)
+  - Import/Export: JSON and CSV file upload support with marketplace **code** column
+  - Auto-creates missing SKUs and marketplaces during import (by code)
+  - Import converts marketplace codes to IDs, export converts IDs to codes
   - Proper file download headers for exports
 - **Me** - Get current user data with roles and tenants
 - **Bootstrap** - Auto-creates systemAdmin user and seeds default roles on startup

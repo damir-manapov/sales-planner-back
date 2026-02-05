@@ -1,5 +1,11 @@
 # @sales-planner/shared
 
+## 0.8.1
+
+### Patch Changes
+
+- Update READMEs to document marketplace numeric ID usage pattern
+
 ## 0.8.0
 
 ### Minor Changes

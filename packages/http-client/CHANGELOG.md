@@ -1,5 +1,13 @@
 # @sales-planner/http-client
 
+## 0.8.2
+
+### Patch Changes
+
+- Update READMEs to document marketplace numeric ID usage pattern
+- Updated dependencies
+  - @sales-planner/shared@0.8.1
+
 ## 0.8.1
 
 ### Patch Changes

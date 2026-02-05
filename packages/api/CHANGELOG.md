@@ -1,5 +1,13 @@
 # @sales-planner/api
 
+## 0.4.1
+
+### Patch Changes
+
+- Update READMEs to document marketplace numeric ID usage pattern
+- Updated dependencies
+  - @sales-planner/shared@0.8.1
+
 ## 0.4.0
 
 ### Minor Changes

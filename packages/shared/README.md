@@ -81,6 +81,13 @@ import type {
 } from '@sales-planner/shared';
 ```
 
+## Marketplace IDs vs Codes
+
+The API uses **numeric IDs** internally for referential integrity:
+- `CreateSalesHistoryRequest.marketplace_id: number` - API uses numeric foreign keys
+- Import/Export use **marketplace codes** (strings) for user convenience
+- This pattern matches SKUs: IDs internally, codes for import/export
+
 ## Types Reference
 
 ### Entities
@@ -92,11 +99,11 @@ import type {
 | `Shop` | Store within a tenant |
 | `Sku` | Stock keeping unit (product variant) |
 | `Brand` | Product brand (shop-scoped) |
-| `SalesHistory` | Sales record for a period |
+| `SalesHistory` | Sales record for a period (uses numeric marketplace_id) |
 | `Role` | Access role |
 | `UserRole` | User-role assignment |
 | `ApiKey` | API authentication key |
-| `Marketplace` | E-commerce platform |
+| `Marketplace` | E-commerce platform (numeric ID, shop-scoped) |
 
 ### Query Types
 
