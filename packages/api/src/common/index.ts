@@ -7,6 +7,7 @@ export {
   isUniqueViolation,
 } from './exceptions.js';
 export { parseCsvImport, sendCsvExport, sendJsonExport } from './export-import.helpers.js';
+export type { ExpressResponse } from './export-import.helpers.js';
 export type {
   ImportResult,
   SkuImportResult,

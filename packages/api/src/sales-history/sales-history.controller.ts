@@ -18,7 +18,6 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes } from '@nestjs/swagger';
-import type { Response as ExpressResponse } from 'express';
 import { AuthenticatedRequest, AuthGuard } from '../auth/auth.guard.js';
 import {
   RequireReadAccess,
@@ -27,6 +26,7 @@ import {
   type ShopContext as ShopContextType,
 } from '../auth/decorators.js';
 import {
+  type ExpressResponse,
   parseAndValidateImport,
   sendCsvExport,
   sendJsonExport,
