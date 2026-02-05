@@ -3,6 +3,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { ApiError, SalesPlannerClient } from '@sales-planner/http-client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
+import { normalizeCode } from '../src/lib/normalize-code.js';
 import { TestContext } from './test-context.js';
 import { cleanupUser } from './test-helpers.js';
 
@@ -68,7 +69,7 @@ describe('Brands (e2e)', () => {
       const brand = await ctx.client.createBrand(newBrand, ctx.shopContext);
 
       expect(brand).toHaveProperty('id');
-      expect(brand.code).toBe(newBrand.code);
+      expect(brand.code).toBe(normalizeCode(newBrand.code));
       expect(brand.title).toBe(newBrand.title);
       expect(brand.shop_id).toBe(ctx.shop.id);
       expect(brand.tenant_id).toBe(ctx.tenant.id);
@@ -226,8 +227,8 @@ describe('Brands (e2e)', () => {
 
       const brands = await ctx.client.getBrands(ctx.shopContext);
       const codes = brands.map((b) => b.code);
-      expect(codes).toContain(code1);
-      expect(codes).toContain(code2);
+      expect(codes).toContain(normalizeCode(code1));
+      expect(codes).toContain(normalizeCode(code2));
     });
 
     it('importBrandsJson - should upsert existing brands', async () => {
@@ -255,8 +256,8 @@ describe('Brands (e2e)', () => {
 
       const brands = await ctx.client.getBrands(ctx.shopContext);
       const codes = brands.map((b) => b.code);
-      expect(codes).toContain(code1);
-      expect(codes).toContain(code2);
+      expect(codes).toContain(normalizeCode(code1));
+      expect(codes).toContain(normalizeCode(code2));
     });
 
     it('importBrandsCsv - should import brands from CSV with semicolons', async () => {
@@ -271,8 +272,8 @@ describe('Brands (e2e)', () => {
 
       const brands = await ctx.client.getBrands(ctx.shopContext);
       const codes = brands.map((b) => b.code);
-      expect(codes).toContain(code1);
-      expect(codes).toContain(code2);
+      expect(codes).toContain(normalizeCode(code1));
+      expect(codes).toContain(normalizeCode(code2));
     });
 
     it('importBrandsCsv - should handle Cyrillic characters with semicolons', async () => {
@@ -305,11 +306,11 @@ describe('Brands (e2e)', () => {
 
       expect(Array.isArray(exported)).toBe(true);
       const exportedCodes = exported.map((b) => b.code);
-      expect(exportedCodes).toContain(code1);
-      expect(exportedCodes).toContain(code2);
+      expect(exportedCodes).toContain(normalizeCode(code1));
+      expect(exportedCodes).toContain(normalizeCode(code2));
 
-      const item = exported.find((b) => b.code === code1);
-      expect(item).toEqual({ code: code1, title: 'Export Test Brand 1' });
+      const item = exported.find((b) => b.code === normalizeCode(code1));
+      expect(item).toEqual({ code: normalizeCode(code1), title: 'Export Test Brand 1' });
     });
 
     it('exportBrandsCsv - should export brands in CSV format', async () => {
@@ -329,8 +330,8 @@ describe('Brands (e2e)', () => {
       expect(typeof csv).toBe('string');
       const lines = csv.split('\n');
       expect(lines[0]).toBe('code,title');
-      expect(lines.some((line) => line.includes(code1))).toBe(true);
-      expect(lines.some((line) => line.includes(code2))).toBe(true);
+      expect(lines.some((line) => line.includes(normalizeCode(code1)))).toBe(true);
+      expect(lines.some((line) => line.includes(normalizeCode(code2)))).toBe(true);
     });
   });
 

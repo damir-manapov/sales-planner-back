@@ -19,8 +19,8 @@ export interface UpdateSalesHistoryDto {
 export type UpdateSalesHistoryRequest = UpdateSalesHistoryDto;
 
 export interface ImportSalesHistoryItem {
-  sku_code: string;
-  period: string; // YYYY-MM format
-  quantity: number;
   marketplace: string;
+  period: string; // YYYY-MM format
+  sku: string;
+  quantity: number;
 }

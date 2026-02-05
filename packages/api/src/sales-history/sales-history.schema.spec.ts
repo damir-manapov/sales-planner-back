@@ -216,10 +216,10 @@ describe('Sales History Schemas', () => {
   describe('ImportSalesHistoryItemSchema', () => {
     it('should validate valid import item', () => {
       const data = {
-        sku_code: 'SKU-001',
-        period: '2024-01',
-        quantity: 50,
         marketplace: 'WB',
+        period: '2024-01',
+        sku: 'SKU-001',
+        quantity: 50,
       };
 
       const result = ImportSalesHistoryItemSchema.parse(data);
@@ -227,33 +227,33 @@ describe('Sales History Schemas', () => {
       expect(result).toEqual(data);
     });
 
-    it('should reject missing sku_code', () => {
+    it('should reject missing sku', () => {
       const data = {
+        marketplace: 'WB',
         period: '2024-01',
         quantity: 50,
-        marketplace: 'WB',
       };
 
       expect(() => ImportSalesHistoryItemSchema.parse(data)).toThrow();
     });
 
-    it('should reject empty sku_code', () => {
+    it('should reject empty sku', () => {
       const data = {
-        sku_code: '',
-        period: '2024-01',
-        quantity: 50,
         marketplace: 'WB',
+        period: '2024-01',
+        sku: '',
+        quantity: 50,
       };
 
       expect(() => ImportSalesHistoryItemSchema.parse(data)).toThrow();
     });
 
-    it('should reject sku_code longer than 100 characters', () => {
+    it('should reject sku longer than 100 characters', () => {
       const data = {
-        sku_code: 'A'.repeat(101),
-        period: '2024-01',
-        quantity: 50,
         marketplace: 'WB',
+        period: '2024-01',
+        sku: 'A'.repeat(101),
+        quantity: 50,
       };
 
       expect(() => ImportSalesHistoryItemSchema.parse(data)).toThrow();
@@ -261,10 +261,10 @@ describe('Sales History Schemas', () => {
 
     it('should reject invalid period in import', () => {
       const data = {
-        sku_code: 'SKU-001',
-        period: 'invalid',
-        quantity: 50,
         marketplace: 'WB',
+        period: 'invalid',
+        sku: 'SKU-001',
+        quantity: 50,
       };
 
       expect(() => ImportSalesHistoryItemSchema.parse(data)).toThrow();
@@ -272,8 +272,8 @@ describe('Sales History Schemas', () => {
 
     it('should reject missing marketplace', () => {
       const data = {
-        sku_code: 'SKU-001',
         period: '2024-01',
+        sku: 'SKU-001',
         quantity: 50,
       };
 
@@ -282,10 +282,10 @@ describe('Sales History Schemas', () => {
 
     it('should reject empty marketplace', () => {
       const data = {
-        sku_code: 'SKU-001',
-        period: '2024-01',
-        quantity: 50,
         marketplace: '',
+        period: '2024-01',
+        sku: 'SKU-001',
+        quantity: 50,
       };
 
       expect(() => ImportSalesHistoryItemSchema.parse(data)).toThrow();
@@ -293,9 +293,9 @@ describe('Sales History Schemas', () => {
 
     it('should validate array of import items', () => {
       const data = [
-        { sku_code: 'SKU-001', period: '2024-01', quantity: 10, marketplace: 'WB' },
-        { sku_code: 'SKU-002', period: '2024-02', quantity: 20, marketplace: 'OZON' },
-        { sku_code: 'SKU-003', period: '2024-03', quantity: 0, marketplace: 'WB' },
+        { marketplace: 'WB', period: '2024-01', sku: 'SKU-001', quantity: 10 },
+        { marketplace: 'OZON', period: '2024-02', sku: 'SKU-002', quantity: 20 },
+        { marketplace: 'WB', period: '2024-03', sku: 'SKU-003', quantity: 0 },
       ];
 
       const results = data.map((item) => ImportSalesHistoryItemSchema.parse(item));

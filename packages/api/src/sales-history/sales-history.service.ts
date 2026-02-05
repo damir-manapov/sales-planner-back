@@ -202,7 +202,7 @@ export class SalesHistoryService {
     }
 
     // Find or create SKUs by code
-    const skuCodes = validatedItems.map((i) => normalizeSkuCode(i.sku_code));
+    const skuCodes = validatedItems.map((i) => normalizeSkuCode(i.sku));
     const { codeToId: skuCodeToId, created: skusCreated } =
       await this.skusService.findOrCreateByCode(skuCodes, shopId, tenantId);
 
@@ -222,7 +222,7 @@ export class SalesHistoryService {
     const validItems: PreparedSalesHistoryItem[] = [];
 
     validatedItems.forEach((item) => {
-      const normalizedSkuCode = normalizeSkuCode(item.sku_code);
+      const normalizedSkuCode = normalizeSkuCode(item.sku);
       const normalizedMarketplaceCode = normalizeCode(item.marketplace);
       const skuId = skuCodeToId.get(normalizedSkuCode);
       const marketplaceId = marketplaceCodeToId.get(normalizedMarketplaceCode);
@@ -334,10 +334,10 @@ export class SalesHistoryService {
       .execute();
 
     return rows.map((r) => ({
-      sku_code: r.sku_code,
-      period: r.period,
-      quantity: r.quantity,
       marketplace: r.marketplace_code,
+      period: r.period,
+      sku: r.sku_code,
+      quantity: r.quantity,
     }));
   }
 }

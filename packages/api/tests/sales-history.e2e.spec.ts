@@ -176,8 +176,8 @@ describe('Sales History (e2e)', () => {
     it('POST /sales-history/import/json - should import multiple records', async () => {
       const result = await ctx.client.importSalesHistoryJson(
         [
-          { sku_code: skuCode, period: '2025-11', quantity: 80, marketplace: 'WB' },
-          { sku_code: skuCode, period: '2025-12', quantity: 90, marketplace: 'WB' },
+          { marketplace: 'WB', period: '2025-11', sku: skuCode, quantity: 80 },
+          { marketplace: 'WB', period: '2025-12', sku: skuCode, quantity: 90 },
         ],
         ctx.shopContext,
       );
@@ -189,7 +189,7 @@ describe('Sales History (e2e)', () => {
 
     it('POST /sales-history/import/json - should upsert existing records', async () => {
       const result = await ctx.client.importSalesHistoryJson(
-        [{ sku_code: skuCode, period: '2025-11', quantity: 100, marketplace: 'WB' }],
+        [{ marketplace: 'WB', period: '2025-11', sku: skuCode, quantity: 100 }],
         ctx.shopContext,
       );
 
@@ -202,7 +202,7 @@ describe('Sales History (e2e)', () => {
       const normalizedSkuCode = normalizeSkuCode(newSkuCode);
 
       const result = await ctx.client.importSalesHistoryJson(
-        [{ sku_code: newSkuCode, period: '2025-05', quantity: 50, marketplace: 'WB' }],
+        [{ marketplace: 'WB', period: '2025-05', sku: newSkuCode, quantity: 50 }],
         ctx.shopContext,
       );
 
@@ -222,7 +222,7 @@ describe('Sales History (e2e)', () => {
       const normalizedMarketplace = normalizeCode(uniqueMarketplace);
 
       const result = await ctx.client.importSalesHistoryJson(
-        [{ sku_code: skuCode, period: '2025-06', quantity: 30, marketplace: uniqueMarketplace }],
+        [{ marketplace: uniqueMarketplace, period: '2025-06', sku: skuCode, quantity: 30 }],
         ctx.shopContext,
       );
 
@@ -248,7 +248,7 @@ describe('Sales History (e2e)', () => {
 
       // Import sales history
       await ctx.client.importSalesHistoryJson(
-        [{ sku_code: exportSkuCode, period: '2025-07', quantity: 100, marketplace: 'OZON' }],
+        [{ marketplace: 'OZON', period: '2025-07', sku: exportSkuCode, quantity: 100 }],
         ctx.shopContext,
       );
 
@@ -258,14 +258,14 @@ describe('Sales History (e2e)', () => {
       expect(Array.isArray(exported)).toBe(true);
 
       const item = exported.find(
-        (r) => r.sku_code === normalizedExportSkuCode && r.period === '2025-07',
+        (r) => r.sku === normalizedExportSkuCode && r.period === '2025-07',
       );
       expect(item).toBeDefined();
       expect(item).toEqual({
-        sku_code: normalizedExportSkuCode,
-        period: '2025-07',
-        quantity: 100,
         marketplace: normalizeCode('OZON'),
+        period: '2025-07',
+        sku: normalizedExportSkuCode,
+        quantity: 100,
       });
     });
 
@@ -289,14 +289,14 @@ describe('Sales History (e2e)', () => {
       expect(typeof csv).toBe('string');
 
       const lines = csv.split('\n');
-      expect(lines[0]).toBe('sku_code,period,quantity,marketplace');
+      expect(lines[0]).toBe('marketplace,period,sku,quantity');
       expect(lines.length).toBeGreaterThan(1);
     });
 
     it('POST /sales-history/import/csv - should import sales history from CSV', async () => {
       const skuCode = `CSV-IMPORT-${Date.now()}`;
       const normalizedSkuCode = normalizeSkuCode(skuCode);
-      const csvContent = `sku_code,period,quantity,marketplace\n${skuCode},2025-08,75,WB`;
+      const csvContent = `marketplace,period,sku,quantity\nWB,2025-08,${skuCode},75`;
 
       const result = await ctx.client.importSalesHistoryCsv(csvContent, ctx.shopContext);
 
@@ -305,14 +305,14 @@ describe('Sales History (e2e)', () => {
       expect(result).toHaveProperty('skus_created');
       expect(result.skus_created).toBeGreaterThanOrEqual(1);
 
-      // Verify the data was imported using the export endpoint which includes sku_code
+      // Verify the data was imported using the export endpoint which includes sku
       const exported = await ctx.client.exportSalesHistoryJson(ctx.shopContext, {
         period_from: '2025-08',
         period_to: '2025-08',
       });
 
       const imported = exported.find(
-        (r) => r.sku_code === normalizedSkuCode && r.period === '2025-08',
+        (r) => r.sku === normalizedSkuCode && r.period === '2025-08',
       );
       expect(imported).toBeDefined();
       expect(imported?.quantity).toBe(75);
@@ -326,15 +326,16 @@ describe('Sales History (e2e)', () => {
 
       expect(Array.isArray(example)).toBe(true);
       expect(example.length).toBeGreaterThan(0);
-      expect(example[0]).toHaveProperty('sku_code');
+      expect(example[0]).toHaveProperty('marketplace');
       expect(example[0]).toHaveProperty('period');
+      expect(example[0]).toHaveProperty('sku');
       expect(example[0]).toHaveProperty('quantity');
     });
 
     it('GET /sales-history/examples/csv - should return CSV example without auth', async () => {
       const csv = await ctx.client.getSalesHistoryExampleCsv();
 
-      expect(csv).toContain('sku_code,period,quantity');
+      expect(csv).toContain('marketplace,period,sku,quantity');
       expect(csv).toContain('SKU-001');
     });
   });

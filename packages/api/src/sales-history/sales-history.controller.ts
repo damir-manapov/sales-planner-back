@@ -91,10 +91,10 @@ export class SalesHistoryController {
     PeriodQuerySchema.parse({ period_from: periodFrom, period_to: periodTo });
     const items = await this.salesHistoryService.exportForShop(ctx.shopId, periodFrom, periodTo);
     sendCsvExport(res, items, 'sales-history.csv', [
-      'sku_code',
-      'period',
-      'quantity',
       'marketplace',
+      'period',
+      'sku',
+      'quantity',
     ]);
   }
 
@@ -195,7 +195,7 @@ export class SalesHistoryController {
             file: {
               type: 'string',
               format: 'binary',
-              description: 'JSON file with array of {sku_code, period, quantity} objects',
+              description: 'JSON file with array of {marketplace, period, sku, quantity} objects',
             },
           },
         },
@@ -204,8 +204,9 @@ export class SalesHistoryController {
           items: {
             type: 'object',
             properties: {
-              sku_code: { type: 'string' },
+              marketplace: { type: 'string' },
               period: { type: 'string' },
+              sku: { type: 'string' },
               quantity: { type: 'number' },
             },
           },
@@ -234,7 +235,7 @@ export class SalesHistoryController {
         file: {
           type: 'string',
           format: 'binary',
-          description: 'CSV file with columns: sku_code, period, quantity, marketplace',
+          description: 'CSV file with columns: marketplace, period, sku, quantity',
         },
       },
     },
@@ -249,11 +250,11 @@ export class SalesHistoryController {
     }
     const content = file.buffer.toString('utf-8');
     const records = fromCsv<{
-      sku_code: string;
-      period: string;
-      quantity: string;
       marketplace: string;
-    }>(content, ['sku_code', 'period', 'quantity', 'marketplace']);
+      period: string;
+      sku: string;
+      quantity: string;
+    }>(content, ['marketplace', 'period', 'sku', 'quantity']);
 
     // Validate and transform each record with Zod
     const validatedData = records.map((record, index) => {
@@ -263,10 +264,10 @@ export class SalesHistoryController {
       }
       try {
         return ImportSalesHistoryItemSchema.parse({
-          sku_code: record.sku_code,
-          period: record.period,
-          quantity,
           marketplace: record.marketplace,
+          period: record.period,
+          sku: record.sku,
+          quantity,
         });
       } catch (error) {
         throw new BadRequestException(`Invalid data at row ${index + 1}: ${error}`);

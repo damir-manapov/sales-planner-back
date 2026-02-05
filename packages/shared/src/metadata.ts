@@ -87,11 +87,11 @@ export const ENTITIES_METADATA: EntitiesMetadata = {
     description: 'Historical sales data by SKU, period, and marketplace',
     fields: [
       {
-        name: 'sku_code',
+        name: 'marketplace',
         type: 'string',
-        description: 'Product SKU code',
+        description: 'Marketplace code where sales occurred',
         required: true,
-        example: 'IPHONE-15-PRO',
+        example: 'amazon',
       },
       {
         name: 'period',
@@ -101,18 +101,18 @@ export const ENTITIES_METADATA: EntitiesMetadata = {
         example: '2024-01',
       },
       {
+        name: 'sku',
+        type: 'string',
+        description: 'Product SKU code',
+        required: true,
+        example: 'IPHONE-15-PRO',
+      },
+      {
         name: 'quantity',
         type: 'number',
         description: 'Number of units sold',
         required: true,
         example: '150',
-      },
-      {
-        name: 'marketplace',
-        type: 'string',
-        description: 'Marketplace code where sales occurred',
-        required: true,
-        example: 'amazon',
       },
     ],
   },
