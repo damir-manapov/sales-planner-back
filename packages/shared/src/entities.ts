@@ -2,6 +2,20 @@
  * Core database entities
  */
 
+/**
+ * Base interface for entities scoped to both shop and tenant
+ * (e.g., SKUs, Brands, Marketplaces)
+ */
+export interface ShopScopedEntity {
+  id: number;
+  code: string;
+  title: string;
+  shop_id: number;
+  tenant_id: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
 export interface User {
   id: number;
   email: string;
@@ -28,15 +42,9 @@ export interface Shop {
   updated_at: Date;
 }
 
-export interface Sku {
-  id: number;
-  code: string;
-  title: string;
-  shop_id: number;
-  tenant_id: number;
-  created_at: Date;
-  updated_at: Date;
-}
+export interface Sku extends ShopScopedEntity {}
+
+export interface Brand extends ShopScopedEntity {}
 
 export interface SalesHistory {
   id: number;

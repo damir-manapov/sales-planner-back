@@ -1,5 +1,6 @@
 import { ArgumentMetadata, BadRequestException, Injectable, PipeTransform } from '@nestjs/common';
-import { ZodError, ZodIssue, ZodSchema } from 'zod';
+import { ZodError } from 'zod';
+import type { ZodIssue, ZodType } from 'zod';
 
 /**
  * Validation pipe for query parameters using Zod schemas
@@ -7,7 +8,7 @@ import { ZodError, ZodIssue, ZodSchema } from 'zod';
  */
 @Injectable()
 export class QueryValidationPipe<T> implements PipeTransform {
-  constructor(private schema: ZodSchema<T>) {}
+  constructor(private schema: ZodType<T>) {}
 
   transform(value: unknown, metadata: ArgumentMetadata): T {
     // Only validate if we're dealing with query parameters

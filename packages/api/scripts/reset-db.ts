@@ -27,6 +27,7 @@ async function resetDb() {
   // Drop all tables in reverse dependency order
   const tables = [
     'sales_history',
+    'brands',
     'skus',
     'marketplaces',
     'user_roles',

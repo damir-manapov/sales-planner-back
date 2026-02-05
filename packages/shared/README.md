@@ -53,29 +53,31 @@ export type CreateUserRequest = CreateUserDto;
 ```typescript
 import type { 
   // Entities
-  User, Tenant, Shop, Sku, SalesHistory,
+  User, Tenant, Shop, Sku, Brand, SalesHistory,
   Role, UserRole, ApiKey, Marketplace,
-  
+
   // Request types (HTTP layer)
   CreateUserRequest, UpdateUserRequest,
   CreateSkuRequest, UpdateSkuRequest,
+  CreateBrandRequest, UpdateBrandRequest,
   CreateSalesHistoryRequest, UpdateSalesHistoryRequest,
-  
+
   // DTO types (Service layer)
   CreateUserDto, UpdateUserDto,
   CreateSkuDto, UpdateSkuDto,
+  CreateBrandDto, UpdateBrandDto,
   CreateSalesHistoryDto, UpdateSalesHistoryDto,
-  
+
   // Import types
-  ImportSkuItem, ImportSalesHistoryItem, ImportMarketplaceItem,
-  
+  ImportSkuItem, ImportBrandItem, ImportSalesHistoryItem, ImportMarketplaceItem,
+
   // Query types
   ShopContextParams, PeriodQuery,
-  
+
   // Response types
   UserWithRolesAndTenants, TenantWithShopAndApiKey,
   ImportResult, DeleteDataResult,
-  SkuExportItem, SalesHistoryExportItem
+  SkuExportItem, BrandExportItem, SalesHistoryExportItem
 } from '@sales-planner/shared';
 ```
 
@@ -88,7 +90,8 @@ import type {
 | `User` | User account |
 | `Tenant` | Organization/company |
 | `Shop` | Store within a tenant |
-| `Sku` | Stock keeping unit |
+| `Sku` | Stock keeping unit (product variant) |
+| `Brand` | Product brand (shop-scoped) |
 | `SalesHistory` | Sales record for a period |
 | `Role` | Access role |
 | `UserRole` | User-role assignment |

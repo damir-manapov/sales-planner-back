@@ -47,6 +47,11 @@ const skus = await client.skus.getSkus({ tenantId, shopId });
 await client.skus.importSkusJson(items, { tenantId, shopId });
 const csv = await client.skus.exportSkusCsv({ tenantId, shopId });
 
+// Brands with import/export
+const brands = await client.brands.getBrands({ tenantId, shopId });
+await client.brands.importBrandsJson(items, { tenantId, shopId });
+const brandsCsv = await client.brands.exportBrandsCsv({ tenantId, shopId });
+
 // Sales History
 const history = await client.salesHistory.getSalesHistory(
   { tenantId, shopId },
@@ -75,7 +80,7 @@ const skus = await client.getSkus({ tenantId, shopId });
 
 ## Import/Export Pattern
 
-Resources that support bulk operations (SKUs, Sales History, Marketplaces) follow a consistent pattern:
+Resources that support bulk operations (SKUs, Brands, Sales History, Marketplaces) follow a consistent pattern:
 
 ```typescript
 // Import from JSON
@@ -95,8 +100,16 @@ const result = await client.skus.importSkusCsv(csvContent, { tenantId, shopId })
 // Export to CSV
 const csv = await client.skus.exportSkusCsv({ tenantId, shopId });
 
-// Get example templates
+// Get example templates (no auth required)
 const exampleCsv = await client.skus.getSkusExampleCsv();
+
+// Same pattern works for brands
+const brandResult = await client.brands.importBrandsJson(
+  [{ code: 'apple', title: 'Apple' }],
+  { tenantId, shopId }
+);
+const brandsCsv = await client.brands.exportBrandsCsv({ tenantId, shopId });
+const brandExample = await client.brands.getBrandsExampleCsv();
 ```
 
 ## Error Handling
@@ -155,6 +168,13 @@ try {
 - `exportSkusJson(ctx)`, `exportSkusCsv(ctx)` - Requires read access
 - `getSkusExampleJson()`, `getSkusExampleCsv()` - Get import format examples (no auth required)
 
+### Brands
+- `getBrands(ctx)`, `getBrand(id, ctx)` - Requires read access (viewer or higher)
+- `createBrand(dto, ctx)`, `updateBrand(id, dto, ctx)`, `deleteBrand(id, ctx)` - Requires write access (editor or higher)
+- `importBrandsJson(items, ctx)`, `importBrandsCsv(csvContent, ctx)` - Requires write access (bulk upsert by code)
+- `exportBrandsJson(ctx)`, `exportBrandsCsv(ctx)` - Requires read access
+- `getBrandsExampleJson()`, `getBrandsExampleCsv()` - Get import format examples (no auth required)
+
 ### Sales History
 - `getSalesHistory(ctx, query?)`, `getSalesHistoryItem(id, ctx)` - Requires read access (viewer or higher)
 - `createSalesHistory(dto, ctx)`, `updateSalesHistory(id, dto, ctx)`, `deleteSalesHistory(id, ctx)` - Requires write access (editor or higher)
@@ -195,10 +215,12 @@ All entity types, DTOs, and response types are exported:
 
 ```typescript
 import type { 
-  User, Tenant, Shop, Sku, SalesHistory,
+  User, Tenant, Shop, Sku, Brand, SalesHistory,
   CreateUserDto, CreateTenantDto, CreateShopDto,
+  CreateSkuRequest, CreateBrandRequest,
   ShopContextParams, PeriodQuery,
-  UserWithRolesAndTenants, ImportResult
+  UserWithRolesAndTenants, ImportResult,
+  SkuExportItem, BrandExportItem
 } from '@sales-planner/http-client';
 ```
 

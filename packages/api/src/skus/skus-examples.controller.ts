@@ -1,6 +1,6 @@
-import { Controller, Get, Header } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import type { SkuExportItem } from '@sales-planner/shared';
-import { toCsv } from '../lib/index.js';
+import { BaseExamplesController } from '../common/index.js';
 
 const EXAMPLE_SKUS: SkuExportItem[] = [
   { code: 'SKU-001', title: 'Product 1' },
@@ -9,18 +9,8 @@ const EXAMPLE_SKUS: SkuExportItem[] = [
 ];
 
 @Controller('skus/examples')
-export class SkusExamplesController {
-  @Get('json')
-  @Header('Content-Type', 'application/json')
-  @Header('Content-Disposition', 'attachment; filename="skus-example.json"')
-  getJsonExample(): SkuExportItem[] {
-    return EXAMPLE_SKUS;
-  }
-
-  @Get('csv')
-  @Header('Content-Type', 'text/csv')
-  @Header('Content-Disposition', 'attachment; filename="skus-example.csv"')
-  getCsvExample(): string {
-    return toCsv(EXAMPLE_SKUS, ['code', 'title']);
-  }
+export class SkusExamplesController extends BaseExamplesController<SkuExportItem> {
+  protected readonly examples = EXAMPLE_SKUS;
+  protected readonly entityName = 'skus';
+  protected readonly csvColumns = ['code', 'title'] as const;
 }

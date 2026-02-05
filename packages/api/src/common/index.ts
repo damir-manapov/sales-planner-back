@@ -1,3 +1,5 @@
+export * from './base-entity.service.js';
+export * from './base-examples.controller.js';
 export {
   DatabaseException,
   DuplicateResourceException,

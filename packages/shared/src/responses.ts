@@ -71,6 +71,11 @@ export interface SkuExportItem {
   title: string;
 }
 
+export interface BrandExportItem {
+  code: string;
+  title: string;
+}
+
 export interface MarketplaceExportItem {
   id: string;
   title: string;

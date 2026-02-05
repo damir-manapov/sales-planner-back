@@ -35,6 +35,16 @@ export interface ApiKeys {
   user_id: number;
 }
 
+export interface Brands {
+  code: string;
+  created_at: Generated<Timestamp>;
+  id: Generated<number>;
+  shop_id: number;
+  tenant_id: number;
+  title: string;
+  updated_at: Generated<Timestamp>;
+}
+
 export interface Marketplaces {
   created_at: Generated<Timestamp>;
   id: string;
@@ -219,6 +229,7 @@ export interface UserShops {
 
 export interface DB {
   api_keys: ApiKeys;
+  brands: Brands;
   marketplaces: Marketplaces;
   'neon_auth.account': NeonAuthAccount;
   'neon_auth.invitation': NeonAuthInvitation;

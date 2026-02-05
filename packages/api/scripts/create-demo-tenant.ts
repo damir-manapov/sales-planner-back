@@ -13,6 +13,17 @@ interface DemoTenantArgs {
   apiUrl?: string;
 }
 
+const DEMO_BRANDS = [
+  { code: 'dell', title: 'Dell' },
+  { code: 'apple', title: 'Apple' },
+  { code: 'lenovo', title: 'Lenovo' },
+  { code: 'samsung', title: 'Samsung' },
+  { code: 'google', title: 'Google' },
+  { code: 'lg', title: 'LG' },
+  { code: 'logitech', title: 'Logitech' },
+  { code: 'sony', title: 'Sony' },
+];
+
 const DEMO_SKUS = [
   { code: 'LAPTOP-001', title: 'Dell XPS 13 Laptop' },
   { code: 'LAPTOP-002', title: 'MacBook Pro 14"' },
@@ -94,20 +105,21 @@ async function createDemoTenant(args: DemoTenantArgs) {
 
     const ctx = { shop_id: setup.shop.id, tenant_id: setup.tenant.id };
 
-    // Step 3: Import SKUs
-    console.log(`📊 Step 3: Importing ${DEMO_SKUS.length} demo products...`);
-    const skusResult = await userClient.importSkusJson(DEMO_SKUS, ctx);
-    console.log(`   ✅ Created ${skusResult.created} products`);
+    // Step 3: Import brands
+    console.log(`🏷️  Step 3: Importing ${DEMO_BRANDS.length} brands...`);
+    const brandsResult = await userClient.importBrandsJson(DEMO_BRANDS, ctx);
+    console.log(`   ✅ Created ${brandsResult.created} brands`);
     console.log('');
 
-    // Step 4: Import sales history
-    console.log(`📈 Step 4: Importing ${DEMO_SALES_DATA.length} sales history records...`);
+    // Step 5: Import sales history
+    console.log(`📈 Step 5: Importing ${DEMO_SALES_DATA.length} sales history records...`);
     const salesResult = await userClient.importSalesHistoryJson(DEMO_SALES_DATA, ctx);
     console.log(`   ✅ Created ${salesResult.created} sales records`);
     console.log('');
 
     // Success summary
     printSuccessSummary(setup, [
+      `${DEMO_BRANDS.length} brands (Dell, Apple, Samsung, etc.)`,
       `${DEMO_SKUS.length} products (laptops, phones, tablets, accessories)`,
       `${DEMO_SALES_DATA.length} sales history records across 3 periods`,
       'Periods: 2025-11, 2025-12, 2026-01',
@@ -138,7 +150,8 @@ Environment Variables:
   SYSTEM_ADMIN_KEY                  System admin API key (required)
   SALES_PLANNER_API_URL             Base API URL (optional)
 
-Demo Data Includes:
+Demo8 popular brands (Dell, Apple, Samsung, Lenovo, Google, LG, Logitech, Sony)
+  •  Data Includes:
   • 15 sample products (laptops, phones, tablets, monitors, accessories)
   • Sales history for 3 months (Nov 2025, Dec 2025, Jan 2026)
   • Admin user with full access

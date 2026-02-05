@@ -16,6 +16,7 @@ interface AlenaTenantArgs {
 const __dirname = import.meta.dirname;
 const SKUS_CSV = readFileSync(join(__dirname, 'skus.csv'), 'utf-8');
 const SALES_HISTORY_CSV = readFileSync(join(__dirname, 'sales-history.csv'), 'utf-8');
+const BRANDS_CSV = readFileSync(join(__dirname, 'original/brands.csv'), 'utf-8');
 
 async function createAlenaTenant(args: AlenaTenantArgs) {
   const { client: adminClient, apiUrl } = initAdminClient(args.apiUrl);
@@ -52,20 +53,27 @@ async function createAlenaTenant(args: AlenaTenantArgs) {
 
     const ctx = { shop_id: setup.shop.id, tenant_id: setup.tenant.id };
 
-    // Step 3: Import SKUs from CSV
-    console.log('💐 Step 3: Importing products from CSV...');
+    // Step 3: Import brands from CSV
+    console.log('🏷️  Step 3: Importing brands from CSV...');
+    const brandsResult = await userClient.importBrandsCsv(BRANDS_CSV, ctx);
+    console.log(`   ✅ Created ${brandsResult.created} brands`);
+    console.log('');
+
+    // Step 4: Import SKUs from CSV
+    console.log('💐 Step 4: Importing products from CSV...');
     const skusResult = await userClient.importSkusCsv(SKUS_CSV, ctx);
     console.log(`   ✅ Created ${skusResult.created} products`);
     console.log('');
 
-    // Step 4: Import sales history from CSV
-    console.log('📈 Step 4: Importing sales history from CSV...');
+    // Step 5: Import sales history from CSV
+    console.log('📈 Step 5: Importing sales history from CSV...');
     const salesResult = await userClient.importSalesHistoryCsv(SALES_HISTORY_CSV, ctx);
     console.log(`   ✅ Created ${salesResult.created} sales records`);
     console.log('');
 
     // Success summary
     printSuccessSummary(setup, [
+      `${brandsResult.created} brands`,
       `${skusResult.created} products (flowers and gifts)`,
       `${salesResult.created} sales history records across 3 periods`,
       'Periods: 2025-11, 2025-12, 2026-01',

@@ -24,6 +24,16 @@ Swagger UI provides:
 - **User-Roles** - Assign roles to users (per shop or per tenant)
 - **API Keys** - API keys with optional expiration, linked to users
 - **Marketplaces** - Marketplace management (string IDs, read access for all users, write access for system admins only)
+- **Brands** - Brand management linked to shops (unique code per shop)
+  - **CRUD Operations**: Full create, read, update, delete with access control
+  - **Import/Export**: Supports both JSON and CSV formats
+    - JSON: Upload file or send array directly in request body
+    - CSV: Auto-detects delimiter (comma or semicolon)
+    - Handles UTF-8 BOM and Cyrillic characters
+    - Proper file download headers (Content-Type, Content-Disposition)
+  - **Example Downloads**: `/brands/examples/json` and `/brands/examples/csv` (no auth required)
+  - **Bulk Operations**: Import performs upsert (insert or update) based on code
+  - **Data Validation**: Zod schemas with type safety from `@sales-planner/shared`
 - **SKUs** - SKU management linked to shops (unique code per shop)
   - Import/Export: JSON and CSV file upload support
   - Proper file download headers for exports
@@ -38,6 +48,83 @@ Swagger UI provides:
 - **Request Validation** - Zod-based schema validation with type sync to `@sales-planner/shared`
 - **Error Handling** - Returns 409 Conflict for duplicate resources (email, code, period, etc.)
 - **Security** - API keys are auto-generated using `crypto.randomUUID()` (not user-provided)
+
+## Code Architecture
+
+### Base Classes for DRY Principles
+
+The API uses generic base classes to eliminate code duplication across shop-scoped entities:
+
+**BaseEntityService<T>** - Generic CRUD service for shop-scoped entities
+```typescript
+// src/common/base-entity.service.ts
+export abstract class BaseEntityService<
+  TEntity extends ShopScopedEntity,
+  TCreateDto, TUpdateDto, TImportItem
+> {
+  // Provides standard CRUD operations:
+  // - findAll, findById, findByShopId, findByTenantId
+  // - findByCodeAndShop (unique code per shop)
+  // - create, update, delete, deleteByShopId
+  // - bulkUpsert (with ON CONFLICT handling)
+  // - exportForShop (JSON/CSV export)
+
+  // Extensibility hooks:
+  protected normalizeCode(code: string): string
+  protected abstract validateImportItem(item: unknown)
+}
+```
+
+**Usage Example - Brands Service (23 lines vs 165):**
+```typescript
+@Injectable()
+export class BrandsService extends BaseEntityService<
+  Brand, CreateBrandDto, UpdateBrandDto, ImportBrandItem
+> {
+  constructor(db: DatabaseService) { super(db, 'brands'); }
+
+  protected validateImportItem(item: unknown) {
+    return ImportBrandItemSchema.safeParse(item);
+  }
+}
+```
+
+**BaseExamplesController<T>** - Generic controller for example endpoints
+```typescript
+// src/common/base-examples.controller.ts
+export abstract class BaseExamplesController<T extends object> {
+  protected abstract readonly examples: T[];
+  protected abstract readonly entityName: string;
+  protected abstract readonly csvColumns: ReadonlyArray<keyof T>;
+
+  @Get('json') getJsonExample(): T[]
+  @Get('csv') getCsvExample(): string
+}
+```
+
+**Usage Example - Brands Examples Controller (15 lines vs 26):**
+```typescript
+@Controller('brands/examples')
+export class BrandsExamplesController extends BaseExamplesController<BrandExportItem> {
+  protected readonly examples = EXAMPLE_BRANDS;
+  protected readonly entityName = 'brands';
+  protected readonly csvColumns = ['code', 'title'] as const; // Type-safe!
+}
+```
+
+**Benefits:**
+- **Code Reduction**: ~210 lines of duplicate code eliminated across services and controllers
+- **Type Safety**: Generic constraints ensure compile-time validation
+- **Consistency**: All shop-scoped entities follow the same patterns
+- **Maintainability**: Changes to common logic only need updating in one place
+- **Extensibility**: Protected hooks allow customization (e.g., SKU code normalization)
+
+**Entities using BaseEntityService:**
+- Brands (86% code reduction: 165 → 23 lines)
+- SKUs (58% code reduction: 221 → 94 lines, keeps unique methods like `findOrCreateByCode`)
+
+**Controllers using BaseExamplesController:**
+- Brands, SKUs, Marketplaces, Sales History (42% code reduction each)
 
 ## Type System Architecture
 
@@ -663,6 +750,161 @@ code,title
 SKU-001,Product 1
 SKU-002,Product 2
 ```
+
+### Brands Endpoints
+
+Brands are shop-scoped entities with unique codes per shop. All endpoints (except examples) require `shop_id` and `tenant_id` query parameters for access control.
+
+**Available Endpoints:**
+- `GET /brands/examples/json` - Download example JSON (no auth)
+- `GET /brands/examples/csv` - Download example CSV (no auth)
+- `GET /brands` - List all brands for a shop
+- `POST /brands` - Create a single brand
+- `GET /brands/:id` - Get brand by ID
+- `PUT /brands/:id` - Update brand by ID
+- `DELETE /brands/:id` - Delete brand by ID
+- `POST /brands/import/json` - Import/upsert brands from JSON
+- `POST /brands/import/csv` - Import/upsert brands from CSV
+- `GET /brands/export/json` - Export brands as JSON file
+- `GET /brands/export/csv` - Export brands as CSV file
+
+#### Example Downloads (No Authentication)
+
+These endpoints provide sample data formats for import operations:
+
+```bash
+# Download example JSON format
+curl -O http://localhost:3000/brands/examples/json
+# Creates: brands-example.json with proper download headers
+
+# Download example CSV format
+curl -O http://localhost:3000/brands/examples/csv
+# Creates: brands-example.csv with proper download headers
+```
+
+#### Basic CRUD Operations
+
+```bash
+# List all brands for a shop
+curl -H "x-api-key: $API_KEY" \
+  "http://localhost:3000/brands?shop_id=1&tenant_id=1"
+
+# Create a single brand
+curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
+  "http://localhost:3000/brands?shop_id=1&tenant_id=1" \
+  -d '{"code": "apple", "title": "Apple"}'
+
+# Get brand by ID
+curl -H "x-api-key: $API_KEY" \
+  "http://localhost:3000/brands/1?shop_id=1&tenant_id=1"
+
+# Update brand
+curl -X PUT -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
+  "http://localhost:3000/brands/1?shop_id=1&tenant_id=1" \
+  -d '{"title": "Apple Inc."}'
+
+# Delete brand
+curl -X DELETE -H "x-api-key: $API_KEY" \
+  "http://localhost:3000/brands/1?shop_id=1&tenant_id=1"
+```
+
+#### Import Operations (Bulk Upsert)
+
+Import endpoints perform **upsert** operations: insert new brands or update existing ones based on the `code` field.
+
+**JSON Import (Two Options):**
+
+```bash
+# Option 1: Upload a JSON file
+curl -X POST -H "x-api-key: $API_KEY" \
+  "http://localhost:3000/brands/import/json?shop_id=1&tenant_id=1" \
+  -F 'file=@brands.json'
+
+# Option 2: Send JSON array directly in body
+curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
+  "http://localhost:3000/brands/import/json?shop_id=1&tenant_id=1" \
+  -d '[{"code": "apple", "title": "Apple"}, {"code": "samsung", "title": "Samsung"}]'
+```
+
+**CSV Import:**
+
+```bash
+# Import brands from CSV file
+curl -X POST -H "x-api-key: $API_KEY" \
+  "http://localhost:3000/brands/import/csv?shop_id=1&tenant_id=1" \
+  -F 'file=@brands.csv'
+```
+
+**Import Response:**
+```json
+{
+  "created": 15,
+  "updated": 5,
+  "errors": []
+}
+```
+
+#### Export Operations
+
+Export endpoints return all brands for the shop with proper download headers.
+
+```bash
+# Export as JSON file
+curl -H "x-api-key: $API_KEY" \
+  "http://localhost:3000/brands/export/json?shop_id=1&tenant_id=1" \
+  -o brands.json
+# Downloads: brands.json with Content-Disposition header
+
+# Export as CSV file
+curl -H "x-api-key: $API_KEY" \
+  "http://localhost:3000/brands/export/csv?shop_id=1&tenant_id=1" \
+  -o brands.csv
+# Downloads: brands.csv with Content-Disposition header
+```
+
+#### Data Formats
+
+**Brand JSON Format:**
+```json
+[
+  {"code": "apple", "title": "Apple"},
+  {"code": "samsung", "title": "Samsung"},
+  {"code": "dell", "title": "Dell"}
+]
+```
+
+**Brand CSV Format (Comma-Separated):**
+```csv
+code,title
+apple,Apple
+samsung,Samsung
+dell,Dell
+```
+
+**Brand CSV Format (Semicolon-Separated):**
+```csv
+code;title
+apple;Apple
+samsung;Samsung
+dell;Dell
+```
+
+**CSV Features:**
+- **Auto-Detection**: Delimiter (comma or semicolon) automatically detected from first line
+- **UTF-8 BOM**: Handles Byte Order Mark (BOM) for Excel compatibility
+- **Unicode Support**: Full support for Cyrillic and other Unicode characters
+- **Whitespace Handling**: Automatically trims leading/trailing whitespace from values
+- **Validation**: Each row validated with Zod schema before import
+- **Error Reporting**: Detailed error messages with row numbers for invalid data
+
+**Field Requirements:**
+- `code` (required): Unique identifier per shop, string, 1-100 characters
+- `title` (required): Display name, string, 1-200 characters
+
+**Upsert Logic:**
+- If a brand with the same `code` exists in the shop → **Update** the title
+- If no brand with that `code` exists → **Insert** new brand
+- Uses PostgreSQL `ON CONFLICT (shop_id, code) DO UPDATE` for atomic operations
 
 ### Sales History Endpoints
 

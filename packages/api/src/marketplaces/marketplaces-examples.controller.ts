@@ -1,6 +1,6 @@
-import { Controller, Get, Header } from '@nestjs/common';
+import { Controller } from '@nestjs/common';
 import type { MarketplaceExportItem } from '@sales-planner/shared';
-import { toCsv } from '../lib/index.js';
+import { BaseExamplesController } from '../common/index.js';
 
 const EXAMPLE_MARKETPLACES: MarketplaceExportItem[] = [
   { id: 'wb', title: 'Wildberries' },
@@ -9,18 +9,8 @@ const EXAMPLE_MARKETPLACES: MarketplaceExportItem[] = [
 ];
 
 @Controller('marketplaces/examples')
-export class MarketplacesExamplesController {
-  @Get('json')
-  @Header('Content-Type', 'application/json')
-  @Header('Content-Disposition', 'attachment; filename="marketplaces-example.json"')
-  getJsonExample(): MarketplaceExportItem[] {
-    return EXAMPLE_MARKETPLACES;
-  }
-
-  @Get('csv')
-  @Header('Content-Type', 'text/csv')
-  @Header('Content-Disposition', 'attachment; filename="marketplaces-example.csv"')
-  getCsvExample(): string {
-    return toCsv(EXAMPLE_MARKETPLACES, ['id', 'title']);
-  }
+export class MarketplacesExamplesController extends BaseExamplesController<MarketplaceExportItem> {
+  protected readonly examples = EXAMPLE_MARKETPLACES;
+  protected readonly entityName = 'marketplaces';
+  protected readonly csvColumns = ['id', 'title'] as const;
 }

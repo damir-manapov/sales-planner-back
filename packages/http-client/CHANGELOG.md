@@ -1,5 +1,42 @@
 # @sales-planner/http-client
 
+## 0.7.0
+
+### Minor Changes
+
+- Add brands entity with comprehensive CRUD, import/export, and base classes for DRY
+
+  **New Features:**
+
+  - **Brands Entity**: Full CRUD operations with shop-scoped unique codes
+  - **Import/Export**: JSON and CSV support with auto-detected delimiters (comma/semicolon)
+  - **Example Endpoints**: `/brands/examples/json` and `/brands/examples/csv` (no auth)
+  - **BaseEntityService**: Generic service class for shop-scoped entities (brands, SKUs)
+  - **BaseExamplesController**: Generic controller for example endpoints
+  - **Type Safety**: CSV columns now use `ReadonlyArray<keyof T>` with `as const`
+
+  **Improvements:**
+
+  - Moved `findOrCreateByCode` to BaseEntityService for reuse across entities
+  - Updated `toCsv` to accept readonly arrays
+  - Code reduction: Brands service 23 lines (vs 165), SKUs service ~40 lines (vs 221)
+  - All example controllers reduced by 42%
+  - Enhanced READMEs with detailed API documentation
+
+  **CSV Features:**
+
+  - Auto-detects delimiter (comma or semicolon)
+  - Handles UTF-8 BOM for Excel compatibility
+  - Supports Cyrillic and Unicode characters
+  - Proper file download headers (Content-Type, Content-Disposition)
+
+  **Breaking Changes:** None - all changes are additive
+
+### Patch Changes
+
+- Updated dependencies
+  - @sales-planner/shared@0.6.0
+
 ## 0.6.0
 
 ### Minor Changes

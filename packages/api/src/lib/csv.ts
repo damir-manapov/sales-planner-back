@@ -4,7 +4,7 @@ import { parse } from 'csv-parse/sync';
 /**
  * Converts an array of objects to CSV string format
  */
-export function toCsv<T extends object>(items: T[], columns: Array<keyof T>): string {
+export function toCsv<T extends object>(items: T[], columns: ReadonlyArray<keyof T>): string {
   const header = columns.map(String).join(',');
   const rows = items.map((item) => {
     return columns
@@ -27,6 +27,7 @@ export function toCsv<T extends object>(items: T[], columns: Array<keyof T>): st
 
 /**
  * Parses CSV content and validates required columns
+ * Supports both comma and semicolon delimiters
  */
 export function fromCsv<T extends Record<string, string>>(
   content: string,
@@ -37,10 +38,19 @@ export function fromCsv<T extends Record<string, string>>(
   }
 
   try {
-    const records = parse(content, {
+    // Strip UTF-8 BOM if present
+    const cleanContent = content.charCodeAt(0) === 0xfeff ? content.slice(1) : content;
+
+    // Auto-detect delimiter by checking first line
+    const firstLine = cleanContent.split('\n')[0];
+    const delimiter = firstLine?.includes(';') ? ';' : ',';
+
+    const records = parse(cleanContent, {
       columns: true,
       skip_empty_lines: true,
       trim: true,
+      delimiter,
+      bom: true, // Handle BOM at parser level too
     }) as Array<Record<string, string>>;
 
     // Validate required columns exist

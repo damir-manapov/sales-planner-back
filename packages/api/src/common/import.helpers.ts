@@ -1,5 +1,5 @@
 import { BadRequestException } from '@nestjs/common';
-import { ZodSchema } from 'zod';
+import type { ZodType } from 'zod';
 
 /**
  * Parse import data from either file upload or JSON body
@@ -31,7 +31,7 @@ export function parseImportData<T>(
 /**
  * Validate array of items against Zod schema
  */
-export function validateArray<T>(data: unknown[], schema: ZodSchema<T>): T[] {
+export function validateArray<T>(data: unknown[], schema: ZodType<T>): T[] {
   return data.map((item, index) => {
     try {
       return schema.parse(item);
@@ -47,7 +47,7 @@ export function validateArray<T>(data: unknown[], schema: ZodSchema<T>): T[] {
 export function parseAndValidateImport<T>(
   file: Express.Multer.File | undefined,
   bodyItems: unknown[] | undefined,
-  schema: ZodSchema<T>,
+  schema: ZodType<T>,
 ): T[] {
   const data = parseImportData(file, bodyItems);
   return validateArray(data, schema);

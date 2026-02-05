@@ -5,6 +5,7 @@ import { UsersClient } from './users-client.js';
 import { TenantsClient } from './tenants-client.js';
 import { ShopsClient } from './shops-client.js';
 import { SkusClient } from './skus-client.js';
+import { BrandsClient } from './brands-client.js';
 import { SalesHistoryClient } from './sales-history-client.js';
 import { MarketplacesClient } from './marketplaces-client.js';
 import { RolesClient } from './roles-client.js';
@@ -20,6 +21,7 @@ export class SalesPlannerClient {
   readonly tenants: TenantsClient;
   readonly shops: ShopsClient;
   readonly skus: SkusClient;
+  readonly brands: BrandsClient;
   readonly salesHistory: SalesHistoryClient;
   readonly marketplaces: MarketplacesClient;
   readonly roles: RolesClient;
@@ -33,6 +35,7 @@ export class SalesPlannerClient {
     this.tenants = new TenantsClient(config);
     this.shops = new ShopsClient(config);
     this.skus = new SkusClient(config);
+    this.brands = new BrandsClient(config);
     this.salesHistory = new SalesHistoryClient(config);
     this.marketplaces = new MarketplacesClient(config);
     this.roles = new RolesClient(config);
@@ -89,6 +92,32 @@ export class SalesPlannerClient {
   exportSkusCsv = (ctx: Parameters<SkusClient['exportSkusCsv']>[0]) => this.skus.exportSkusCsv(ctx);
   getSkusExampleJson = () => this.skus.getSkusExampleJson();
   getSkusExampleCsv = () => this.skus.getSkusExampleCsv();
+  getBrands = (ctx: Parameters<BrandsClient['getBrands']>[0]) => this.brands.getBrands(ctx);
+  getBrand = (id: number, ctx: Parameters<BrandsClient['getBrand']>[1]) =>
+    this.brands.getBrand(id, ctx);
+  createBrand = (
+    dto: Parameters<BrandsClient['createBrand']>[0],
+    ctx: Parameters<BrandsClient['createBrand']>[1],
+  ) => this.brands.createBrand(dto, ctx);
+  updateBrand = (
+    id: number,
+    dto: Parameters<BrandsClient['updateBrand']>[1],
+    ctx: Parameters<BrandsClient['updateBrand']>[2],
+  ) => this.brands.updateBrand(id, dto, ctx);
+  deleteBrand = (id: number, ctx: Parameters<BrandsClient['deleteBrand']>[1]) =>
+    this.brands.deleteBrand(id, ctx);
+  importBrandsJson = (
+    items: Parameters<BrandsClient['importBrandsJson']>[0],
+    ctx: Parameters<BrandsClient['importBrandsJson']>[1],
+  ) => this.brands.importBrandsJson(items, ctx);
+  importBrandsCsv = (
+    csvContent: Parameters<BrandsClient['importBrandsCsv']>[0],
+    ctx: Parameters<BrandsClient['importBrandsCsv']>[1],
+  ) => this.brands.importBrandsCsv(csvContent, ctx);
+  exportBrandsJson = (ctx: Parameters<BrandsClient['exportBrandsJson']>[0]) =>
+    this.brands.exportBrandsJson(ctx);
+  exportBrandsCsv = (ctx: Parameters<BrandsClient['exportBrandsCsv']>[0]) =>
+    this.brands.exportBrandsCsv(ctx);
   getSalesHistory = (
     ctx: Parameters<SalesHistoryClient['getSalesHistory']>[0],
     query?: Parameters<SalesHistoryClient['getSalesHistory']>[1],

@@ -5,6 +5,7 @@ import { AppController } from './app.controller.js';
 import { AppService } from './app.service.js';
 import { AuthModule } from './auth/index.js';
 import { BootstrapModule } from './bootstrap/index.js';
+import { BrandsModule } from './brands/index.js';
 import { databaseConfig } from './database/database.config.js';
 import { DatabaseModule } from './database/index.js';
 import { MarketplacesModule } from './marketplaces/index.js';
@@ -38,6 +39,7 @@ import { UsersModule } from './users/index.js';
     BootstrapModule,
     MarketplacesModule,
     SkusModule,
+    BrandsModule,
     SalesHistoryModule,
   ],
   controllers: [AppController],

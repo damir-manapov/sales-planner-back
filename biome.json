@@ -17,6 +17,18 @@
       }
     }
   },
+  "overrides": [
+    {
+      "includes": ["packages/api/src/common/base-entity.service.ts"],
+      "linter": {
+        "rules": {
+          "suspicious": {
+            "noExplicitAny": "off"
+          }
+        }
+      }
+    }
+  ],
   "formatter": {
     "enabled": true,
     "indentStyle": "space",
