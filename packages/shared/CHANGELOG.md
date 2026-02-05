@@ -1,5 +1,11 @@
 # @sales-planner/shared
 
+## 0.8.3
+
+### Patch Changes
+
+- Reorganize entities and responses into separate files per domain (matching dto/ structure)
+
 ## 0.8.2
 
 ### Patch Changes
