@@ -6,6 +6,11 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { AppModule } from '../src/app.module.js';
 
+// Minimal interface for Express Response to avoid @types/express dependency in production
+interface ServerlessResponse {
+  status(code: number): { json(body: unknown): void };
+}
+
 const server = express();
 let isAppInitialized = false;
 
@@ -55,7 +60,7 @@ export default async function handler(req: express.Request, res: express.Respons
     server(req, res);
   } catch (error) {
     console.error('Serverless function error:', error);
-    res.status(500).json({
+    (res as unknown as ServerlessResponse).status(500).json({
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error',
     });
