@@ -1,4 +1,4 @@
-import type { Tenant } from '../entities/tenants.js';
+import type { Tenant } from '../entities/tenants';
 
 export interface TenantWithShopAndApiKey {
   tenant: Tenant;

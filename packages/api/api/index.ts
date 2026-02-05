@@ -23,7 +23,7 @@ export default async function handler(req: express.Request, res: express.Respons
           version: string;
         };
         version = packageJson.version;
-      } catch (error) {
+      } catch (_error) {
         console.warn('Could not read package.json, using default version');
       }
 
@@ -55,6 +55,9 @@ export default async function handler(req: express.Request, res: express.Respons
     server(req, res);
   } catch (error) {
     console.error('Serverless function error:', error);
-    res.status(500).json({ error: 'Internal server error', details: error instanceof Error ? error.message : 'Unknown error' });
+    res.status(500).json({
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    });
   }
 }

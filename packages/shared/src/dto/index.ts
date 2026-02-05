@@ -8,13 +8,13 @@
  * - UpdateXRequest: HTTP update request (typically same as DTO)
  */
 
-export * from './users.js';
-export * from './tenants.js';
-export * from './shops.js';
-export * from './skus.js';
-export * from './brands.js';
-export * from './sales-history.js';
-export * from './marketplaces.js';
-export * from './api-keys.js';
-export * from './roles.js';
-export * from './user-roles.js';
+export * from './users';
+export * from './tenants';
+export * from './shops';
+export * from './skus';
+export * from './brands';
+export * from './sales-history';
+export * from './marketplaces';
+export * from './api-keys';
+export * from './roles';
+export * from './user-roles';

@@ -1,3 +1,3 @@
-import type { ShopScopedEntity } from './base.js';
+import type { ShopScopedEntity } from './base';
 
 export interface Sku extends ShopScopedEntity {}

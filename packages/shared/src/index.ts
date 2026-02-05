@@ -1,14 +1,14 @@
 // Entities
-export * from './entities/index.js';
+export * from './entities/index';
 
 // DTOs
-export * from './dto/index.js';
+export * from './dto/index';
 
 // Response types
-export * from './responses/index.js';
+export * from './responses/index';
 
 // Query types
-export * from './query.js';
+export * from './query';
 
 // Metadata
-export * from './metadata.js';
+export * from './metadata';

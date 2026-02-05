@@ -1,5 +1,13 @@
 # @sales-planner/http-client
 
+## 0.9.3
+
+### Patch Changes
+
+- Convert @sales-planner/shared to CommonJS for Vercel compatibility
+- Updated dependencies
+  - @sales-planner/shared@0.9.3
+
 ## 0.9.2
 
 ### Patch Changes

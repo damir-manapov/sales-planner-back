@@ -1,4 +1,4 @@
-import type { User } from '../entities/users.js';
+import type { User } from '../entities/users';
 
 export interface UserRole {
   id: number;
