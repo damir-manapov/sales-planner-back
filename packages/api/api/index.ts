@@ -55,7 +55,7 @@ export default async function handler(req: express.Request, res: express.Respons
     server(req, res);
   } catch (error) {
     console.error('Serverless function error:', error);
-    res.status(500).json({
+    (res as any).status(500).json({
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error',
     });
