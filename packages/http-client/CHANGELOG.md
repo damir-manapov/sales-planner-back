@@ -1,5 +1,19 @@
 # @sales-planner/http-client
 
+## 0.9.2
+
+### Patch Changes
+
+- Updated dependencies
+  - @sales-planner/shared@0.9.2
+
+## 0.9.1
+
+### Patch Changes
+
+- Updated dependencies
+  - @sales-planner/shared@0.9.1
+
 ## 0.9.0
 
 ### Minor Changes

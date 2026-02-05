@@ -1,5 +1,17 @@
 # @sales-planner/shared
 
+## 0.9.2
+
+### Patch Changes
+
+- Fix package.json exports to support both CommonJS and ES modules in Vercel serverless environment
+
+## 0.9.1
+
+### Patch Changes
+
+- Fix package.json exports to support both CommonJS and ES modules in Vercel serverless environment
+
 ## 0.9.0
 
 ### Minor Changes
