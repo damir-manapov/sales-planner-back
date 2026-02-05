@@ -26,6 +26,11 @@ export interface StatusExportItem {
   title: string;
 }
 
+export interface SupplierExportItem {
+  code: string;
+  title: string;
+}
+
 export interface MarketplaceExportItem {
   code: string;
   title: string;

@@ -61,13 +61,17 @@ describe('Metadata (e2e)', () => {
       expect(response.statuses.name).toBe('Statuses');
       expect(response.statuses.fields).toHaveLength(2);
 
+      expect(response.suppliers).toBeDefined();
+      expect(response.suppliers.name).toBe('Suppliers');
+      expect(response.suppliers.fields).toHaveLength(2);
+
       expect(response.marketplaces).toBeDefined();
       expect(response.marketplaces.name).toBe('Marketplaces');
       expect(response.marketplaces.fields).toHaveLength(2);
 
       expect(response.skus).toBeDefined();
       expect(response.skus.name).toBe('Products');
-      expect(response.skus.fields).toHaveLength(5);
+      expect(response.skus.fields).toHaveLength(6);
 
       expect(response.salesHistory).toBeDefined();
       expect(response.salesHistory.name).toBe('Sales History');

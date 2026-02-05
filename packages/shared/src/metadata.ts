@@ -19,6 +19,7 @@ export interface EntitiesMetadata {
   categories: EntityMetadata;
   groups: EntityMetadata;
   statuses: EntityMetadata;
+  suppliers: EntityMetadata;
   marketplaces: EntityMetadata;
   skus: EntityMetadata;
   salesHistory: EntityMetadata;
@@ -105,6 +106,26 @@ export const ENTITIES_METADATA: EntitiesMetadata = {
       },
     ],
   },
+  suppliers: {
+    name: 'Suppliers',
+    description: 'Product suppliers and vendors',
+    fields: [
+      {
+        name: 'code',
+        type: 'string',
+        description: 'Unique supplier identifier',
+        required: true,
+        example: 'acme-corp',
+      },
+      {
+        name: 'title',
+        type: 'string',
+        description: 'Supplier display name',
+        required: true,
+        example: 'ACME Corporation',
+      },
+    ],
+  },
   marketplaces: {
     name: 'Marketplaces',
     description: 'Sales channels where products are sold',
@@ -163,6 +184,13 @@ export const ENTITIES_METADATA: EntitiesMetadata = {
         description: 'Product status code',
         required: false,
         example: 'active',
+      },
+      {
+        name: 'supplier_code',
+        type: 'string',
+        description: 'Product supplier code',
+        required: false,
+        example: 'acme-corp',
       },
     ],
   },

@@ -10,6 +10,7 @@ import { BrandsClient } from './brands-client.js';
 import { CategoriesClient } from './categories-client.js';
 import { GroupsClient } from './groups-client.js';
 import { StatusesClient } from './statuses-client.js';
+import { SuppliersClient } from './suppliers-client.js';
 import { SalesHistoryClient } from './sales-history-client.js';
 import { MarketplacesClient } from './marketplaces-client.js';
 import { RolesClient } from './roles-client.js';
@@ -30,6 +31,7 @@ export class SalesPlannerClient {
   readonly categories: CategoriesClient;
   readonly groups: GroupsClient;
   readonly statuses: StatusesClient;
+  readonly suppliers: SuppliersClient;
   readonly salesHistory: SalesHistoryClient;
   readonly marketplaces: MarketplacesClient;
   readonly roles: RolesClient;
@@ -48,6 +50,7 @@ export class SalesPlannerClient {
     this.categories = new CategoriesClient(config);
     this.groups = new GroupsClient(config);
     this.statuses = new StatusesClient(config);
+    this.suppliers = new SuppliersClient(config);
     this.salesHistory = new SalesHistoryClient(config);
     this.marketplaces = new MarketplacesClient(config);
     this.roles = new RolesClient(config);
@@ -209,6 +212,34 @@ export class SalesPlannerClient {
     this.statuses.exportStatusesJson(ctx);
   exportStatusesCsv = (ctx: Parameters<StatusesClient['exportStatusesCsv']>[0]) =>
     this.statuses.exportStatusesCsv(ctx);
+  getSuppliers = (ctx: Parameters<SuppliersClient['getSuppliers']>[0]) => this.suppliers.getSuppliers(ctx);
+  getSupplier = (id: number, ctx: Parameters<SuppliersClient['getSupplier']>[1]) =>
+    this.suppliers.getSupplier(id, ctx);
+  createSupplier = (
+    dto: Parameters<SuppliersClient['createSupplier']>[0],
+    ctx: Parameters<SuppliersClient['createSupplier']>[1],
+  ) => this.suppliers.createSupplier(dto, ctx);
+  updateSupplier = (
+    id: number,
+    dto: Parameters<SuppliersClient['updateSupplier']>[1],
+    ctx: Parameters<SuppliersClient['updateSupplier']>[2],
+  ) => this.suppliers.updateSupplier(id, dto, ctx);
+  deleteSupplier = (id: number, ctx: Parameters<SuppliersClient['deleteSupplier']>[1]) =>
+    this.suppliers.deleteSupplier(id, ctx);
+  importSuppliersJson = (
+    items: Parameters<SuppliersClient['importSuppliersJson']>[0],
+    ctx: Parameters<SuppliersClient['importSuppliersJson']>[1],
+  ) => this.suppliers.importSuppliersJson(items, ctx);
+  importSuppliersCsv = (
+    csvContent: Parameters<SuppliersClient['importSuppliersCsv']>[0],
+    ctx: Parameters<SuppliersClient['importSuppliersCsv']>[1],
+  ) => this.suppliers.importSuppliersCsv(csvContent, ctx);
+  exportSuppliersJson = (ctx: Parameters<SuppliersClient['exportSuppliersJson']>[0]) =>
+    this.suppliers.exportSuppliersJson(ctx);
+  exportSuppliersCsv = (ctx: Parameters<SuppliersClient['exportSuppliersCsv']>[0]) =>
+    this.suppliers.exportSuppliersCsv(ctx);
+  getSupplierExamplesJson = () => this.suppliers.getSupplierExamplesJson();
+  getSupplierExamplesCsv = () => this.suppliers.getSupplierExamplesCsv();
   getSalesHistory = (
     ctx: Parameters<SalesHistoryClient['getSalesHistory']>[0],
     query?: Parameters<SalesHistoryClient['getSalesHistory']>[1],

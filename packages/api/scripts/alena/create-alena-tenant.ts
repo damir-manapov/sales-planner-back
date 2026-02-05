@@ -20,6 +20,7 @@ const BRANDS_CSV = readFileSync(join(__dirname, 'original/brands.csv'), 'utf-8')
 const CATEGORIES_CSV = readFileSync(join(__dirname, 'original/categories.csv'), 'utf-8');
 const GROUPS_CSV = readFileSync(join(__dirname, 'original/groups.csv'), 'utf-8');
 const STATUSES_CSV = readFileSync(join(__dirname, 'original/statuses.csv'), 'utf-8');
+const SUPPLIERS_CSV = readFileSync(join(__dirname, 'original/suppliers.csv'), 'utf-8');
 
 async function createAlenaTenant(args: AlenaTenantArgs) {
   const { client: adminClient, apiUrl } = initAdminClient(args.apiUrl);
@@ -80,14 +81,20 @@ async function createAlenaTenant(args: AlenaTenantArgs) {
     console.log(`   ✅ Created ${statusesResult.created} statuses`);
     console.log('');
 
-    // Step 7: Import SKUs from CSV
-    console.log('💐 Step 7: Importing products from CSV...');
+    // Step 7: Import suppliers from CSV
+    console.log('🚚 Step 7: Importing suppliers from CSV...');
+    const suppliersResult = await userClient.importSuppliersCsv(SUPPLIERS_CSV, ctx);
+    console.log(`   ✅ Created ${suppliersResult.created} suppliers`);
+    console.log('');
+
+    // Step 8: Import SKUs from CSV
+    console.log('💐 Step 8: Importing products from CSV...');
     const skusResult = await userClient.importSkusCsv(SKUS_CSV, ctx);
     console.log(`   ✅ Created ${skusResult.created} products`);
     console.log('');
 
-    // Step 8: Import sales history from CSV
-    console.log('📈 Step 8: Importing sales history from CSV...');
+    // Step 9: Import sales history from CSV
+    console.log('📈 Step 9: Importing sales history from CSV...');
     const salesResult = await userClient.importSalesHistoryCsv(SALES_HISTORY_CSV, ctx);
     console.log(`   ✅ Created ${salesResult.created} sales records`);
     console.log('');
@@ -98,6 +105,7 @@ async function createAlenaTenant(args: AlenaTenantArgs) {
       `${categoriesResult.created} categories`,
       `${groupsResult.created} groups`,
       `${statusesResult.created} statuses`,
+      `${suppliersResult.created} suppliers`,
       `${skusResult.created} products (flowers and gifts)`,
       `${salesResult.created} sales history records across 3 periods`,
       'Periods: 2025-11, 2025-12, 2026-01',

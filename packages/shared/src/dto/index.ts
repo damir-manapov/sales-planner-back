@@ -16,6 +16,7 @@ export * from './brands';
 export * from './categories';
 export * from './groups';
 export * from './statuses';
+export * from './suppliers';
 export * from './sales-history';
 export * from './marketplaces';
 export * from './api-keys';

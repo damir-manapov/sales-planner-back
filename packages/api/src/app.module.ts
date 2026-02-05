@@ -14,6 +14,7 @@ import { MarketplacesModule } from './marketplaces/index.js';
 import { MeModule } from './me/index.js';
 import { MetadataModule } from './metadata/index.js';
 import { StatusesModule } from './statuses/index.js';
+import { SuppliersModule } from './suppliers/index.js';
 import { RolesModule } from './roles/index.js';
 import { SalesHistoryModule } from './sales-history/index.js';
 import { ShopsModule } from './shops/index.js';
@@ -48,6 +49,7 @@ import { UsersModule } from './users/index.js';
     CategoriesModule,
     GroupsModule,
     StatusesModule,
+    SuppliersModule,
     SalesHistoryModule,
   ],
   controllers: [AppController],
