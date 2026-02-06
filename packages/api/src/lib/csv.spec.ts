@@ -191,6 +191,25 @@ TABLET-003,iPad Air`;
         expect(result).toHaveLength(3);
         expect(result[1]).toEqual({ code: 'PHONE-002', title: 'iPhone 13 Pro' });
       });
+
+      it('should allow rows with fewer columns than header (optional fields)', () => {
+        // Header has 4 columns, but rows only have required fields (code, title)
+        const csv = `code;title;category;status
+SKU-001;Product A
+SKU-002;Product B;electronics
+SKU-003;Product C;electronics;active`;
+
+        const result = fromCsv(csv, ['code', 'title']);
+        expect(result).toHaveLength(3);
+        expect(result[0]).toEqual({ code: 'SKU-001', title: 'Product A' });
+        expect(result[1]).toEqual({ code: 'SKU-002', title: 'Product B', category: 'electronics' });
+        expect(result[2]).toEqual({
+          code: 'SKU-003',
+          title: 'Product C',
+          category: 'electronics',
+          status: 'active',
+        });
+      });
     });
   });
 });

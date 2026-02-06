@@ -51,6 +51,7 @@ export function fromCsv<T extends Record<string, string>>(
       trim: true,
       delimiter,
       bom: true, // Handle BOM at parser level too
+      relax_column_count: true, // Allow rows with fewer columns than header (for optional fields)
     }) as Array<Record<string, string>>;
 
     // Filter out empty records (all values empty or whitespace)
