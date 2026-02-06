@@ -29,7 +29,6 @@ describe('SkusService', () => {
       findCodesByShopId: vi.fn().mockResolvedValue(new Set()),
       exportForShop: vi.fn(),
       findOrCreateByCode: vi.fn().mockResolvedValue({ codeToId: new Map(), created: 0 }),
-      isUniqueViolation: vi.fn().mockReturnValue(false),
     };
 
     mockCategoriesService = {

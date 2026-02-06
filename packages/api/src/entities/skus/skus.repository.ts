@@ -2,7 +2,6 @@ import { Injectable } from '@nestjs/common';
 import type { CreateSkuDto, Sku, UpdateSkuDto } from '@sales-planner/shared';
 import { ShopScopedRepository } from '../../common/shop-scoped-repository.js';
 import { DatabaseService, USER_QUERYABLE_TABLES } from '../../database/index.js';
-import { isUniqueViolation } from '../../common/exceptions.js';
 
 @Injectable()
 export class SkusRepository extends ShopScopedRepository<Sku, CreateSkuDto, UpdateSkuDto> {
@@ -72,9 +71,5 @@ export class SkusRepository extends ShopScopedRepository<Sku, CreateSkuDto, Upda
       .where('skus.shop_id', '=', shopId)
       .orderBy('skus.code', 'asc')
       .execute();
-  }
-
-  isUniqueViolation(error: unknown): boolean {
-    return isUniqueViolation(error);
   }
 }

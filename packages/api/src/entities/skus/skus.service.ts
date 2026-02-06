@@ -9,7 +9,7 @@ import type {
   SkuImportResult,
   UpdateSkuDto,
 } from '@sales-planner/shared';
-import { DuplicateResourceException } from '../../common/index.js';
+import { DuplicateResourceException, isUniqueViolation } from '../../common/index.js';
 import { normalizeCode, normalizeSkuCode } from '../../lib/index.js';
 import { CategoriesService } from '../categories/categories.service.js';
 import { GroupsService } from '../groups/groups.service.js';
@@ -79,7 +79,7 @@ export class SkusService {
         supplier_id: dto.supplier_id,
       });
     } catch (error) {
-      if (this.repository.isUniqueViolation(error)) {
+      if (isUniqueViolation(error)) {
         throw new DuplicateResourceException('sku', dto.code, 'this shop');
       }
       throw error;
