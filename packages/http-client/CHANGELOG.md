@@ -1,5 +1,25 @@
 # @sales-planner/http-client
 
+## 0.15.0
+
+### Minor Changes
+
+- 25ce063: Add pagination support to all entities and code cleanup
+
+  - All entity endpoints now return paginated responses with `items`, `total`, `limit`, `offset`
+  - Added `PaginationQuery` and `SalesHistoryQuery` types
+  - Added pagination e2e tests for all entities (431 tests total)
+  - Updated http-client to return `PaginatedResponse<T>` from getAll methods
+  - Service `update()` now throws `NotFoundException` instead of returning `undefined`
+  - Removed unnecessary type casts from controllers
+  - Fixed lint errors and improved type safety
+  - Excluded dist folders from biome linting
+
+### Patch Changes
+
+- Updated dependencies [25ce063]
+  - @sales-planner/shared@0.13.0
+
 ## 0.14.0
 
 ### Minor Changes
