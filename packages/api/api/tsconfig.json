@@ -1,0 +1,13 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "outDir": "../dist/api",
+    "rootDir": ".",
+    "declaration": false,
+    "declarationMap": false,
+    "incremental": false,
+    "noImplicitAny": false,
+    "skipLibCheck": true
+  },
+  "include": ["./*.ts"]
+}

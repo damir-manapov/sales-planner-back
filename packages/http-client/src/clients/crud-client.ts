@@ -17,7 +17,9 @@ export class CrudClient<
   }
 
   async getAll(query?: PaginationQuery): Promise<PaginatedResponse<TEntity>> {
-    return this.request('GET', `/${this.resourcePath}`, { params: query as Record<string, string | number | undefined> });
+    return this.request('GET', `/${this.resourcePath}`, {
+      params: query as Record<string, string | number | undefined>,
+    });
   }
 
   async getById(id: number): Promise<TEntity> {

@@ -15,7 +15,9 @@ export interface GetTenantsQuery extends PaginationQuery {
 
 export class TenantsClient extends BaseClient {
   async getAll(query?: GetTenantsQuery): Promise<PaginatedResponse<Tenant>> {
-    return this.request('GET', '/tenants', { params: query as Record<string, string | number | undefined> });
+    return this.request('GET', '/tenants', {
+      params: query as Record<string, string | number | undefined>,
+    });
   }
 
   async getById(id: number): Promise<Tenant> {

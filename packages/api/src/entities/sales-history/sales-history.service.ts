@@ -293,7 +293,9 @@ export class SalesHistoryService {
       .map(([key, count]) => `"${key}" (${count} times)`);
 
     if (duplicateKeys.length > 0) {
-      errors.push(`Duplicate records found: ${duplicateKeys.slice(0, 5).join(', ')}${duplicateKeys.length > 5 ? ` and ${duplicateKeys.length - 5} more` : ''}`);
+      errors.push(
+        `Duplicate records found: ${duplicateKeys.slice(0, 5).join(', ')}${duplicateKeys.length > 5 ? ` and ${duplicateKeys.length - 5} more` : ''}`,
+      );
       return {
         created: 0,
         updated: 0,

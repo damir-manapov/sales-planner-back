@@ -15,7 +15,11 @@ import {
 import type { PaginatedResponse } from '@sales-planner/shared';
 import { hasTenantAccess, validateTenantAdminAccess } from '../../auth/access-control.js';
 import { AuthenticatedRequest, AuthGuard } from '../../auth/auth.guard.js';
-import { type PaginationQuery, PaginationQuerySchema, ZodValidationPipe } from '../../common/index.js';
+import {
+  type PaginationQuery,
+  PaginationQuerySchema,
+  ZodValidationPipe,
+} from '../../common/index.js';
 import { UserRolesService } from '../user-roles/user-roles.service.js';
 import { type CreateUserRequest, CreateUserSchema } from './users.schema.js';
 import { type User, UsersService } from './users.service.js';

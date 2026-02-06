@@ -15,7 +15,11 @@ import {
 import type { PaginatedResponse } from '@sales-planner/shared';
 import { hasTenantAccess, validateTenantAdminAccess } from '../../auth/access-control.js';
 import { AuthenticatedRequest, AuthGuard } from '../../auth/auth.guard.js';
-import { type PaginationQuery, PaginationQuerySchema, ZodValidationPipe } from '../../common/index.js';
+import {
+  type PaginationQuery,
+  PaginationQuerySchema,
+  ZodValidationPipe,
+} from '../../common/index.js';
 import { CreateUserRoleDto, UserRole, UserRolesService } from './user-roles.service.js';
 
 @Controller('user-roles')
@@ -67,7 +71,12 @@ export class UserRolesController {
       roles = roles.filter((r) => r.role_id === Number(roleId));
     }
 
-    return { items: roles, total: roles.length, limit: query?.limit ?? 0, offset: query?.offset ?? 0 };
+    return {
+      items: roles,
+      total: roles.length,
+      limit: query?.limit ?? 0,
+      offset: query?.offset ?? 0,
+    };
   }
 
   @Get(':id')

@@ -1,5 +1,10 @@
 import { Injectable } from '@nestjs/common';
-import type { DeleteDataResult, PaginatedResponse, PaginationQuery, Shop } from '@sales-planner/shared';
+import type {
+  DeleteDataResult,
+  PaginatedResponse,
+  PaginationQuery,
+  Shop,
+} from '@sales-planner/shared';
 import { DatabaseService } from '../../database/database.service.js';
 import { MarketplacesService } from '../marketplaces/marketplaces.service.js';
 import { SalesHistoryService } from '../sales-history/sales-history.service.js';
@@ -48,7 +53,11 @@ export class ShopsService {
   }
 
   async findByTenantId(tenantId: number, query?: PaginationQuery): Promise<Shop[]> {
-    let q = this.db.selectFrom('shops').selectAll().where('tenant_id', '=', tenantId).orderBy('id', 'asc');
+    let q = this.db
+      .selectFrom('shops')
+      .selectAll()
+      .where('tenant_id', '=', tenantId)
+      .orderBy('id', 'asc');
     if (query?.limit !== undefined) q = q.limit(query.limit);
     if (query?.offset !== undefined) q = q.offset(query.offset);
     return q.execute();

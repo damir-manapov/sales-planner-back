@@ -4,14 +4,14 @@
   "buildCommand": "pnpm build",
   "builds": [
     {
-      "src": "packages/api/api/index.ts",
+      "src": "packages/api/dist/api/index.js",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "packages/api/api/index.ts"
+      "dest": "packages/api/dist/api/index.js"
     }
   ]
 }

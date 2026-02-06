@@ -1,4 +1,9 @@
-import type { User, CreateUserRequest, PaginatedResponse, PaginationQuery } from '@sales-planner/shared';
+import type {
+  User,
+  CreateUserRequest,
+  PaginatedResponse,
+  PaginationQuery,
+} from '@sales-planner/shared';
 import { BaseClient } from './base-client.js';
 
 export interface GetUsersQuery extends PaginationQuery {
@@ -7,7 +12,9 @@ export interface GetUsersQuery extends PaginationQuery {
 
 export class UsersClient extends BaseClient {
   async getAll(query?: GetUsersQuery): Promise<PaginatedResponse<User>> {
-    return this.request('GET', '/users', { params: query as Record<string, string | number | undefined> });
+    return this.request('GET', '/users', {
+      params: query as Record<string, string | number | undefined>,
+    });
   }
 
   async getById(id: number): Promise<User> {

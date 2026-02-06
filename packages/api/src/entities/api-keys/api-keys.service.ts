@@ -45,7 +45,11 @@ export class ApiKeysService {
   }
 
   async findByUserId(userId: number, query?: PaginationQuery): Promise<ApiKey[]> {
-    let q = this.db.selectFrom('api_keys').selectAll().where('user_id', '=', userId).orderBy('id', 'asc');
+    let q = this.db
+      .selectFrom('api_keys')
+      .selectAll()
+      .where('user_id', '=', userId)
+      .orderBy('id', 'asc');
     if (query?.limit !== undefined) q = q.limit(query.limit);
     if (query?.offset !== undefined) q = q.offset(query.offset);
     return q.execute();

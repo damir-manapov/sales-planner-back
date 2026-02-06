@@ -1,7 +1,8 @@
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import express from 'express';
-import { AppModule } from '../src/app.module.js';
+// @ts-ignore - Path is correct at runtime (dist/api/index.js -> dist/app.module.js)
+import { AppModule } from '../app.module.js';
 
 // Minimal interface for Express Response to avoid @types/express dependency in production
 interface ServerlessResponse {
