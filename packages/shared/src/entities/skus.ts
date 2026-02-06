@@ -1,6 +1,6 @@
-import type { ShopScopedEntity } from './base';
+import type { CodedShopScopedEntity } from './base';
 
-export interface Sku extends ShopScopedEntity {
+export interface Sku extends CodedShopScopedEntity {
   title2?: string | null;
   category_id?: number | null;
   group_id?: number | null;

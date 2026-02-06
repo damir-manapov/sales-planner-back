@@ -9,7 +9,7 @@ import { sql } from 'kysely';
 import { DuplicateResourceException, isUniqueViolation } from '../../common/index.js';
 import type { SalesHistory as SalesHistoryTable } from '../../database/database.types.js';
 import { DatabaseService } from '../../database/index.js';
-import { dateToPeriod, normalizeCode, normalizeSkuCode, periodToDate } from '../../lib/index.js';
+import { dateToPeriod, periodToDate } from '../../lib/index.js';
 import { MarketplacesService } from '../marketplaces/marketplaces.service.js';
 import { SkusService } from '../skus/skus.service.js';
 import type {
@@ -172,9 +172,9 @@ export class SalesHistoryService {
   }
 
   async bulkUpsert(
-    items: ImportSalesHistoryItem[],
-    shopId: number,
     tenantId: number,
+    shopId: number,
+    items: ImportSalesHistoryItem[],
   ): Promise<SalesHistoryImportResult> {
     if (items.length === 0) {
       return { created: 0, updated: 0, skus_created: 0, marketplaces_created: 0, errors: [] };
@@ -200,37 +200,29 @@ export class SalesHistoryService {
     }
 
     // Find or create SKUs by code
-    const skuCodes = validatedItems.map((i) => normalizeSkuCode(i.sku));
+    const skuCodes = validatedItems.map((i) => this.skusService.normalizeCode(i.sku));
     const { codeToId: skuCodeToId, created: skusCreated } =
-      await this.skusService.findOrCreateByCode(skuCodes, shopId, tenantId);
+      await this.skusService.findOrCreateByCode(tenantId, shopId, skuCodes);
 
-    // Ensure all marketplaces exist (auto-creates missing ones)
-    const marketplaceCodes = validatedItems.map((i) => normalizeCode(i.marketplace));
-    const marketplacesCreated = await this.marketplacesService.ensureExist(
-      marketplaceCodes,
-      shopId,
-      tenantId,
-    );
-
-    // Get marketplace code to ID mapping (AFTER ensuring they exist)
-    // This ensures we capture any newly created marketplaces
-    const marketplaces = await this.marketplacesService.findByShopId(shopId);
-    const marketplaceCodeToId = new Map(marketplaces.map((m) => [m.code, m.id]));
+    // Find or create marketplaces by code (auto-creates missing ones)
+    const marketplaceCodes = validatedItems.map((i) => this.marketplacesService.normalizeCode(i.marketplace));
+    const { codeToId: marketplaceCodeToId, created: marketplacesCreated } =
+      await this.marketplacesService.findOrCreateByCode(tenantId, shopId, marketplaceCodes);
 
     // Map items to include sku_id and marketplace_id
     const validItems: PreparedSalesHistoryItem[] = [];
 
     validatedItems.forEach((item) => {
-      const normalizedSkuCode = normalizeSkuCode(item.sku);
-      const normalizedMarketplaceCode = normalizeCode(item.marketplace);
+      const normalizedSkuCode = this.skusService.normalizeCode(item.sku);
+      const normalizedMarketplace = this.marketplacesService.normalizeCode(item.marketplace);
       const skuId = skuCodeToId.get(normalizedSkuCode);
 
       // Try to find the marketplace ID by trying different normalization approaches
-      let marketplaceId = marketplaceCodeToId.get(normalizedMarketplaceCode);
+      let marketplaceId = marketplaceCodeToId.get(normalizedMarketplace);
 
       // If not found, try the lowercase version (fallback for inconsistent normalization)
       if (!marketplaceId) {
-        const lowercaseMarketplace = normalizedMarketplaceCode.toLowerCase();
+        const lowercaseMarketplace = normalizedMarketplace.toLowerCase();
         marketplaceId = marketplaceCodeToId.get(lowercaseMarketplace);
       }
 

@@ -5,12 +5,13 @@ import { TenantsModule } from '../tenants/tenants.module.js';
 import { UserRolesModule } from '../user-roles/user-roles.module.js';
 import { CategoriesController } from './categories.controller.js';
 import { CategoriesExamplesController } from './categories-examples.controller.js';
+import { CategoriesRepository } from './categories.repository.js';
 import { CategoriesService } from './categories.service.js';
 
 @Module({
   imports: [ApiKeysModule, UserRolesModule, TenantsModule],
   controllers: [CategoriesController, CategoriesExamplesController],
-  providers: [CategoriesService, AuthGuard],
+  providers: [CategoriesRepository, CategoriesService, AuthGuard],
   exports: [CategoriesService],
 })
 export class CategoriesModule {}

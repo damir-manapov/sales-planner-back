@@ -201,7 +201,7 @@ export class SkusController {
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<SkuImportResult> {
     const validatedData = parseAndValidateImport(file, items, ImportSkuItemSchema);
-    return this.skusService.bulkUpsert(validatedData, ctx.shopId, ctx.tenantId);
+    return this.skusService.bulkUpsert(ctx.tenantId, ctx.shopId, validatedData);
   }
 
   @Post('import/csv')
@@ -242,7 +242,7 @@ export class SkusController {
       status: record.status,
       supplier: record.supplier,
     }));
-    return this.skusService.bulkUpsert(items, ctx.shopId, ctx.tenantId);
+    return this.skusService.bulkUpsert(ctx.tenantId, ctx.shopId, items);
   }
 
   @Delete(':id')

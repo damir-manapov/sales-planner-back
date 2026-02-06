@@ -8,6 +8,7 @@
  * - UpdateXRequest: HTTP update request (typically same as DTO)
  */
 
+export * from './base';
 export * from './users';
 export * from './tenants';
 export * from './shops';

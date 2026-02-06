@@ -1,6 +1,6 @@
 import type { CreateUserRoleDto as SharedCreateUserRoleDto } from '@sales-planner/shared';
 import { z } from 'zod';
-import { AssertCompatible, zodSchemas } from '../../common/schema.utils.js';
+import { AssertCompatible, zodSchemas } from '../../common/index.js';
 
 const { id } = zodSchemas;
 

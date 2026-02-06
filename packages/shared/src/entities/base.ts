@@ -1,13 +1,20 @@
 /**
  * Base interface for entities scoped to both shop and tenant
- * (e.g., SKUs, Brands, Marketplaces)
+ * without code/title (e.g., SalesHistory)
  */
-export interface ShopScopedEntity {
+export interface ShopScopedBaseEntity {
   id: number;
-  code: string;
-  title: string;
   shop_id: number;
   tenant_id: number;
   created_at: Date;
   updated_at: Date;
+}
+
+/**
+ * Interface for shop-scoped entities with code and title
+ * (e.g., SKUs, Brands, Categories, Marketplaces)
+ */
+export interface CodedShopScopedEntity extends ShopScopedBaseEntity {
+  code: string;
+  title: string;
 }

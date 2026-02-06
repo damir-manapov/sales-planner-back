@@ -1,15 +1,54 @@
 import { Injectable } from '@nestjs/common';
-import type { CreateSkuDto, Sku, UpdateSkuDto } from '@sales-planner/shared';
-import { ShopScopedRepository } from '../../common/shop-scoped-repository.js';
+import type { CodedTitledItem, CreateSkuDto, CreateSkuRequest, Sku, UpdateSkuDto } from '@sales-planner/shared';
+import type { BulkUpsertResult } from '../../common/internal-types.js';
+import { CodedShopScopedRepository } from '../../common/index.js';
 import { DatabaseService, USER_QUERYABLE_TABLES } from '../../database/index.js';
 
 @Injectable()
-export class SkusRepository extends ShopScopedRepository<Sku, CreateSkuDto, UpdateSkuDto> {
+export class SkusRepository extends CodedShopScopedRepository<Sku, CreateSkuDto, UpdateSkuDto> {
   constructor(db: DatabaseService) {
     super(db, 'skus', USER_QUERYABLE_TABLES);
   }
 
-  async bulkUpsert(items: CreateSkuDto[]): Promise<void> {
+  override async bulkUpsert(tenantId: number, shopId: number, items: CodedTitledItem[]): Promise<BulkUpsertResult> {
+    if (items.length === 0) {
+      return { created: 0, updated: 0 };
+    }
+
+    const existingCodes = await this.findCodesByShopId(
+      shopId,
+      items.map((i) => i.code),
+    );
+
+    const updated = items.filter((i) => existingCodes.has(i.code)).length;
+    const created = items.length - updated;
+
+    await this.db
+      .insertInto('skus')
+      .values(
+        items.map((item) => ({
+          code: item.code,
+          title: item.title,
+          shop_id: shopId,
+          tenant_id: tenantId,
+          updated_at: new Date(),
+        })),
+      )
+      .onConflict((oc) =>
+        oc.columns(['code', 'shop_id']).doUpdateSet((eb) => ({
+          title: eb.ref('excluded.title'),
+          updated_at: new Date(),
+        })),
+      )
+      .execute();
+
+    return { created, updated };
+  }
+
+  /**
+   * Bulk upsert with full SKU fields (used by import)
+   */
+  async bulkUpsertFull(tenantId: number, shopId: number, items: CreateSkuRequest[]): Promise<void> {
     if (items.length === 0) return;
 
     await this.db
@@ -19,8 +58,8 @@ export class SkusRepository extends ShopScopedRepository<Sku, CreateSkuDto, Upda
           code: item.code,
           title: item.title,
           title2: item.title2,
-          shop_id: item.shop_id,
-          tenant_id: item.tenant_id,
+          shop_id: shopId,
+          tenant_id: tenantId,
           category_id: item.category_id,
           group_id: item.group_id,
           status_id: item.status_id,

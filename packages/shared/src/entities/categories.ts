@@ -1,3 +1,3 @@
-import type { ShopScopedEntity } from './base';
+import type { CodedShopScopedEntity } from './base';
 
-export interface Category extends ShopScopedEntity {}
+export interface Category extends CodedShopScopedEntity {}

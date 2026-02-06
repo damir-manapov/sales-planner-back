@@ -1,20 +1,7 @@
-export interface CreateMarketplaceRequest {
-  code: string;
-  title: string;
-}
-export interface CreateMarketplaceDto {
-  code: string;
-  title: string;
-  shop_id: number;
-  tenant_id: number;
-}
+import type { CodedTitledItem, CodedTitledShopScopedCreateDto, CodedTitledUpdateDto } from './base';
 
-export interface UpdateMarketplaceDto {
-  title?: string;
-}
+export type CreateMarketplaceRequest = CodedTitledItem;
+export type CreateMarketplaceDto = CodedTitledShopScopedCreateDto;
+export type UpdateMarketplaceDto = Omit<CodedTitledUpdateDto, 'code'>;
 export type UpdateMarketplaceRequest = UpdateMarketplaceDto;
-
-export interface ImportMarketplaceItem {
-  code: string;
-  title: string;
-}
+export type ImportMarketplaceItem = CodedTitledItem;

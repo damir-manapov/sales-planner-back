@@ -1,8 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { Category } from '@sales-planner/shared';
-import { BaseEntityService } from '../../common/index.js';
-import { DatabaseService } from '../../database/index.js';
-import { normalizeCode } from '../../lib/index.js';
+import { CodedShopScopedEntityService } from '../../common/index.js';
+import { CategoriesRepository } from './categories.repository.js';
 import type {
   CreateCategoryDto,
   ImportCategoryItem,
@@ -13,21 +12,13 @@ import { ImportCategoryItemSchema } from './categories.schema.js';
 export type { Category };
 
 @Injectable()
-export class CategoriesService extends BaseEntityService<
+export class CategoriesService extends CodedShopScopedEntityService<
   Category,
   CreateCategoryDto,
   UpdateCategoryDto,
   ImportCategoryItem
 > {
-  constructor(db: DatabaseService) {
-    super(db, 'categories');
-  }
-
-  protected normalizeCode(code: string): string {
-    return normalizeCode(code);
-  }
-
-  protected validateImportItem(item: unknown) {
-    return ImportCategoryItemSchema.safeParse(item);
+  constructor(repository: CategoriesRepository) {
+    super(repository, 'category', ImportCategoryItemSchema);
   }
 }

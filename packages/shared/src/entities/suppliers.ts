@@ -1,3 +1,3 @@
-import type { ShopScopedEntity } from './base.js';
+import type { CodedShopScopedEntity } from './base.js';
 
-export interface Supplier extends ShopScopedEntity {}
+export interface Supplier extends CodedShopScopedEntity {}

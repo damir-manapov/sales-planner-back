@@ -1,19 +1,29 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { DatabaseService } from '../../database/index.js';
+import type { ICodedShopScopedRepository } from '../../common/index.js';
+import type { Supplier } from '@sales-planner/shared';
 import { SuppliersService } from './suppliers.service.js';
+import type { SuppliersRepository } from './suppliers.repository.js';
 
 describe('SuppliersService', () => {
   let service: SuppliersService;
-  let mockDb: Partial<DatabaseService>;
+  let mockRepository: Partial<ICodedShopScopedRepository<Supplier, any, any>>;
 
   beforeEach(() => {
-    mockDb = {
-      selectFrom: vi.fn().mockReturnThis(),
-      insertInto: vi.fn().mockReturnThis(),
-      updateTable: vi.fn().mockReturnThis(),
-      deleteFrom: vi.fn().mockReturnThis(),
+    mockRepository = {
+      findAll: vi.fn().mockResolvedValue([]),
+      findById: vi.fn().mockResolvedValue(undefined),
+      findByShopId: vi.fn().mockResolvedValue([]),
+      findByTenantId: vi.fn().mockResolvedValue([]),
+      findByCodeAndShop: vi.fn().mockResolvedValue(undefined),
+      create: vi.fn().mockResolvedValue({ id: 1, code: 'test', title: 'Test' }),
+      update: vi.fn().mockResolvedValue({ id: 1, code: 'test', title: 'Updated' }),
+      delete: vi.fn().mockResolvedValue(undefined),
+      deleteByShopId: vi.fn().mockResolvedValue(0),
+      exportForShop: vi.fn().mockResolvedValue([]),
+      findOrCreateByCode: vi.fn().mockResolvedValue({ codeToId: new Map(), created: 0 }),
+      bulkUpsert: vi.fn().mockResolvedValue({ created: 0, updated: 0 }),
     };
-    service = new SuppliersService(mockDb as DatabaseService);
+    service = new SuppliersService(mockRepository as unknown as SuppliersRepository);
   });
 
   it('should be defined', () => {
@@ -21,74 +31,37 @@ describe('SuppliersService', () => {
   });
 
   describe('findByShopId', () => {
-    it('should call database with correct shop_id', async () => {
-      const mockExecute = vi.fn().mockResolvedValue([]);
-      const mockWhere = vi.fn().mockReturnValue({ execute: mockExecute });
-      const mockSelectAll = vi.fn().mockReturnValue({ where: mockWhere });
-      mockDb.selectFrom = vi.fn().mockReturnValue({ selectAll: mockSelectAll });
-
+    it('should delegate to repository', async () => {
       await service.findByShopId(1);
-
-      expect(mockDb.selectFrom).toHaveBeenCalledWith('suppliers');
-      expect(mockSelectAll).toHaveBeenCalled();
-      expect(mockWhere).toHaveBeenCalledWith('shop_id', '=', 1);
-      expect(mockExecute).toHaveBeenCalled();
+      expect(mockRepository.findByShopId).toHaveBeenCalledWith(1);
     });
   });
 
   describe('findByTenantId', () => {
-    it('should call database with correct tenant_id', async () => {
-      const mockExecute = vi.fn().mockResolvedValue([]);
-      const mockWhere = vi.fn().mockReturnValue({ execute: mockExecute });
-      const mockSelectAll = vi.fn().mockReturnValue({ where: mockWhere });
-      mockDb.selectFrom = vi.fn().mockReturnValue({ selectAll: mockSelectAll });
-
+    it('should delegate to repository', async () => {
       await service.findByTenantId(1);
-
-      expect(mockDb.selectFrom).toHaveBeenCalledWith('suppliers');
-      expect(mockSelectAll).toHaveBeenCalled();
-      expect(mockWhere).toHaveBeenCalledWith('tenant_id', '=', 1);
-      expect(mockExecute).toHaveBeenCalled();
+      expect(mockRepository.findByTenantId).toHaveBeenCalledWith(1);
     });
   });
 
   describe('findByCodeAndShop', () => {
-    it('should call database with correct code and shop_id', async () => {
-      const mockExecuteTakeFirst = vi.fn().mockResolvedValue(undefined);
-      const mockWhere2 = vi.fn().mockReturnValue({ executeTakeFirst: mockExecuteTakeFirst });
-      const mockWhere1 = vi.fn().mockReturnValue({ where: mockWhere2 });
-      const mockSelectAll = vi.fn().mockReturnValue({ where: mockWhere1 });
-      mockDb.selectFrom = vi.fn().mockReturnValue({ selectAll: mockSelectAll });
-
-      await service.findByCodeAndShop('supplier1', 1);
-
-      expect(mockDb.selectFrom).toHaveBeenCalledWith('suppliers');
-      expect(mockSelectAll).toHaveBeenCalled();
-      expect(mockWhere1).toHaveBeenCalledWith('code', '=', 'supplier1');
-      expect(mockWhere2).toHaveBeenCalledWith('shop_id', '=', 1);
-      expect(mockExecuteTakeFirst).toHaveBeenCalled();
+    it('should normalize code and delegate to repository', async () => {
+      await service.findByCodeAndShop('SUPPLIER1', 1);
+      expect(mockRepository.findByCodeAndShop).toHaveBeenCalledWith('supplier1', 1);
     });
   });
 
   describe('exportForShop', () => {
-    it('should return suppliers with only code and title', async () => {
+    it('should delegate to repository', async () => {
       const mockSuppliers = [
-        { code: 'supplier1', title: 'Example Supplier 1' },
-        { code: 'supplier2', title: 'Example Supplier 2' },
+        { code: 'supplier1', title: 'Supplier 1' },
+        { code: 'supplier2', title: 'Supplier 2' },
       ];
-
-      const mockExecute = vi.fn().mockResolvedValue(mockSuppliers);
-      const mockOrderBy = vi.fn().mockReturnValue({ execute: mockExecute });
-      const mockWhere = vi.fn().mockReturnValue({ orderBy: mockOrderBy });
-      const mockSelect = vi.fn().mockReturnValue({ where: mockWhere });
-      mockDb.selectFrom = vi.fn().mockReturnValue({ select: mockSelect });
+      mockRepository.exportForShop = vi.fn().mockResolvedValue(mockSuppliers);
 
       const result = await service.exportForShop(1);
 
-      expect(mockDb.selectFrom).toHaveBeenCalledWith('suppliers');
-      expect(mockSelect).toHaveBeenCalledWith(['code', 'title']);
-      expect(mockWhere).toHaveBeenCalledWith('shop_id', '=', 1);
-      expect(mockOrderBy).toHaveBeenCalledWith('code', 'asc');
+      expect(mockRepository.exportForShop).toHaveBeenCalledWith(1);
       expect(result).toEqual(mockSuppliers);
     });
   });

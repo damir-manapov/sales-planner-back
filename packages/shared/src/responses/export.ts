@@ -1,3 +1,5 @@
+import type { CodedTitledItem } from '../dto/base';
+
 export interface SkuExportItem {
   code: string;
   title: string;
@@ -8,35 +10,17 @@ export interface SkuExportItem {
   supplier?: string;
 }
 
-export interface BrandExportItem {
-  code: string;
-  title: string;
-}
+export type BrandExportItem = CodedTitledItem;
 
-export interface CategoryExportItem {
-  code: string;
-  title: string;
-}
+export type CategoryExportItem = CodedTitledItem;
 
-export interface GroupExportItem {
-  code: string;
-  title: string;
-}
+export type GroupExportItem = CodedTitledItem;
 
-export interface StatusExportItem {
-  code: string;
-  title: string;
-}
+export type StatusExportItem = CodedTitledItem;
 
-export interface SupplierExportItem {
-  code: string;
-  title: string;
-}
+export type SupplierExportItem = CodedTitledItem;
 
-export interface MarketplaceExportItem {
-  code: string;
-  title: string;
-}
+export type MarketplaceExportItem = CodedTitledItem;
 
 export interface SalesHistoryExportItem {
   marketplace: string;

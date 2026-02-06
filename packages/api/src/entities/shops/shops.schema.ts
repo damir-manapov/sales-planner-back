@@ -5,7 +5,7 @@ import type {
   UpdateShopRequest as SharedUpdateShopRequest,
 } from '@sales-planner/shared';
 import { z } from 'zod';
-import { AssertCompatible, zodSchemas } from '../../common/schema.utils.js';
+import { AssertCompatible, zodSchemas } from '../../common/index.js';
 
 const { title, id } = zodSchemas;
 

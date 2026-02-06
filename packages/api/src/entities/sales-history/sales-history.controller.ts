@@ -216,7 +216,7 @@ export class SalesHistoryController {
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<SalesHistoryImportResult> {
     const validatedData = parseAndValidateImport(file, items, ImportSalesHistoryItemSchema);
-    return this.salesHistoryService.bulkUpsert(validatedData, ctx.shopId, ctx.tenantId);
+    return this.salesHistoryService.bulkUpsert(ctx.tenantId, ctx.shopId, validatedData);
   }
 
   @Post('import/csv')
@@ -269,6 +269,6 @@ export class SalesHistoryController {
       }
     });
 
-    return this.salesHistoryService.bulkUpsert(validatedData, ctx.shopId, ctx.tenantId);
+    return this.salesHistoryService.bulkUpsert(ctx.tenantId, ctx.shopId, validatedData);
   }
 }

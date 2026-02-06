@@ -1,24 +1,8 @@
+import type { CodedTitledItem, CodedTitledShopScopedCreateDto, CodedTitledUpdateDto } from './base';
+
 // Brands
-export interface CreateBrandRequest {
-  code: string;
-  title: string;
-}
-
-export interface CreateBrandDto {
-  code: string;
-  title: string;
-  shop_id: number;
-  tenant_id: number;
-}
-
-export interface UpdateBrandDto {
-  code?: string;
-  title?: string;
-}
-
-export type UpdateBrandRequest = UpdateBrandDto;
-
-export interface ImportBrandItem {
-  code: string;
-  title: string;
-}
+export type CreateBrandRequest = CodedTitledItem;
+export type CreateBrandDto = CodedTitledShopScopedCreateDto;
+export type UpdateBrandDto = CodedTitledUpdateDto;
+export type UpdateBrandRequest = CodedTitledUpdateDto;
+export type ImportBrandItem = CodedTitledItem;

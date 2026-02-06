@@ -37,6 +37,11 @@ export class SkusService {
     private readonly suppliersService: SuppliersService,
   ) {}
 
+  /** Normalize SKU code for consistent lookups */
+  normalizeCode(code: string): string {
+    return normalizeSkuCode(code);
+  }
+
   // ============ Read Operations (delegate to repository) ============
 
   async findById(id: number): Promise<Sku | undefined> {
@@ -103,7 +108,7 @@ export class SkusService {
 
   // ============ Import/Export Operations ============
 
-  async bulkUpsert(items: unknown[], shopId: number, tenantId: number): Promise<SkuImportResult> {
+  async bulkUpsert(tenantId: number, shopId: number, items: unknown[]): Promise<SkuImportResult> {
     const validItems: ImportSkuItem[] = [];
     const errors: string[] = [];
 
@@ -153,16 +158,16 @@ export class SkusService {
 
     const [categoryResult, groupResult, statusResult, supplierResult] = await Promise.all([
       categoryCodes.length > 0
-        ? this.categoriesService.findOrCreateByCode(categoryCodes, shopId, tenantId)
+        ? this.categoriesService.findOrCreateByCode(tenantId, shopId, categoryCodes)
         : { codeToId: new Map<string, number>(), created: 0 },
       groupCodes.length > 0
-        ? this.groupsService.findOrCreateByCode(groupCodes, shopId, tenantId)
+        ? this.groupsService.findOrCreateByCode(tenantId, shopId, groupCodes)
         : { codeToId: new Map<string, number>(), created: 0 },
       statusCodes.length > 0
-        ? this.statusesService.findOrCreateByCode(statusCodes, shopId, tenantId)
+        ? this.statusesService.findOrCreateByCode(tenantId, shopId, statusCodes)
         : { codeToId: new Map<string, number>(), created: 0 },
       supplierCodes.length > 0
-        ? this.suppliersService.findOrCreateByCode(supplierCodes, shopId, tenantId)
+        ? this.suppliersService.findOrCreateByCode(tenantId, shopId, supplierCodes)
         : { codeToId: new Map<string, number>(), created: 0 },
     ]);
 
@@ -170,15 +175,15 @@ export class SkusService {
     const preparedItems: PreparedSkuItem[] = validItems.map((item) => ({
       ...item,
       category_id: item.category
-        ? (categoryResult.codeToId.get(normalizeCode(item.category)) ?? null)
-        : null,
-      group_id: item.group ? (groupResult.codeToId.get(normalizeCode(item.group)) ?? null) : null,
+        ? categoryResult.codeToId.get(normalizeCode(item.category))
+        : undefined,
+      group_id: item.group ? groupResult.codeToId.get(normalizeCode(item.group)) : undefined,
       status_id: item.status
-        ? (statusResult.codeToId.get(normalizeCode(item.status)) ?? null)
-        : null,
+        ? statusResult.codeToId.get(normalizeCode(item.status))
+        : undefined,
       supplier_id: item.supplier
-        ? (supplierResult.codeToId.get(normalizeCode(item.supplier)) ?? null)
-        : null,
+        ? supplierResult.codeToId.get(normalizeCode(item.supplier))
+        : undefined,
     }));
 
     // Get existing codes for counting created vs updated
@@ -186,13 +191,13 @@ export class SkusService {
     const existingCodes = await this.repository.findCodesByShopId(shopId, normalizedCodes);
 
     // Bulk upsert
-    await this.repository.bulkUpsert(
+    await this.repository.bulkUpsertFull(
+      tenantId,
+      shopId,
       preparedItems.map((item) => ({
         code: normalizeSkuCode(item.code),
         title: item.title,
         title2: item.title2,
-        shop_id: shopId,
-        tenant_id: tenantId,
         category_id: item.category_id,
         group_id: item.group_id,
         status_id: item.status_id,
@@ -235,15 +240,15 @@ export class SkusService {
    * Used by SalesHistory import to auto-create SKUs.
    */
   async findOrCreateByCode(
-    codes: string[],
-    shopId: number,
     tenantId: number,
+    shopId: number,
+    codes: string[],
   ): Promise<{ codeToId: Map<string, number>; created: number }> {
     if (codes.length === 0) {
       return { codeToId: new Map(), created: 0 };
     }
 
     const normalizedCodes = codes.map((code) => normalizeSkuCode(code));
-    return this.repository.findOrCreateByCode(normalizedCodes, shopId, tenantId);
+    return this.repository.findOrCreateByCode(tenantId, shopId, normalizedCodes);
   }
 }

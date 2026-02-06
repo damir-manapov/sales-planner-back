@@ -97,6 +97,9 @@ src/
 │   ├── user-shops/       # User-shop associations
 │   └── users/            # User management
 ├── common/               # Shared utilities and base classes
+│   ├── shop-scoped/      # Repository and service base classes
+│   ├── pipes/            # Validation pipes (Zod, query)
+│   └── helpers/          # Export/import helpers, schema utils
 ├── database/             # Database configuration and types
 ├── auth/                 # Authentication and authorization
 ├── roles/                # Role definitions
@@ -110,11 +113,11 @@ src/
 
 The API uses generic base classes to eliminate code duplication across shop-scoped entities:
 
-**BaseEntityService<T>** - Generic CRUD service for shop-scoped entities
+**CodedShopScopedEntityService<T>** - Generic CRUD service for shop-scoped entities with code
 ```typescript
-// src/common/base-entity.service.ts
-export abstract class BaseEntityService<
-  TEntity extends ShopScopedEntity,
+// src/common/shop-scoped/coded-entity.service.ts
+export abstract class CodedShopScopedEntityService<
+  TEntity extends CodedShopScopedEntity,
   TCreateDto, TUpdateDto, TImportItem
 > {
   // Provides standard CRUD operations:
@@ -133,10 +136,10 @@ export abstract class BaseEntityService<
 **Usage Example - Brands Service (23 lines vs 165):**
 ```typescript
 @Injectable()
-export class BrandsService extends BaseEntityService<
+export class BrandsService extends CodedShopScopedEntityService<
   Brand, CreateBrandDto, UpdateBrandDto, ImportBrandItem
 > {
-  constructor(db: DatabaseService) { super(db, 'brands'); }
+  constructor(repository: BrandsRepository) { super(repository); }
 
   protected validateImportItem(item: unknown) {
     return ImportBrandItemSchema.safeParse(item);
@@ -174,32 +177,32 @@ export class BrandsExamplesController extends BaseExamplesController<BrandExport
 - **Maintainability**: Changes to common logic only need updating in one place
 - **Extensibility**: Protected hooks allow customization (e.g., SKU code normalization)
 
-**Entities using BaseEntityService:**
+**Entities using CodedShopScopedEntityService:**
 - Brands (86% code reduction: 165 → 23 lines)
 - SKUs (58% code reduction: 221 → 94 lines, keeps unique methods like `findOrCreateByCode`)
 
 **Controllers using BaseExamplesController:**
 - Brands, SKUs, Marketplaces, Sales History (42% code reduction each)
 
-### Repository Pattern (ShopScopedRepository)
+### Repository Pattern (CodedShopScopedRepository)
 
 For entities requiring pagination and advanced queries, we use the Repository pattern:
 
-**ShopScopedRepository<TEntity, TCreateDto, TUpdateDto>** - Generic repository with pagination
+**CodedShopScopedRepository<TEntity, TCreateDto, TUpdateDto>** - Generic repository with pagination
 ```typescript
-// src/common/shop-scoped-repository.ts
-export class ShopScopedRepository<
-  TEntity extends ShopScopedEntity,
+// src/common/shop-scoped/coded-repository.ts
+export class CodedShopScopedRepository<
+  TEntity extends CodedShopScopedEntity,
   TCreateDto,
   TUpdateDto
-> implements IShopScopedRepository<TEntity, TCreateDto, TUpdateDto> {
+> implements ICodedShopScopedRepository<TEntity, TCreateDto, TUpdateDto> {
   // Standard CRUD operations:
   // - create(data: TCreateDto): Promise<TEntity>
   // - update(id: number, data: TUpdateDto): Promise<TEntity | undefined>
   // - delete(id: number): Promise<void>
   // - findById(id: number): Promise<TEntity | undefined>
   // - findByShopId(shopId: number): Promise<TEntity[]>
-  
+
   // Paginated queries:
   // - findByShopIdPaginated(shopId, options): Promise<PaginatedResult<TEntity>>
 
@@ -211,13 +214,12 @@ export class ShopScopedRepository<
 **Usage Example - SKUs Repository:**
 ```typescript
 @Injectable()
-export class SkusRepository extends ShopScopedRepository<Sku, CreateSkuDto, UpdateSkuDto> {
+export class SkusRepository extends CodedShopScopedRepository<Sku, CreateSkuDto, UpdateSkuDto> {
   constructor(db: DatabaseService) {
-    super(db, 'skus', ['skus']);  // table name + allowed tables whitelist
+    super(db, 'skus');  // table name
   }
 
   // Entity-specific methods
-  async bulkUpsert(items: CreateSkuDto[]): Promise<Sku[]> { ... }
   async findOrCreateByCode(code: string, shopId: number, tenantId: number): Promise<Sku> { ... }
 }
 ```
@@ -259,7 +261,7 @@ export interface CreateSkuDto {
 ```typescript
 // skus/skus.schema.ts
 import type { CreateSkuRequest, CreateSkuDto } from '@sales-planner/shared';
-import { AssertCompatible } from '../common/schema.utils.js';
+import { AssertCompatible } from '../../common/index.js';
 
 // Schema for HTTP requests (without context)
 export const CreateSkuSchema = z.object({

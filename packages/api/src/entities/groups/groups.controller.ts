@@ -23,9 +23,9 @@ import {
   ShopContext,
   type ShopContext as ShopContextType,
 } from '../../auth/decorators.js';
+import type { ImportResult } from '@sales-planner/shared';
 import {
   type ExpressResponse,
-  type ImportResult,
   parseAndValidateImport,
   parseCsvImport,
   sendCsvExport,
@@ -182,7 +182,7 @@ export class GroupsController {
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<ImportResult> {
     const validatedData = parseAndValidateImport(file, items, ImportGroupItemSchema);
-    return this.groupsService.bulkUpsert(validatedData, ctx.shopId, ctx.tenantId);
+    return this.groupsService.bulkUpsert(ctx.tenantId, ctx.shopId, validatedData);
   }
 
   @Post('import/csv')
@@ -213,6 +213,6 @@ export class GroupsController {
       code: record.code,
       title: record.title,
     }));
-    return this.groupsService.bulkUpsert(items, ctx.shopId, ctx.tenantId);
+    return this.groupsService.bulkUpsert(ctx.tenantId, ctx.shopId, items);
   }
 }

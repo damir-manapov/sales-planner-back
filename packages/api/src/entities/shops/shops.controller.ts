@@ -21,7 +21,7 @@ import {
   validateWriteAccess,
 } from '../../auth/access-control.js';
 import { AuthenticatedRequest, AuthGuard } from '../../auth/auth.guard.js';
-import { ZodValidationPipe } from '../../common/zod-validation.pipe.js';
+import { ZodValidationPipe } from '../../common/index.js';
 import {
   type CreateShopRequest,
   CreateShopSchema,
