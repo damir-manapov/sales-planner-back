@@ -1,38 +1,65 @@
 import * as esbuild from 'esbuild';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { readFileSync, writeFileSync } from 'fs';
+import { writeFileSync } from 'fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const apiRoot = join(__dirname, '..');
 
-// Read the entry point
-const entryContent = readFileSync(join(apiRoot, 'api/index.ts'), 'utf-8');
+// Create entry point that imports from dist (which has decorator metadata)
+const entryContent = `
+import { NestFactory } from '@nestjs/core';
+import { ExpressAdapter } from '@nestjs/platform-express';
+import express from 'express';
+import { AppModule } from './app.module.js';
 
-// Transform: change import from ../src/app.module.js to ../dist/app.module.js
-const transformedContent = entryContent.replace(
-  /from ['"]\.\.\/src\/app\.module\.js['"]/,
-  "from '../dist/app.module.js'"
-);
+const server = express();
+let isAppInitialized = false;
 
-// Write a temporary file
-const tempEntry = join(apiRoot, 'api/index.temp.ts');
-writeFileSync(tempEntry, transformedContent);
-
-try {
-  await esbuild.build({
-    entryPoints: [tempEntry],
-    bundle: false, // Don't bundle - just compile TS to JS
-    platform: 'node',
-    target: 'node18',
-    format: 'esm',
-    outfile: join(apiRoot, 'api/index.bundle.mjs'),
-    sourcemap: false,
-    minify: false,
-  });
-  console.log('✅ Compiled api/index.ts → api/index.bundle.mjs');
-} finally {
-  // Clean up temp file
-  const { unlinkSync } = await import('fs');
-  unlinkSync(tempEntry);
+export default async function handler(req, res) {
+  try {
+    if (!isAppInitialized) {
+      const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
+      app.enableCors();
+      await app.init();
+      isAppInitialized = true;
+    }
+    server(req, res);
+  } catch (error) {
+    console.error('Serverless function error:', error);
+    res.status(500).json({
+      error: 'Internal server error',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
 }
+`;
+
+// Write temporary entry point in dist folder
+const tempEntry = join(apiRoot, 'dist/serverless-entry.js');
+writeFileSync(tempEntry, entryContent);
+
+await esbuild.build({
+  entryPoints: [tempEntry],
+  bundle: true,
+  platform: 'node',
+  target: 'node18',
+  format: 'esm',
+  outfile: join(apiRoot, 'api/index.bundle.mjs'),
+  // Keep node_modules external - they'll be resolved from Vercel's node_modules
+  packages: 'external',
+  sourcemap: false,
+  minify: false,
+  banner: {
+    js: `
+import { createRequire } from 'module';
+import { fileURLToPath } from 'url';
+import { dirname } from 'path';
+const require = createRequire(import.meta.url);
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+`.trim(),
+  },
+});
+
+console.log('✅ Bundled dist/ → api/index.bundle.mjs');

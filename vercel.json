@@ -5,10 +5,7 @@
   "builds": [
     {
       "src": "packages/api/api/index.bundle.mjs",
-      "use": "@vercel/node",
-      "config": {
-        "includeFiles": ["packages/api/dist/**", "packages/shared/dist/**"]
-      }
+      "use": "@vercel/node"
     }
   ],
   "routes": [
