@@ -4,6 +4,14 @@ import type { ClientConfig } from './base-client.js';
 
 /**
  * Generic client for shop-scoped resources with import/export capabilities.
+ *
+ * @typeParam TEntity - The entity type
+ * @typeParam TCreateRequest - The create request type
+ * @typeParam TUpdateRequest - The update request type
+ * @typeParam TImportItem - The import item type
+ * @typeParam TExportItem - The export item type
+ * @typeParam TImportResult - The import result type
+ * @typeParam TQuery - The query type for getAll/export (defaults to empty object)
  */
 export class ShopScopedClient<
   TEntity,
@@ -12,6 +20,7 @@ export class ShopScopedClient<
   TImportItem,
   TExportItem,
   TImportResult,
+  TQuery = Record<string, never>,
 > extends ImportExportBaseClient {
   constructor(
     config: ClientConfig,
@@ -20,8 +29,8 @@ export class ShopScopedClient<
     super(config);
   }
 
-  async getAll(ctx: ShopContextParams, query?: Record<string, string | number | undefined>): Promise<TEntity[]> {
-    return this.request('GET', `/${this.resourcePath}`, { params: { ...ctx, ...query } });
+  async getAll(ctx: ShopContextParams, query?: TQuery): Promise<TEntity[]> {
+    return this.request('GET', `/${this.resourcePath}`, { params: { ...ctx, ...query } as Record<string, string | number | undefined> });
   }
 
   async getById(ctx: ShopContextParams, id: number): Promise<TEntity> {
@@ -48,12 +57,12 @@ export class ShopScopedClient<
     return this.uploadCsv(`/${this.resourcePath}/import/csv`, csvContent, ctx);
   }
 
-  async exportJson(ctx: ShopContextParams, query?: Record<string, string | number | undefined>): Promise<TExportItem[]> {
-    return this.request('GET', `/${this.resourcePath}/export/json`, { params: { ...ctx, ...query } });
+  async exportJson(ctx: ShopContextParams, query?: TQuery): Promise<TExportItem[]> {
+    return this.request('GET', `/${this.resourcePath}/export/json`, { params: { ...ctx, ...query } as Record<string, string | number | undefined> });
   }
 
-  async exportCsv(ctx: ShopContextParams, query?: Record<string, string | number | undefined>): Promise<string> {
-    return this.requestText('GET', `/${this.resourcePath}/export/csv`, { params: { ...ctx, ...query } });
+  async exportCsv(ctx: ShopContextParams, query?: TQuery): Promise<string> {
+    return this.requestText('GET', `/${this.resourcePath}/export/csv`, { params: { ...ctx, ...query } as Record<string, string | number | undefined> });
   }
 
   async getExampleJson(): Promise<TImportItem[]> {

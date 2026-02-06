@@ -38,6 +38,7 @@ import type {
   ImportSalesHistoryItem,
   SalesHistoryExportItem,
   SalesHistoryImportResult,
+  PeriodQuery,
 } from '@sales-planner/shared';
 import type { ClientConfig } from './base-client.js';
 import { ApiError } from './base-client.js';
@@ -69,7 +70,7 @@ export class SalesPlannerClient {
   readonly statuses: CodedEntityClient<Status, CreateStatusRequest, UpdateStatusRequest, ImportStatusItem, StatusExportItem>;
   readonly suppliers: CodedEntityClient<Supplier, CreateSupplierRequest, UpdateSupplierRequest, ImportSupplierItem, SupplierExportItem>;
   readonly marketplaces: CodedEntityClient<Marketplace, CreateMarketplaceRequest, UpdateMarketplaceRequest, ImportMarketplaceItem, MarketplaceExportItem>;
-  readonly salesHistory: ShopScopedClient<SalesHistory, CreateSalesHistoryRequest, UpdateSalesHistoryRequest, ImportSalesHistoryItem, SalesHistoryExportItem, SalesHistoryImportResult>;
+  readonly salesHistory: ShopScopedClient<SalesHistory, CreateSalesHistoryRequest, UpdateSalesHistoryRequest, ImportSalesHistoryItem, SalesHistoryExportItem, SalesHistoryImportResult, PeriodQuery>;
   readonly roles: CrudClient<Role, CreateRoleRequest, UpdateRoleRequest>;
   readonly userRoles: UserRolesClient;
   readonly apiKeys: ApiKeysClient;
