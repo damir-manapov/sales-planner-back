@@ -1,5 +1,16 @@
 # @sales-planner/http-client
 
+## 0.16.0
+
+### Minor Changes
+
+- feat: add pagination to all system entities (users, tenants, shops, roles, userRoles, apiKeys)
+
+### Patch Changes
+
+- Updated dependencies
+  - @sales-planner/shared@0.14.0
+
 ## 0.15.1
 
 ### Patch Changes

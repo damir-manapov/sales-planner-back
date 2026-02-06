@@ -1,5 +1,11 @@
 # @sales-planner/shared
 
+## 0.14.0
+
+### Minor Changes
+
+- feat: add pagination to all system entities (users, tenants, shops, roles, userRoles, apiKeys)
+
 ## 0.13.1
 
 ### Patch Changes
