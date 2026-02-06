@@ -9,7 +9,7 @@ export default async function handler(req, res) {
   try {
     if (!isAppInitialized) {
       // Dynamic import - resolves at runtime after build completes
-      const { AppModule } = await import('../dist/app.module.js');
+      const { AppModule } = await import('./dist/app.module.js');
       const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
       app.enableCors();
 
