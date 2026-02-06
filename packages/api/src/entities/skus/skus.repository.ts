@@ -43,52 +43,7 @@ export class SkusRepository extends ShopScopedRepository<Sku, CreateSkuDto, Upda
       .execute();
   }
 
-  async findOrCreateByCode(
-    codes: string[],
-    shopId: number,
-    tenantId: number,
-  ): Promise<{ codeToId: Map<string, number>; created: number }> {
-    if (codes.length === 0) {
-      return { codeToId: new Map(), created: 0 };
-    }
-
-    const uniqueCodes = [...new Set(codes)];
-
-    let entities = await this.db
-      .selectFrom('skus')
-      .select(['id', 'code'])
-      .where('shop_id', '=', shopId)
-      .where('code', 'in', uniqueCodes)
-      .execute();
-
-    const existingCodes = new Set(entities.map((e) => e.code));
-    const missingCodes = uniqueCodes.filter((code) => !existingCodes.has(code));
-
-    if (missingCodes.length > 0) {
-      const newEntities = await this.db
-        .insertInto('skus')
-        .values(
-          missingCodes.map((code) => ({
-            code,
-            title: code,
-            shop_id: shopId,
-            tenant_id: tenantId,
-            updated_at: new Date(),
-          })),
-        )
-        .returning(['id', 'code'])
-        .execute();
-
-      entities = [...entities, ...newEntities];
-    }
-
-    return {
-      codeToId: new Map(entities.map((e) => [e.code, e.id])),
-      created: missingCodes.length,
-    };
-  }
-
-  async exportForShop(shopId: number): Promise<
+  override async exportForShop(shopId: number): Promise<
     Array<{
       code: string;
       title: string;

@@ -151,4 +151,63 @@ export abstract class ShopScopedRepository<
       .executeTakeFirst();
     return Number(result.numDeletedRows);
   }
+
+  async exportForShop(shopId: number): Promise<Array<{ code: string; title: string }>> {
+    return this.db
+      .selectFrom(this.tableName as any)
+      .select(['code', 'title'])
+      .where('shop_id', '=', shopId)
+      .orderBy('code', 'asc')
+      .execute() as Promise<Array<{ code: string; title: string }>>;
+  }
+
+  /**
+   * Finds entities by code or creates missing ones.
+   * Returns a map of code -> id and the count of newly created entities.
+   * Useful for auto-creating referenced entities during imports.
+   */
+  async findOrCreateByCode(
+    codes: string[],
+    shopId: number,
+    tenantId: number,
+  ): Promise<{ codeToId: Map<string, number>; created: number }> {
+    if (codes.length === 0) {
+      return { codeToId: new Map(), created: 0 };
+    }
+
+    const uniqueCodes = [...new Set(codes)];
+
+    let entities = (await this.db
+      .selectFrom(this.tableName as any)
+      .select(['id', 'code'])
+      .where('shop_id', '=', shopId)
+      .where('code', 'in', uniqueCodes)
+      .execute()) as Array<{ id: number; code: string }>;
+
+    const existingCodes = new Set(entities.map((e) => e.code));
+    const missingCodes = uniqueCodes.filter((code) => !existingCodes.has(code));
+
+    if (missingCodes.length > 0) {
+      const newEntities = (await this.db
+        .insertInto(this.tableName as any)
+        .values(
+          missingCodes.map((code) => ({
+            code,
+            title: code,
+            shop_id: shopId,
+            tenant_id: tenantId,
+            updated_at: new Date(),
+          })),
+        )
+        .returning(['id', 'code'])
+        .execute()) as Array<{ id: number; code: string }>;
+
+      entities = [...entities, ...newEntities];
+    }
+
+    return {
+      codeToId: new Map(entities.map((e) => [e.code, e.id])),
+      created: missingCodes.length,
+    };
+  }
 }
