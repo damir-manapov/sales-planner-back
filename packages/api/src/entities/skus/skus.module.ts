@@ -1,8 +1,8 @@
 import { Module } from '@nestjs/common';
-import { ApiKeysModule } from '../../api-keys/api-keys.module.js';
+import { ApiKeysModule } from '../api-keys/api-keys.module.js';
 import { AuthGuard } from '../../auth/auth.guard.js';
-import { TenantsModule } from '../../tenants/tenants.module.js';
-import { UserRolesModule } from '../../user-roles/user-roles.module.js';
+import { TenantsModule } from '../tenants/tenants.module.js';
+import { UserRolesModule } from '../user-roles/user-roles.module.js';
 import { CategoriesModule } from '../categories/categories.module.js';
 import { GroupsModule } from '../groups/groups.module.js';
 import { StatusesModule } from '../statuses/statuses.module.js';

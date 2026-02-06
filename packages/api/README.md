@@ -77,6 +77,35 @@ Swagger UI provides:
 
 ## Code Architecture
 
+### Folder Structure
+
+```
+src/
+├── entities/              # Business entities
+│   ├── api-keys/         # API key management
+│   ├── brands/           # Brand management (shop-scoped)
+│   ├── categories/       # Category management (shop-scoped)
+│   ├── groups/           # Group management (shop-scoped)
+│   ├── marketplaces/     # Marketplace management (shop-scoped)
+│   ├── sales-history/    # Sales history records (shop-scoped)
+│   ├── shops/            # Shop management (tenant-scoped)
+│   ├── skus/             # SKU management (shop-scoped)
+│   ├── statuses/         # Status management (shop-scoped)
+│   ├── suppliers/        # Supplier management (shop-scoped)
+│   ├── tenants/          # Tenant management
+│   ├── user-roles/       # Role assignments
+│   ├── user-shops/       # User-shop associations
+│   └── users/            # User management
+├── common/               # Shared utilities and base classes
+├── database/             # Database configuration and types
+├── auth/                 # Authentication and authorization
+├── roles/                # Role definitions
+├── me/                   # Current user endpoint
+├── bootstrap/            # App initialization
+├── lib/                  # Utility functions
+└── metadata/             # Entity metadata API
+```
+
 ### Base Classes for DRY Principles
 
 The API uses generic base classes to eliminate code duplication across shop-scoped entities:
@@ -151,6 +180,56 @@ export class BrandsExamplesController extends BaseExamplesController<BrandExport
 
 **Controllers using BaseExamplesController:**
 - Brands, SKUs, Marketplaces, Sales History (42% code reduction each)
+
+### Repository Pattern (ShopScopedRepository)
+
+For entities requiring pagination and advanced queries, we use the Repository pattern:
+
+**ShopScopedRepository<TEntity, TCreateDto, TUpdateDto>** - Generic repository with pagination
+```typescript
+// src/common/shop-scoped-repository.ts
+export class ShopScopedRepository<
+  TEntity extends ShopScopedEntity,
+  TCreateDto,
+  TUpdateDto
+> implements IShopScopedRepository<TEntity, TCreateDto, TUpdateDto> {
+  // Standard CRUD operations:
+  // - create(data: TCreateDto): Promise<TEntity>
+  // - update(id: number, data: TUpdateDto): Promise<TEntity | undefined>
+  // - delete(id: number): Promise<void>
+  // - findById(id: number): Promise<TEntity | undefined>
+  // - findByShopId(shopId: number): Promise<TEntity[]>
+  
+  // Paginated queries:
+  // - findByShopIdPaginated(shopId, options): Promise<PaginatedResult<TEntity>>
+
+  // SQL injection protection:
+  // - Table names are validated against a whitelist
+}
+```
+
+**Usage Example - SKUs Repository:**
+```typescript
+@Injectable()
+export class SkusRepository extends ShopScopedRepository<Sku, CreateSkuDto, UpdateSkuDto> {
+  constructor(db: DatabaseService) {
+    super(db, 'skus', ['skus']);  // table name + allowed tables whitelist
+  }
+
+  // Entity-specific methods
+  async bulkUpsert(items: CreateSkuDto[]): Promise<Sku[]> { ... }
+  async findOrCreateByCode(code: string, shopId: number, tenantId: number): Promise<Sku> { ... }
+}
+```
+
+**Security - Table Name Validation:**
+```typescript
+// Prevents SQL injection via dynamic table names
+const VALID_TABLE_NAMES = ['skus', 'brands', 'categories', ...] as const;
+const USER_QUERYABLE_TABLES = ['skus', 'sales_history'] as const;
+
+assertValidTableName(tableName, allowedTables);  // throws InvalidTableNameException
+```
 
 ## Type System Architecture
 

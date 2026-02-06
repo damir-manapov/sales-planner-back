@@ -1,6 +1,6 @@
 import { Controller, Get, Headers, NotFoundException, UnauthorizedException } from '@nestjs/common';
-import { ApiKeysService } from '../api-keys/api-keys.service.js';
-import { UsersService } from '../users/users.service.js';
+import { ApiKeysService } from '../entities/api-keys/api-keys.service.js';
+import { UsersService } from '../entities/users/users.service.js';
 
 @Controller('me')
 export class MeController {

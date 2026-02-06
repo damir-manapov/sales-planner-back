@@ -7,10 +7,10 @@ import {
   UnauthorizedException,
 } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
-import { ApiKeysService } from '../api-keys/api-keys.service.js';
+import { ApiKeysService } from '../entities/api-keys/api-keys.service.js';
 import { ROLE_NAMES } from '../common/constants.js';
-import { TenantsService } from '../tenants/tenants.service.js';
-import { UserRolesService } from '../user-roles/user-roles.service.js';
+import { TenantsService } from '../entities/tenants/tenants.service.js';
+import { UserRolesService } from '../entities/user-roles/user-roles.service.js';
 import { hasReadAccess, hasWriteAccess } from './access-control.js';
 import { ACCESS_LEVEL_KEY, AccessLevel } from './decorators.js';
 

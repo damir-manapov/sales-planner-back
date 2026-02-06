@@ -1,10 +1,10 @@
 import { Injectable, Logger, OnModuleInit } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { ApiKeysService } from '../api-keys/api-keys.service.js';
+import { ApiKeysService } from '../entities/api-keys/api-keys.service.js';
 import { ROLE_NAMES } from '../common/constants.js';
 import { RolesService } from '../roles/roles.service.js';
-import { UserRolesService } from '../user-roles/user-roles.service.js';
-import { UsersService } from '../users/users.service.js';
+import { UserRolesService } from '../entities/user-roles/user-roles.service.js';
+import { UsersService } from '../entities/users/users.service.js';
 
 @Injectable()
 export class BootstrapService implements OnModuleInit {

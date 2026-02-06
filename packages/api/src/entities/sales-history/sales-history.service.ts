@@ -10,7 +10,7 @@ import { DuplicateResourceException, isUniqueViolation } from '../../common/inde
 import type { SalesHistory as SalesHistoryTable } from '../../database/database.types.js';
 import { DatabaseService } from '../../database/index.js';
 import { dateToPeriod, normalizeCode, normalizeSkuCode, periodToDate } from '../../lib/index.js';
-import { MarketplacesService } from '../../marketplaces/marketplaces.service.js';
+import { MarketplacesService } from '../marketplaces/marketplaces.service.js';
 import { SkusService } from '../skus/skus.service.js';
 import type {
   CreateSalesHistoryDto,
