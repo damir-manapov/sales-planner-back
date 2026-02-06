@@ -4,14 +4,14 @@
   "buildCommand": "pnpm build",
   "builds": [
     {
-      "src": "packages/api/api/index.bundle.mjs",
+      "src": "api/index.mjs",
       "use": "@vercel/node"
     }
   ],
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "packages/api/api/index.bundle.mjs"
+      "dest": "api/index.mjs"
     }
   ]
 }

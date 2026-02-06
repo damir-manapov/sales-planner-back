@@ -1,13 +1,15 @@
 import * as esbuild from 'esbuild';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { writeFileSync } from 'fs';
+import { writeFileSync, unlinkSync } from 'fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const apiRoot = join(__dirname, '..');
+const repoRoot = join(apiRoot, '../..');
 
 // Create entry point that imports from dist (which has decorator metadata)
 const entryContent = `
+import 'reflect-metadata';
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import express from 'express';
@@ -39,19 +41,47 @@ export default async function handler(req, res) {
 const tempEntry = join(apiRoot, 'dist/serverless-entry.js');
 writeFileSync(tempEntry, entryContent);
 
-await esbuild.build({
-  entryPoints: [tempEntry],
-  bundle: true,
-  platform: 'node',
-  target: 'node18',
-  format: 'esm',
-  outfile: join(apiRoot, 'api/index.bundle.mjs'),
-  // Keep node_modules external - they'll be resolved from Vercel's node_modules
-  packages: 'external',
-  sourcemap: false,
-  minify: false,
-  banner: {
-    js: `
+try {
+  await esbuild.build({
+    entryPoints: [tempEntry],
+    bundle: true,
+    platform: 'node',
+    target: 'node18',
+    format: 'esm',
+    // Output to repo root so it can find node_modules
+    outfile: join(repoRoot, 'api/index.mjs'),
+    // Bundle everything - no external packages
+    // This avoids node_modules resolution issues
+    external: [
+      // Only keep truly optional/problematic packages external
+      '@nestjs/microservices',
+      '@nestjs/websockets',
+      '@nestjs/platform-socket.io',
+      'class-transformer/storage',
+      'class-transformer',
+      'class-validator',
+      'cache-manager',
+      'ioredis',
+      // Native modules that can't be bundled
+      'pg-native',
+    ],
+    sourcemap: false,
+    minify: false,
+    // Ignore console-ninja VS Code extension
+    plugins: [{
+      name: 'ignore-extensions',
+      setup(build) {
+        build.onResolve({ filter: /console-ninja|wallabyjs/ }, () => ({
+          path: 'empty',
+          namespace: 'empty',
+        }));
+        build.onLoad({ filter: /.*/, namespace: 'empty' }, () => ({
+          contents: 'export default {}',
+        }));
+      },
+    }],
+    banner: {
+      js: `
 import { createRequire } from 'module';
 import { fileURLToPath } from 'url';
 import { dirname } from 'path';
@@ -59,7 +89,9 @@ const require = createRequire(import.meta.url);
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 `.trim(),
-  },
-});
-
-console.log('✅ Bundled dist/ → api/index.bundle.mjs');
+    },
+  });
+  console.log('✅ Bundled dist/ → api/index.mjs');
+} finally {
+  unlinkSync(tempEntry);
+}
