@@ -11,22 +11,22 @@ import type {
 import { ImportExportBaseClient } from './import-export-base-client.js';
 
 export class SalesHistoryClient extends ImportExportBaseClient {
-  async getSalesHistory(ctx: ShopContextParams, query?: PeriodQuery): Promise<SalesHistory[]> {
+  async getAll(ctx: ShopContextParams, query?: PeriodQuery): Promise<SalesHistory[]> {
     return this.request('GET', '/sales-history', { params: { ...ctx, ...query } });
   }
 
-  async getSalesHistoryItem(ctx: ShopContextParams, id: number): Promise<SalesHistory> {
+  async getById(ctx: ShopContextParams, id: number): Promise<SalesHistory> {
     return this.request('GET', `/sales-history/${id}`, { params: ctx });
   }
 
-  async createSalesHistory(
+  async create(
     ctx: ShopContextParams,
     request: CreateSalesHistoryRequest,
   ): Promise<SalesHistory> {
     return this.request('POST', '/sales-history', { body: request, params: ctx });
   }
 
-  async updateSalesHistory(
+  async update(
     ctx: ShopContextParams,
     id: number,
     request: UpdateSalesHistoryRequest,
@@ -34,7 +34,7 @@ export class SalesHistoryClient extends ImportExportBaseClient {
     return this.request('PUT', `/sales-history/${id}`, { body: request, params: ctx });
   }
 
-  async deleteSalesHistory(ctx: ShopContextParams, id: number): Promise<void> {
+  async delete(ctx: ShopContextParams, id: number): Promise<void> {
     return this.request('DELETE', `/sales-history/${id}`, { params: ctx });
   }
 

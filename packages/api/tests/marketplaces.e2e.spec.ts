@@ -48,19 +48,19 @@ describe('Marketplaces (e2e)', () => {
   describe('Authentication', () => {
     it('should return 401 without API key', async () => {
       const noAuthClient = new SalesPlannerClient({ baseUrl, apiKey: '' });
-      await expectUnauthorized(() => noAuthClient.marketplaces.getMarketplaces(ctx.shopContext));
+      await expectUnauthorized(() => noAuthClient.marketplaces.getAll(ctx.shopContext));
     });
 
     it('should return 401 with invalid API key', async () => {
       const badClient = new SalesPlannerClient({ baseUrl, apiKey: 'invalid-key' });
-      await expectUnauthorized(() => badClient.marketplaces.getMarketplaces(ctx.shopContext));
+      await expectUnauthorized(() => badClient.marketplaces.getAll(ctx.shopContext));
     });
   });
 
   describe('CRUD operations', () => {
     it('should create marketplace', async () => {
       const newMarketplace = { code: generateTestCode('marketplace'), title: 'Test Marketplace' };
-      const marketplace = await ctx.client.marketplaces.createMarketplace(
+      const marketplace = await ctx.client.marketplaces.create(
         ctx.shopContext,
         newMarketplace,
       );
@@ -73,12 +73,12 @@ describe('Marketplaces (e2e)', () => {
     });
 
     it('should list marketplaces', async () => {
-      await ctx.client.marketplaces.createMarketplace(ctx.shopContext, {
+      await ctx.client.marketplaces.create(ctx.shopContext, {
         code: generateTestCode('marketplace-list'),
         title: 'List Marketplace',
       });
 
-      const marketplaces = await ctx.client.marketplaces.getMarketplaces(ctx.shopContext);
+      const marketplaces = await ctx.client.marketplaces.getAll(ctx.shopContext);
 
       expect(Array.isArray(marketplaces)).toBe(true);
       expect(marketplaces.length).toBeGreaterThan(0);
@@ -89,23 +89,23 @@ describe('Marketplaces (e2e)', () => {
     });
 
     it('should get marketplace by id', async () => {
-      const created = await ctx.client.marketplaces.createMarketplace(ctx.shopContext, {
+      const created = await ctx.client.marketplaces.create(ctx.shopContext, {
         code: generateTestCode('marketplace-get'),
         title: 'Get Marketplace',
       });
 
-      const marketplace = await ctx.client.marketplaces.getMarketplace(ctx.shopContext, created.id);
+      const marketplace = await ctx.client.marketplaces.getById(ctx.shopContext, created.id);
 
       expect(marketplace.id).toBe(created.id);
     });
 
     it('should get marketplace by code', async () => {
-      const created = await ctx.client.marketplaces.createMarketplace(ctx.shopContext, {
+      const created = await ctx.client.marketplaces.create(ctx.shopContext, {
         code: generateTestCode('marketplace-get-code'),
         title: 'Get Marketplace Code',
       });
 
-      const marketplace = await ctx.client.marketplaces.getMarketplaceByCode(
+      const marketplace = await ctx.client.marketplaces.getByCode(
         ctx.shopContext,
         created.code,
       );
@@ -115,12 +115,12 @@ describe('Marketplaces (e2e)', () => {
     });
 
     it('should update marketplace', async () => {
-      const created = await ctx.client.marketplaces.createMarketplace(ctx.shopContext, {
+      const created = await ctx.client.marketplaces.create(ctx.shopContext, {
         code: generateTestCode('marketplace-update'),
         title: 'To Update',
       });
 
-      const marketplace = await ctx.client.marketplaces.updateMarketplace(
+      const marketplace = await ctx.client.marketplaces.update(
         ctx.shopContext,
         created.id,
         { title: 'Updated Marketplace Title' },
@@ -131,13 +131,13 @@ describe('Marketplaces (e2e)', () => {
 
     it('should return 409 on duplicate code', async () => {
       const duplicateCode = generateTestCode('marketplace');
-      await ctx.client.marketplaces.createMarketplace(ctx.shopContext, {
+      await ctx.client.marketplaces.create(ctx.shopContext, {
         code: duplicateCode,
         title: 'First Marketplace',
       });
 
       await expectConflict(() =>
-        ctx.client.marketplaces.createMarketplace(ctx.shopContext, {
+        ctx.client.marketplaces.create(ctx.shopContext, {
           code: duplicateCode,
           title: 'Duplicate Marketplace',
         }),
@@ -145,20 +145,20 @@ describe('Marketplaces (e2e)', () => {
     });
 
     it('should return 404 for non-existent marketplace', async () => {
-      await expectNotFound(() => ctx.client.marketplaces.getMarketplace(ctx.shopContext, 999999));
+      await expectNotFound(() => ctx.client.marketplaces.getById(ctx.shopContext, 999999));
     });
   });
 
   describe('Delete operations', () => {
     it('should delete marketplace', async () => {
-      const toDelete = await ctx.client.marketplaces.createMarketplace(ctx.shopContext, {
+      const toDelete = await ctx.client.marketplaces.create(ctx.shopContext, {
         code: generateTestCode('marketplace-delete'),
         title: 'Delete Marketplace',
       });
 
-      await ctx.client.marketplaces.deleteMarketplace(ctx.shopContext, toDelete.id);
+      await ctx.client.marketplaces.delete(ctx.shopContext, toDelete.id);
       await expectNotFound(() =>
-        ctx.client.marketplaces.getMarketplace(ctx.shopContext, toDelete.id),
+        ctx.client.marketplaces.getById(ctx.shopContext, toDelete.id),
       );
     });
   });
@@ -180,7 +180,7 @@ describe('Marketplaces (e2e)', () => {
 
     it('should return 403 when accessing other tenant', async () => {
       await expectForbidden(() =>
-        ctx.client.marketplaces.getMarketplaces({
+        ctx.client.marketplaces.getAll({
           shop_id: otherCtx.shop.id,
           tenant_id: otherCtx.tenant.id,
         }),
@@ -189,7 +189,7 @@ describe('Marketplaces (e2e)', () => {
 
     it('should return 403 when creating for other tenant', async () => {
       await expectForbidden(() =>
-        ctx.client.marketplaces.createMarketplace(
+        ctx.client.marketplaces.create(
           { shop_id: ctx.shop.id, tenant_id: otherCtx.tenant.id },
           { code: 'forbidden-marketplace', title: 'Should Fail' },
         ),
@@ -197,16 +197,16 @@ describe('Marketplaces (e2e)', () => {
     });
 
     it('should return 404 when getting resource from other tenant', async () => {
-      const otherMarketplace = await otherCtx.client.marketplaces.createMarketplace(
+      const otherMarketplace = await otherCtx.client.marketplaces.create(
         otherCtx.shopContext,
         { code: generateTestCode('other'), title: 'Other Marketplace' },
       );
 
       await expectNotFound(() =>
-        ctx.client.marketplaces.getMarketplace(ctx.shopContext, otherMarketplace.id),
+        ctx.client.marketplaces.getById(ctx.shopContext, otherMarketplace.id),
       );
       await expectForbidden(() =>
-        ctx.client.marketplaces.getMarketplaceByCode(
+        ctx.client.marketplaces.getByCode(
           {
             shop_id: ctx.shop.id,
             tenant_id: otherCtx.tenant.id,
@@ -219,11 +219,11 @@ describe('Marketplaces (e2e)', () => {
     it('should allow same code in different tenants', async () => {
       const sharedCode = generateTestCode('shared');
 
-      const marketplace1 = await ctx.client.marketplaces.createMarketplace(ctx.shopContext, {
+      const marketplace1 = await ctx.client.marketplaces.create(ctx.shopContext, {
         code: sharedCode,
         title: 'Marketplace in Tenant 1',
       });
-      const marketplace2 = await otherCtx.client.marketplaces.createMarketplace(
+      const marketplace2 = await otherCtx.client.marketplaces.create(
         otherCtx.shopContext,
         { code: sharedCode, title: 'Marketplace in Tenant 2' },
       );
@@ -249,7 +249,7 @@ describe('Marketplaces (e2e)', () => {
       expect(result.updated).toBe(0);
       expect(result.errors).toEqual([]);
 
-      const marketplaces = await ctx.client.marketplaces.getMarketplaces(ctx.shopContext);
+      const marketplaces = await ctx.client.marketplaces.getAll(ctx.shopContext);
       const codes = marketplaces.map((m) => m.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
@@ -279,7 +279,7 @@ describe('Marketplaces (e2e)', () => {
       expect(result.created).toBe(2);
       expect(result.updated).toBe(0);
 
-      const marketplaces = await ctx.client.marketplaces.getMarketplaces(ctx.shopContext);
+      const marketplaces = await ctx.client.marketplaces.getAll(ctx.shopContext);
       const codes = marketplaces.map((m) => m.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
@@ -378,12 +378,12 @@ describe('Marketplaces (e2e)', () => {
       });
 
       it('editor should list marketplaces', async () => {
-        const marketplaces = await editorClient.marketplaces.getMarketplaces(ctx.shopContext);
+        const marketplaces = await editorClient.marketplaces.getAll(ctx.shopContext);
         expect(Array.isArray(marketplaces)).toBe(true);
       });
 
       it('editor should create marketplace', async () => {
-        const marketplace = await editorClient.marketplaces.createMarketplace(ctx.shopContext, {
+        const marketplace = await editorClient.marketplaces.create(ctx.shopContext, {
           code: generateTestCode('editor-mp'),
           title: 'Editor Marketplace',
         });
@@ -391,12 +391,12 @@ describe('Marketplaces (e2e)', () => {
       });
 
       it('editor should get marketplace by code', async () => {
-        const marketplaces = await editorClient.marketplaces.getMarketplaces(ctx.shopContext);
+        const marketplaces = await editorClient.marketplaces.getAll(ctx.shopContext);
         if (marketplaces.length === 0)
           throw new Error('Expected at least one marketplace for editor');
         const firstMarketplace = marketplaces[0];
         if (!firstMarketplace) throw new Error('Expected marketplace');
-        const marketplace = await editorClient.marketplaces.getMarketplaceByCode(
+        const marketplace = await editorClient.marketplaces.getByCode(
           ctx.shopContext,
           firstMarketplace.code,
         );
@@ -404,11 +404,11 @@ describe('Marketplaces (e2e)', () => {
       });
 
       it('editor should update marketplace', async () => {
-        const marketplaces = await editorClient.marketplaces.getMarketplaces(ctx.shopContext);
+        const marketplaces = await editorClient.marketplaces.getAll(ctx.shopContext);
         if (marketplaces.length > 0) {
           const firstMarketplace = marketplaces[0];
           if (!firstMarketplace) throw new Error('Expected marketplace');
-          const updated = await editorClient.marketplaces.updateMarketplace(
+          const updated = await editorClient.marketplaces.update(
             ctx.shopContext,
             firstMarketplace.id,
             { title: 'Editor Updated' },
@@ -418,13 +418,13 @@ describe('Marketplaces (e2e)', () => {
       });
 
       it('editor should delete marketplace', async () => {
-        const marketplace = await editorClient.marketplaces.createMarketplace(ctx.shopContext, {
+        const marketplace = await editorClient.marketplaces.create(ctx.shopContext, {
           code: generateTestCode('editor-delete'),
           title: 'To Delete',
         });
-        await editorClient.marketplaces.deleteMarketplace(ctx.shopContext, marketplace.id);
+        await editorClient.marketplaces.delete(ctx.shopContext, marketplace.id);
         await expectNotFound(() =>
-          editorClient.marketplaces.getMarketplace(ctx.shopContext, marketplace.id),
+          editorClient.marketplaces.getById(ctx.shopContext, marketplace.id),
         );
       });
 
@@ -474,16 +474,16 @@ describe('Marketplaces (e2e)', () => {
       });
 
       it('viewer should list marketplaces', async () => {
-        const marketplaces = await viewerClient.marketplaces.getMarketplaces(ctx.shopContext);
+        const marketplaces = await viewerClient.marketplaces.getAll(ctx.shopContext);
         expect(Array.isArray(marketplaces)).toBe(true);
       });
 
       it('viewer should get marketplace by id', async () => {
-        const marketplaces = await viewerClient.marketplaces.getMarketplaces(ctx.shopContext);
+        const marketplaces = await viewerClient.marketplaces.getAll(ctx.shopContext);
         if (marketplaces.length > 0) {
           const firstMarketplace = marketplaces[0];
           if (!firstMarketplace) throw new Error('Expected marketplace');
-          const marketplace = await viewerClient.marketplaces.getMarketplace(
+          const marketplace = await viewerClient.marketplaces.getById(
             ctx.shopContext,
             firstMarketplace.id,
           );
@@ -492,12 +492,12 @@ describe('Marketplaces (e2e)', () => {
       });
 
       it('viewer should get marketplace by code', async () => {
-        const marketplaces = await viewerClient.marketplaces.getMarketplaces(ctx.shopContext);
+        const marketplaces = await viewerClient.marketplaces.getAll(ctx.shopContext);
         if (marketplaces.length === 0)
           throw new Error('Expected at least one marketplace for viewer');
         const firstMarketplace = marketplaces[0];
         if (!firstMarketplace) throw new Error('Expected marketplace');
-        const marketplace = await viewerClient.marketplaces.getMarketplaceByCode(
+        const marketplace = await viewerClient.marketplaces.getByCode(
           ctx.shopContext,
           firstMarketplace.code,
         );
@@ -506,7 +506,7 @@ describe('Marketplaces (e2e)', () => {
 
       it('viewer should NOT create marketplace', async () => {
         await expectForbidden(() =>
-          viewerClient.marketplaces.createMarketplace(ctx.shopContext, {
+          viewerClient.marketplaces.create(ctx.shopContext, {
             code: 'viewer-mp',
             title: 'Should Fail',
           }),
@@ -514,12 +514,12 @@ describe('Marketplaces (e2e)', () => {
       });
 
       it('viewer should NOT update marketplace', async () => {
-        const marketplaces = await viewerClient.marketplaces.getMarketplaces(ctx.shopContext);
+        const marketplaces = await viewerClient.marketplaces.getAll(ctx.shopContext);
         if (marketplaces.length > 0) {
           const firstMarketplace = marketplaces[0];
           if (!firstMarketplace) throw new Error('Expected marketplace');
           await expectForbidden(() =>
-            viewerClient.marketplaces.updateMarketplace(ctx.shopContext, firstMarketplace.id, {
+            viewerClient.marketplaces.update(ctx.shopContext, firstMarketplace.id, {
               title: 'Should Fail',
             }),
           );
@@ -527,12 +527,12 @@ describe('Marketplaces (e2e)', () => {
       });
 
       it('viewer should NOT delete marketplace', async () => {
-        const marketplaces = await viewerClient.marketplaces.getMarketplaces(ctx.shopContext);
+        const marketplaces = await viewerClient.marketplaces.getAll(ctx.shopContext);
         if (marketplaces.length > 0) {
           const firstMarketplace = marketplaces[0];
           if (!firstMarketplace) throw new Error('Expected marketplace');
           await expectForbidden(() =>
-            viewerClient.marketplaces.deleteMarketplace(ctx.shopContext, firstMarketplace.id),
+            viewerClient.marketplaces.delete(ctx.shopContext, firstMarketplace.id),
           );
         }
       });

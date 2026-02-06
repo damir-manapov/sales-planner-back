@@ -254,7 +254,7 @@ describe('Shops E2E', () => {
     });
 
     it('GET /skus - should return empty after data deletion', async () => {
-      const { items: skus } = await ctx.client.skus.getSkus(dataShopContext());
+      const { items: skus } = await ctx.client.skus.getAll(dataShopContext());
 
       expect(skus).toHaveLength(0);
     });

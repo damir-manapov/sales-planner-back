@@ -12,27 +12,27 @@ import type {
 import { ImportExportBaseClient } from './import-export-base-client.js';
 
 export class SkusClient extends ImportExportBaseClient {
-  async getSkus(ctx: ShopContextParams, query?: PaginationQuery): Promise<PaginatedResponse<Sku>> {
+  async getAll(ctx: ShopContextParams, query?: PaginationQuery): Promise<PaginatedResponse<Sku>> {
     return this.request('GET', '/skus', { params: { ...ctx, ...query } });
   }
 
-  async getSku(ctx: ShopContextParams, id: number): Promise<Sku> {
+  async getById(ctx: ShopContextParams, id: number): Promise<Sku> {
     return this.request('GET', `/skus/${id}`, { params: ctx });
   }
 
-  async getSkuByCode(ctx: ShopContextParams, code: string): Promise<Sku> {
+  async getByCode(ctx: ShopContextParams, code: string): Promise<Sku> {
     return this.request('GET', `/skus/code/${encodeURIComponent(code)}`, { params: ctx });
   }
 
-  async createSku(ctx: ShopContextParams, request: CreateSkuRequest): Promise<Sku> {
+  async create(ctx: ShopContextParams, request: CreateSkuRequest): Promise<Sku> {
     return this.request('POST', '/skus', { body: request, params: ctx });
   }
 
-  async updateSku(ctx: ShopContextParams, id: number, request: UpdateSkuRequest): Promise<Sku> {
+  async update(ctx: ShopContextParams, id: number, request: UpdateSkuRequest): Promise<Sku> {
     return this.request('PUT', `/skus/${id}`, { body: request, params: ctx });
   }
 
-  async deleteSku(ctx: ShopContextParams, id: number): Promise<void> {
+  async delete(ctx: ShopContextParams, id: number): Promise<void> {
     return this.request('DELETE', `/skus/${id}`, { params: ctx });
   }
 

@@ -48,19 +48,19 @@ describe('Statuses (e2e)', () => {
   describe('Authentication', () => {
     it('should return 401 without API key', async () => {
       const noAuthClient = new SalesPlannerClient({ baseUrl, apiKey: '' });
-      await expectUnauthorized(() => noAuthClient.statuses.getStatuses(ctx.shopContext));
+      await expectUnauthorized(() => noAuthClient.statuses.getAll(ctx.shopContext));
     });
 
     it('should return 401 with invalid API key', async () => {
       const badClient = new SalesPlannerClient({ baseUrl, apiKey: 'invalid-key' });
-      await expectUnauthorized(() => badClient.statuses.getStatuses(ctx.shopContext));
+      await expectUnauthorized(() => badClient.statuses.getAll(ctx.shopContext));
     });
   });
 
   describe('CRUD operations', () => {
     it('should create status', async () => {
       const newStatus = { code: generateTestCode('status'), title: 'Test Status' };
-      const status = await ctx.client.statuses.createStatus(ctx.shopContext, newStatus);
+      const status = await ctx.client.statuses.create(ctx.shopContext, newStatus);
 
       expect(status).toHaveProperty('id');
       expect(status.code).toBe(normalizeCode(newStatus.code));
@@ -70,47 +70,47 @@ describe('Statuses (e2e)', () => {
     });
 
     it('should list statuses', async () => {
-      await ctx.client.statuses.createStatus(ctx.shopContext, {
+      await ctx.client.statuses.create(ctx.shopContext, {
         code: generateTestCode('status-list'),
         title: 'List Status',
       });
 
-      const statuses = await ctx.client.statuses.getStatuses(ctx.shopContext);
+      const statuses = await ctx.client.statuses.getAll(ctx.shopContext);
 
       expect(Array.isArray(statuses)).toBe(true);
       expect(statuses.length).toBeGreaterThan(0);
     });
 
     it('should get status by id', async () => {
-      const created = await ctx.client.statuses.createStatus(ctx.shopContext, {
+      const created = await ctx.client.statuses.create(ctx.shopContext, {
         code: generateTestCode('status-get'),
         title: 'Get Status',
       });
 
-      const status = await ctx.client.statuses.getStatus(ctx.shopContext, created.id);
+      const status = await ctx.client.statuses.getById(ctx.shopContext, created.id);
 
       expect(status.id).toBe(created.id);
     });
 
     it('should get status by code', async () => {
-      const created = await ctx.client.statuses.createStatus(ctx.shopContext, {
+      const created = await ctx.client.statuses.create(ctx.shopContext, {
         code: generateTestCode('status-get-code'),
         title: 'Get Status Code',
       });
 
-      const status = await ctx.client.statuses.getStatusByCode(ctx.shopContext, created.code);
+      const status = await ctx.client.statuses.getByCode(ctx.shopContext, created.code);
 
       expect(status.id).toBe(created.id);
       expect(status.code).toBe(created.code);
     });
 
     it('should update status', async () => {
-      const created = await ctx.client.statuses.createStatus(ctx.shopContext, {
+      const created = await ctx.client.statuses.create(ctx.shopContext, {
         code: generateTestCode('status-update'),
         title: 'To Update',
       });
 
-      const status = await ctx.client.statuses.updateStatus(ctx.shopContext, created.id, {
+      const status = await ctx.client.statuses.update(ctx.shopContext, created.id, {
         title: 'Updated Status Title',
       });
 
@@ -119,13 +119,13 @@ describe('Statuses (e2e)', () => {
 
     it('should return 409 on duplicate code', async () => {
       const duplicateCode = generateTestCode('status');
-      await ctx.client.statuses.createStatus(ctx.shopContext, {
+      await ctx.client.statuses.create(ctx.shopContext, {
         code: duplicateCode,
         title: 'First Status',
       });
 
       await expectConflict(() =>
-        ctx.client.statuses.createStatus(ctx.shopContext, {
+        ctx.client.statuses.create(ctx.shopContext, {
           code: duplicateCode,
           title: 'Duplicate Status',
         }),
@@ -135,13 +135,13 @@ describe('Statuses (e2e)', () => {
 
   describe('Delete operations', () => {
     it('should delete status', async () => {
-      const toDelete = await ctx.client.statuses.createStatus(ctx.shopContext, {
+      const toDelete = await ctx.client.statuses.create(ctx.shopContext, {
         code: generateTestCode('status-delete'),
         title: 'Delete Status',
       });
 
-      await ctx.client.statuses.deleteStatus(ctx.shopContext, toDelete.id);
-      await expectNotFound(() => ctx.client.statuses.getStatus(ctx.shopContext, toDelete.id));
+      await ctx.client.statuses.delete(ctx.shopContext, toDelete.id);
+      await expectNotFound(() => ctx.client.statuses.getById(ctx.shopContext, toDelete.id));
     });
   });
 
@@ -162,7 +162,7 @@ describe('Statuses (e2e)', () => {
 
     it('should return 403 when accessing other tenant', async () => {
       await expectForbidden(() =>
-        ctx.client.statuses.getStatuses({
+        ctx.client.statuses.getAll({
           shop_id: otherCtx.shop.id,
           tenant_id: otherCtx.tenant.id,
         }),
@@ -171,7 +171,7 @@ describe('Statuses (e2e)', () => {
 
     it('should return 403 when creating for other tenant', async () => {
       await expectForbidden(() =>
-        ctx.client.statuses.createStatus(
+        ctx.client.statuses.create(
           { shop_id: ctx.shop.id, tenant_id: otherCtx.tenant.id },
           { code: 'forbidden-status', title: 'Should Fail' },
         ),
@@ -179,14 +179,14 @@ describe('Statuses (e2e)', () => {
     });
 
     it('should return 404 when getting resource from other tenant', async () => {
-      const otherStatus = await otherCtx.client.statuses.createStatus(otherCtx.shopContext, {
+      const otherStatus = await otherCtx.client.statuses.create(otherCtx.shopContext, {
         code: generateTestCode('other'),
         title: 'Other Status',
       });
 
-      await expectNotFound(() => ctx.client.statuses.getStatus(ctx.shopContext, otherStatus.id));
+      await expectNotFound(() => ctx.client.statuses.getById(ctx.shopContext, otherStatus.id));
       await expectForbidden(() =>
-        ctx.client.statuses.getStatusByCode(
+        ctx.client.statuses.getByCode(
           {
             shop_id: ctx.shop.id,
             tenant_id: otherCtx.tenant.id,
@@ -199,11 +199,11 @@ describe('Statuses (e2e)', () => {
     it('should allow same code in different tenants', async () => {
       const sharedCode = generateTestCode('shared');
 
-      const status1 = await ctx.client.statuses.createStatus(ctx.shopContext, {
+      const status1 = await ctx.client.statuses.create(ctx.shopContext, {
         code: sharedCode,
         title: 'Status in Tenant 1',
       });
-      const status2 = await otherCtx.client.statuses.createStatus(otherCtx.shopContext, {
+      const status2 = await otherCtx.client.statuses.create(otherCtx.shopContext, {
         code: sharedCode,
         title: 'Status in Tenant 2',
       });
@@ -229,7 +229,7 @@ describe('Statuses (e2e)', () => {
       expect(result.updated).toBe(0);
       expect(result.errors).toEqual([]);
 
-      const statuses = await ctx.client.statuses.getStatuses(ctx.shopContext);
+      const statuses = await ctx.client.statuses.getAll(ctx.shopContext);
       const codes = statuses.map((s) => s.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
@@ -257,7 +257,7 @@ describe('Statuses (e2e)', () => {
       expect(result.created).toBe(2);
       expect(result.updated).toBe(0);
 
-      const statuses = await ctx.client.statuses.getStatuses(ctx.shopContext);
+      const statuses = await ctx.client.statuses.getAll(ctx.shopContext);
       const codes = statuses.map((s) => s.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
@@ -273,7 +273,7 @@ describe('Statuses (e2e)', () => {
       expect(result.created).toBe(2);
       expect(result.updated).toBe(0);
 
-      const statuses = await ctx.client.statuses.getStatuses(ctx.shopContext);
+      const statuses = await ctx.client.statuses.getAll(ctx.shopContext);
       const codes = statuses.map((s) => s.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
@@ -287,7 +287,7 @@ describe('Statuses (e2e)', () => {
       expect(result.created).toBe(3);
       expect(result.updated).toBe(0);
 
-      const statuses = await ctx.client.statuses.getStatuses(ctx.shopContext);
+      const statuses = await ctx.client.statuses.getAll(ctx.shopContext);
       const mavyko = statuses.find((s) => s.code === 'mavyko');
       expect(mavyko).toBeDefined();
       expect(mavyko?.title).toBe('Мавико');
@@ -384,12 +384,12 @@ describe('Statuses (e2e)', () => {
       });
 
       it('editor should list statuses', async () => {
-        const statuses = await editorClient.statuses.getStatuses(ctx.shopContext);
+        const statuses = await editorClient.statuses.getAll(ctx.shopContext);
         expect(Array.isArray(statuses)).toBe(true);
       });
 
       it('editor should create status', async () => {
-        const status = await editorClient.statuses.createStatus(ctx.shopContext, {
+        const status = await editorClient.statuses.create(ctx.shopContext, {
           code: generateTestCode('editor-status'),
           title: 'Editor Status',
         });
@@ -397,11 +397,11 @@ describe('Statuses (e2e)', () => {
       });
 
       it('editor should get status by code', async () => {
-        const statuses = await editorClient.statuses.getStatuses(ctx.shopContext);
+        const statuses = await editorClient.statuses.getAll(ctx.shopContext);
         if (statuses.length === 0) throw new Error('Expected at least one status for editor');
         const firstStatus = statuses[0];
         if (!firstStatus) throw new Error('Expected status');
-        const status = await editorClient.statuses.getStatusByCode(
+        const status = await editorClient.statuses.getByCode(
           ctx.shopContext,
           firstStatus.code,
         );
@@ -409,11 +409,11 @@ describe('Statuses (e2e)', () => {
       });
 
       it('editor should update status', async () => {
-        const statuses = await editorClient.statuses.getStatuses(ctx.shopContext);
+        const statuses = await editorClient.statuses.getAll(ctx.shopContext);
         if (statuses.length > 0) {
           const firstStatus = statuses[0];
           if (!firstStatus) throw new Error('Expected status');
-          const updated = await editorClient.statuses.updateStatus(
+          const updated = await editorClient.statuses.update(
             ctx.shopContext,
             firstStatus.id,
             { title: 'Editor Updated' },
@@ -423,12 +423,12 @@ describe('Statuses (e2e)', () => {
       });
 
       it('editor should delete status', async () => {
-        const status = await editorClient.statuses.createStatus(ctx.shopContext, {
+        const status = await editorClient.statuses.create(ctx.shopContext, {
           code: generateTestCode('editor-delete'),
           title: 'To Delete',
         });
-        await editorClient.statuses.deleteStatus(ctx.shopContext, status.id);
-        await expectNotFound(() => editorClient.statuses.getStatus(ctx.shopContext, status.id));
+        await editorClient.statuses.delete(ctx.shopContext, status.id);
+        await expectNotFound(() => editorClient.statuses.getById(ctx.shopContext, status.id));
       });
 
       it('editor should import statuses', async () => {
@@ -477,26 +477,26 @@ describe('Statuses (e2e)', () => {
       });
 
       it('viewer should list statuses', async () => {
-        const statuses = await viewerClient.statuses.getStatuses(ctx.shopContext);
+        const statuses = await viewerClient.statuses.getAll(ctx.shopContext);
         expect(Array.isArray(statuses)).toBe(true);
       });
 
       it('viewer should get status by id', async () => {
-        const statuses = await viewerClient.statuses.getStatuses(ctx.shopContext);
+        const statuses = await viewerClient.statuses.getAll(ctx.shopContext);
         if (statuses.length > 0) {
           const firstStatus = statuses[0];
           if (!firstStatus) throw new Error('Expected status');
-          const status = await viewerClient.statuses.getStatus(ctx.shopContext, firstStatus.id);
+          const status = await viewerClient.statuses.getById(ctx.shopContext, firstStatus.id);
           expect(status.id).toBe(firstStatus.id);
         }
       });
 
       it('viewer should get status by code', async () => {
-        const statuses = await viewerClient.statuses.getStatuses(ctx.shopContext);
+        const statuses = await viewerClient.statuses.getAll(ctx.shopContext);
         if (statuses.length === 0) throw new Error('Expected at least one status for viewer');
         const firstStatus = statuses[0];
         if (!firstStatus) throw new Error('Expected status');
-        const status = await viewerClient.statuses.getStatusByCode(
+        const status = await viewerClient.statuses.getByCode(
           ctx.shopContext,
           firstStatus.code,
         );
@@ -505,7 +505,7 @@ describe('Statuses (e2e)', () => {
 
       it('viewer should NOT create status', async () => {
         await expectForbidden(() =>
-          viewerClient.statuses.createStatus(ctx.shopContext, {
+          viewerClient.statuses.create(ctx.shopContext, {
             code: 'viewer-status',
             title: 'Should Fail',
           }),
@@ -513,12 +513,12 @@ describe('Statuses (e2e)', () => {
       });
 
       it('viewer should NOT update status', async () => {
-        const statuses = await viewerClient.statuses.getStatuses(ctx.shopContext);
+        const statuses = await viewerClient.statuses.getAll(ctx.shopContext);
         if (statuses.length > 0) {
           const firstStatus = statuses[0];
           if (!firstStatus) throw new Error('Expected status');
           await expectForbidden(() =>
-            viewerClient.statuses.updateStatus(ctx.shopContext, firstStatus.id, {
+            viewerClient.statuses.update(ctx.shopContext, firstStatus.id, {
               title: 'Should Fail',
             }),
           );
@@ -526,12 +526,12 @@ describe('Statuses (e2e)', () => {
       });
 
       it('viewer should NOT delete status', async () => {
-        const statuses = await viewerClient.statuses.getStatuses(ctx.shopContext);
+        const statuses = await viewerClient.statuses.getAll(ctx.shopContext);
         if (statuses.length > 0) {
           const firstStatus = statuses[0];
           if (!firstStatus) throw new Error('Expected status');
           await expectForbidden(() =>
-            viewerClient.statuses.deleteStatus(ctx.shopContext, firstStatus.id),
+            viewerClient.statuses.delete(ctx.shopContext, firstStatus.id),
           );
         }
       });
