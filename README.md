@@ -17,7 +17,7 @@ Monorepo for Sales Planner API and related packages. Multi-tenant sales planning
 - **Entity Management** - SKUs, Brands, Categories, Groups, Statuses, Suppliers, Marketplaces
 - **Sales History** - Monthly sales data with composite key (SKU + marketplace + period)
 - **Import/Export** - JSON and CSV support with auto-delimiter detection
-- **Comprehensive Testing** - 400+ e2e tests across 15 test files
+- **Comprehensive Testing** - 430+ e2e tests across 15 test files
 
 ## Quick Start
 

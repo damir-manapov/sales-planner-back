@@ -83,9 +83,10 @@ import type {
   ImportSupplierItem, ImportSalesHistoryItem, ImportMarketplaceItem,
 
   // Query types
-  ShopContextParams, PeriodQuery,
+  ShopContextParams, PaginationQuery, PeriodQuery, SalesHistoryQuery,
 
   // Response types
+  PaginatedResponse,
   UserWithRolesAndTenants, TenantWithShopAndApiKey,
   ImportResult, DeleteDataResult,
   SkuExportItem, BrandExportItem, CategoryExportItem, GroupExportItem, StatusExportItem,
@@ -126,13 +127,14 @@ The API uses **numeric IDs** internally for referential integrity:
 | Type | Description |
 |------|-------------|
 | `ShopContextParams` | `{ shop_id: number; tenant_id: number }` |
+| `PaginationQuery` | `{ limit?: number; offset?: number }` |
 | `PeriodQuery` | `{ period_from?: string; period_to?: string }` |
+| `SalesHistoryQuery` | `PaginationQuery & PeriodQuery` |
 
 ### Response Types
 
 | Type | Description |
-|------|-------------|
-| `UserWithRolesAndTenants` | User with their roles and tenants |
+|------|-------------|| `PaginatedResponse<T>` | `{ items: T[]; total: number; limit: number; offset: number }` || `UserWithRolesAndTenants` | User with their roles and tenants |
 | `TenantWithShopAndApiKey` | Created tenant with shop and API key |
 | `ImportResult` | `{ created: number; updated: number; errors: string[] }` |
 | `DeleteDataResult` | `{ skusDeleted: number; salesHistoryDeleted: number; marketplacesDeleted: number }` |
