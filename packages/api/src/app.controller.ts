@@ -1,7 +1,8 @@
-import { readFileSync } from 'node:fs';
-import { join } from 'node:path';
 import { Controller, Get } from '@nestjs/common';
 import { AppService } from './app.service.js';
+
+// Version is set at build time
+const APP_VERSION = process.env.npm_package_version || '0.0.0';
 
 @Controller()
 export class AppController {
@@ -14,13 +15,11 @@ export class AppController {
 
   @Get('health')
   getHealth(): { status: string; version: string } {
-    const packageJson = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8'));
-    return { status: 'ok', version: packageJson.version };
+    return { status: 'ok', version: APP_VERSION };
   }
 
   @Get('version')
   getVersion(): { version: string } {
-    const packageJson = JSON.parse(readFileSync(join(process.cwd(), 'package.json'), 'utf-8'));
-    return { version: packageJson.version };
+    return { version: APP_VERSION };
   }
 }
