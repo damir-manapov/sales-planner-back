@@ -13,7 +13,7 @@ export interface IShopScopedRepository<
 > {
   countByShopId(shopId: number): Promise<number>;
   findById(id: number): Promise<TEntity | undefined>;
-  findByShopId(shopId: number): Promise<TEntity[]>;
+  findByShopId(shopId: number, limit?: number, offset?: number): Promise<TEntity[]>;
   findByShopIdPaginated(shopId: number, query?: PaginationQuery): Promise<PaginatedResponse<TEntity>>;
   findByCodeAndShop(code: string, shopId: number): Promise<TEntity | undefined>;
   findCodesByShopId(shopId: number, codes: string[]): Promise<Set<string>>;

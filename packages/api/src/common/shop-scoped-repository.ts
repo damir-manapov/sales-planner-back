@@ -56,12 +56,21 @@ export abstract class ShopScopedRepository<
       .executeTakeFirst() as Promise<TEntity | undefined>;
   }
 
-  async findByShopId(shopId: number): Promise<TEntity[]> {
-    return this.db
+  async findByShopId(shopId: number, limit?: number, offset?: number): Promise<TEntity[]> {
+    let query = this.db
       .selectFrom(this.tableName as any)
       .selectAll()
       .where('shop_id', '=', shopId)
-      .execute() as Promise<TEntity[]>;
+      .orderBy('id', 'asc');
+
+    if (limit !== undefined) {
+      query = query.limit(limit);
+    }
+    if (offset !== undefined) {
+      query = query.offset(offset);
+    }
+
+    return query.execute() as Promise<TEntity[]>;
   }
 
   async findByShopIdPaginated(
@@ -73,14 +82,7 @@ export abstract class ShopScopedRepository<
 
     const [total, items] = await Promise.all([
       this.countByShopId(shopId),
-      this.db
-        .selectFrom(this.tableName as any)
-        .selectAll()
-        .where('shop_id', '=', shopId)
-        .orderBy('id', 'asc')
-        .limit(limit)
-        .offset(offset)
-        .execute() as Promise<TEntity[]>,
+      this.findByShopId(shopId, limit, offset),
     ]);
 
     return { items, total, limit, offset };
