@@ -12,29 +12,9 @@ await esbuild.build({
   target: 'node18',
   format: 'esm',
   outfile: join(apiRoot, 'api/index.bundle.mjs'),
-  external: [
-    // Don't bundle these - Vercel provides them or they have native bindings
-    '@nestjs/microservices',
-    '@nestjs/websockets',
-    '@nestjs/platform-express',
-    'class-transformer/storage',
-    'class-transformer',
-    'class-validator',
-    'cache-manager',
-    'ioredis',
-    // Template engines that console-ninja tries to require
-    'dustjs-linkedin',
-    'twig',
-    'hamlet',
-    'whiskers',
-    'hogan.js',
-    'walrus',
-    'mustache',
-    'ractive',
-    'htmling',
-    'babel-core',
-    'twing',
-  ],
+  // Keep all node_modules external - let Vercel resolve them at runtime
+  // This preserves NestJS decorator metadata which gets lost during bundling
+  packages: 'external',
   // Ignore console-ninja VS Code extension files
   plugins: [{
     name: 'ignore-console-ninja',
@@ -50,10 +30,6 @@ await esbuild.build({
   }],
   sourcemap: false,
   minify: false,
-  // Handle __dirname/__filename for ESM
-  define: {
-    'import.meta.url': 'import.meta.url',
-  },
   banner: {
     js: `
 import { createRequire } from 'module';
