@@ -55,9 +55,7 @@ describe('User Roles (e2e)', () => {
   describe('Authentication', () => {
     it('should return 401 without API key', async () => {
       const noAuthClient = new SalesPlannerClient({ baseUrl, apiKey: '' });
-      await expectUnauthorized(() =>
-        noAuthClient.userRoles.getAll({ tenantId: ctx.tenant.id }),
-      );
+      await expectUnauthorized(() => noAuthClient.userRoles.getAll({ tenantId: ctx.tenant.id }));
     });
 
     it('should return 401 with invalid API key', async () => {
@@ -236,9 +234,7 @@ describe('User Roles (e2e)', () => {
     });
 
     it('should return 403 when listing roles for other tenant', async () => {
-      await expectForbidden(() =>
-        ctx.client.userRoles.getAll({ tenantId: otherCtx.tenant.id }),
-      );
+      await expectForbidden(() => ctx.client.userRoles.getAll({ tenantId: otherCtx.tenant.id }));
     });
 
     it('should return 403 when getting user role from other tenant', async () => {
@@ -383,9 +379,7 @@ describe('User Roles (e2e)', () => {
     });
 
     it('system admin should list user roles by tenant', async () => {
-      const userRoles = await ctx
-        .getSystemClient()
-        .userRoles.getAll({ tenantId: ctx.tenant.id });
+      const userRoles = await ctx.getSystemClient().userRoles.getAll({ tenantId: ctx.tenant.id });
 
       expect(Array.isArray(userRoles)).toBe(true);
       userRoles.forEach((ur) => {

@@ -205,9 +205,7 @@ describe('Shops E2E', () => {
     });
 
     it('PUT /shops/:id - should return 403 when updating shop in other tenant', async () => {
-      await expectForbidden(() =>
-        otherClient.shops.update(testShopId, { title: 'Hacked Shop' }),
-      );
+      await expectForbidden(() => otherClient.shops.update(testShopId, { title: 'Hacked Shop' }));
     });
 
     it('DELETE /shops/:id - should return 403 when deleting shop in other tenant', async () => {

@@ -91,7 +91,11 @@ export abstract class CodedShopScopedEntityService<
       title: item.title,
     }));
 
-    const { created, updated } = await this.repository.bulkUpsert(tenantId, shopId, normalizedItems);
+    const { created, updated } = await this.repository.bulkUpsert(
+      tenantId,
+      shopId,
+      normalizedItems,
+    );
 
     return { created, updated, errors };
   }

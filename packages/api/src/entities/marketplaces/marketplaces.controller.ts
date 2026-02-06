@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Query,
   Req,
   Res,
   UploadedFile,
@@ -23,12 +24,14 @@ import {
   ShopContext,
   type ShopContext as ShopContextType,
 } from '../../auth/decorators.js';
-import type { ImportResult } from '@sales-planner/shared';
+import type { ImportResult, PaginatedResponse } from '@sales-planner/shared';
 import {
   assertShopAccess,
   type ExpressResponse,
   parseAndValidateImport,
   parseCsvImport,
+  type PaginationQuery,
+  PaginationQuerySchema,
   sendCsvExport,
   sendJsonExport,
   ZodValidationPipe,
@@ -53,8 +56,9 @@ export class MarketplacesController {
   async findAll(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-  ): Promise<Marketplace[]> {
-    return this.marketplacesService.findByShopId(ctx.shopId);
+    @Query(new ZodValidationPipe(PaginationQuerySchema)) query: PaginationQuery,
+  ): Promise<PaginatedResponse<Marketplace>> {
+    return this.marketplacesService.findByShopIdPaginated(ctx.shopId, query);
   }
 
   @Get('code/:code')
@@ -130,9 +134,7 @@ export class MarketplacesController {
   ): Promise<Marketplace> {
     const marketplace = await this.marketplacesService.findById(id);
     assertShopAccess(marketplace, ctx, 'Marketplace', id);
-
-    // update() returns undefined only if record doesn't exist, but we already verified it exists
-    return (await this.marketplacesService.update(id, dto))!;
+    return this.marketplacesService.update(id, dto);
   }
 
   @Delete(':id')

@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Query,
   Req,
   Res,
   UploadedFile,
@@ -22,12 +23,14 @@ import {
   ShopContext,
   type ShopContext as ShopContextType,
 } from '../../auth/decorators.js';
-import type { ImportResult } from '@sales-planner/shared';
+import type { ImportResult, PaginatedResponse } from '@sales-planner/shared';
 import {
   assertShopAccess,
   type ExpressResponse,
   parseAndValidateImport,
   parseCsvImport,
+  type PaginationQuery,
+  PaginationQuerySchema,
   sendCsvExport,
   sendJsonExport,
   ZodValidationPipe,
@@ -52,8 +55,9 @@ export class BrandsController {
   async findAll(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-  ): Promise<Brand[]> {
-    return this.brandsService.findByShopId(ctx.shopId);
+    @Query(new ZodValidationPipe(PaginationQuerySchema)) query: PaginationQuery,
+  ): Promise<PaginatedResponse<Brand>> {
+    return this.brandsService.findByShopIdPaginated(ctx.shopId, query);
   }
 
   @Get('code/:code')

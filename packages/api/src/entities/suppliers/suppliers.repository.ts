@@ -4,7 +4,11 @@ import { CodedShopScopedRepository } from '../../common/index.js';
 import { DatabaseService, USER_QUERYABLE_TABLES } from '../../database/index.js';
 
 @Injectable()
-export class SuppliersRepository extends CodedShopScopedRepository<Supplier, CreateSupplierDto, UpdateSupplierDto> {
+export class SuppliersRepository extends CodedShopScopedRepository<
+  Supplier,
+  CreateSupplierDto,
+  UpdateSupplierDto
+> {
   constructor(db: DatabaseService) {
     super(db, 'suppliers', USER_QUERYABLE_TABLES);
   }

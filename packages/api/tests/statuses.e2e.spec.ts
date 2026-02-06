@@ -77,8 +77,8 @@ describe('Statuses (e2e)', () => {
 
       const statuses = await ctx.client.statuses.getAll(ctx.shopContext);
 
-      expect(Array.isArray(statuses)).toBe(true);
-      expect(statuses.length).toBeGreaterThan(0);
+      expect(Array.isArray(statuses.items)).toBe(true);
+      expect(statuses.items.length).toBeGreaterThan(0);
     });
 
     it('should get status by id', async () => {
@@ -130,6 +130,86 @@ describe('Statuses (e2e)', () => {
           title: 'Duplicate Status',
         }),
       );
+    });
+  });
+
+  describe('Pagination', () => {
+    const paginationItems: { id: number; code: string }[] = [];
+
+    beforeAll(async () => {
+      for (let i = 0; i < 15; i++) {
+        const item = await ctx.client.statuses.create(ctx.shopContext, {
+          code: generateTestCode(`pagination-status-${i.toString().padStart(2, '0')}`),
+          title: `Pagination Status ${i}`,
+        });
+        paginationItems.push({ id: item.id, code: item.code });
+      }
+    });
+
+    afterAll(async () => {
+      for (const item of paginationItems) {
+        try {
+          await ctx.client.statuses.delete(ctx.shopContext, item.id);
+        } catch {
+          // Ignore errors during cleanup
+        }
+      }
+    });
+
+    it('should return paginated response with metadata', async () => {
+      const response = await ctx.client.statuses.getAll(ctx.shopContext);
+
+      expect(response).toHaveProperty('items');
+      expect(response).toHaveProperty('total');
+      expect(response).toHaveProperty('limit');
+      expect(response).toHaveProperty('offset');
+      expect(Array.isArray(response.items)).toBe(true);
+      expect(response.offset).toBe(0);
+    });
+
+    it('should respect custom limit and offset', async () => {
+      const response = await ctx.client.statuses.getAll(ctx.shopContext, { limit: 5, offset: 3 });
+
+      expect(response.items.length).toBeLessThanOrEqual(5);
+      expect(response.limit).toBe(5);
+      expect(response.offset).toBe(3);
+    });
+
+    it('should return different items on different pages', async () => {
+      const firstPage = await ctx.client.statuses.getAll(ctx.shopContext, { limit: 5, offset: 0 });
+      const secondPage = await ctx.client.statuses.getAll(ctx.shopContext, { limit: 5, offset: 5 });
+
+      if (firstPage.items.length > 0 && secondPage.items.length > 0) {
+        const firstPageIds = firstPage.items.map((b) => b.id);
+        const secondPageIds = secondPage.items.map((b) => b.id);
+        const overlap = firstPageIds.filter((id) => secondPageIds.includes(id));
+        expect(overlap.length).toBe(0);
+      }
+    });
+
+    it('should return correct total count', async () => {
+      const response = await ctx.client.statuses.getAll(ctx.shopContext, { limit: 5 });
+      expect(response.total).toBeGreaterThanOrEqual(15);
+    });
+
+    it('should paginate through all items correctly', async () => {
+      const pageSize = 5;
+      const allItems: number[] = [];
+      let offset = 0;
+      let total = 0;
+
+      do {
+        const response = await ctx.client.statuses.getAll(ctx.shopContext, {
+          limit: pageSize,
+          offset,
+        });
+        total = response.total;
+        allItems.push(...response.items.map((b) => b.id));
+        offset += pageSize;
+      } while (allItems.length < total);
+
+      const uniqueIds = new Set(allItems);
+      expect(uniqueIds.size).toBe(total);
     });
   });
 
@@ -230,7 +310,7 @@ describe('Statuses (e2e)', () => {
       expect(result.errors).toEqual([]);
 
       const statuses = await ctx.client.statuses.getAll(ctx.shopContext);
-      const codes = statuses.map((s) => s.code);
+      const codes = statuses.items.map((s) => s.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
     });
@@ -258,7 +338,7 @@ describe('Statuses (e2e)', () => {
       expect(result.updated).toBe(0);
 
       const statuses = await ctx.client.statuses.getAll(ctx.shopContext);
-      const codes = statuses.map((s) => s.code);
+      const codes = statuses.items.map((s) => s.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
     });
@@ -274,7 +354,7 @@ describe('Statuses (e2e)', () => {
       expect(result.updated).toBe(0);
 
       const statuses = await ctx.client.statuses.getAll(ctx.shopContext);
-      const codes = statuses.map((s) => s.code);
+      const codes = statuses.items.map((s) => s.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
     });
@@ -288,7 +368,7 @@ describe('Statuses (e2e)', () => {
       expect(result.updated).toBe(0);
 
       const statuses = await ctx.client.statuses.getAll(ctx.shopContext);
-      const mavyko = statuses.find((s) => s.code === 'mavyko');
+      const mavyko = statuses.items.find((s) => s.code === 'mavyko');
       expect(mavyko).toBeDefined();
       expect(mavyko?.title).toBe('Мавико');
     });
@@ -385,7 +465,7 @@ describe('Statuses (e2e)', () => {
 
       it('editor should list statuses', async () => {
         const statuses = await editorClient.statuses.getAll(ctx.shopContext);
-        expect(Array.isArray(statuses)).toBe(true);
+        expect(Array.isArray(statuses.items)).toBe(true);
       });
 
       it('editor should create status', async () => {
@@ -398,26 +478,21 @@ describe('Statuses (e2e)', () => {
 
       it('editor should get status by code', async () => {
         const statuses = await editorClient.statuses.getAll(ctx.shopContext);
-        if (statuses.length === 0) throw new Error('Expected at least one status for editor');
-        const firstStatus = statuses[0];
+        if (statuses.items.length === 0) throw new Error('Expected at least one status for editor');
+        const firstStatus = statuses.items[0];
         if (!firstStatus) throw new Error('Expected status');
-        const status = await editorClient.statuses.getByCode(
-          ctx.shopContext,
-          firstStatus.code,
-        );
+        const status = await editorClient.statuses.getByCode(ctx.shopContext, firstStatus.code);
         expect(status.id).toBe(firstStatus.id);
       });
 
       it('editor should update status', async () => {
         const statuses = await editorClient.statuses.getAll(ctx.shopContext);
-        if (statuses.length > 0) {
-          const firstStatus = statuses[0];
+        if (statuses.items.length > 0) {
+          const firstStatus = statuses.items[0];
           if (!firstStatus) throw new Error('Expected status');
-          const updated = await editorClient.statuses.update(
-            ctx.shopContext,
-            firstStatus.id,
-            { title: 'Editor Updated' },
-          );
+          const updated = await editorClient.statuses.update(ctx.shopContext, firstStatus.id, {
+            title: 'Editor Updated',
+          });
           expect(updated.title).toBe('Editor Updated');
         }
       });
@@ -478,13 +553,13 @@ describe('Statuses (e2e)', () => {
 
       it('viewer should list statuses', async () => {
         const statuses = await viewerClient.statuses.getAll(ctx.shopContext);
-        expect(Array.isArray(statuses)).toBe(true);
+        expect(Array.isArray(statuses.items)).toBe(true);
       });
 
       it('viewer should get status by id', async () => {
         const statuses = await viewerClient.statuses.getAll(ctx.shopContext);
-        if (statuses.length > 0) {
-          const firstStatus = statuses[0];
+        if (statuses.items.length > 0) {
+          const firstStatus = statuses.items[0];
           if (!firstStatus) throw new Error('Expected status');
           const status = await viewerClient.statuses.getById(ctx.shopContext, firstStatus.id);
           expect(status.id).toBe(firstStatus.id);
@@ -493,13 +568,10 @@ describe('Statuses (e2e)', () => {
 
       it('viewer should get status by code', async () => {
         const statuses = await viewerClient.statuses.getAll(ctx.shopContext);
-        if (statuses.length === 0) throw new Error('Expected at least one status for viewer');
-        const firstStatus = statuses[0];
+        if (statuses.items.length === 0) throw new Error('Expected at least one status for viewer');
+        const firstStatus = statuses.items[0];
         if (!firstStatus) throw new Error('Expected status');
-        const status = await viewerClient.statuses.getByCode(
-          ctx.shopContext,
-          firstStatus.code,
-        );
+        const status = await viewerClient.statuses.getByCode(ctx.shopContext, firstStatus.code);
         expect(status.id).toBe(firstStatus.id);
       });
 
@@ -514,8 +586,8 @@ describe('Statuses (e2e)', () => {
 
       it('viewer should NOT update status', async () => {
         const statuses = await viewerClient.statuses.getAll(ctx.shopContext);
-        if (statuses.length > 0) {
-          const firstStatus = statuses[0];
+        if (statuses.items.length > 0) {
+          const firstStatus = statuses.items[0];
           if (!firstStatus) throw new Error('Expected status');
           await expectForbidden(() =>
             viewerClient.statuses.update(ctx.shopContext, firstStatus.id, {
@@ -527,8 +599,8 @@ describe('Statuses (e2e)', () => {
 
       it('viewer should NOT delete status', async () => {
         const statuses = await viewerClient.statuses.getAll(ctx.shopContext);
-        if (statuses.length > 0) {
-          const firstStatus = statuses[0];
+        if (statuses.items.length > 0) {
+          const firstStatus = statuses.items[0];
           if (!firstStatus) throw new Error('Expected status');
           await expectForbidden(() =>
             viewerClient.statuses.delete(ctx.shopContext, firstStatus.id),

@@ -77,8 +77,8 @@ describe('Brands (e2e)', () => {
 
       const brands = await ctx.client.brands.getAll(ctx.shopContext);
 
-      expect(Array.isArray(brands)).toBe(true);
-      expect(brands.length).toBeGreaterThan(0);
+      expect(Array.isArray(brands.items)).toBe(true);
+      expect(brands.items.length).toBeGreaterThan(0);
     });
 
     it('should get brand by id', async () => {
@@ -130,6 +130,111 @@ describe('Brands (e2e)', () => {
           title: 'Duplicate Brand',
         }),
       );
+    });
+  });
+
+  describe('Pagination', () => {
+    const paginationBrands: { id: number; code: string }[] = [];
+
+    beforeAll(async () => {
+      // Create 15 brands for pagination testing
+      for (let i = 0; i < 15; i++) {
+        const brand = await ctx.client.brands.create(ctx.shopContext, {
+          code: generateTestCode(`pagination-brand-${i.toString().padStart(2, '0')}`),
+          title: `Pagination Brand ${i}`,
+        });
+        paginationBrands.push({ id: brand.id, code: brand.code });
+      }
+    });
+
+    afterAll(async () => {
+      // Cleanup pagination test brands
+      for (const brand of paginationBrands) {
+        try {
+          await ctx.client.brands.delete(ctx.shopContext, brand.id);
+        } catch {
+          // Ignore errors during cleanup
+        }
+      }
+    });
+
+    it('should return paginated response with metadata', async () => {
+      const response = await ctx.client.brands.getAll(ctx.shopContext);
+
+      expect(response).toHaveProperty('items');
+      expect(response).toHaveProperty('total');
+      expect(response).toHaveProperty('limit');
+      expect(response).toHaveProperty('offset');
+      expect(Array.isArray(response.items)).toBe(true);
+      expect(typeof response.total).toBe('number');
+      expect(response.offset).toBe(0);
+    });
+
+    it('should respect custom limit', async () => {
+      const response = await ctx.client.brands.getAll(ctx.shopContext, { limit: 5 });
+
+      expect(response.items.length).toBeLessThanOrEqual(5);
+      expect(response.limit).toBe(5);
+      expect(response.offset).toBe(0);
+    });
+
+    it('should respect custom offset', async () => {
+      const firstPage = await ctx.client.brands.getAll(ctx.shopContext, { limit: 5, offset: 0 });
+      const secondPage = await ctx.client.brands.getAll(ctx.shopContext, { limit: 5, offset: 5 });
+
+      expect(secondPage.offset).toBe(5);
+      expect(secondPage.limit).toBe(5);
+
+      // Items should be different between pages (if there are enough items)
+      if (firstPage.items.length > 0 && secondPage.items.length > 0) {
+        const firstPageIds = firstPage.items.map((b) => b.id);
+        const secondPageIds = secondPage.items.map((b) => b.id);
+        const overlap = firstPageIds.filter((id) => secondPageIds.includes(id));
+        expect(overlap.length).toBe(0);
+      }
+    });
+
+    it('should return correct total count', async () => {
+      const response = await ctx.client.brands.getAll(ctx.shopContext, { limit: 5 });
+
+      // Total should be greater than or equal to items in the response
+      expect(response.total).toBeGreaterThanOrEqual(response.items.length);
+      // Total should include all pagination test brands
+      expect(response.total).toBeGreaterThanOrEqual(15);
+    });
+
+    it('should return empty items array when offset exceeds total', async () => {
+      const response = await ctx.client.brands.getAll(ctx.shopContext, {
+        limit: 10,
+        offset: 10000,
+      });
+
+      expect(response.items).toEqual([]);
+      expect(response.offset).toBe(10000);
+      expect(response.total).toBeGreaterThan(0); // Total should still be accurate
+    });
+
+    it('should paginate through all items correctly', async () => {
+      const pageSize = 5;
+      const allItems: number[] = [];
+      let offset = 0;
+      let total = 0;
+
+      // Fetch all pages
+      do {
+        const response = await ctx.client.brands.getAll(ctx.shopContext, {
+          limit: pageSize,
+          offset,
+        });
+        total = response.total;
+        allItems.push(...response.items.map((b) => b.id));
+        offset += pageSize;
+      } while (allItems.length < total);
+
+      // Verify we got all unique items
+      const uniqueIds = new Set(allItems);
+      expect(uniqueIds.size).toBe(total);
+      expect(allItems.length).toBe(total);
     });
   });
 
@@ -232,7 +337,7 @@ describe('Brands (e2e)', () => {
       expect(result.errors).toEqual([]);
 
       const brands = await ctx.client.brands.getAll(ctx.shopContext);
-      const codes = brands.map((b) => b.code);
+      const codes = brands.items.map((b) => b.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
     });
@@ -260,7 +365,7 @@ describe('Brands (e2e)', () => {
       expect(result.updated).toBe(0);
 
       const brands = await ctx.client.brands.getAll(ctx.shopContext);
-      const codes = brands.map((b) => b.code);
+      const codes = brands.items.map((b) => b.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
     });
@@ -276,7 +381,7 @@ describe('Brands (e2e)', () => {
       expect(result.updated).toBe(0);
 
       const brands = await ctx.client.brands.getAll(ctx.shopContext);
-      const codes = brands.map((b) => b.code);
+      const codes = brands.items.map((b) => b.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
     });
@@ -290,7 +395,7 @@ describe('Brands (e2e)', () => {
       expect(result.updated).toBe(0);
 
       const brands = await ctx.client.brands.getAll(ctx.shopContext);
-      const mavyko = brands.find((b) => b.code === 'mavyko');
+      const mavyko = brands.items.find((b) => b.code === 'mavyko');
       expect(mavyko).toBeDefined();
       expect(mavyko?.title).toBe('Мавико');
     });
@@ -387,7 +492,7 @@ describe('Brands (e2e)', () => {
 
       it('editor should list brands', async () => {
         const brands = await editorClient.brands.getAll(ctx.shopContext);
-        expect(Array.isArray(brands)).toBe(true);
+        expect(Array.isArray(brands.items)).toBe(true);
       });
 
       it('editor should create brand', async () => {
@@ -400,8 +505,8 @@ describe('Brands (e2e)', () => {
 
       it('editor should get brand by code', async () => {
         const brands = await editorClient.brands.getAll(ctx.shopContext);
-        if (brands.length === 0) throw new Error('Expected at least one brand for editor');
-        const firstBrand = brands[0];
+        if (brands.items.length === 0) throw new Error('Expected at least one brand for editor');
+        const firstBrand = brands.items[0];
         if (!firstBrand) throw new Error('Expected brand');
         const brand = await editorClient.brands.getByCode(ctx.shopContext, firstBrand.code);
         expect(brand.id).toBe(firstBrand.id);
@@ -409,8 +514,8 @@ describe('Brands (e2e)', () => {
 
       it('editor should update brand', async () => {
         const brands = await editorClient.brands.getAll(ctx.shopContext);
-        if (brands.length > 0) {
-          const firstBrand = brands[0];
+        if (brands.items.length > 0) {
+          const firstBrand = brands.items[0];
           if (!firstBrand) throw new Error('Expected brand');
           const updated = await editorClient.brands.update(ctx.shopContext, firstBrand.id, {
             title: 'Editor Updated',
@@ -475,13 +580,13 @@ describe('Brands (e2e)', () => {
 
       it('viewer should list brands', async () => {
         const brands = await viewerClient.brands.getAll(ctx.shopContext);
-        expect(Array.isArray(brands)).toBe(true);
+        expect(Array.isArray(brands.items)).toBe(true);
       });
 
       it('viewer should get brand by id', async () => {
         const brands = await viewerClient.brands.getAll(ctx.shopContext);
-        if (brands.length > 0) {
-          const firstBrand = brands[0];
+        if (brands.items.length > 0) {
+          const firstBrand = brands.items[0];
           if (!firstBrand) throw new Error('Expected brand');
           const brand = await viewerClient.brands.getById(ctx.shopContext, firstBrand.id);
           expect(brand.id).toBe(firstBrand.id);
@@ -490,8 +595,8 @@ describe('Brands (e2e)', () => {
 
       it('viewer should get brand by code', async () => {
         const brands = await viewerClient.brands.getAll(ctx.shopContext);
-        if (brands.length === 0) throw new Error('Expected at least one brand for viewer');
-        const firstBrand = brands[0];
+        if (brands.items.length === 0) throw new Error('Expected at least one brand for viewer');
+        const firstBrand = brands.items[0];
         if (!firstBrand) throw new Error('Expected brand');
         const brand = await viewerClient.brands.getByCode(ctx.shopContext, firstBrand.code);
         expect(brand.id).toBe(firstBrand.id);
@@ -508,8 +613,8 @@ describe('Brands (e2e)', () => {
 
       it('viewer should NOT update brand', async () => {
         const brands = await viewerClient.brands.getAll(ctx.shopContext);
-        if (brands.length > 0) {
-          const firstBrand = brands[0];
+        if (brands.items.length > 0) {
+          const firstBrand = brands.items[0];
           if (!firstBrand) throw new Error('Expected brand');
           await expectForbidden(() =>
             viewerClient.brands.update(ctx.shopContext, firstBrand.id, {
@@ -521,12 +626,10 @@ describe('Brands (e2e)', () => {
 
       it('viewer should NOT delete brand', async () => {
         const brands = await viewerClient.brands.getAll(ctx.shopContext);
-        if (brands.length > 0) {
-          const firstBrand = brands[0];
+        if (brands.items.length > 0) {
+          const firstBrand = brands.items[0];
           if (!firstBrand) throw new Error('Expected brand');
-          await expectForbidden(() =>
-            viewerClient.brands.delete(ctx.shopContext, firstBrand.id),
-          );
+          await expectForbidden(() => viewerClient.brands.delete(ctx.shopContext, firstBrand.id));
         }
       });
 

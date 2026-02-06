@@ -1,4 +1,9 @@
-import type { ImportResult, ShopContextParams } from '@sales-planner/shared';
+import type {
+  ImportResult,
+  PaginatedResponse,
+  PaginationQuery,
+  ShopContextParams,
+} from '@sales-planner/shared';
 import type { ClientConfig } from './base-client.js';
 import { ImportExportBaseClient } from './import-export-base-client.js';
 
@@ -28,8 +33,11 @@ export class CodedEntityClient<
 
   // CRUD operations
 
-  async getAll(ctx: ShopContextParams): Promise<TEntity[]> {
-    return this.request('GET', `/${this.entityPath}`, { params: ctx });
+  async getAll(
+    ctx: ShopContextParams,
+    query?: PaginationQuery,
+  ): Promise<PaginatedResponse<TEntity>> {
+    return this.request('GET', `/${this.entityPath}`, { params: { ...ctx, ...query } });
   }
 
   async getById(ctx: ShopContextParams, id: number): Promise<TEntity> {

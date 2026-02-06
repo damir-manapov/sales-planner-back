@@ -117,7 +117,13 @@ export abstract class ShopScopedBaseRepository<
   }
 
   /** Immutable fields that should never be updated */
-  protected static readonly IMMUTABLE_FIELDS = new Set<string>(['id', 'shop_id', 'tenant_id', 'created_at', 'updated_at']);
+  protected static readonly IMMUTABLE_FIELDS = new Set<string>([
+    'id',
+    'shop_id',
+    'tenant_id',
+    'created_at',
+    'updated_at',
+  ]);
 
   async create(data: TCreateDto): Promise<TEntity> {
     const result = await this.db
@@ -179,13 +185,18 @@ export abstract class ShopScopedBaseRepository<
    * Bulk upsert items. Returns counts of created and updated items.
    * Updates all fields from items except immutable ones.
    */
-  async bulkUpsert(tenantId: number, shopId: number, items: TImportItem[]): Promise<BulkUpsertResult> {
+  async bulkUpsert(
+    tenantId: number,
+    shopId: number,
+    items: TImportItem[],
+  ): Promise<BulkUpsertResult> {
     if (items.length === 0) {
       return { created: 0, updated: 0 };
     }
 
     // Get business primary key for counting existing records
-    const primaryKey = this.businessPrimaryKey ?? this.uniqueKeys.find((k) => k !== 'shop_id') ?? 'id';
+    const primaryKey =
+      this.businessPrimaryKey ?? this.uniqueKeys.find((k) => k !== 'shop_id') ?? 'id';
     const keyValues = items.map((item) => (item as Record<string, unknown>)[primaryKey]);
 
     // Count existing records by unique key
@@ -218,9 +229,7 @@ export abstract class ShopScopedBaseRepository<
           updated_at: new Date(),
         })),
       )
-      .onConflict((oc) =>
-        oc.columns(this.uniqueKeys.slice() as any).doUpdateSet(updateSet as any),
-      )
+      .onConflict((oc) => oc.columns(this.uniqueKeys.slice() as any).doUpdateSet(updateSet as any))
       .execute();
 
     return { created, updated };

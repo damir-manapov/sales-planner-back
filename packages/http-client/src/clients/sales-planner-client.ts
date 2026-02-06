@@ -38,7 +38,7 @@ import type {
   ImportSalesHistoryItem,
   SalesHistoryExportItem,
   SalesHistoryImportResult,
-  PeriodQuery,
+  SalesHistoryQuery,
 } from '@sales-planner/shared';
 import type { ClientConfig } from './base-client.js';
 import { ApiError } from './base-client.js';
@@ -64,13 +64,57 @@ export class SalesPlannerClient {
   readonly tenants: TenantsClient;
   readonly shops: ShopsClient;
   readonly skus: SkusClient;
-  readonly brands: CodedEntityClient<Brand, CreateBrandRequest, UpdateBrandRequest, ImportBrandItem, BrandExportItem>;
-  readonly categories: CodedEntityClient<Category, CreateCategoryRequest, UpdateCategoryRequest, ImportCategoryItem, CategoryExportItem>;
-  readonly groups: CodedEntityClient<Group, CreateGroupRequest, UpdateGroupRequest, ImportGroupItem, GroupExportItem>;
-  readonly statuses: CodedEntityClient<Status, CreateStatusRequest, UpdateStatusRequest, ImportStatusItem, StatusExportItem>;
-  readonly suppliers: CodedEntityClient<Supplier, CreateSupplierRequest, UpdateSupplierRequest, ImportSupplierItem, SupplierExportItem>;
-  readonly marketplaces: CodedEntityClient<Marketplace, CreateMarketplaceRequest, UpdateMarketplaceRequest, ImportMarketplaceItem, MarketplaceExportItem>;
-  readonly salesHistory: ShopScopedClient<SalesHistory, CreateSalesHistoryRequest, UpdateSalesHistoryRequest, ImportSalesHistoryItem, SalesHistoryExportItem, SalesHistoryImportResult, PeriodQuery>;
+  readonly brands: CodedEntityClient<
+    Brand,
+    CreateBrandRequest,
+    UpdateBrandRequest,
+    ImportBrandItem,
+    BrandExportItem
+  >;
+  readonly categories: CodedEntityClient<
+    Category,
+    CreateCategoryRequest,
+    UpdateCategoryRequest,
+    ImportCategoryItem,
+    CategoryExportItem
+  >;
+  readonly groups: CodedEntityClient<
+    Group,
+    CreateGroupRequest,
+    UpdateGroupRequest,
+    ImportGroupItem,
+    GroupExportItem
+  >;
+  readonly statuses: CodedEntityClient<
+    Status,
+    CreateStatusRequest,
+    UpdateStatusRequest,
+    ImportStatusItem,
+    StatusExportItem
+  >;
+  readonly suppliers: CodedEntityClient<
+    Supplier,
+    CreateSupplierRequest,
+    UpdateSupplierRequest,
+    ImportSupplierItem,
+    SupplierExportItem
+  >;
+  readonly marketplaces: CodedEntityClient<
+    Marketplace,
+    CreateMarketplaceRequest,
+    UpdateMarketplaceRequest,
+    ImportMarketplaceItem,
+    MarketplaceExportItem
+  >;
+  readonly salesHistory: ShopScopedClient<
+    SalesHistory,
+    CreateSalesHistoryRequest,
+    UpdateSalesHistoryRequest,
+    ImportSalesHistoryItem,
+    SalesHistoryExportItem,
+    SalesHistoryImportResult,
+    SalesHistoryQuery
+  >;
   readonly roles: CrudClient<Role, CreateRoleRequest, UpdateRoleRequest>;
   readonly userRoles: UserRolesClient;
   readonly apiKeys: ApiKeysClient;

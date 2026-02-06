@@ -1,16 +1,33 @@
 import { Injectable } from '@nestjs/common';
-import type { CodedTitledItem, CreateSkuDto, CreateSkuRequest, Sku, UpdateSkuDto } from '@sales-planner/shared';
+import type {
+  CodedTitledItem,
+  CreateSkuDto,
+  CreateSkuRequest,
+  Sku,
+  SkuExportItem,
+  UpdateSkuDto,
+} from '@sales-planner/shared';
 import type { BulkUpsertResult } from '../../common/internal-types.js';
 import { CodedShopScopedRepository } from '../../common/index.js';
 import { DatabaseService, USER_QUERYABLE_TABLES } from '../../database/index.js';
 
 @Injectable()
-export class SkusRepository extends CodedShopScopedRepository<Sku, CreateSkuDto, UpdateSkuDto> {
+export class SkusRepository extends CodedShopScopedRepository<
+  Sku,
+  CreateSkuDto,
+  UpdateSkuDto,
+  SkuExportItem,
+  CodedTitledItem
+> {
   constructor(db: DatabaseService) {
     super(db, 'skus', USER_QUERYABLE_TABLES);
   }
 
-  override async bulkUpsert(tenantId: number, shopId: number, items: CodedTitledItem[]): Promise<BulkUpsertResult> {
+  override async bulkUpsert(
+    tenantId: number,
+    shopId: number,
+    items: CodedTitledItem[],
+  ): Promise<BulkUpsertResult> {
     if (items.length === 0) {
       return { created: 0, updated: 0 };
     }
@@ -81,18 +98,8 @@ export class SkusRepository extends CodedShopScopedRepository<Sku, CreateSkuDto,
       .execute();
   }
 
-  override async exportForShop(shopId: number): Promise<
-    Array<{
-      code: string;
-      title: string;
-      title2: string | null;
-      category: string | null;
-      group: string | null;
-      status: string | null;
-      supplier: string | null;
-    }>
-  > {
-    return this.db
+  override async exportForShop(shopId: number): Promise<SkuExportItem[]> {
+    const rows = await this.db
       .selectFrom('skus')
       .leftJoin('categories', 'skus.category_id', 'categories.id')
       .leftJoin('groups', 'skus.group_id', 'groups.id')
@@ -110,5 +117,15 @@ export class SkusRepository extends CodedShopScopedRepository<Sku, CreateSkuDto,
       .where('skus.shop_id', '=', shopId)
       .orderBy('skus.code', 'asc')
       .execute();
+
+    return rows.map((row) => ({
+      code: row.code,
+      title: row.title,
+      title2: row.title2 ?? undefined,
+      category: row.category ?? undefined,
+      group: row.group ?? undefined,
+      status: row.status ?? undefined,
+      supplier: row.supplier ?? undefined,
+    }));
   }
 }

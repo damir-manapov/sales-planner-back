@@ -1,4 +1,9 @@
-import type { ShopScopedBaseEntity } from '@sales-planner/shared';
+import type {
+  PaginatedResponse,
+  PaginationQuery,
+  ShopScopedBaseEntity,
+} from '@sales-planner/shared';
+import { NotFoundException } from '@nestjs/common';
 import { DuplicateResourceException, isUniqueViolation } from '../exceptions.js';
 import type { IShopScopedBaseRepository } from './base-repository.interface.js';
 
@@ -28,6 +33,13 @@ export abstract class ShopScopedBaseEntityService<
     return this.repository.findByShopId(shopId);
   }
 
+  async findByShopIdPaginated(
+    shopId: number,
+    query?: PaginationQuery,
+  ): Promise<PaginatedResponse<TEntity>> {
+    return this.repository.findByShopIdPaginated(shopId, query);
+  }
+
   async findByTenantId(tenantId: number): Promise<TEntity[]> {
     return this.repository.findByTenantId(tenantId);
   }
@@ -44,7 +56,11 @@ export abstract class ShopScopedBaseEntityService<
       return await this.repository.create(dto);
     } catch (error) {
       if (isUniqueViolation(error)) {
-        throw new DuplicateResourceException(this.entityName, this.getCreateIdentifier(dto), 'this shop');
+        throw new DuplicateResourceException(
+          this.entityName,
+          this.getCreateIdentifier(dto),
+          'this shop',
+        );
       }
       throw error;
     }
@@ -57,12 +73,20 @@ export abstract class ShopScopedBaseEntityService<
     return 'unknown';
   }
 
-  async update(id: number, dto: TUpdateDto): Promise<TEntity | undefined> {
+  async update(id: number, dto: TUpdateDto): Promise<TEntity> {
     try {
-      return await this.repository.update(id, dto);
+      const updated = await this.repository.update(id, dto);
+      if (!updated) {
+        throw new NotFoundException(`${this.entityName} with id ${id} not found`);
+      }
+      return updated;
     } catch (error) {
       if (isUniqueViolation(error)) {
-        throw new DuplicateResourceException(this.entityName, this.getUpdateIdentifier(dto), 'this shop');
+        throw new DuplicateResourceException(
+          this.entityName,
+          this.getUpdateIdentifier(dto),
+          'this shop',
+        );
       }
       throw error;
     }

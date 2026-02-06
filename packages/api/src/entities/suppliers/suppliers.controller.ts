@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Query,
   Req,
   Res,
   UploadedFile,
@@ -22,12 +23,14 @@ import {
   ShopContext,
   type ShopContext as ShopContextType,
 } from '../../auth/decorators.js';
-import type { ImportResult } from '@sales-planner/shared';
+import type { ImportResult, PaginatedResponse } from '@sales-planner/shared';
 import {
   assertShopAccess,
   type ExpressResponse,
   parseAndValidateImport,
   parseCsvImport,
+  type PaginationQuery,
+  PaginationQuerySchema,
   sendCsvExport,
   sendJsonExport,
   ZodValidationPipe,
@@ -52,8 +55,9 @@ export class SuppliersController {
   async findAll(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-  ): Promise<Supplier[]> {
-    return this.suppliersService.findByShopId(ctx.shopId);
+    @Query(new ZodValidationPipe(PaginationQuerySchema)) query: PaginationQuery,
+  ): Promise<PaginatedResponse<Supplier>> {
+    return this.suppliersService.findByShopIdPaginated(ctx.shopId, query);
   }
 
   @Get('code/:code')
@@ -129,9 +133,7 @@ export class SuppliersController {
   ): Promise<Supplier> {
     const supplier = await this.suppliersService.findById(id);
     assertShopAccess(supplier, ctx, 'Supplier', id);
-
-    // update() returns undefined only if record doesn't exist, but we already verified it exists
-    return (await this.suppliersService.update(id, body))!;
+    return this.suppliersService.update(id, body);
   }
 
   @Delete(':id')

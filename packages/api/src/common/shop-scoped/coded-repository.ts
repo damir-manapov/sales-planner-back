@@ -1,7 +1,4 @@
-import type {
-  CodedTitledItem,
-  CodedShopScopedEntity,
-} from '@sales-planner/shared';
+import type { CodedTitledItem, CodedShopScopedEntity } from '@sales-planner/shared';
 import type { ICodedShopScopedRepository } from './coded-repository.interface.js';
 import { ShopScopedBaseRepository } from './base-repository.js';
 
@@ -18,12 +15,13 @@ export type { ICodedShopScopedRepository } from './coded-repository.interface.js
  * @typeParam TImportItem - The type for bulk import items (defaults to CodedTitledItem)
  */
 export abstract class CodedShopScopedRepository<
-  TEntity extends CodedShopScopedEntity,
-  TCreateDto = Partial<TEntity>,
-  TUpdateDto = Partial<TEntity>,
-  TExport = CodedTitledItem,
-  TImportItem extends CodedTitledItem = CodedTitledItem,
-> extends ShopScopedBaseRepository<TEntity, TCreateDto, TUpdateDto, TExport, TImportItem>
+    TEntity extends CodedShopScopedEntity,
+    TCreateDto = Partial<TEntity>,
+    TUpdateDto = Partial<TEntity>,
+    TExport = CodedTitledItem,
+    TImportItem extends CodedTitledItem = CodedTitledItem,
+  >
+  extends ShopScopedBaseRepository<TEntity, TCreateDto, TUpdateDto, TExport, TImportItem>
   implements ICodedShopScopedRepository<TEntity, TCreateDto, TUpdateDto, TExport, TImportItem>
 {
   /** Override to include code/title in export */

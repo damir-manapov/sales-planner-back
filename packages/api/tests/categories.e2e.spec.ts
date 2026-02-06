@@ -77,8 +77,8 @@ describe('Categories (e2e)', () => {
 
       const categories = await ctx.client.categories.getAll(ctx.shopContext);
 
-      expect(Array.isArray(categories)).toBe(true);
-      expect(categories.length).toBeGreaterThan(0);
+      expect(Array.isArray(categories.items)).toBe(true);
+      expect(categories.items.length).toBeGreaterThan(0);
     });
 
     it('should get category by id', async () => {
@@ -133,6 +133,92 @@ describe('Categories (e2e)', () => {
     });
   });
 
+  describe('Pagination', () => {
+    const paginationItems: { id: number; code: string }[] = [];
+
+    beforeAll(async () => {
+      for (let i = 0; i < 15; i++) {
+        const item = await ctx.client.categories.create(ctx.shopContext, {
+          code: generateTestCode(`pagination-category-${i.toString().padStart(2, '0')}`),
+          title: `Pagination Category ${i}`,
+        });
+        paginationItems.push({ id: item.id, code: item.code });
+      }
+    });
+
+    afterAll(async () => {
+      for (const item of paginationItems) {
+        try {
+          await ctx.client.categories.delete(ctx.shopContext, item.id);
+        } catch {
+          // Ignore errors during cleanup
+        }
+      }
+    });
+
+    it('should return paginated response with metadata', async () => {
+      const response = await ctx.client.categories.getAll(ctx.shopContext);
+
+      expect(response).toHaveProperty('items');
+      expect(response).toHaveProperty('total');
+      expect(response).toHaveProperty('limit');
+      expect(response).toHaveProperty('offset');
+      expect(Array.isArray(response.items)).toBe(true);
+      expect(response.offset).toBe(0);
+    });
+
+    it('should respect custom limit and offset', async () => {
+      const response = await ctx.client.categories.getAll(ctx.shopContext, { limit: 5, offset: 3 });
+
+      expect(response.items.length).toBeLessThanOrEqual(5);
+      expect(response.limit).toBe(5);
+      expect(response.offset).toBe(3);
+    });
+
+    it('should return different items on different pages', async () => {
+      const firstPage = await ctx.client.categories.getAll(ctx.shopContext, {
+        limit: 5,
+        offset: 0,
+      });
+      const secondPage = await ctx.client.categories.getAll(ctx.shopContext, {
+        limit: 5,
+        offset: 5,
+      });
+
+      if (firstPage.items.length > 0 && secondPage.items.length > 0) {
+        const firstPageIds = firstPage.items.map((b) => b.id);
+        const secondPageIds = secondPage.items.map((b) => b.id);
+        const overlap = firstPageIds.filter((id) => secondPageIds.includes(id));
+        expect(overlap.length).toBe(0);
+      }
+    });
+
+    it('should return correct total count', async () => {
+      const response = await ctx.client.categories.getAll(ctx.shopContext, { limit: 5 });
+      expect(response.total).toBeGreaterThanOrEqual(15);
+    });
+
+    it('should paginate through all items correctly', async () => {
+      const pageSize = 5;
+      const allItems: number[] = [];
+      let offset = 0;
+      let total = 0;
+
+      do {
+        const response = await ctx.client.categories.getAll(ctx.shopContext, {
+          limit: pageSize,
+          offset,
+        });
+        total = response.total;
+        allItems.push(...response.items.map((b) => b.id));
+        offset += pageSize;
+      } while (allItems.length < total);
+
+      const uniqueIds = new Set(allItems);
+      expect(uniqueIds.size).toBe(total);
+    });
+  });
+
   describe('Delete operations', () => {
     it('should delete category', async () => {
       const toDelete = await ctx.client.categories.create(ctx.shopContext, {
@@ -184,9 +270,7 @@ describe('Categories (e2e)', () => {
         title: 'Other Category',
       });
 
-      await expectNotFound(() =>
-        ctx.client.categories.getById(ctx.shopContext, otherCategory.id),
-      );
+      await expectNotFound(() => ctx.client.categories.getById(ctx.shopContext, otherCategory.id));
       await expectForbidden(() =>
         ctx.client.categories.getByCode(
           {
@@ -232,7 +316,7 @@ describe('Categories (e2e)', () => {
       expect(result.errors).toEqual([]);
 
       const categories = await ctx.client.categories.getAll(ctx.shopContext);
-      const codes = categories.map((c) => c.code);
+      const codes = categories.items.map((c) => c.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
     });
@@ -260,7 +344,7 @@ describe('Categories (e2e)', () => {
       expect(result.updated).toBe(0);
 
       const categories = await ctx.client.categories.getAll(ctx.shopContext);
-      const codes = categories.map((c) => c.code);
+      const codes = categories.items.map((c) => c.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
     });
@@ -276,7 +360,7 @@ describe('Categories (e2e)', () => {
       expect(result.updated).toBe(0);
 
       const categories = await ctx.client.categories.getAll(ctx.shopContext);
-      const codes = categories.map((c) => c.code);
+      const codes = categories.items.map((c) => c.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
     });
@@ -290,7 +374,7 @@ describe('Categories (e2e)', () => {
       expect(result.updated).toBe(0);
 
       const categories = await ctx.client.categories.getAll(ctx.shopContext);
-      const mavyko = categories.find((c) => c.code === 'mavyko');
+      const mavyko = categories.items.find((c) => c.code === 'mavyko');
       expect(mavyko).toBeDefined();
       expect(mavyko?.title).toBe('Мавико');
     });
@@ -387,7 +471,7 @@ describe('Categories (e2e)', () => {
 
       it('editor should list categories', async () => {
         const categories = await editorClient.categories.getAll(ctx.shopContext);
-        expect(Array.isArray(categories)).toBe(true);
+        expect(Array.isArray(categories.items)).toBe(true);
       });
 
       it('editor should create category', async () => {
@@ -400,8 +484,9 @@ describe('Categories (e2e)', () => {
 
       it('editor should get category by code', async () => {
         const categories = await editorClient.categories.getAll(ctx.shopContext);
-        if (categories.length === 0) throw new Error('Expected at least one category for editor');
-        const firstCategory = categories[0];
+        if (categories.items.length === 0)
+          throw new Error('Expected at least one category for editor');
+        const firstCategory = categories.items[0];
         if (!firstCategory) throw new Error('Expected category');
         const category = await editorClient.categories.getByCode(
           ctx.shopContext,
@@ -412,14 +497,12 @@ describe('Categories (e2e)', () => {
 
       it('editor should update category', async () => {
         const categories = await editorClient.categories.getAll(ctx.shopContext);
-        if (categories.length > 0) {
-          const firstCategory = categories[0];
+        if (categories.items.length > 0) {
+          const firstCategory = categories.items[0];
           if (!firstCategory) throw new Error('Expected category');
-          const updated = await editorClient.categories.update(
-            ctx.shopContext,
-            firstCategory.id,
-            { title: 'Editor Updated' },
-          );
+          const updated = await editorClient.categories.update(ctx.shopContext, firstCategory.id, {
+            title: 'Editor Updated',
+          });
           expect(updated.title).toBe('Editor Updated');
         }
       });
@@ -430,9 +513,7 @@ describe('Categories (e2e)', () => {
           title: 'To Delete',
         });
         await editorClient.categories.delete(ctx.shopContext, category.id);
-        await expectNotFound(() =>
-          editorClient.categories.getById(ctx.shopContext, category.id),
-        );
+        await expectNotFound(() => editorClient.categories.getById(ctx.shopContext, category.id));
       });
 
       it('editor should import categories', async () => {
@@ -482,13 +563,14 @@ describe('Categories (e2e)', () => {
 
       it('viewer should list categories', async () => {
         const categories = await viewerClient.categories.getAll(ctx.shopContext);
-        expect(Array.isArray(categories)).toBe(true);
+        expect(Array.isArray(categories.items)).toBe(true);
       });
 
       it('viewer should get category by code', async () => {
         const categories = await viewerClient.categories.getAll(ctx.shopContext);
-        if (categories.length === 0) throw new Error('Expected at least one category for viewer');
-        const firstCategory = categories[0];
+        if (categories.items.length === 0)
+          throw new Error('Expected at least one category for viewer');
+        const firstCategory = categories.items[0];
         if (!firstCategory) throw new Error('Expected category');
         const category = await viewerClient.categories.getByCode(
           ctx.shopContext,
@@ -499,13 +581,10 @@ describe('Categories (e2e)', () => {
 
       it('viewer should get category by id', async () => {
         const categories = await viewerClient.categories.getAll(ctx.shopContext);
-        if (categories.length > 0) {
-          const firstCategory = categories[0];
+        if (categories.items.length > 0) {
+          const firstCategory = categories.items[0];
           if (!firstCategory) throw new Error('Expected category');
-          const category = await viewerClient.categories.getById(
-            ctx.shopContext,
-            firstCategory.id,
-          );
+          const category = await viewerClient.categories.getById(ctx.shopContext, firstCategory.id);
           expect(category.id).toBe(firstCategory.id);
         }
       });
@@ -521,8 +600,8 @@ describe('Categories (e2e)', () => {
 
       it('viewer should NOT update category', async () => {
         const categories = await viewerClient.categories.getAll(ctx.shopContext);
-        if (categories.length > 0) {
-          const firstCategory = categories[0];
+        if (categories.items.length > 0) {
+          const firstCategory = categories.items[0];
           if (!firstCategory) throw new Error('Expected category');
           await expectForbidden(() =>
             viewerClient.categories.update(ctx.shopContext, firstCategory.id, {
@@ -534,8 +613,8 @@ describe('Categories (e2e)', () => {
 
       it('viewer should NOT delete category', async () => {
         const categories = await viewerClient.categories.getAll(ctx.shopContext);
-        if (categories.length > 0) {
-          const firstCategory = categories[0];
+        if (categories.items.length > 0) {
+          const firstCategory = categories.items[0];
           if (!firstCategory) throw new Error('Expected category');
           await expectForbidden(() =>
             viewerClient.categories.delete(ctx.shopContext, firstCategory.id),

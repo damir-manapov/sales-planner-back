@@ -20,4 +20,5 @@ export interface CodedTitledUpdateDto {
 export interface CodedTitledItem {
   code: string;
   title: string;
+  [key: string]: unknown;
 }

@@ -21,7 +21,9 @@
     {
       "includes": [
         "packages/api/src/common/base-entity.service.ts",
-        "packages/api/src/common/shop-scoped-repository.ts"
+        "packages/api/src/common/shop-scoped-repository.ts",
+        "packages/api/src/common/shop-scoped/base-repository.ts",
+        "packages/api/src/common/shop-scoped/coded-repository.ts"
       ],
       "linter": {
         "rules": {
@@ -49,6 +51,11 @@
     }
   },
   "files": {
-    "includes": ["packages/**/*.ts", "scripts/**/*.sh"]
+    "includes": [
+      "packages/**/src/**/*.ts",
+      "packages/**/tests/**/*.ts",
+      "packages/**/scripts/**/*.ts",
+      "scripts/**/*.sh"
+    ]
   }
 }

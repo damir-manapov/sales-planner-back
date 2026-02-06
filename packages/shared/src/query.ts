@@ -18,6 +18,8 @@ export interface PeriodQuery {
   period_to?: string; // YYYY-MM format
 }
 
+export interface SalesHistoryQuery extends PeriodQuery, PaginationQuery {}
+
 export interface GetUserRolesQuery {
   userId?: number;
   roleId?: number;

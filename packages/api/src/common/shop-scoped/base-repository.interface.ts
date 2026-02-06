@@ -3,7 +3,7 @@ import type {
   PaginationQuery,
   ShopScopedBaseEntity,
 } from '@sales-planner/shared';
-import type { BulkUpsertResult } from './internal-types.js';
+import type { BulkUpsertResult } from '../internal-types.js';
 
 /**
  * Base interface for shop-scoped repository operations (without code)
@@ -25,7 +25,10 @@ export interface IShopScopedBaseRepository<
   findById(id: number): Promise<TEntity | undefined>;
   findByShopId(shopId: number, query?: PaginationQuery): Promise<TEntity[]>;
   findByTenantId(tenantId: number): Promise<TEntity[]>;
-  findByShopIdPaginated(shopId: number, query?: PaginationQuery): Promise<PaginatedResponse<TEntity>>;
+  findByShopIdPaginated(
+    shopId: number,
+    query?: PaginationQuery,
+  ): Promise<PaginatedResponse<TEntity>>;
   create(data: TCreateDto): Promise<TEntity>;
   update(id: number, data: TUpdateDto): Promise<TEntity | undefined>;
   delete(id: number): Promise<void>;

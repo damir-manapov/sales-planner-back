@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Query,
   Req,
   Res,
   UploadedFile,
@@ -22,12 +23,14 @@ import {
   ShopContext,
   type ShopContext as ShopContextType,
 } from '../../auth/decorators.js';
-import type { ImportResult } from '@sales-planner/shared';
+import type { ImportResult, PaginatedResponse } from '@sales-planner/shared';
 import {
   assertShopAccess,
   type ExpressResponse,
   parseAndValidateImport,
   parseCsvImport,
+  type PaginationQuery,
+  PaginationQuerySchema,
   sendCsvExport,
   sendJsonExport,
   ZodValidationPipe,
@@ -52,8 +55,9 @@ export class GroupsController {
   async findAll(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-  ): Promise<Group[]> {
-    return this.groupsService.findByShopId(ctx.shopId);
+    @Query(new ZodValidationPipe(PaginationQuerySchema)) query: PaginationQuery,
+  ): Promise<PaginatedResponse<Group>> {
+    return this.groupsService.findByShopIdPaginated(ctx.shopId, query);
   }
 
   @Get('code/:code')
@@ -129,9 +133,7 @@ export class GroupsController {
   ): Promise<Group> {
     const group = await this.groupsService.findById(id);
     assertShopAccess(group, ctx, 'Group', id);
-
-    // update() returns undefined only if record doesn't exist, but we already verified it exists
-    return (await this.groupsService.update(id, body))!;
+    return this.groupsService.update(id, body);
   }
 
   @Delete(':id')

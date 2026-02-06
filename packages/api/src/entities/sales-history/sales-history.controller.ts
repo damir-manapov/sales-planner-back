@@ -16,6 +16,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
+import type { PaginatedResponse, SalesHistoryImportResult } from '@sales-planner/shared';
 import { AuthenticatedRequest, AuthGuard } from '../../auth/auth.guard.js';
 import {
   RequireReadAccess,
@@ -27,7 +28,6 @@ import {
   assertShopAccess,
   type ExpressResponse,
   parseAndValidateImport,
-  type SalesHistoryImportResult,
   sendCsvExport,
   sendJsonExport,
   ZodValidationPipe,
@@ -39,6 +39,8 @@ import {
   type ImportSalesHistoryItem,
   ImportSalesHistoryItemSchema,
   PeriodQuerySchema,
+  type SalesHistoryQuery,
+  SalesHistoryQuerySchema,
   type UpdateSalesHistoryRequest,
   UpdateSalesHistorySchema,
 } from './sales-history.schema.js';
@@ -54,12 +56,9 @@ export class SalesHistoryController {
   async findAll(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-    @Query('period_from') periodFrom?: string,
-    @Query('period_to') periodTo?: string,
-  ): Promise<SalesHistory[]> {
-    // Validate query params
-    PeriodQuerySchema.parse({ period_from: periodFrom, period_to: periodTo });
-    return this.salesHistoryService.findByShopAndPeriod(ctx.shopId, periodFrom, periodTo);
+    @Query(new ZodValidationPipe(SalesHistoryQuerySchema)) query: SalesHistoryQuery,
+  ): Promise<PaginatedResponse<SalesHistory>> {
+    return this.salesHistoryService.findByShopAndPeriod(ctx.shopId, query);
   }
 
   @Get('export/json')
@@ -129,9 +128,7 @@ export class SalesHistoryController {
   ): Promise<SalesHistory> {
     const record = await this.salesHistoryService.findById(id);
     assertShopAccess(record, ctx, 'Sales history record', id);
-
-    // update() returns undefined only if record doesn't exist, but we already verified it exists
-    return (await this.salesHistoryService.update(id, dto))!;
+    return this.salesHistoryService.update(id, dto);
   }
 
   @Delete(':id')

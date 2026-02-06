@@ -5,12 +5,14 @@ export type {
   CreateSalesHistoryDto,
   ImportSalesHistoryItem,
   PeriodQuery,
+  SalesHistoryQuery,
   UpdateSalesHistoryDto,
 } from './sales-history.schema.js';
 export {
   CreateSalesHistorySchema,
   ImportSalesHistoryItemSchema,
   PeriodQuerySchema,
+  SalesHistoryQuerySchema,
   UpdateSalesHistorySchema,
 } from './sales-history.schema.js';
 export { SalesHistoryService } from './sales-history.service.js';

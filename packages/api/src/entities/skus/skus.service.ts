@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import type {
   CreateSkuDto,
   ImportSkuItem,
@@ -21,10 +21,10 @@ import { SkusRepository } from './skus.repository.js';
 export type { Sku };
 
 interface PreparedSkuItem extends ImportSkuItem {
-  category_id?: number | null;
-  group_id?: number | null;
-  status_id?: number | null;
-  supplier_id?: number | null;
+  category_id?: number;
+  group_id?: number;
+  status_id?: number;
+  supplier_id?: number;
 }
 
 @Injectable()
@@ -91,11 +91,15 @@ export class SkusService {
     }
   }
 
-  async update(id: number, dto: UpdateSkuDto): Promise<Sku | undefined> {
-    return this.repository.update(id, {
+  async update(id: number, dto: UpdateSkuDto): Promise<Sku> {
+    const updated = await this.repository.update(id, {
       ...dto,
       ...(dto.code !== undefined && { code: normalizeSkuCode(dto.code) }),
     });
+    if (!updated) {
+      throw new NotFoundException(`SKU with id ${id} not found`);
+    }
+    return updated;
   }
 
   async delete(id: number): Promise<void> {
@@ -178,9 +182,7 @@ export class SkusService {
         ? categoryResult.codeToId.get(normalizeCode(item.category))
         : undefined,
       group_id: item.group ? groupResult.codeToId.get(normalizeCode(item.group)) : undefined,
-      status_id: item.status
-        ? statusResult.codeToId.get(normalizeCode(item.status))
-        : undefined,
+      status_id: item.status ? statusResult.codeToId.get(normalizeCode(item.status)) : undefined,
       supplier_id: item.supplier
         ? supplierResult.codeToId.get(normalizeCode(item.supplier))
         : undefined,

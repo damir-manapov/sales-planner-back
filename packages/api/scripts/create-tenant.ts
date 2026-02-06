@@ -23,7 +23,7 @@ async function createTenantWithShopAndUser(args: CreateTenantArgs) {
   console.log('');
 
   try {
-    const result = await client.tenants.createTenantWithShopAndUser({
+    const result = await client.tenants.createWithShopAndUser({
       tenantTitle: args.tenantTitle,
       userEmail,
       userName,

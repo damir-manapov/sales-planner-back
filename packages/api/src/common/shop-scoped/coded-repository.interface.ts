@@ -1,7 +1,4 @@
-import type {
-  CodedTitledItem,
-  CodedShopScopedEntity,
-} from '@sales-planner/shared';
+import type { CodedTitledItem, CodedShopScopedEntity } from '@sales-planner/shared';
 import type { IShopScopedBaseRepository } from './base-repository.interface.js';
 
 /**

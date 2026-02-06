@@ -77,8 +77,8 @@ describe('Suppliers (e2e)', () => {
 
       const suppliers = await ctx.client.suppliers.getAll(ctx.shopContext);
 
-      expect(Array.isArray(suppliers)).toBe(true);
-      expect(suppliers.length).toBeGreaterThan(0);
+      expect(Array.isArray(suppliers.items)).toBe(true);
+      expect(suppliers.items.length).toBeGreaterThan(0);
     });
 
     it('should get supplier by id', async () => {
@@ -137,6 +137,89 @@ describe('Suppliers (e2e)', () => {
     });
   });
 
+  describe('Pagination', () => {
+    const paginationItems: { id: number; code: string }[] = [];
+
+    beforeAll(async () => {
+      for (let i = 0; i < 15; i++) {
+        const item = await ctx.client.suppliers.create(ctx.shopContext, {
+          code: generateTestCode(`pagination-supplier-${i.toString().padStart(2, '0')}`),
+          title: `Pagination Supplier ${i}`,
+        });
+        paginationItems.push({ id: item.id, code: item.code });
+      }
+    });
+
+    afterAll(async () => {
+      for (const item of paginationItems) {
+        try {
+          await ctx.client.suppliers.delete(ctx.shopContext, item.id);
+        } catch {
+          // Ignore errors during cleanup
+        }
+      }
+    });
+
+    it('should return paginated response with metadata', async () => {
+      const response = await ctx.client.suppliers.getAll(ctx.shopContext);
+
+      expect(response).toHaveProperty('items');
+      expect(response).toHaveProperty('total');
+      expect(response).toHaveProperty('limit');
+      expect(response).toHaveProperty('offset');
+      expect(Array.isArray(response.items)).toBe(true);
+      expect(response.offset).toBe(0);
+    });
+
+    it('should respect custom limit and offset', async () => {
+      const response = await ctx.client.suppliers.getAll(ctx.shopContext, { limit: 5, offset: 3 });
+
+      expect(response.items.length).toBeLessThanOrEqual(5);
+      expect(response.limit).toBe(5);
+      expect(response.offset).toBe(3);
+    });
+
+    it('should return different items on different pages', async () => {
+      const firstPage = await ctx.client.suppliers.getAll(ctx.shopContext, { limit: 5, offset: 0 });
+      const secondPage = await ctx.client.suppliers.getAll(ctx.shopContext, {
+        limit: 5,
+        offset: 5,
+      });
+
+      if (firstPage.items.length > 0 && secondPage.items.length > 0) {
+        const firstPageIds = firstPage.items.map((b) => b.id);
+        const secondPageIds = secondPage.items.map((b) => b.id);
+        const overlap = firstPageIds.filter((id) => secondPageIds.includes(id));
+        expect(overlap.length).toBe(0);
+      }
+    });
+
+    it('should return correct total count', async () => {
+      const response = await ctx.client.suppliers.getAll(ctx.shopContext, { limit: 5 });
+      expect(response.total).toBeGreaterThanOrEqual(15);
+    });
+
+    it('should paginate through all items correctly', async () => {
+      const pageSize = 5;
+      const allItems: number[] = [];
+      let offset = 0;
+      let total = 0;
+
+      do {
+        const response = await ctx.client.suppliers.getAll(ctx.shopContext, {
+          limit: pageSize,
+          offset,
+        });
+        total = response.total;
+        allItems.push(...response.items.map((b) => b.id));
+        offset += pageSize;
+      } while (allItems.length < total);
+
+      const uniqueIds = new Set(allItems);
+      expect(uniqueIds.size).toBe(total);
+    });
+  });
+
   describe('Delete operations', () => {
     it('should delete supplier', async () => {
       const toDelete = await ctx.client.suppliers.create(ctx.shopContext, {
@@ -188,9 +271,7 @@ describe('Suppliers (e2e)', () => {
         title: 'Other Supplier',
       });
 
-      await expectNotFound(() =>
-        ctx.client.suppliers.getById(ctx.shopContext, otherSupplier.id),
-      );
+      await expectNotFound(() => ctx.client.suppliers.getById(ctx.shopContext, otherSupplier.id));
       await expectForbidden(() =>
         ctx.client.suppliers.getByCode(
           {
@@ -235,7 +316,7 @@ describe('Suppliers (e2e)', () => {
       expect(result.errors).toHaveLength(0);
 
       const suppliers = await ctx.client.suppliers.getAll(ctx.shopContext);
-      const codes = suppliers.map((s) => s.code);
+      const codes = suppliers.items.map((s) => s.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
     });
@@ -263,7 +344,7 @@ describe('Suppliers (e2e)', () => {
       expect(result.updated).toBe(0);
 
       const suppliers = await ctx.client.suppliers.getAll(ctx.shopContext);
-      const codes = suppliers.map((s) => s.code);
+      const codes = suppliers.items.map((s) => s.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
     });
@@ -356,7 +437,7 @@ describe('Suppliers (e2e)', () => {
 
       it('editor should list suppliers', async () => {
         const suppliers = await editorClient.suppliers.getAll(ctx.shopContext);
-        expect(Array.isArray(suppliers)).toBe(true);
+        expect(Array.isArray(suppliers.items)).toBe(true);
       });
 
       it('editor should create supplier', async () => {
@@ -369,8 +450,9 @@ describe('Suppliers (e2e)', () => {
 
       it('editor should get supplier by code', async () => {
         const suppliers = await editorClient.suppliers.getAll(ctx.shopContext);
-        if (suppliers.length === 0) throw new Error('Expected at least one supplier for editor');
-        const firstSupplier = suppliers[0];
+        if (suppliers.items.length === 0)
+          throw new Error('Expected at least one supplier for editor');
+        const firstSupplier = suppliers.items[0];
         if (!firstSupplier) throw new Error('Expected supplier');
         const supplier = await editorClient.suppliers.getByCode(
           ctx.shopContext,
@@ -381,14 +463,12 @@ describe('Suppliers (e2e)', () => {
 
       it('editor should update supplier', async () => {
         const suppliers = await editorClient.suppliers.getAll(ctx.shopContext);
-        if (suppliers.length > 0) {
-          const firstSupplier = suppliers[0];
+        if (suppliers.items.length > 0) {
+          const firstSupplier = suppliers.items[0];
           if (!firstSupplier) throw new Error('Expected supplier');
-          const updated = await editorClient.suppliers.update(
-            ctx.shopContext,
-            firstSupplier.id,
-            { title: 'Editor Updated' },
-          );
+          const updated = await editorClient.suppliers.update(ctx.shopContext, firstSupplier.id, {
+            title: 'Editor Updated',
+          });
           expect(updated.title).toBe('Editor Updated');
         }
       });
@@ -399,9 +479,7 @@ describe('Suppliers (e2e)', () => {
           title: 'To Delete',
         });
         await editorClient.suppliers.delete(ctx.shopContext, supplier.id);
-        await expectNotFound(() =>
-          editorClient.suppliers.getById(ctx.shopContext, supplier.id),
-        );
+        await expectNotFound(() => editorClient.suppliers.getById(ctx.shopContext, supplier.id));
       });
 
       it('editor should import suppliers', async () => {
@@ -451,26 +529,24 @@ describe('Suppliers (e2e)', () => {
 
       it('viewer should list suppliers', async () => {
         const suppliers = await viewerClient.suppliers.getAll(ctx.shopContext);
-        expect(Array.isArray(suppliers)).toBe(true);
+        expect(Array.isArray(suppliers.items)).toBe(true);
       });
 
       it('viewer should get supplier by id', async () => {
         const suppliers = await viewerClient.suppliers.getAll(ctx.shopContext);
-        if (suppliers.length > 0) {
-          const firstSupplier = suppliers[0];
+        if (suppliers.items.length > 0) {
+          const firstSupplier = suppliers.items[0];
           if (!firstSupplier) throw new Error('Expected supplier');
-          const supplier = await viewerClient.suppliers.getById(
-            ctx.shopContext,
-            firstSupplier.id,
-          );
+          const supplier = await viewerClient.suppliers.getById(ctx.shopContext, firstSupplier.id);
           expect(supplier.id).toBe(firstSupplier.id);
         }
       });
 
       it('viewer should get supplier by code', async () => {
         const suppliers = await viewerClient.suppliers.getAll(ctx.shopContext);
-        if (suppliers.length === 0) throw new Error('Expected at least one supplier for viewer');
-        const firstSupplier = suppliers[0];
+        if (suppliers.items.length === 0)
+          throw new Error('Expected at least one supplier for viewer');
+        const firstSupplier = suppliers.items[0];
         if (!firstSupplier) throw new Error('Expected supplier');
         const supplier = await viewerClient.suppliers.getByCode(
           ctx.shopContext,
@@ -490,8 +566,8 @@ describe('Suppliers (e2e)', () => {
 
       it('viewer should NOT update supplier', async () => {
         const suppliers = await viewerClient.suppliers.getAll(ctx.shopContext);
-        if (suppliers.length > 0) {
-          const firstSupplier = suppliers[0];
+        if (suppliers.items.length > 0) {
+          const firstSupplier = suppliers.items[0];
           if (!firstSupplier) throw new Error('Expected supplier');
           await expectForbidden(() =>
             viewerClient.suppliers.update(ctx.shopContext, firstSupplier.id, {
@@ -503,8 +579,8 @@ describe('Suppliers (e2e)', () => {
 
       it('viewer should NOT delete supplier', async () => {
         const suppliers = await viewerClient.suppliers.getAll(ctx.shopContext);
-        if (suppliers.length > 0) {
-          const firstSupplier = suppliers[0];
+        if (suppliers.items.length > 0) {
+          const firstSupplier = suppliers.items[0];
           if (!firstSupplier) throw new Error('Expected supplier');
           await expectForbidden(() =>
             viewerClient.suppliers.delete(ctx.shopContext, firstSupplier.id),

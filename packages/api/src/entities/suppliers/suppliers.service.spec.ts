@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ICodedShopScopedRepository } from '../../common/index.js';
-import type { Supplier } from '@sales-planner/shared';
+import type { Supplier, CreateSupplierDto, UpdateSupplierDto } from '@sales-planner/shared';
 import { SuppliersService } from './suppliers.service.js';
 import type { SuppliersRepository } from './suppliers.repository.js';
 
 describe('SuppliersService', () => {
   let service: SuppliersService;
-  let mockRepository: Partial<ICodedShopScopedRepository<Supplier, any, any>>;
+  let mockRepository: Partial<
+    ICodedShopScopedRepository<Supplier, CreateSupplierDto, UpdateSupplierDto>
+  >;
 
   beforeEach(() => {
     mockRepository = {

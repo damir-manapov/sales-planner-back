@@ -49,7 +49,7 @@ async function createAlenaTenant(args: AlenaTenantArgs) {
 
     // Step 2: Clear existing shop data
     console.log('🧹 Step 2: Clearing existing shop data...');
-    const deleteResult = await userClient.shops.deleteShopData(setup.shop.id);
+    const deleteResult = await userClient.shops.deleteData(setup.shop.id);
     console.log(
       `   ✅ Deleted ${deleteResult.skusDeleted} SKUs and ${deleteResult.salesHistoryDeleted} sales records`,
     );

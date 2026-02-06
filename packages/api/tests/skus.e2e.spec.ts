@@ -154,6 +154,83 @@ describe('SKUs (e2e)', () => {
     });
   });
 
+  describe('Pagination', () => {
+    const paginationItems: { id: number; code: string }[] = [];
+
+    beforeAll(async () => {
+      for (let i = 0; i < 15; i++) {
+        const item = await ctx.client.skus.create(ctx.shopContext, {
+          code: generateTestCode(`PAGINATION-SKU-${i.toString().padStart(2, '0')}`),
+          title: `Pagination SKU ${i}`,
+        });
+        paginationItems.push({ id: item.id, code: item.code });
+      }
+    });
+
+    afterAll(async () => {
+      for (const item of paginationItems) {
+        try {
+          await ctx.client.skus.delete(ctx.shopContext, item.id);
+        } catch {
+          // Ignore errors during cleanup
+        }
+      }
+    });
+
+    it('should return paginated response with metadata', async () => {
+      const response = await ctx.client.skus.getAll(ctx.shopContext);
+
+      expect(response).toHaveProperty('items');
+      expect(response).toHaveProperty('total');
+      expect(response).toHaveProperty('limit');
+      expect(response).toHaveProperty('offset');
+      expect(Array.isArray(response.items)).toBe(true);
+      expect(response.offset).toBe(0);
+    });
+
+    it('should respect custom limit and offset', async () => {
+      const response = await ctx.client.skus.getAll(ctx.shopContext, { limit: 5, offset: 3 });
+
+      expect(response.items.length).toBeLessThanOrEqual(5);
+      expect(response.limit).toBe(5);
+      expect(response.offset).toBe(3);
+    });
+
+    it('should return different items on different pages', async () => {
+      const firstPage = await ctx.client.skus.getAll(ctx.shopContext, { limit: 5, offset: 0 });
+      const secondPage = await ctx.client.skus.getAll(ctx.shopContext, { limit: 5, offset: 5 });
+
+      if (firstPage.items.length > 0 && secondPage.items.length > 0) {
+        const firstPageIds = firstPage.items.map((b) => b.id);
+        const secondPageIds = secondPage.items.map((b) => b.id);
+        const overlap = firstPageIds.filter((id) => secondPageIds.includes(id));
+        expect(overlap.length).toBe(0);
+      }
+    });
+
+    it('should return correct total count', async () => {
+      const response = await ctx.client.skus.getAll(ctx.shopContext, { limit: 5 });
+      expect(response.total).toBeGreaterThanOrEqual(15);
+    });
+
+    it('should paginate through all items correctly', async () => {
+      const pageSize = 5;
+      const allItems: number[] = [];
+      let offset = 0;
+      let total = 0;
+
+      do {
+        const response = await ctx.client.skus.getAll(ctx.shopContext, { limit: pageSize, offset });
+        total = response.total;
+        allItems.push(...response.items.map((b) => b.id));
+        offset += pageSize;
+      } while (allItems.length < total);
+
+      const uniqueIds = new Set(allItems);
+      expect(uniqueIds.size).toBe(total);
+    });
+  });
+
   describe('Delete operations', () => {
     it('should delete SKU', async () => {
       const toDelete = await ctx.client.skus.create(ctx.shopContext, {
@@ -404,10 +481,7 @@ describe('SKUs (e2e)', () => {
         ctx.shopContext,
         normalizeCode(category),
       );
-      const groupEntity = await ctx.client.groups.getByCode(
-        ctx.shopContext,
-        normalizeCode(group),
-      );
+      const groupEntity = await ctx.client.groups.getByCode(ctx.shopContext, normalizeCode(group));
       const statusEntity = await ctx.client.statuses.getByCode(
         ctx.shopContext,
         normalizeCode(status),
@@ -486,19 +560,10 @@ describe('SKUs (e2e)', () => {
       );
       if (!sku) throw new Error('SKU not found after update');
 
-      const catB = await ctx.client.categories.getByCode(
-        ctx.shopContext,
-        normalizeCode(categoryB),
-      );
+      const catB = await ctx.client.categories.getByCode(ctx.shopContext, normalizeCode(categoryB));
       const grpB = await ctx.client.groups.getByCode(ctx.shopContext, normalizeCode(groupB));
-      const stsB = await ctx.client.statuses.getByCode(
-        ctx.shopContext,
-        normalizeCode(statusB),
-      );
-      const supB = await ctx.client.suppliers.getByCode(
-        ctx.shopContext,
-        normalizeCode(supplierB),
-      );
+      const stsB = await ctx.client.statuses.getByCode(ctx.shopContext, normalizeCode(statusB));
+      const supB = await ctx.client.suppliers.getByCode(ctx.shopContext, normalizeCode(supplierB));
 
       expect(sku.category_id).toBe(catB.id);
       expect(sku.group_id).toBe(grpB.id);

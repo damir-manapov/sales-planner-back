@@ -3,6 +3,7 @@ import {
   Controller,
   Delete,
   Get,
+  NotFoundException,
   Param,
   ParseIntPipe,
   Post,
@@ -15,7 +16,7 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import type { PaginatedResponse } from '@sales-planner/shared';
+import type { PaginatedResponse, SkuImportResult } from '@sales-planner/shared';
 import { AuthenticatedRequest, AuthGuard } from '../../auth/auth.guard.js';
 import {
   RequireReadAccess,
@@ -30,7 +31,6 @@ import {
   parseCsvImport,
   sendCsvExport,
   sendJsonExport,
-  type SkuImportResult,
   ZodValidationPipe,
 } from '../../common/index.js';
 import {
@@ -141,9 +141,7 @@ export class SkusController {
   ): Promise<Sku> {
     const sku = await this.skusService.findById(id);
     assertShopAccess(sku, ctx, 'SKU', id);
-
-    // update() returns undefined only if record doesn't exist, but we already verified it exists
-    return (await this.skusService.update(id, dto))!;
+    return this.skusService.update(id, dto);
   }
 
   @Post('import/json')

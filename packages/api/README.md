@@ -742,6 +742,51 @@ sales-planner-back/
 | `/sales-history/import/csv` | POST | Import/upsert sales history from CSV file (auto-creates missing SKUs) |
 | `/sales-history/:id` | GET, PUT, DELETE | Sales history CRUD (requires `shop_id` and `tenant_id` query params) |
 
+### Pagination
+
+All list endpoints for shop-scoped entities return paginated responses:
+
+**Response Format:**
+```json
+{
+  "items": [...],      // Array of items for current page
+  "total": 150,        // Total count of all matching items
+  "limit": 100,        // Items per page (default: 100, max: 1000)
+  "offset": 0          // Number of items skipped
+}
+```
+
+**Query Parameters:**
+| Parameter | Type | Default | Description |
+|-----------|------|---------|-------------|
+| `limit` | number | 100 | Items per page (1-1000) |
+| `offset` | number | 0 | Number of items to skip |
+
+**Examples:**
+```bash
+# Get first page (default limit=100)
+curl -H "x-api-key: $API_KEY" \
+  "http://localhost:3000/brands?shop_id=1&tenant_id=1"
+
+# Get specific page with custom limit
+curl -H "x-api-key: $API_KEY" \
+  "http://localhost:3000/brands?shop_id=1&tenant_id=1&limit=20&offset=40"
+
+# Sales history with period filter and pagination
+curl -H "x-api-key: $API_KEY" \
+  "http://localhost:3000/sales-history?shop_id=1&tenant_id=1&period_from=2024-01&period_to=2024-12&limit=50&offset=0"
+```
+
+**Paginated Endpoints:**
+- `GET /brands` - Brands list
+- `GET /categories` - Categories list
+- `GET /groups` - Groups list
+- `GET /statuses` - Statuses list
+- `GET /suppliers` - Suppliers list
+- `GET /marketplaces` - Marketplaces list
+- `GET /skus` - SKUs list
+- `GET /sales-history` - Sales history list (also supports `period_from`, `period_to` filters)
+
 ### Tenant Management
 
 Tenant endpoints require authentication. When creating a tenant, the `created_by` field is automatically set to the authenticated user's ID:

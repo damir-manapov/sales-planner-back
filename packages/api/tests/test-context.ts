@@ -52,8 +52,7 @@ export class TestContext {
       userName: options.userName || 'Test User',
     };
 
-    const setup: TenantWithShopAndApiKey =
-      await systemClient.tenants.createWithShopAndUser(dto);
+    const setup: TenantWithShopAndApiKey = await systemClient.tenants.createWithShopAndUser(dto);
 
     const client = new SalesPlannerClient({
       baseUrl,

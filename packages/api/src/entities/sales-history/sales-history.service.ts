@@ -1,5 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import type {
+  PaginatedResponse,
   SalesHistory,
   SalesHistoryExportItem,
   SalesHistoryImportResult,
@@ -15,6 +16,7 @@ import { SkusService } from '../skus/skus.service.js';
 import type {
   CreateSalesHistoryDto,
   ImportSalesHistoryItem,
+  SalesHistoryQuery,
   UpdateSalesHistoryDto,
 } from './sales-history.schema.js';
 import { ImportSalesHistoryItemSchema } from './sales-history.schema.js';
@@ -69,20 +71,38 @@ export class SalesHistoryService {
 
   async findByShopAndPeriod(
     shopId: number,
-    periodFrom?: string,
-    periodTo?: string,
-  ): Promise<SalesHistory[]> {
-    let query = this.db.selectFrom('sales_history').selectAll().where('shop_id', '=', shopId);
+    query?: SalesHistoryQuery,
+  ): Promise<PaginatedResponse<SalesHistory>> {
+    const { period_from: periodFrom, period_to: periodTo, limit = 100, offset = 0 } = query ?? {};
+
+    let baseQuery = this.db.selectFrom('sales_history').where('shop_id', '=', shopId);
 
     if (periodFrom) {
-      query = query.where('period', '>=', periodToDate(periodFrom));
+      baseQuery = baseQuery.where('period', '>=', periodToDate(periodFrom));
     }
     if (periodTo) {
-      query = query.where('period', '<=', periodToDate(periodTo));
+      baseQuery = baseQuery.where('period', '<=', periodToDate(periodTo));
     }
 
-    const rows = await query.orderBy('period', 'desc').execute();
-    return rows.map((r) => this.mapRow(r));
+    // Get total count
+    const { count } = await baseQuery
+      .select((eb) => eb.fn.countAll().as('count'))
+      .executeTakeFirstOrThrow();
+
+    // Get paginated results
+    const rows = await baseQuery
+      .selectAll()
+      .orderBy('period', 'desc')
+      .limit(limit)
+      .offset(offset)
+      .execute();
+
+    return {
+      items: rows.map((r) => this.mapRow(r)),
+      total: Number(count),
+      limit,
+      offset,
+    };
   }
 
   async findBySkuId(skuId: number): Promise<SalesHistory[]> {
@@ -124,14 +144,17 @@ export class SalesHistoryService {
     }
   }
 
-  async update(id: number, dto: UpdateSalesHistoryDto): Promise<SalesHistory | undefined> {
+  async update(id: number, dto: UpdateSalesHistoryDto): Promise<SalesHistory> {
     const result = await this.db
       .updateTable('sales_history')
       .set({ ...dto, updated_at: new Date() })
       .where('id', '=', id)
       .returningAll()
       .executeTakeFirst();
-    return result ? this.mapRow(result) : undefined;
+    if (!result) {
+      throw new NotFoundException(`Sales history record with id ${id} not found`);
+    }
+    return this.mapRow(result);
   }
 
   async delete(id: number): Promise<void> {
@@ -205,7 +228,9 @@ export class SalesHistoryService {
       await this.skusService.findOrCreateByCode(tenantId, shopId, skuCodes);
 
     // Find or create marketplaces by code (auto-creates missing ones)
-    const marketplaceCodes = validatedItems.map((i) => this.marketplacesService.normalizeCode(i.marketplace));
+    const marketplaceCodes = validatedItems.map((i) =>
+      this.marketplacesService.normalizeCode(i.marketplace),
+    );
     const { codeToId: marketplaceCodeToId, created: marketplacesCreated } =
       await this.marketplacesService.findOrCreateByCode(tenantId, shopId, marketplaceCodes);
 

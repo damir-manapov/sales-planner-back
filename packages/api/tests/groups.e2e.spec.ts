@@ -77,8 +77,8 @@ describe('Groups (e2e)', () => {
 
       const groups = await ctx.client.groups.getAll(ctx.shopContext);
 
-      expect(Array.isArray(groups)).toBe(true);
-      expect(groups.length).toBeGreaterThan(0);
+      expect(Array.isArray(groups.items)).toBe(true);
+      expect(groups.items.length).toBeGreaterThan(0);
     });
 
     it('should get group by id', async () => {
@@ -130,6 +130,86 @@ describe('Groups (e2e)', () => {
           title: 'Duplicate Group',
         }),
       );
+    });
+  });
+
+  describe('Pagination', () => {
+    const paginationItems: { id: number; code: string }[] = [];
+
+    beforeAll(async () => {
+      for (let i = 0; i < 15; i++) {
+        const item = await ctx.client.groups.create(ctx.shopContext, {
+          code: generateTestCode(`pagination-group-${i.toString().padStart(2, '0')}`),
+          title: `Pagination Group ${i}`,
+        });
+        paginationItems.push({ id: item.id, code: item.code });
+      }
+    });
+
+    afterAll(async () => {
+      for (const item of paginationItems) {
+        try {
+          await ctx.client.groups.delete(ctx.shopContext, item.id);
+        } catch {
+          // Ignore errors during cleanup
+        }
+      }
+    });
+
+    it('should return paginated response with metadata', async () => {
+      const response = await ctx.client.groups.getAll(ctx.shopContext);
+
+      expect(response).toHaveProperty('items');
+      expect(response).toHaveProperty('total');
+      expect(response).toHaveProperty('limit');
+      expect(response).toHaveProperty('offset');
+      expect(Array.isArray(response.items)).toBe(true);
+      expect(response.offset).toBe(0);
+    });
+
+    it('should respect custom limit and offset', async () => {
+      const response = await ctx.client.groups.getAll(ctx.shopContext, { limit: 5, offset: 3 });
+
+      expect(response.items.length).toBeLessThanOrEqual(5);
+      expect(response.limit).toBe(5);
+      expect(response.offset).toBe(3);
+    });
+
+    it('should return different items on different pages', async () => {
+      const firstPage = await ctx.client.groups.getAll(ctx.shopContext, { limit: 5, offset: 0 });
+      const secondPage = await ctx.client.groups.getAll(ctx.shopContext, { limit: 5, offset: 5 });
+
+      if (firstPage.items.length > 0 && secondPage.items.length > 0) {
+        const firstPageIds = firstPage.items.map((b) => b.id);
+        const secondPageIds = secondPage.items.map((b) => b.id);
+        const overlap = firstPageIds.filter((id) => secondPageIds.includes(id));
+        expect(overlap.length).toBe(0);
+      }
+    });
+
+    it('should return correct total count', async () => {
+      const response = await ctx.client.groups.getAll(ctx.shopContext, { limit: 5 });
+      expect(response.total).toBeGreaterThanOrEqual(15);
+    });
+
+    it('should paginate through all items correctly', async () => {
+      const pageSize = 5;
+      const allItems: number[] = [];
+      let offset = 0;
+      let total = 0;
+
+      do {
+        const response = await ctx.client.groups.getAll(ctx.shopContext, {
+          limit: pageSize,
+          offset,
+        });
+        total = response.total;
+        allItems.push(...response.items.map((b) => b.id));
+        offset += pageSize;
+      } while (allItems.length < total);
+
+      const uniqueIds = new Set(allItems);
+      expect(uniqueIds.size).toBe(total);
     });
   });
 
@@ -230,7 +310,7 @@ describe('Groups (e2e)', () => {
       expect(result.errors).toEqual([]);
 
       const groups = await ctx.client.groups.getAll(ctx.shopContext);
-      const codes = groups.map((g) => g.code);
+      const codes = groups.items.map((g) => g.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
     });
@@ -258,7 +338,7 @@ describe('Groups (e2e)', () => {
       expect(result.updated).toBe(0);
 
       const groups = await ctx.client.groups.getAll(ctx.shopContext);
-      const codes = groups.map((g) => g.code);
+      const codes = groups.items.map((g) => g.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
     });
@@ -274,7 +354,7 @@ describe('Groups (e2e)', () => {
       expect(result.updated).toBe(0);
 
       const groups = await ctx.client.groups.getAll(ctx.shopContext);
-      const codes = groups.map((g) => g.code);
+      const codes = groups.items.map((g) => g.code);
       expect(codes).toContain(normalizeCode(code1));
       expect(codes).toContain(normalizeCode(code2));
     });
@@ -288,7 +368,7 @@ describe('Groups (e2e)', () => {
       expect(result.updated).toBe(0);
 
       const groups = await ctx.client.groups.getAll(ctx.shopContext);
-      const mavyko = groups.find((g) => g.code === 'mavyko');
+      const mavyko = groups.items.find((g) => g.code === 'mavyko');
       expect(mavyko).toBeDefined();
       expect(mavyko?.title).toBe('Мавико');
     });
@@ -385,7 +465,7 @@ describe('Groups (e2e)', () => {
 
       it('editor should list groups', async () => {
         const groups = await editorClient.groups.getAll(ctx.shopContext);
-        expect(Array.isArray(groups)).toBe(true);
+        expect(Array.isArray(groups.items)).toBe(true);
       });
 
       it('editor should create group', async () => {
@@ -398,8 +478,8 @@ describe('Groups (e2e)', () => {
 
       it('editor should get group by code', async () => {
         const groups = await editorClient.groups.getAll(ctx.shopContext);
-        if (groups.length === 0) throw new Error('Expected at least one group for editor');
-        const firstGroup = groups[0];
+        if (groups.items.length === 0) throw new Error('Expected at least one group for editor');
+        const firstGroup = groups.items[0];
         if (!firstGroup) throw new Error('Expected group');
         const group = await editorClient.groups.getByCode(ctx.shopContext, firstGroup.code);
         expect(group.id).toBe(firstGroup.id);
@@ -407,8 +487,8 @@ describe('Groups (e2e)', () => {
 
       it('editor should update group', async () => {
         const groups = await editorClient.groups.getAll(ctx.shopContext);
-        if (groups.length > 0) {
-          const firstGroup = groups[0];
+        if (groups.items.length > 0) {
+          const firstGroup = groups.items[0];
           if (!firstGroup) throw new Error('Expected group');
           const updated = await editorClient.groups.update(ctx.shopContext, firstGroup.id, {
             title: 'Editor Updated',
@@ -473,13 +553,13 @@ describe('Groups (e2e)', () => {
 
       it('viewer should list groups', async () => {
         const groups = await viewerClient.groups.getAll(ctx.shopContext);
-        expect(Array.isArray(groups)).toBe(true);
+        expect(Array.isArray(groups.items)).toBe(true);
       });
 
       it('viewer should get group by code', async () => {
         const groups = await viewerClient.groups.getAll(ctx.shopContext);
-        if (groups.length === 0) throw new Error('Expected at least one group for viewer');
-        const firstGroup = groups[0];
+        if (groups.items.length === 0) throw new Error('Expected at least one group for viewer');
+        const firstGroup = groups.items[0];
         if (!firstGroup) throw new Error('Expected group');
         const group = await viewerClient.groups.getByCode(ctx.shopContext, firstGroup.code);
         expect(group.id).toBe(firstGroup.id);
@@ -487,8 +567,8 @@ describe('Groups (e2e)', () => {
 
       it('viewer should get group by id', async () => {
         const groups = await viewerClient.groups.getAll(ctx.shopContext);
-        if (groups.length > 0) {
-          const firstGroup = groups[0];
+        if (groups.items.length > 0) {
+          const firstGroup = groups.items[0];
           if (!firstGroup) throw new Error('Expected group');
           const group = await viewerClient.groups.getById(ctx.shopContext, firstGroup.id);
           expect(group.id).toBe(firstGroup.id);
@@ -506,8 +586,8 @@ describe('Groups (e2e)', () => {
 
       it('viewer should NOT update group', async () => {
         const groups = await viewerClient.groups.getAll(ctx.shopContext);
-        if (groups.length > 0) {
-          const firstGroup = groups[0];
+        if (groups.items.length > 0) {
+          const firstGroup = groups.items[0];
           if (!firstGroup) throw new Error('Expected group');
           await expectForbidden(() =>
             viewerClient.groups.update(ctx.shopContext, firstGroup.id, {
@@ -519,12 +599,10 @@ describe('Groups (e2e)', () => {
 
       it('viewer should NOT delete group', async () => {
         const groups = await viewerClient.groups.getAll(ctx.shopContext);
-        if (groups.length > 0) {
-          const firstGroup = groups[0];
+        if (groups.items.length > 0) {
+          const firstGroup = groups.items[0];
           if (!firstGroup) throw new Error('Expected group');
-          await expectForbidden(() =>
-            viewerClient.groups.delete(ctx.shopContext, firstGroup.id),
-          );
+          await expectForbidden(() => viewerClient.groups.delete(ctx.shopContext, firstGroup.id));
         }
       });
 
