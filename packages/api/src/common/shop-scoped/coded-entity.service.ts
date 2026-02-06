@@ -86,6 +86,21 @@ export abstract class CodedShopScopedEntityService<
       return { created: 0, updated: 0, errors };
     }
 
+    // Check for duplicate codes in input
+    const codeCounts = new Map<string, number>();
+    for (const item of validItems) {
+      const code = this.normalizeCode(item.code);
+      codeCounts.set(code, (codeCounts.get(code) || 0) + 1);
+    }
+    const duplicateCodes = [...codeCounts.entries()]
+      .filter(([, count]) => count > 1)
+      .map(([code, count]) => `"${code}" (${count} times)`);
+
+    if (duplicateCodes.length > 0) {
+      errors.push(`Duplicate ${this.entityName} codes found: ${duplicateCodes.slice(0, 5).join(', ')}${duplicateCodes.length > 5 ? ` and ${duplicateCodes.length - 5} more` : ''}`);
+      return { created: 0, updated: 0, errors };
+    }
+
     const normalizedItems = validItems.map((item) => ({
       code: this.normalizeCode(item.code),
       title: item.title,

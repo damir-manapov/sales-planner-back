@@ -747,7 +747,7 @@ sales-planner-back/
 
 ### Pagination
 
-All list endpoints for shop-scoped entities return paginated responses:
+All list endpoints return paginated responses:
 
 **Response Format:**
 ```json
@@ -778,9 +778,15 @@ curl -H "x-api-key: $API_KEY" \
 # Sales history with period filter and pagination
 curl -H "x-api-key: $API_KEY" \
   "http://localhost:3000/sales-history?shop_id=1&tenant_id=1&period_from=2024-01&period_to=2024-12&limit=50&offset=0"
+
+# System entities (users, tenants, shops) also support pagination
+curl -H "x-api-key: $API_KEY" \
+  "http://localhost:3000/users?limit=20&offset=0"
 ```
 
 **Paginated Endpoints:**
+
+*Shop-Scoped Entities:*
 - `GET /brands` - Brands list
 - `GET /categories` - Categories list
 - `GET /groups` - Groups list
@@ -789,6 +795,14 @@ curl -H "x-api-key: $API_KEY" \
 - `GET /marketplaces` - Marketplaces list
 - `GET /skus` - SKUs list
 - `GET /sales-history` - Sales history list (also supports `period_from`, `period_to` filters)
+
+*System Entities:*
+- `GET /users` - Users list
+- `GET /tenants` - Tenants list
+- `GET /shops` - Shops list
+- `GET /roles` - Roles list
+- `GET /user-roles` - User roles list
+- `GET /api-keys` - API keys list
 
 ### Tenant Management
 

@@ -416,6 +416,18 @@ describe('Categories (e2e)', () => {
       expect(lines.some((line) => line.includes(normalizeCode(code1)))).toBe(true);
       expect(lines.some((line) => line.includes(normalizeCode(code2)))).toBe(true);
     });
+
+    it('should reject import with duplicate codes', async () => {
+      const code = generateTestCode('dup-category');
+      const csvContent = `code,title\n${code},First Category\n${code},Second Category`;
+
+      const result = await ctx.client.categories.importCsv(ctx.shopContext, csvContent);
+
+      expect(result.created).toBe(0);
+      expect(result.updated).toBe(0);
+      expect(result.errors.length).toBeGreaterThan(0);
+      expect(result.errors[0]).toContain('Duplicate category codes');
+    });
   });
 
   describe('Example downloads', () => {
@@ -455,7 +467,7 @@ describe('Categories (e2e)', () => {
         editorClient = new SalesPlannerClient({ baseUrl, apiKey: editorApiKey.key });
 
         const roles = await ctx.getSystemClient().roles.getAll();
-        const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
+        const editorRole = roles.items.find((r) => r.name === ROLE_NAMES.EDITOR);
         if (!editorRole) throw new Error('Editor role not found');
         await ctx.getSystemClient().userRoles.create({
           user_id: editorUserId,
@@ -547,7 +559,7 @@ describe('Categories (e2e)', () => {
         viewerClient = new SalesPlannerClient({ baseUrl, apiKey: viewerApiKey.key });
 
         const roles = await ctx.getSystemClient().roles.getAll();
-        const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
+        const viewerRole = roles.items.find((r) => r.name === ROLE_NAMES.VIEWER);
         if (!viewerRole) throw new Error('Viewer role not found');
         await ctx.getSystemClient().userRoles.create({
           user_id: viewerUserId,

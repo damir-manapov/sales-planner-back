@@ -3,12 +3,18 @@ import type {
   CreateShopRequest,
   UpdateShopRequest,
   DeleteDataResult,
+  PaginatedResponse,
+  PaginationQuery,
 } from '@sales-planner/shared';
 import { BaseClient } from './base-client.js';
 
+export interface GetShopsQuery extends PaginationQuery {
+  tenantId?: number;
+}
+
 export class ShopsClient extends BaseClient {
-  async getAll(tenantId?: number): Promise<Shop[]> {
-    return this.request('GET', '/shops', { params: { tenantId } });
+  async getAll(query?: GetShopsQuery): Promise<PaginatedResponse<Shop>> {
+    return this.request('GET', '/shops', { params: query as Record<string, string | number | undefined> });
   }
 
   async getById(id: number): Promise<Shop> {

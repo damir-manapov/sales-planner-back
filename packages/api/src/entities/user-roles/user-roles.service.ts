@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import type { PaginatedResponse, PaginationQuery } from '@sales-planner/shared';
 import { type Selectable } from 'kysely';
 import { DuplicateResourceException, isUniqueViolation } from '../../common/index.js';
 import { DatabaseService } from '../../database/database.service.js';
@@ -18,20 +19,105 @@ interface UserRoleWithName {
 export class UserRolesService {
   constructor(private readonly db: DatabaseService) {}
 
-  async findAll(): Promise<UserRole[]> {
-    return this.db.selectFrom('user_roles').selectAll().execute();
+  async count(): Promise<number> {
+    const result = await this.db
+      .selectFrom('user_roles')
+      .select(this.db.fn.countAll<number>().as('count'))
+      .executeTakeFirstOrThrow();
+    return Number(result.count);
   }
 
-  async findByUserId(userId: number): Promise<UserRole[]> {
-    return this.db.selectFrom('user_roles').selectAll().where('user_id', '=', userId).execute();
+  async countByTenantId(tenantId: number): Promise<number> {
+    const result = await this.db
+      .selectFrom('user_roles')
+      .select(this.db.fn.countAll<number>().as('count'))
+      .where('tenant_id', '=', tenantId)
+      .executeTakeFirstOrThrow();
+    return Number(result.count);
   }
 
-  async findByRoleId(roleId: number): Promise<UserRole[]> {
-    return this.db.selectFrom('user_roles').selectAll().where('role_id', '=', roleId).execute();
+  async countByUserId(userId: number): Promise<number> {
+    const result = await this.db
+      .selectFrom('user_roles')
+      .select(this.db.fn.countAll<number>().as('count'))
+      .where('user_id', '=', userId)
+      .executeTakeFirstOrThrow();
+    return Number(result.count);
   }
 
-  async findByTenantId(tenantId: number): Promise<UserRole[]> {
-    return this.db.selectFrom('user_roles').selectAll().where('tenant_id', '=', tenantId).execute();
+  async countByRoleId(roleId: number): Promise<number> {
+    const result = await this.db
+      .selectFrom('user_roles')
+      .select(this.db.fn.countAll<number>().as('count'))
+      .where('role_id', '=', roleId)
+      .executeTakeFirstOrThrow();
+    return Number(result.count);
+  }
+
+  async findAll(query?: PaginationQuery): Promise<UserRole[]> {
+    let q = this.db.selectFrom('user_roles').selectAll().orderBy('id', 'asc');
+    if (query?.limit !== undefined) q = q.limit(query.limit);
+    if (query?.offset !== undefined) q = q.offset(query.offset);
+    return q.execute();
+  }
+
+  async findAllPaginated(query: PaginationQuery = {}): Promise<PaginatedResponse<UserRole>> {
+    const [total, items] = await Promise.all([this.count(), this.findAll(query)]);
+    return { items, total, limit: query.limit ?? 0, offset: query.offset ?? 0 };
+  }
+
+  async findByUserId(userId: number, query?: PaginationQuery): Promise<UserRole[]> {
+    let q = this.db.selectFrom('user_roles').selectAll().where('user_id', '=', userId).orderBy('id', 'asc');
+    if (query?.limit !== undefined) q = q.limit(query.limit);
+    if (query?.offset !== undefined) q = q.offset(query.offset);
+    return q.execute();
+  }
+
+  async findByUserIdPaginated(
+    userId: number,
+    query: PaginationQuery = {},
+  ): Promise<PaginatedResponse<UserRole>> {
+    const [total, items] = await Promise.all([
+      this.countByUserId(userId),
+      this.findByUserId(userId, query),
+    ]);
+    return { items, total, limit: query.limit ?? 0, offset: query.offset ?? 0 };
+  }
+
+  async findByRoleId(roleId: number, query?: PaginationQuery): Promise<UserRole[]> {
+    let q = this.db.selectFrom('user_roles').selectAll().where('role_id', '=', roleId).orderBy('id', 'asc');
+    if (query?.limit !== undefined) q = q.limit(query.limit);
+    if (query?.offset !== undefined) q = q.offset(query.offset);
+    return q.execute();
+  }
+
+  async findByRoleIdPaginated(
+    roleId: number,
+    query: PaginationQuery = {},
+  ): Promise<PaginatedResponse<UserRole>> {
+    const [total, items] = await Promise.all([
+      this.countByRoleId(roleId),
+      this.findByRoleId(roleId, query),
+    ]);
+    return { items, total, limit: query.limit ?? 0, offset: query.offset ?? 0 };
+  }
+
+  async findByTenantId(tenantId: number, query?: PaginationQuery): Promise<UserRole[]> {
+    let q = this.db.selectFrom('user_roles').selectAll().where('tenant_id', '=', tenantId).orderBy('id', 'asc');
+    if (query?.limit !== undefined) q = q.limit(query.limit);
+    if (query?.offset !== undefined) q = q.offset(query.offset);
+    return q.execute();
+  }
+
+  async findByTenantIdPaginated(
+    tenantId: number,
+    query: PaginationQuery = {},
+  ): Promise<PaginatedResponse<UserRole>> {
+    const [total, items] = await Promise.all([
+      this.countByTenantId(tenantId),
+      this.findByTenantId(tenantId, query),
+    ]);
+    return { items, total, limit: query.limit ?? 0, offset: query.offset ?? 0 };
   }
 
   async findById(id: number): Promise<UserRole | undefined> {

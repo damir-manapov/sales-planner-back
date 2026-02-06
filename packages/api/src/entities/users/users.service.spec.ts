@@ -24,7 +24,8 @@ describe('UsersService', () => {
     it('should call selectFrom with users table', async () => {
       const mockUsers = [{ id: 1, email: 'test@example.com', name: 'Test' }];
       const mockExecute = vi.fn().mockResolvedValue(mockUsers);
-      const mockSelectAll = vi.fn().mockReturnValue({ execute: mockExecute });
+      const mockOrderBy = vi.fn().mockReturnValue({ execute: mockExecute });
+      const mockSelectAll = vi.fn().mockReturnValue({ orderBy: mockOrderBy });
 
       mockDb.selectFrom = vi.fn().mockReturnValue({ selectAll: mockSelectAll });
 

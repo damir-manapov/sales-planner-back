@@ -449,7 +449,7 @@ describe('Statuses (e2e)', () => {
         editorClient = new SalesPlannerClient({ baseUrl, apiKey: editorApiKey.key });
 
         const roles = await ctx.getSystemClient().roles.getAll();
-        const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
+        const editorRole = roles.items.find((r) => r.name === ROLE_NAMES.EDITOR);
         if (!editorRole) throw new Error('Editor role not found');
         await ctx.getSystemClient().userRoles.create({
           user_id: editorUserId,
@@ -537,7 +537,7 @@ describe('Statuses (e2e)', () => {
         viewerClient = new SalesPlannerClient({ baseUrl, apiKey: viewerApiKey.key });
 
         const roles = await ctx.getSystemClient().roles.getAll();
-        const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
+        const viewerRole = roles.items.find((r) => r.name === ROLE_NAMES.VIEWER);
         if (!viewerRole) throw new Error('Viewer role not found');
         await ctx.getSystemClient().userRoles.create({
           user_id: viewerUserId,

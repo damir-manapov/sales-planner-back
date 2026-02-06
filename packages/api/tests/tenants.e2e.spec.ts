@@ -60,7 +60,7 @@ describe('Tenants (e2e)', () => {
 
     // Get systemAdmin role and assign it
     const roles = await ctx.getSystemClient().roles.getAll();
-    const sysAdminRole = roles.find((r) => r.name === ROLE_NAMES.SYSTEM_ADMIN);
+    const sysAdminRole = roles.items.find((r) => r.name === ROLE_NAMES.SYSTEM_ADMIN);
     if (sysAdminRole) {
       await ctx
         .getSystemClient()
@@ -128,10 +128,10 @@ describe('Tenants (e2e)', () => {
     it('GET /tenants - should return all tenants', async () => {
       const tenants = await userClient.tenants.getAll();
 
-      expect(Array.isArray(tenants)).toBe(true);
-      expect(tenants.length).toBeGreaterThan(0);
+      expect(Array.isArray(tenants.items)).toBe(true);
+      expect(tenants.items.length).toBeGreaterThan(0);
 
-      const createdTenant = tenants.find((t) => t.id === createdTenantId);
+      const createdTenant = tenants.items.find((t) => t.id === createdTenantId);
       expect(createdTenant).toBeDefined();
       expect(createdTenant?.created_by).toBe(systemAdminUserId);
     });

@@ -105,7 +105,7 @@ export class TestContext {
     // Create role for the new user
     const editorRole = await systemClient.roles
       .getAll()
-      .then((roles) => roles.find((r) => r.name === 'editor'));
+      .then((roles) => roles.items.find((r) => r.name === 'editor'));
 
     if (!editorRole) throw new Error('Editor role not found');
 

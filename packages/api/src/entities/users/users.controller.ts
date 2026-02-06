@@ -12,9 +12,10 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import type { PaginatedResponse } from '@sales-planner/shared';
 import { hasTenantAccess, validateTenantAdminAccess } from '../../auth/access-control.js';
 import { AuthenticatedRequest, AuthGuard } from '../../auth/auth.guard.js';
-import { ZodValidationPipe } from '../../common/index.js';
+import { type PaginationQuery, PaginationQuerySchema, ZodValidationPipe } from '../../common/index.js';
 import { UserRolesService } from '../user-roles/user-roles.service.js';
 import { type CreateUserRequest, CreateUserSchema } from './users.schema.js';
 import { type User, UsersService } from './users.service.js';
@@ -31,13 +32,14 @@ export class UsersController {
   async findAll(
     @Req() req: AuthenticatedRequest,
     @Query('tenantId') tenantId?: string,
-  ): Promise<User[]> {
+    @Query(new ZodValidationPipe(PaginationQuerySchema)) query?: PaginationQuery,
+  ): Promise<PaginatedResponse<User>> {
     // System admins can see all users
     if (req.user.isSystemAdmin) {
       if (tenantId) {
-        return this.usersService.findByTenantId(Number(tenantId));
+        return this.usersService.findByTenantIdPaginated(Number(tenantId), query);
       }
-      return this.usersService.findAll();
+      return this.usersService.findAllPaginated(query);
     }
 
     // Tenant admins must specify a tenant they have access to
@@ -50,7 +52,7 @@ export class UsersController {
       throw new ForbiddenException('Access to this tenant is not allowed');
     }
 
-    return this.usersService.findByTenantId(tid);
+    return this.usersService.findByTenantIdPaginated(tid, query);
   }
 
   @Get(':id')

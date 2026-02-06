@@ -52,14 +52,18 @@ export async function getOrCreateTenant(
 ): Promise<TenantSetup> {
   console.log('🔍 Checking if tenant already exists...');
 
-  const users = await adminClient.users.getAll();
+  const usersResponse = await adminClient.users.getAll();
+  // Handle both paginated (new) and array (old) responses for compatibility
+  const users = Array.isArray(usersResponse) ? usersResponse : usersResponse.items;
   const existingUser = users.find((u: { email: string }) => u.email === config.userEmail);
 
   if (existingUser) {
     console.log(`   ℹ️  User ${config.userEmail} already exists (ID: ${existingUser.id})`);
 
     // Get user's API key
-    const apiKeys = await adminClient.apiKeys.getAll(existingUser.id);
+    const apiKeysResponse = await adminClient.apiKeys.getAll({ user_id: existingUser.id });
+    // Handle both paginated (new) and array (old) responses for compatibility
+    const apiKeys = Array.isArray(apiKeysResponse) ? apiKeysResponse : apiKeysResponse.items;
     const firstApiKey = apiKeys[0];
     if (!firstApiKey) {
       console.error('❌ User has no API key');
