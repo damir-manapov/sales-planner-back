@@ -1,18 +1,13 @@
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import express from 'express';
-// @ts-ignore - Path is correct at runtime (dist/api/index.js -> dist/app.module.js)
-import { AppModule } from '../app.module.js';
-
-// Minimal interface for Express Response to avoid @types/express dependency in production
-interface ServerlessResponse {
-  status(code: number): { json(body: unknown): void };
-}
+// Import from pre-built dist folder (created by buildCommand before this runs)
+import { AppModule } from '../dist/app.module.js';
 
 const server = express();
 let isAppInitialized = false;
 
-export default async function handler(req: express.Request, res: express.Response) {
+export default async function handler(req, res) {
   try {
     if (!isAppInitialized) {
       const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
@@ -24,7 +19,7 @@ export default async function handler(req: express.Request, res: express.Respons
     server(req, res);
   } catch (error) {
     console.error('Serverless function error:', error);
-    (res as unknown as ServerlessResponse).status(500).json({
+    res.status(500).json({
       error: 'Internal server error',
       details: error instanceof Error ? error.message : 'Unknown error',
     });
