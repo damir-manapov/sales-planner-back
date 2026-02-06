@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DatabaseService } from '../database/database.service.js';
 import { MarketplacesService } from '../marketplaces/marketplaces.service.js';
-import { SalesHistoryService } from '../sales-history/sales-history.service.js';
-import { SkusService } from '../skus/skus.service.js';
+import { SalesHistoryService } from '../entities/sales-history/sales-history.service.js';
+import { SkusService } from '../entities/skus/skus.service.js';
 import { ShopsService } from './shops.service.js';
 
 describe('ShopsService', () => {

@@ -2,8 +2,8 @@ import { Injectable } from '@nestjs/common';
 import type { DeleteDataResult, Shop } from '@sales-planner/shared';
 import { DatabaseService } from '../database/database.service.js';
 import { MarketplacesService } from '../marketplaces/marketplaces.service.js';
-import { SalesHistoryService } from '../sales-history/sales-history.service.js';
-import { SkusService } from '../skus/skus.service.js';
+import { SalesHistoryService } from '../entities/sales-history/sales-history.service.js';
+import { SkusService } from '../entities/skus/skus.service.js';
 import type { CreateShopDto, UpdateShopDto } from './shops.schema.js';
 
 export type { Shop };
