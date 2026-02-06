@@ -25,6 +25,7 @@ import {
 } from '../../auth/decorators.js';
 import type { ImportResult } from '@sales-planner/shared';
 import {
+  assertShopAccess,
   type ExpressResponse,
   parseAndValidateImport,
   parseCsvImport,
@@ -100,16 +101,9 @@ export class GroupsController {
     @ShopContext() ctx: ShopContextType,
     @Param('id', ParseIntPipe) id: number,
   ): Promise<Group> {
-    const brand = await this.groupsService.findById(id);
-    if (!brand) {
-      throw new NotFoundException(`Group with id ${id} not found`);
-    }
-
-    if (brand.shop_id !== ctx.shopId || brand.tenant_id !== ctx.tenantId) {
-      throw new NotFoundException(`Group with id ${id} not found in this shop/tenant`);
-    }
-
-    return brand;
+    const group = await this.groupsService.findById(id);
+    assertShopAccess(group, ctx, 'Group', id);
+    return group;
   }
 
   @Post()
@@ -134,22 +128,11 @@ export class GroupsController {
     @Param('id', ParseIntPipe) id: number,
     @Body(new ZodValidationPipe(UpdateGroupSchema)) body: UpdateGroupRequest,
   ): Promise<Group> {
-    // Check brand exists and belongs to the user's shop/tenant
-    const brand = await this.groupsService.findById(id);
-    if (!brand) {
-      throw new NotFoundException(`Group with id ${id} not found`);
-    }
+    const group = await this.groupsService.findById(id);
+    assertShopAccess(group, ctx, 'Group', id);
 
-    if (brand.shop_id !== ctx.shopId || brand.tenant_id !== ctx.tenantId) {
-      throw new NotFoundException(`Group with id ${id} not found in this shop/tenant`);
-    }
-
-    const updated = await this.groupsService.update(id, body);
-    if (!updated) {
-      throw new NotFoundException(`Group with id ${id} not found`);
-    }
-
-    return updated;
+    // update() returns undefined only if record doesn't exist, but we already verified it exists
+    return (await this.groupsService.update(id, body))!;
   }
 
   @Delete(':id')
@@ -159,15 +142,8 @@ export class GroupsController {
     @ShopContext() ctx: ShopContextType,
     @Param('id', ParseIntPipe) id: number,
   ): Promise<{ message: string }> {
-    // Check brand exists and belongs to the user's shop/tenant
-    const brand = await this.groupsService.findById(id);
-    if (!brand) {
-      throw new NotFoundException(`Group with id ${id} not found`);
-    }
-
-    if (brand.shop_id !== ctx.shopId || brand.tenant_id !== ctx.tenantId) {
-      throw new NotFoundException(`Group with id ${id} not found in this shop/tenant`);
-    }
+    const group = await this.groupsService.findById(id);
+    assertShopAccess(group, ctx, 'Group', id);
 
     await this.groupsService.delete(id);
     return { message: 'Group deleted successfully' };

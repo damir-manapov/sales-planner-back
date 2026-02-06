@@ -26,6 +26,7 @@ import {
 } from '../../auth/decorators.js';
 import type { ImportResult } from '@sales-planner/shared';
 import {
+  assertShopAccess,
   type ExpressResponse,
   parseAndValidateImport,
   parseCsvImport,
@@ -102,14 +103,7 @@ export class MarketplacesController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<Marketplace> {
     const marketplace = await this.marketplacesService.findById(id);
-    if (!marketplace) {
-      throw new NotFoundException(`Marketplace with id ${id} not found`);
-    }
-
-    if (marketplace.shop_id !== ctx.shopId || marketplace.tenant_id !== ctx.tenantId) {
-      throw new NotFoundException(`Marketplace with id ${id} not found in this shop/tenant`);
-    }
-
+    assertShopAccess(marketplace, ctx, 'Marketplace', id);
     return marketplace;
   }
 
@@ -135,22 +129,11 @@ export class MarketplacesController {
     @Param('id', ParseIntPipe) id: number,
     @Body(new ZodValidationPipe(UpdateMarketplaceSchema)) dto: UpdateMarketplaceRequest,
   ): Promise<Marketplace> {
-    // Check marketplace exists and belongs to the user's shop/tenant
     const marketplace = await this.marketplacesService.findById(id);
-    if (!marketplace) {
-      throw new NotFoundException(`Marketplace with id ${id} not found`);
-    }
+    assertShopAccess(marketplace, ctx, 'Marketplace', id);
 
-    if (marketplace.shop_id !== ctx.shopId || marketplace.tenant_id !== ctx.tenantId) {
-      throw new NotFoundException(`Marketplace with id ${id} not found in this shop/tenant`);
-    }
-
-    const updated = await this.marketplacesService.update(id, dto);
-    if (!updated) {
-      throw new NotFoundException(`Marketplace with id ${id} not found`);
-    }
-
-    return updated;
+    // update() returns undefined only if record doesn't exist, but we already verified it exists
+    return (await this.marketplacesService.update(id, dto))!;
   }
 
   @Delete(':id')
@@ -160,15 +143,8 @@ export class MarketplacesController {
     @ShopContext() ctx: ShopContextType,
     @Param('id', ParseIntPipe) id: number,
   ): Promise<{ message: string }> {
-    // Check marketplace exists and belongs to the user's shop/tenant
     const marketplace = await this.marketplacesService.findById(id);
-    if (!marketplace) {
-      throw new NotFoundException(`Marketplace with id ${id} not found`);
-    }
-
-    if (marketplace.shop_id !== ctx.shopId || marketplace.tenant_id !== ctx.tenantId) {
-      throw new NotFoundException(`Marketplace with id ${id} not found in this shop/tenant`);
-    }
+    assertShopAccess(marketplace, ctx, 'Marketplace', id);
 
     await this.marketplacesService.delete(id);
     return { message: 'Marketplace deleted successfully' };

@@ -25,6 +25,7 @@ import {
 } from '../../auth/decorators.js';
 import type { ImportResult } from '@sales-planner/shared';
 import {
+  assertShopAccess,
   type ExpressResponse,
   parseAndValidateImport,
   parseCsvImport,
@@ -101,14 +102,7 @@ export class SuppliersController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<Supplier> {
     const supplier = await this.suppliersService.findById(id);
-    if (!supplier) {
-      throw new NotFoundException(`Supplier with id ${id} not found`);
-    }
-
-    if (supplier.shop_id !== ctx.shopId || supplier.tenant_id !== ctx.tenantId) {
-      throw new NotFoundException(`Supplier with id ${id} not found in this shop/tenant`);
-    }
-
+    assertShopAccess(supplier, ctx, 'Supplier', id);
     return supplier;
   }
 
@@ -134,22 +128,11 @@ export class SuppliersController {
     @Param('id', ParseIntPipe) id: number,
     @Body(new ZodValidationPipe(UpdateSupplierSchema)) body: UpdateSupplierRequest,
   ): Promise<Supplier> {
-    // Check supplier exists and belongs to the user's shop/tenant
     const supplier = await this.suppliersService.findById(id);
-    if (!supplier) {
-      throw new NotFoundException(`Supplier with id ${id} not found`);
-    }
+    assertShopAccess(supplier, ctx, 'Supplier', id);
 
-    if (supplier.shop_id !== ctx.shopId || supplier.tenant_id !== ctx.tenantId) {
-      throw new NotFoundException(`Supplier with id ${id} not found in this shop/tenant`);
-    }
-
-    const updated = await this.suppliersService.update(id, body);
-    if (!updated) {
-      throw new NotFoundException(`Supplier with id ${id} not found`);
-    }
-
-    return updated;
+    // update() returns undefined only if record doesn't exist, but we already verified it exists
+    return (await this.suppliersService.update(id, body))!;
   }
 
   @Delete(':id')
@@ -159,15 +142,8 @@ export class SuppliersController {
     @ShopContext() ctx: ShopContextType,
     @Param('id', ParseIntPipe) id: number,
   ): Promise<{ message: string }> {
-    // Check supplier exists and belongs to the user's shop/tenant
     const supplier = await this.suppliersService.findById(id);
-    if (!supplier) {
-      throw new NotFoundException(`Supplier with id ${id} not found`);
-    }
-
-    if (supplier.shop_id !== ctx.shopId || supplier.tenant_id !== ctx.tenantId) {
-      throw new NotFoundException(`Supplier with id ${id} not found in this shop/tenant`);
-    }
+    assertShopAccess(supplier, ctx, 'Supplier', id);
 
     await this.suppliersService.delete(id);
     return { message: 'Supplier deleted successfully' };

@@ -25,6 +25,7 @@ import {
 } from '../../auth/decorators.js';
 import type { ImportResult } from '@sales-planner/shared';
 import {
+  assertShopAccess,
   type ExpressResponse,
   parseAndValidateImport,
   parseCsvImport,
@@ -100,16 +101,9 @@ export class CategoriesController {
     @ShopContext() ctx: ShopContextType,
     @Param('id', ParseIntPipe) id: number,
   ): Promise<Category> {
-    const brand = await this.categoriesService.findById(id);
-    if (!brand) {
-      throw new NotFoundException(`Category with id ${id} not found`);
-    }
-
-    if (brand.shop_id !== ctx.shopId || brand.tenant_id !== ctx.tenantId) {
-      throw new NotFoundException(`Category with id ${id} not found in this shop/tenant`);
-    }
-
-    return brand;
+    const category = await this.categoriesService.findById(id);
+    assertShopAccess(category, ctx, 'Category', id);
+    return category;
   }
 
   @Post()
@@ -134,15 +128,8 @@ export class CategoriesController {
     @Param('id', ParseIntPipe) id: number,
     @Body(new ZodValidationPipe(UpdateCategorySchema)) body: UpdateCategoryRequest,
   ): Promise<Category> {
-    // Check brand exists and belongs to the user's shop/tenant
-    const brand = await this.categoriesService.findById(id);
-    if (!brand) {
-      throw new NotFoundException(`Category with id ${id} not found`);
-    }
-
-    if (brand.shop_id !== ctx.shopId || brand.tenant_id !== ctx.tenantId) {
-      throw new NotFoundException(`Category with id ${id} not found in this shop/tenant`);
-    }
+    const category = await this.categoriesService.findById(id);
+    assertShopAccess(category, ctx, 'Category', id);
 
     const updated = await this.categoriesService.update(id, body);
     if (!updated) {
@@ -159,15 +146,8 @@ export class CategoriesController {
     @ShopContext() ctx: ShopContextType,
     @Param('id', ParseIntPipe) id: number,
   ): Promise<{ message: string }> {
-    // Check brand exists and belongs to the user's shop/tenant
-    const brand = await this.categoriesService.findById(id);
-    if (!brand) {
-      throw new NotFoundException(`Category with id ${id} not found`);
-    }
-
-    if (brand.shop_id !== ctx.shopId || brand.tenant_id !== ctx.tenantId) {
-      throw new NotFoundException(`Category with id ${id} not found in this shop/tenant`);
-    }
+    const category = await this.categoriesService.findById(id);
+    assertShopAccess(category, ctx, 'Category', id);
 
     await this.categoriesService.delete(id);
     return { message: 'Category deleted successfully' };

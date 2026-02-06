@@ -3,7 +3,6 @@ import {
   Controller,
   Delete,
   Get,
-  NotFoundException,
   Param,
   ParseIntPipe,
   Post,
@@ -26,13 +25,14 @@ import {
   type ShopContext as ShopContextType,
 } from '../../auth/decorators.js';
 import {
+  assertShopAccess,
   type ExpressResponse,
   parseAndValidateImport,
   parseCsvImport,
   sendCsvExport,
   sendJsonExport,
-  ZodValidationPipe,
   type SkuImportResult,
+  ZodValidationPipe,
 } from '../../common/index.js';
 import {
   type CreateSkuRequest,
@@ -114,14 +114,7 @@ export class SkusController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<Sku> {
     const sku = await this.skusService.findById(id);
-    if (!sku) {
-      throw new NotFoundException(`SKU with id ${id} not found`);
-    }
-
-    if (sku.shop_id !== ctx.shopId || sku.tenant_id !== ctx.tenantId) {
-      throw new NotFoundException(`SKU with id ${id} not found in this shop/tenant`);
-    }
-
+    assertShopAccess(sku, ctx, 'SKU', id);
     return sku;
   }
 
@@ -147,20 +140,11 @@ export class SkusController {
     @Param('id', ParseIntPipe) id: number,
     @Body(new ZodValidationPipe(UpdateSkuSchema)) dto: UpdateSkuRequest,
   ): Promise<Sku> {
-    const existing = await this.skusService.findById(id);
-    if (!existing) {
-      throw new NotFoundException(`SKU with id ${id} not found`);
-    }
+    const sku = await this.skusService.findById(id);
+    assertShopAccess(sku, ctx, 'SKU', id);
 
-    if (existing.shop_id !== ctx.shopId || existing.tenant_id !== ctx.tenantId) {
-      throw new NotFoundException(`SKU with id ${id} not found in this shop/tenant`);
-    }
-
-    const sku = await this.skusService.update(id, dto);
-    if (!sku) {
-      throw new NotFoundException(`SKU with id ${id} not found`);
-    }
-    return sku;
+    // update() returns undefined only if record doesn't exist, but we already verified it exists
+    return (await this.skusService.update(id, dto))!;
   }
 
   @Post('import/json')
@@ -252,14 +236,8 @@ export class SkusController {
     @ShopContext() ctx: ShopContextType,
     @Param('id', ParseIntPipe) id: number,
   ): Promise<void> {
-    const existing = await this.skusService.findById(id);
-    if (!existing) {
-      throw new NotFoundException(`SKU with id ${id} not found`);
-    }
-
-    if (existing.shop_id !== ctx.shopId || existing.tenant_id !== ctx.tenantId) {
-      throw new NotFoundException(`SKU with id ${id} not found in this shop/tenant`);
-    }
+    const sku = await this.skusService.findById(id);
+    assertShopAccess(sku, ctx, 'SKU', id);
 
     await this.skusService.delete(id);
   }

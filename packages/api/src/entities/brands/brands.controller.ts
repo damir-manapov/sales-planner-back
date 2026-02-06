@@ -25,6 +25,7 @@ import {
 } from '../../auth/decorators.js';
 import type { ImportResult } from '@sales-planner/shared';
 import {
+  assertShopAccess,
   type ExpressResponse,
   parseAndValidateImport,
   parseCsvImport,
@@ -101,14 +102,7 @@ export class BrandsController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<Brand> {
     const brand = await this.brandsService.findById(id);
-    if (!brand) {
-      throw new NotFoundException(`Brand with id ${id} not found`);
-    }
-
-    if (brand.shop_id !== ctx.shopId || brand.tenant_id !== ctx.tenantId) {
-      throw new NotFoundException(`Brand with id ${id} not found in this shop/tenant`);
-    }
-
+    assertShopAccess(brand, ctx, 'Brand', id);
     return brand;
   }
 
@@ -134,15 +128,8 @@ export class BrandsController {
     @Param('id', ParseIntPipe) id: number,
     @Body(new ZodValidationPipe(UpdateBrandSchema)) body: UpdateBrandRequest,
   ): Promise<Brand> {
-    // Check brand exists and belongs to the user's shop/tenant
     const brand = await this.brandsService.findById(id);
-    if (!brand) {
-      throw new NotFoundException(`Brand with id ${id} not found`);
-    }
-
-    if (brand.shop_id !== ctx.shopId || brand.tenant_id !== ctx.tenantId) {
-      throw new NotFoundException(`Brand with id ${id} not found in this shop/tenant`);
-    }
+    assertShopAccess(brand, ctx, 'Brand', id);
 
     const updated = await this.brandsService.update(id, body);
     if (!updated) {
@@ -159,15 +146,8 @@ export class BrandsController {
     @ShopContext() ctx: ShopContextType,
     @Param('id', ParseIntPipe) id: number,
   ): Promise<{ message: string }> {
-    // Check brand exists and belongs to the user's shop/tenant
     const brand = await this.brandsService.findById(id);
-    if (!brand) {
-      throw new NotFoundException(`Brand with id ${id} not found`);
-    }
-
-    if (brand.shop_id !== ctx.shopId || brand.tenant_id !== ctx.tenantId) {
-      throw new NotFoundException(`Brand with id ${id} not found in this shop/tenant`);
-    }
+    assertShopAccess(brand, ctx, 'Brand', id);
 
     await this.brandsService.delete(id);
     return { message: 'Brand deleted successfully' };

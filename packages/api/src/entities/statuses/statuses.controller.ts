@@ -25,6 +25,7 @@ import {
 } from '../../auth/decorators.js';
 import type { ImportResult } from '@sales-planner/shared';
 import {
+  assertShopAccess,
   type ExpressResponse,
   parseAndValidateImport,
   parseCsvImport,
@@ -100,16 +101,9 @@ export class StatusesController {
     @ShopContext() ctx: ShopContextType,
     @Param('id', ParseIntPipe) id: number,
   ): Promise<Status> {
-    const brand = await this.statusesService.findById(id);
-    if (!brand) {
-      throw new NotFoundException(`Status with id ${id} not found`);
-    }
-
-    if (brand.shop_id !== ctx.shopId || brand.tenant_id !== ctx.tenantId) {
-      throw new NotFoundException(`Status with id ${id} not found in this shop/tenant`);
-    }
-
-    return brand;
+    const status = await this.statusesService.findById(id);
+    assertShopAccess(status, ctx, 'Status', id);
+    return status;
   }
 
   @Post()
@@ -134,22 +128,11 @@ export class StatusesController {
     @Param('id', ParseIntPipe) id: number,
     @Body(new ZodValidationPipe(UpdateStatusSchema)) body: UpdateStatusRequest,
   ): Promise<Status> {
-    // Check brand exists and belongs to the user's shop/tenant
-    const brand = await this.statusesService.findById(id);
-    if (!brand) {
-      throw new NotFoundException(`Status with id ${id} not found`);
-    }
+    const status = await this.statusesService.findById(id);
+    assertShopAccess(status, ctx, 'Status', id);
 
-    if (brand.shop_id !== ctx.shopId || brand.tenant_id !== ctx.tenantId) {
-      throw new NotFoundException(`Status with id ${id} not found in this shop/tenant`);
-    }
-
-    const updated = await this.statusesService.update(id, body);
-    if (!updated) {
-      throw new NotFoundException(`Status with id ${id} not found`);
-    }
-
-    return updated;
+    // update() returns undefined only if record doesn't exist, but we already verified it exists
+    return (await this.statusesService.update(id, body))!;
   }
 
   @Delete(':id')
@@ -159,15 +142,8 @@ export class StatusesController {
     @ShopContext() ctx: ShopContextType,
     @Param('id', ParseIntPipe) id: number,
   ): Promise<{ message: string }> {
-    // Check brand exists and belongs to the user's shop/tenant
-    const brand = await this.statusesService.findById(id);
-    if (!brand) {
-      throw new NotFoundException(`Status with id ${id} not found`);
-    }
-
-    if (brand.shop_id !== ctx.shopId || brand.tenant_id !== ctx.tenantId) {
-      throw new NotFoundException(`Status with id ${id} not found in this shop/tenant`);
-    }
+    const status = await this.statusesService.findById(id);
+    assertShopAccess(status, ctx, 'Status', id);
 
     await this.statusesService.delete(id);
     return { message: 'Status deleted successfully' };

@@ -1,3 +1,4 @@
+export { assertShopAccess } from './access.helpers.js';
 export { parseCsvImport, sendCsvExport, sendJsonExport } from './export-import.helpers.js';
 export type { ExpressResponse } from './export-import.helpers.js';
 export { parseAndValidateImport, parseImportData, validateArray } from './import.helpers.js';

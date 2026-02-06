@@ -4,7 +4,6 @@ import {
   Controller,
   Delete,
   Get,
-  NotFoundException,
   Param,
   ParseIntPipe,
   Post,
@@ -26,12 +25,13 @@ import {
   type ShopContext as ShopContextType,
 } from '../../auth/decorators.js';
 import {
+  assertShopAccess,
   type ExpressResponse,
   parseAndValidateImport,
+  type SalesHistoryImportResult,
   sendCsvExport,
   sendJsonExport,
   ZodValidationPipe,
-  type SalesHistoryImportResult,
 } from '../../common/index.js';
 import { fromCsv } from '../../lib/index.js';
 import {
@@ -101,16 +101,7 @@ export class SalesHistoryController {
     @Param('id', ParseIntPipe) id: number,
   ): Promise<SalesHistory> {
     const record = await this.salesHistoryService.findById(id);
-    if (!record) {
-      throw new NotFoundException(`Sales history record with id ${id} not found`);
-    }
-
-    if (record.shop_id !== ctx.shopId || record.tenant_id !== ctx.tenantId) {
-      throw new NotFoundException(
-        `Sales history record with id ${id} not found in this shop/tenant`,
-      );
-    }
-
+    assertShopAccess(record, ctx, 'Sales history record', id);
     return record;
   }
 
@@ -137,22 +128,11 @@ export class SalesHistoryController {
     @Param('id', ParseIntPipe) id: number,
     @Body(new ZodValidationPipe(UpdateSalesHistorySchema)) dto: UpdateSalesHistoryRequest,
   ): Promise<SalesHistory> {
-    const existing = await this.salesHistoryService.findById(id);
-    if (!existing) {
-      throw new NotFoundException(`Sales history record with id ${id} not found`);
-    }
+    const record = await this.salesHistoryService.findById(id);
+    assertShopAccess(record, ctx, 'Sales history record', id);
 
-    if (existing.shop_id !== ctx.shopId || existing.tenant_id !== ctx.tenantId) {
-      throw new NotFoundException(
-        `Sales history record with id ${id} not found in this shop/tenant`,
-      );
-    }
-
-    const updated = await this.salesHistoryService.update(id, dto);
-    if (!updated) {
-      throw new NotFoundException(`Sales history record with id ${id} not found`);
-    }
-    return updated;
+    // update() returns undefined only if record doesn't exist, but we already verified it exists
+    return (await this.salesHistoryService.update(id, dto))!;
   }
 
   @Delete(':id')
@@ -162,16 +142,8 @@ export class SalesHistoryController {
     @ShopContext() ctx: ShopContextType,
     @Param('id', ParseIntPipe) id: number,
   ): Promise<void> {
-    const existing = await this.salesHistoryService.findById(id);
-    if (!existing) {
-      throw new NotFoundException(`Sales history record with id ${id} not found`);
-    }
-
-    if (existing.shop_id !== ctx.shopId || existing.tenant_id !== ctx.tenantId) {
-      throw new NotFoundException(
-        `Sales history record with id ${id} not found in this shop/tenant`,
-      );
-    }
+    const record = await this.salesHistoryService.findById(id);
+    assertShopAccess(record, ctx, 'Sales history record', id);
 
     await this.salesHistoryService.delete(id);
   }
