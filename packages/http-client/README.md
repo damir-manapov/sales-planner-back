@@ -64,10 +64,10 @@ All use generic method names with context first:
 | Client | Methods |
 |--------|---------|
 | `me` | `getMe()` |
-| `users` | `getUsers()`, `getUser(id)`, `createUser(req)`, `updateUser(id, req)`, `deleteUser(id)` |
+| `users` | `getUsers()`, `getUser(id)`, `createUser(req)`, `deleteUser(id)` |
 | `tenants` | `getTenants()`, `getTenant(id)`, `createTenant(req)`, `updateTenant(id, req)`, `deleteTenant(id)`, `createTenantWithShopAndUser(req)` |
 | `shops` | `getShops(tenantId?)`, `getShop(id)`, `createShop(req)`, `updateShop(id, req)`, `deleteShop(id)`, `deleteShopData(id)` |
-| `roles` | `getRoles()`, `getRole(id)` |
+| `roles` | `getAll()`, `getById(id)`, `create(req)`, `update(id, req)`, `delete(id)` |
 | `userRoles` | `getUserRoles(query)`, `getUserRole(id)`, `createUserRole(req)`, `deleteUserRole(id)` |
 | `apiKeys` | `getApiKeys()`, `createApiKey(req)`, `deleteApiKey(id)` |
 | `metadata` | `getEntitiesMetadata()` (no auth) |
