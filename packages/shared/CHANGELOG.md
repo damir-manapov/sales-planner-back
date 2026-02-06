@@ -1,5 +1,11 @@
 # @sales-planner/shared
 
+## 0.13.1
+
+### Patch Changes
+
+- Update README with pagination types documentation
+
 ## 0.13.0
 
 ### Minor Changes
