@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { Role } from '@sales-planner/shared';
+import type { PaginatedResponse, PaginationQuery, Role } from '@sales-planner/shared';
 import { DuplicateResourceException, isUniqueViolation } from '../common/index.js';
 import { DatabaseService } from '../database/database.service.js';
 import type { CreateRoleDto, UpdateRoleDto } from './roles.schema.js';
@@ -11,8 +11,24 @@ export type { CreateRoleDto, UpdateRoleDto };
 export class RolesService {
   constructor(private readonly db: DatabaseService) {}
 
-  async findAll(): Promise<Role[]> {
-    return this.db.selectFrom('roles').selectAll().execute();
+  async count(): Promise<number> {
+    const result = await this.db
+      .selectFrom('roles')
+      .select(this.db.fn.countAll<number>().as('count'))
+      .executeTakeFirstOrThrow();
+    return Number(result.count);
+  }
+
+  async findAll(query?: PaginationQuery): Promise<Role[]> {
+    let q = this.db.selectFrom('roles').selectAll().orderBy('id', 'asc');
+    if (query?.limit !== undefined) q = q.limit(query.limit);
+    if (query?.offset !== undefined) q = q.offset(query.offset);
+    return q.execute();
+  }
+
+  async findAllPaginated(query: PaginationQuery = {}): Promise<PaginatedResponse<Role>> {
+    const [total, items] = await Promise.all([this.count(), this.findAll(query)]);
+    return { items, total, limit: query.limit ?? 0, offset: query.offset ?? 0 };
   }
 
   async findById(id: number): Promise<Role | undefined> {

@@ -10,9 +10,10 @@ import {
   Query,
   UseGuards,
 } from '@nestjs/common';
+import type { PaginatedResponse, ApiKey } from '@sales-planner/shared';
 import { AuthGuard } from '../../auth/auth.guard.js';
 import { SystemAdminGuard } from '../../auth/system-admin.guard.js';
-import { ZodValidationPipe } from '../../common/index.js';
+import { type PaginationQuery, PaginationQuerySchema, ZodValidationPipe } from '../../common/index.js';
 import {
   type CreateApiKeyRequest,
   CreateApiKeySchema,
@@ -27,11 +28,14 @@ export class ApiKeysController {
   constructor(private readonly apiKeysService: ApiKeysService) {}
 
   @Get()
-  async findAll(@Query('user_id') userId?: string) {
+  async findAll(
+    @Query('user_id') userId?: string,
+    @Query(new ZodValidationPipe(PaginationQuerySchema)) query?: PaginationQuery,
+  ): Promise<PaginatedResponse<ApiKey>> {
     if (userId) {
-      return this.apiKeysService.findByUserId(Number.parseInt(userId, 10));
+      return this.apiKeysService.findByUserIdPaginated(Number.parseInt(userId, 10), query);
     }
-    return this.apiKeysService.findAll();
+    return this.apiKeysService.findAllPaginated(query);
   }
 
   @Get(':id')

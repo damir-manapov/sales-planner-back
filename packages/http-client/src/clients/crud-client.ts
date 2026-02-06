@@ -1,3 +1,4 @@
+import type { PaginatedResponse, PaginationQuery } from '@sales-planner/shared';
 import { BaseClient, type ClientConfig } from './base-client.js';
 
 /**
@@ -15,8 +16,8 @@ export class CrudClient<
     super(config);
   }
 
-  async getAll(): Promise<TEntity[]> {
-    return this.request('GET', `/${this.resourcePath}`);
+  async getAll(query?: PaginationQuery): Promise<PaginatedResponse<TEntity>> {
+    return this.request('GET', `/${this.resourcePath}`, { params: query as Record<string, string | number | undefined> });
   }
 
   async getById(id: number): Promise<TEntity> {

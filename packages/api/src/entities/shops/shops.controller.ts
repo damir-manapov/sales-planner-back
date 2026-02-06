@@ -13,7 +13,7 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import type { DeleteDataResult } from '@sales-planner/shared';
+import type { DeleteDataResult, PaginatedResponse } from '@sales-planner/shared';
 import {
   hasReadAccess,
   hasTenantAccess,
@@ -21,7 +21,7 @@ import {
   validateWriteAccess,
 } from '../../auth/access-control.js';
 import { AuthenticatedRequest, AuthGuard } from '../../auth/auth.guard.js';
-import { ZodValidationPipe } from '../../common/index.js';
+import { type PaginationQuery, PaginationQuerySchema, ZodValidationPipe } from '../../common/index.js';
 import {
   type CreateShopRequest,
   CreateShopSchema,
@@ -39,13 +39,14 @@ export class ShopsController {
   async findAll(
     @Req() req: AuthenticatedRequest,
     @Query('tenantId') tenantId?: string,
-  ): Promise<Shop[]> {
+    @Query(new ZodValidationPipe(PaginationQuerySchema)) query?: PaginationQuery,
+  ): Promise<PaginatedResponse<Shop>> {
     // System admins can see all shops
     if (req.user.isSystemAdmin) {
       if (tenantId) {
-        return this.shopsService.findByTenantId(Number(tenantId));
+        return this.shopsService.findByTenantIdPaginated(Number(tenantId), query);
       }
-      return this.shopsService.findAll();
+      return this.shopsService.findAllPaginated(query);
     }
 
     // If tenantId is specified, check access
@@ -54,10 +55,11 @@ export class ShopsController {
       if (!hasTenantAccess(req.user, tid)) {
         throw new ForbiddenException('Access to this tenant is not allowed');
       }
-      return this.shopsService.findByTenantId(tid);
+      return this.shopsService.findByTenantIdPaginated(tid, query);
     }
 
     // Return shops from all tenants user has access to
+    // Note: Pagination is not supported for aggregated shops across tenants
     const allShops: Shop[] = [];
     const addedShopIds = new Set<number>();
 
@@ -96,7 +98,8 @@ export class ShopsController {
       }
     }
 
-    return allShops;
+    // Return as paginated response (all items when aggregating across tenants)
+    return { items: allShops, total: allShops.length, limit: 0, offset: 0 };
   }
 
   @Get(':id')

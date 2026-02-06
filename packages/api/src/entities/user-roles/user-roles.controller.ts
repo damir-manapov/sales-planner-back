@@ -12,8 +12,10 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import type { PaginatedResponse } from '@sales-planner/shared';
 import { hasTenantAccess, validateTenantAdminAccess } from '../../auth/access-control.js';
 import { AuthenticatedRequest, AuthGuard } from '../../auth/auth.guard.js';
+import { type PaginationQuery, PaginationQuerySchema, ZodValidationPipe } from '../../common/index.js';
 import { CreateUserRoleDto, UserRole, UserRolesService } from './user-roles.service.js';
 
 @Controller('user-roles')
@@ -27,19 +29,20 @@ export class UserRolesController {
     @Query('userId') userId?: string,
     @Query('roleId') roleId?: string,
     @Query('tenantId') tenantId?: string,
-  ): Promise<UserRole[]> {
+    @Query(new ZodValidationPipe(PaginationQuerySchema)) query?: PaginationQuery,
+  ): Promise<PaginatedResponse<UserRole>> {
     // System admins can see all
     if (req.user.isSystemAdmin) {
       if (tenantId) {
-        return this.userRolesService.findByTenantId(Number(tenantId));
+        return this.userRolesService.findByTenantIdPaginated(Number(tenantId), query);
       }
       if (userId) {
-        return this.userRolesService.findByUserId(Number(userId));
+        return this.userRolesService.findByUserIdPaginated(Number(userId), query);
       }
       if (roleId) {
-        return this.userRolesService.findByRoleId(Number(roleId));
+        return this.userRolesService.findByRoleIdPaginated(Number(roleId), query);
       }
-      return this.userRolesService.findAll();
+      return this.userRolesService.findAllPaginated(query);
     }
 
     // Tenant admins must specify a tenant
@@ -52,6 +55,8 @@ export class UserRolesController {
       throw new ForbiddenException('Access to this tenant is not allowed');
     }
 
+    // For tenant admins with additional filters, we fetch all and filter in memory
+    // Note: This doesn't support pagination efficiently when filtering by userId/roleId
     let roles = await this.userRolesService.findByTenantId(tid);
 
     // Filter by additional params if provided
@@ -62,7 +67,7 @@ export class UserRolesController {
       roles = roles.filter((r) => r.role_id === Number(roleId));
     }
 
-    return roles;
+    return { items: roles, total: roles.length, limit: query?.limit ?? 0, offset: query?.offset ?? 0 };
   }
 
   @Get(':id')

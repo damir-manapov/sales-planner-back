@@ -8,11 +8,13 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
+import type { PaginatedResponse } from '@sales-planner/shared';
 import { AuthGuard } from '../auth/auth.guard.js';
 import { SystemAdminGuard } from '../auth/system-admin.guard.js';
-import { ZodValidationPipe } from '../common/index.js';
+import { type PaginationQuery, PaginationQuerySchema, ZodValidationPipe } from '../common/index.js';
 import {
   type CreateRoleRequest,
   CreateRoleSchema,
@@ -27,8 +29,10 @@ export class RolesController {
   constructor(private readonly rolesService: RolesService) {}
 
   @Get()
-  async findAll(): Promise<Role[]> {
-    return this.rolesService.findAll();
+  async findAll(
+    @Query(new ZodValidationPipe(PaginationQuerySchema)) query?: PaginationQuery,
+  ): Promise<PaginatedResponse<Role>> {
+    return this.rolesService.findAllPaginated(query);
   }
 
   @Get(':id')

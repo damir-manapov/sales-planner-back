@@ -1,4 +1,5 @@
 import { Injectable } from '@nestjs/common';
+import type { ApiKey, PaginatedResponse, PaginationQuery } from '@sales-planner/shared';
 import { DuplicateResourceException, isUniqueViolation } from '../../common/index.js';
 import { DatabaseService } from '../../database/database.service';
 
@@ -6,8 +7,33 @@ import { DatabaseService } from '../../database/database.service';
 export class ApiKeysService {
   constructor(private readonly db: DatabaseService) {}
 
-  async findAll() {
-    return this.db.selectFrom('api_keys').selectAll().execute();
+  async count(): Promise<number> {
+    const result = await this.db
+      .selectFrom('api_keys')
+      .select(this.db.fn.countAll<number>().as('count'))
+      .executeTakeFirstOrThrow();
+    return Number(result.count);
+  }
+
+  async countByUserId(userId: number): Promise<number> {
+    const result = await this.db
+      .selectFrom('api_keys')
+      .select(this.db.fn.countAll<number>().as('count'))
+      .where('user_id', '=', userId)
+      .executeTakeFirstOrThrow();
+    return Number(result.count);
+  }
+
+  async findAll(query?: PaginationQuery): Promise<ApiKey[]> {
+    let q = this.db.selectFrom('api_keys').selectAll().orderBy('id', 'asc');
+    if (query?.limit !== undefined) q = q.limit(query.limit);
+    if (query?.offset !== undefined) q = q.offset(query.offset);
+    return q.execute();
+  }
+
+  async findAllPaginated(query: PaginationQuery = {}): Promise<PaginatedResponse<ApiKey>> {
+    const [total, items] = await Promise.all([this.count(), this.findAll(query)]);
+    return { items, total, limit: query.limit ?? 0, offset: query.offset ?? 0 };
   }
 
   async findById(id: number) {
@@ -18,8 +44,22 @@ export class ApiKeysService {
     return this.db.selectFrom('api_keys').selectAll().where('key', '=', key).executeTakeFirst();
   }
 
-  async findByUserId(userId: number) {
-    return this.db.selectFrom('api_keys').selectAll().where('user_id', '=', userId).execute();
+  async findByUserId(userId: number, query?: PaginationQuery): Promise<ApiKey[]> {
+    let q = this.db.selectFrom('api_keys').selectAll().where('user_id', '=', userId).orderBy('id', 'asc');
+    if (query?.limit !== undefined) q = q.limit(query.limit);
+    if (query?.offset !== undefined) q = q.offset(query.offset);
+    return q.execute();
+  }
+
+  async findByUserIdPaginated(
+    userId: number,
+    query: PaginationQuery = {},
+  ): Promise<PaginatedResponse<ApiKey>> {
+    const [total, items] = await Promise.all([
+      this.countByUserId(userId),
+      this.findByUserId(userId, query),
+    ]);
+    return { items, total, limit: query.limit ?? 0, offset: query.offset ?? 0 };
   }
 
   async findValidByKey(key: string) {

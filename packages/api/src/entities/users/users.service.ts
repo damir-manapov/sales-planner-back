@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { User } from '@sales-planner/shared';
+import type { PaginatedResponse, PaginationQuery, User } from '@sales-planner/shared';
 import { sql } from 'kysely';
 import { ROLE_NAMES } from '../../common/constants.js';
 import { DuplicateResourceException, isUniqueViolation } from '../../common/index.js';
@@ -39,8 +39,34 @@ export interface UserWithRolesAndTenants extends User {
 export class UsersService {
   constructor(private readonly db: DatabaseService) {}
 
-  async findAll(): Promise<User[]> {
-    return this.db.selectFrom('users').selectAll().execute();
+  async count(): Promise<number> {
+    const result = await this.db
+      .selectFrom('users')
+      .select(this.db.fn.countAll<number>().as('count'))
+      .executeTakeFirstOrThrow();
+    return Number(result.count);
+  }
+
+  async countByTenantId(tenantId: number): Promise<number> {
+    const result = await this.db
+      .selectFrom('users')
+      .innerJoin('user_roles', 'user_roles.user_id', 'users.id')
+      .select(this.db.fn.count<number>('users.id').distinct().as('count'))
+      .where('user_roles.tenant_id', '=', tenantId)
+      .executeTakeFirstOrThrow();
+    return Number(result.count);
+  }
+
+  async findAll(query?: PaginationQuery): Promise<User[]> {
+    let q = this.db.selectFrom('users').selectAll().orderBy('id', 'asc');
+    if (query?.limit !== undefined) q = q.limit(query.limit);
+    if (query?.offset !== undefined) q = q.offset(query.offset);
+    return q.execute();
+  }
+
+  async findAllPaginated(query: PaginationQuery = {}): Promise<PaginatedResponse<User>> {
+    const [total, items] = await Promise.all([this.count(), this.findAll(query)]);
+    return { items, total, limit: query.limit ?? 0, offset: query.offset ?? 0 };
   }
 
   async findById(id: number): Promise<User | undefined> {
@@ -85,15 +111,29 @@ export class UsersService {
     await this.db.deleteFrom('users').where('id', '=', id).execute();
   }
 
-  async findByTenantId(tenantId: number): Promise<User[]> {
+  async findByTenantId(tenantId: number, query?: PaginationQuery): Promise<User[]> {
     // Users who have any role in this tenant (either tenant-level or shop-level)
-    return this.db
+    let q = this.db
       .selectFrom('users')
       .selectAll('users')
       .innerJoin('user_roles', 'user_roles.user_id', 'users.id')
       .where('user_roles.tenant_id', '=', tenantId)
       .groupBy('users.id')
-      .execute();
+      .orderBy('users.id', 'asc');
+    if (query?.limit !== undefined) q = q.limit(query.limit);
+    if (query?.offset !== undefined) q = q.offset(query.offset);
+    return q.execute();
+  }
+
+  async findByTenantIdPaginated(
+    tenantId: number,
+    query: PaginationQuery = {},
+  ): Promise<PaginatedResponse<User>> {
+    const [total, items] = await Promise.all([
+      this.countByTenantId(tenantId),
+      this.findByTenantId(tenantId, query),
+    ]);
+    return { items, total, limit: query.limit ?? 0, offset: query.offset ?? 0 };
   }
 
   async getUserWithRolesAndTenants(userId: number): Promise<UserWithRolesAndTenants | null> {

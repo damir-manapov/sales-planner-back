@@ -581,6 +581,36 @@ describe('Sales History (e2e)', () => {
       expect(imported).toBeDefined();
       expect(imported?.quantity).toBe(85);
     });
+
+    it('should reject import with duplicate records (same sku+period+marketplace)', async () => {
+      const skuCode = generateTestCode('DUP-SH');
+      const marketplace = generateTestCode('DUP-MP');
+      const testPeriod = generateTestPeriod();
+      const csvContent = `marketplace,period,sku,quantity\n${marketplace},${testPeriod},${skuCode},10\n${marketplace},${testPeriod},${skuCode},20`;
+
+      const result = await ctx.client.salesHistory.importCsv(ctx.shopContext, csvContent);
+
+      expect(result.created).toBe(0);
+      expect(result.updated).toBe(0);
+      expect(result.errors.length).toBeGreaterThan(0);
+      expect(result.errors[0]).toContain('Duplicate records');
+    });
+
+    it('should reject JSON import with duplicate records', async () => {
+      const skuCode = generateTestCode('DUP-SH-JSON');
+      const marketplace = generateTestCode('DUP-MP-JSON');
+      const testPeriod = generateTestPeriod();
+
+      const result = await ctx.client.salesHistory.importJson(ctx.shopContext, [
+        { marketplace, period: testPeriod, sku: skuCode, quantity: 10 },
+        { marketplace, period: testPeriod, sku: skuCode, quantity: 20 },
+      ]);
+
+      expect(result.created).toBe(0);
+      expect(result.updated).toBe(0);
+      expect(result.errors.length).toBeGreaterThan(0);
+      expect(result.errors[0]).toContain('Duplicate records');
+    });
   });
 
   describe('Example downloads', () => {
@@ -622,7 +652,7 @@ describe('Sales History (e2e)', () => {
         editorClient = new SalesPlannerClient({ baseUrl, apiKey: editorApiKey.key });
 
         const roles = await ctx.getSystemClient().roles.getAll();
-        const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
+        const editorRole = roles.items.find((r) => r.name === ROLE_NAMES.EDITOR);
         if (!editorRole) throw new Error('Editor role not found');
         await ctx.getSystemClient().userRoles.create({
           user_id: editorUserId,
@@ -737,7 +767,7 @@ describe('Sales History (e2e)', () => {
         viewerClient = new SalesPlannerClient({ baseUrl, apiKey: viewerApiKey.key });
 
         const roles = await ctx.getSystemClient().roles.getAll();
-        const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
+        const viewerRole = roles.items.find((r) => r.name === ROLE_NAMES.VIEWER);
         if (!viewerRole) throw new Error('Viewer role not found');
         await ctx.getSystemClient().userRoles.create({
           user_id: viewerUserId,

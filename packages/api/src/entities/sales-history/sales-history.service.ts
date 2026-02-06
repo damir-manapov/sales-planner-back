@@ -282,6 +282,27 @@ export class SalesHistoryService {
       };
     }
 
+    // Check for duplicate records in input (same sku + period + marketplace)
+    const keyCounts = new Map<string, number>();
+    for (const item of validItems) {
+      const key = `${item.sku_id}-${item.period}-${item.marketplace_id}`;
+      keyCounts.set(key, (keyCounts.get(key) || 0) + 1);
+    }
+    const duplicateKeys = [...keyCounts.entries()]
+      .filter(([, count]) => count > 1)
+      .map(([key, count]) => `"${key}" (${count} times)`);
+
+    if (duplicateKeys.length > 0) {
+      errors.push(`Duplicate records found: ${duplicateKeys.slice(0, 5).join(', ')}${duplicateKeys.length > 5 ? ` and ${duplicateKeys.length - 5} more` : ''}`);
+      return {
+        created: 0,
+        updated: 0,
+        skus_created: skusCreated,
+        marketplaces_created: marketplacesCreated,
+        errors,
+      };
+    }
+
     // Get existing records for counting
     const existingKeys = new Set(
       (

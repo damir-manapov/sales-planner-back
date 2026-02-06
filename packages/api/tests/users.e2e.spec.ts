@@ -56,7 +56,7 @@ describe('Users (e2e)', () => {
   describe('CRUD operations', () => {
     it('should list users with system admin', async () => {
       const users = await ctx.getSystemClient().users.getAll();
-      expect(Array.isArray(users)).toBe(true);
+      expect(Array.isArray(users.items)).toBe(true);
     });
 
     it('should create user with system admin', async () => {

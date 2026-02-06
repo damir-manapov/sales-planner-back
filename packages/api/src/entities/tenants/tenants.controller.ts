@@ -12,9 +12,10 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
+import type { PaginatedResponse } from '@sales-planner/shared';
 import { AuthenticatedRequest, AuthGuard } from '../../auth/auth.guard.js';
 import { SystemAdminGuard } from '../../auth/system-admin.guard.js';
-import { ZodValidationPipe } from '../../common/index.js';
+import { type PaginationQuery, PaginationQuerySchema, ZodValidationPipe } from '../../common/index.js';
 import {
   type CreateTenantRequest,
   CreateTenantRequestSchema,
@@ -34,11 +35,12 @@ export class TenantsController {
   async findAll(
     @Req() _req: AuthenticatedRequest,
     @Query('owner_id') ownerId?: string,
-  ): Promise<Tenant[]> {
+    @Query(new ZodValidationPipe(PaginationQuerySchema)) query?: PaginationQuery,
+  ): Promise<PaginatedResponse<Tenant>> {
     if (ownerId) {
-      return this.tenantsService.findByOwnerId(Number.parseInt(ownerId, 10));
+      return this.tenantsService.findByOwnerIdPaginated(Number.parseInt(ownerId, 10), query);
     }
-    return this.tenantsService.findAll();
+    return this.tenantsService.findAllPaginated(query);
   }
 
   @Get(':id')

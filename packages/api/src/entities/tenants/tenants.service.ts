@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { Tenant } from '@sales-planner/shared';
+import type { PaginatedResponse, PaginationQuery, Tenant } from '@sales-planner/shared';
 import { ROLE_NAMES } from '../../common/constants.js';
 import { DatabaseService } from '../../database/database.service.js';
 import type {
@@ -33,16 +33,55 @@ export interface TenantWithShopAndApiKey {
 export class TenantsService {
   constructor(private readonly db: DatabaseService) {}
 
-  async findAll(): Promise<Tenant[]> {
-    return this.db.selectFrom('tenants').selectAll().execute();
+  async count(): Promise<number> {
+    const result = await this.db
+      .selectFrom('tenants')
+      .select(this.db.fn.countAll<number>().as('count'))
+      .executeTakeFirstOrThrow();
+    return Number(result.count);
+  }
+
+  async countByOwnerId(ownerId: number): Promise<number> {
+    const result = await this.db
+      .selectFrom('tenants')
+      .select(this.db.fn.countAll<number>().as('count'))
+      .where('owner_id', '=', ownerId)
+      .executeTakeFirstOrThrow();
+    return Number(result.count);
+  }
+
+  async findAll(query?: PaginationQuery): Promise<Tenant[]> {
+    let q = this.db.selectFrom('tenants').selectAll().orderBy('id', 'asc');
+    if (query?.limit !== undefined) q = q.limit(query.limit);
+    if (query?.offset !== undefined) q = q.offset(query.offset);
+    return q.execute();
+  }
+
+  async findAllPaginated(query: PaginationQuery = {}): Promise<PaginatedResponse<Tenant>> {
+    const [total, items] = await Promise.all([this.count(), this.findAll(query)]);
+    return { items, total, limit: query.limit ?? 0, offset: query.offset ?? 0 };
   }
 
   async findById(id: number): Promise<Tenant | undefined> {
     return this.db.selectFrom('tenants').selectAll().where('id', '=', id).executeTakeFirst();
   }
 
-  async findByOwnerId(ownerId: number): Promise<Tenant[]> {
-    return this.db.selectFrom('tenants').selectAll().where('owner_id', '=', ownerId).execute();
+  async findByOwnerId(ownerId: number, query?: PaginationQuery): Promise<Tenant[]> {
+    let q = this.db.selectFrom('tenants').selectAll().where('owner_id', '=', ownerId).orderBy('id', 'asc');
+    if (query?.limit !== undefined) q = q.limit(query.limit);
+    if (query?.offset !== undefined) q = q.offset(query.offset);
+    return q.execute();
+  }
+
+  async findByOwnerIdPaginated(
+    ownerId: number,
+    query: PaginationQuery = {},
+  ): Promise<PaginatedResponse<Tenant>> {
+    const [total, items] = await Promise.all([
+      this.countByOwnerId(ownerId),
+      this.findByOwnerId(ownerId, query),
+    ]);
+    return { items, total, limit: query.limit ?? 0, offset: query.offset ?? 0 };
   }
 
   async create(dto: CreateTenantInput): Promise<Tenant> {

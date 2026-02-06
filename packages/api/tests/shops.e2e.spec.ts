@@ -75,14 +75,14 @@ describe('Shops E2E', () => {
     it('GET /shops - tenant owner should list shops', async () => {
       const shops = await ctx.client.shops.getAll();
 
-      expect(Array.isArray(shops)).toBe(true);
-      expect(shops.some((s) => s.id === testShopId)).toBe(true);
+      expect(Array.isArray(shops.items)).toBe(true);
+      expect(shops.items.some((s) => s.id === testShopId)).toBe(true);
     });
 
     it('GET /shops?tenantId=X - should filter by tenant', async () => {
-      const shops = await ctx.client.shops.getAll(ctx.tenant.id);
+      const shops = await ctx.client.shops.getAll({ tenantId: ctx.tenant.id });
 
-      expect(shops.every((s) => s.tenant_id === ctx.tenant.id)).toBe(true);
+      expect(shops.items.every((s) => s.tenant_id === ctx.tenant.id)).toBe(true);
     });
 
     it('GET /shops/:id - should return shop by id', async () => {
@@ -122,7 +122,7 @@ describe('Shops E2E', () => {
 
       // Get tenantAdmin role and assign it
       const roles = await ctx.getSystemClient().roles.getAll();
-      const tenantAdminRole = roles.find((r) => r.name === ROLE_NAMES.TENANT_ADMIN);
+      const tenantAdminRole = roles.items.find((r) => r.name === ROLE_NAMES.TENANT_ADMIN);
       if (!tenantAdminRole) throw new Error('Tenant Admin role not found');
       await ctx.getSystemClient().userRoles.create({
         user_id: tenantAdminUserId,
@@ -142,7 +142,7 @@ describe('Shops E2E', () => {
     it('GET /shops - tenant admin should list shops in their tenant', async () => {
       const shops = await tenantAdminClient.shops.getAll();
 
-      expect(Array.isArray(shops)).toBe(true);
+      expect(Array.isArray(shops.items)).toBe(true);
     });
 
     it('POST /shops - tenant admin should create shop', async () => {
@@ -195,7 +195,7 @@ describe('Shops E2E', () => {
     });
 
     it('GET /shops?tenantId=X - should return 403 for other tenant', async () => {
-      await expectForbidden(() => otherClient.shops.getAll(ctx.tenant.id));
+      await expectForbidden(() => otherClient.shops.getAll({ tenantId: ctx.tenant.id }));
     });
 
     it('POST /shops - should return 403 when creating shop in other tenant', async () => {
@@ -262,7 +262,7 @@ describe('Shops E2E', () => {
     it('GET /shops - system admin should see all shops', async () => {
       const shops = await ctx.getSystemClient().shops.getAll();
 
-      expect(Array.isArray(shops)).toBe(true);
+      expect(Array.isArray(shops.items)).toBe(true);
     });
 
     it('GET /shops/:id - system admin should access any shop', async () => {
@@ -291,7 +291,7 @@ describe('Shops E2E', () => {
         editorClient = new SalesPlannerClient({ baseUrl, apiKey: editorApiKey.key });
 
         const roles = await ctx.getSystemClient().roles.getAll();
-        const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
+        const editorRole = roles.items.find((r) => r.name === ROLE_NAMES.EDITOR);
         if (!editorRole) throw new Error('Editor role not found');
         await ctx.getSystemClient().userRoles.create({
           user_id: editorUserId,
@@ -307,8 +307,8 @@ describe('Shops E2E', () => {
 
       it('editor should list shops', async () => {
         const shops = await editorClient.shops.getAll();
-        expect(Array.isArray(shops)).toBe(true);
-        expect(shops.some((s) => s.id === testShopId)).toBe(true);
+        expect(Array.isArray(shops.items)).toBe(true);
+        expect(shops.items.some((s) => s.id === testShopId)).toBe(true);
       });
 
       it('editor should get shop by id', async () => {
@@ -351,7 +351,7 @@ describe('Shops E2E', () => {
         viewerClient = new SalesPlannerClient({ baseUrl, apiKey: viewerApiKey.key });
 
         const roles = await ctx.getSystemClient().roles.getAll();
-        const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
+        const viewerRole = roles.items.find((r) => r.name === ROLE_NAMES.VIEWER);
         if (!viewerRole) throw new Error('Viewer role not found');
         await ctx.getSystemClient().userRoles.create({
           user_id: viewerUserId,
@@ -367,8 +367,8 @@ describe('Shops E2E', () => {
 
       it('viewer should list shops', async () => {
         const shops = await viewerClient.shops.getAll();
-        expect(Array.isArray(shops)).toBe(true);
-        expect(shops.some((s) => s.id === testShopId)).toBe(true);
+        expect(Array.isArray(shops.items)).toBe(true);
+        expect(shops.items.some((s) => s.id === testShopId)).toBe(true);
       });
 
       it('viewer should get shop by id', async () => {

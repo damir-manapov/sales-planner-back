@@ -70,7 +70,19 @@ All shop-scoped clients (`skus`, `brands`, `categories`, `groups`, `statuses`, `
 - `importJson(ctx, items)`, `importCsv(ctx, csv)`, `exportJson(ctx)`, `exportCsv(ctx)`
 - `getExampleJson()`, `getExampleCsv()` (no auth)
 
-System clients: `me`, `users`, `tenants`, `shops`, `roles`, `userRoles`, `apiKeys`, `metadata`
+System clients (`users`, `tenants`, `shops`, `roles`, `userRoles`, `apiKeys`) also return paginated responses:
+
+```typescript
+// All system getAll() methods return PaginatedResponse<T>
+const { items: users, total } = await client.users.getAll();
+const { items: tenants } = await client.tenants.getAll({ limit: 10 });
+const { items: shops } = await client.shops.getAll();
+const { items: roles } = await client.roles.getAll();
+const { items: userRoles } = await client.userRoles.getAll();
+const { items: apiKeys } = await client.apiKeys.getAll();
+```
+
+Other system clients: `me`, `metadata`
 
 ## Error Handling
 

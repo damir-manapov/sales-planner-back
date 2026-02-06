@@ -134,6 +134,29 @@ export class SkusService {
       validItems.push(result.data);
     });
 
+    // Check for duplicate codes in input
+    const codeCounts = new Map<string, number>();
+    for (const item of validItems) {
+      const code = normalizeSkuCode(item.code);
+      codeCounts.set(code, (codeCounts.get(code) || 0) + 1);
+    }
+    const duplicateCodes = [...codeCounts.entries()]
+      .filter(([, count]) => count > 1)
+      .map(([code, count]) => `"${code}" (${count} times)`);
+
+    if (duplicateCodes.length > 0) {
+      errors.push(`Duplicate SKU codes found: ${duplicateCodes.join(', ')}`);
+      return {
+        created: 0,
+        updated: 0,
+        errors,
+        categories_created: 0,
+        groups_created: 0,
+        statuses_created: 0,
+        suppliers_created: 0,
+      };
+    }
+
     if (validItems.length === 0) {
       return {
         created: 0,

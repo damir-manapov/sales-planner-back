@@ -1,9 +1,13 @@
-import type { ApiKey, CreateApiKeyRequest } from '@sales-planner/shared';
+import type { ApiKey, CreateApiKeyRequest, PaginatedResponse, PaginationQuery } from '@sales-planner/shared';
 import { BaseClient } from './base-client.js';
 
+export interface GetApiKeysQuery extends PaginationQuery {
+  user_id?: number;
+}
+
 export class ApiKeysClient extends BaseClient {
-  async getAll(userId?: number): Promise<ApiKey[]> {
-    return this.request('GET', '/api-keys', { params: { user_id: userId } });
+  async getAll(query?: GetApiKeysQuery): Promise<PaginatedResponse<ApiKey>> {
+    return this.request('GET', '/api-keys', { params: query as Record<string, string | number | undefined> });
   }
 
   async create(request: CreateApiKeyRequest): Promise<ApiKey> {

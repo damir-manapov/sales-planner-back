@@ -40,8 +40,8 @@ describe('User Roles (e2e)', () => {
 
     // Get role IDs
     const roles = await ctx.getSystemClient().roles.getAll();
-    const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
-    const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
+    const editorRole = roles.items.find((r) => r.name === ROLE_NAMES.EDITOR);
+    const viewerRole = roles.items.find((r) => r.name === ROLE_NAMES.VIEWER);
     if (!editorRole || !viewerRole) throw new Error('Required roles not found');
     editorRoleId = editorRole.id;
     viewerRoleId = viewerRole.id;
@@ -84,7 +84,7 @@ describe('User Roles (e2e)', () => {
     it('tenant owner should list user roles for their tenant', async () => {
       const userRoles = await ctx.client.userRoles.getAll({ tenantId: ctx.tenant.id });
 
-      expect(Array.isArray(userRoles)).toBe(true);
+      expect(Array.isArray(userRoles.items)).toBe(true);
     });
 
     it('tenant owner should assign editor role to user in their tenant', async () => {
@@ -150,7 +150,7 @@ describe('User Roles (e2e)', () => {
 
       // Assign tenant admin role
       const roles = await ctx.getSystemClient().roles.getAll();
-      const tenantAdminRole = roles.find((r) => r.name === ROLE_NAMES.TENANT_ADMIN);
+      const tenantAdminRole = roles.items.find((r) => r.name === ROLE_NAMES.TENANT_ADMIN);
       if (!tenantAdminRole) throw new Error('Tenant Admin role not found');
       await ctx.getSystemClient().userRoles.create({
         user_id: tenantAdminUserId,
@@ -174,7 +174,7 @@ describe('User Roles (e2e)', () => {
     it('tenant admin should list user roles for their tenant', async () => {
       const userRoles = await tenantAdminClient.userRoles.getAll({ tenantId: ctx.tenant.id });
 
-      expect(Array.isArray(userRoles)).toBe(true);
+      expect(Array.isArray(userRoles.items)).toBe(true);
     });
 
     it('tenant admin should assign role to user in their tenant', async () => {
@@ -375,14 +375,14 @@ describe('User Roles (e2e)', () => {
     it('system admin should list all user roles', async () => {
       const userRoles = await ctx.getSystemClient().userRoles.getAll();
 
-      expect(Array.isArray(userRoles)).toBe(true);
+      expect(Array.isArray(userRoles.items)).toBe(true);
     });
 
     it('system admin should list user roles by tenant', async () => {
       const userRoles = await ctx.getSystemClient().userRoles.getAll({ tenantId: ctx.tenant.id });
 
-      expect(Array.isArray(userRoles)).toBe(true);
-      userRoles.forEach((ur) => {
+      expect(Array.isArray(userRoles.items)).toBe(true);
+      userRoles.items.forEach((ur) => {
         expect(ur.tenant_id).toBe(ctx.tenant.id);
       });
     });
