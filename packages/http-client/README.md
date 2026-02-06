@@ -64,12 +64,12 @@ All use generic method names with context first:
 | Client | Methods |
 |--------|---------|
 | `me` | `getMe()` |
-| `users` | `getUsers()`, `getUser(id)`, `createUser(req)`, `deleteUser(id)` |
-| `tenants` | `getTenants()`, `getTenant(id)`, `createTenant(req)`, `updateTenant(id, req)`, `deleteTenant(id)`, `createTenantWithShopAndUser(req)` |
-| `shops` | `getShops(tenantId?)`, `getShop(id)`, `createShop(req)`, `updateShop(id, req)`, `deleteShop(id)`, `deleteShopData(id)` |
+| `users` | `getAll()`, `getById(id)`, `create(req)`, `delete(id)` |
+| `tenants` | `getAll()`, `getById(id)`, `create(req)`, `update(id, req)`, `delete(id)`, `createWithShopAndUser(req)` |
+| `shops` | `getAll(tenantId?)`, `getById(id)`, `create(req)`, `update(id, req)`, `delete(id)`, `deleteData(id)` |
 | `roles` | `getAll()`, `getById(id)`, `create(req)`, `update(id, req)`, `delete(id)` |
-| `userRoles` | `getUserRoles(query)`, `getUserRole(id)`, `createUserRole(req)`, `deleteUserRole(id)` |
-| `apiKeys` | `getApiKeys()`, `createApiKey(req)`, `deleteApiKey(id)` |
+| `userRoles` | `getAll(query?)`, `getById(id)`, `create(req)`, `delete(id)` |
+| `apiKeys` | `getAll(userId?)`, `create(req)`, `delete(id)` |
 | `metadata` | `getEntitiesMetadata()` (no auth) |
 
 ## Import/Export
@@ -96,7 +96,7 @@ await client.salesHistory.create(ctx, {
 import { SalesPlannerClient, ApiError } from '@sales-planner/http-client';
 
 try {
-  await client.users.getUser(999);
+  await client.users.getById(999);
 } catch (error) {
   if (error instanceof ApiError) {
     console.log(error.status, error.message); // 404, "User not found"

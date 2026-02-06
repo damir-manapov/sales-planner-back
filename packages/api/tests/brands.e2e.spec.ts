@@ -358,13 +358,13 @@ describe('Brands (e2e)', () => {
       let editorClient: SalesPlannerClient;
 
       beforeAll(async () => {
-        const editorUser = await ctx.getSystemClient().users.createUser({
+        const editorUser = await ctx.getSystemClient().users.create({
           email: `editor-${generateUniqueId()}@example.com`,
           name: 'Editor User',
         });
         editorUserId = editorUser.id;
 
-        const editorApiKey = await ctx.getSystemClient().apiKeys.createApiKey({
+        const editorApiKey = await ctx.getSystemClient().apiKeys.create({
           user_id: editorUserId,
           name: 'Editor Key',
         });
@@ -373,7 +373,7 @@ describe('Brands (e2e)', () => {
         const roles = await ctx.getSystemClient().roles.getAll();
         const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
         if (!editorRole) throw new Error('Editor role not found');
-        await ctx.getSystemClient().userRoles.createUserRole({
+        await ctx.getSystemClient().userRoles.create({
           user_id: editorUserId,
           role_id: editorRole.id,
           tenant_id: ctx.tenant.id,
@@ -446,13 +446,13 @@ describe('Brands (e2e)', () => {
       let viewerClient: SalesPlannerClient;
 
       beforeAll(async () => {
-        const viewerUser = await ctx.getSystemClient().users.createUser({
+        const viewerUser = await ctx.getSystemClient().users.create({
           email: `viewer-${generateUniqueId()}@example.com`,
           name: 'Viewer User',
         });
         viewerUserId = viewerUser.id;
 
-        const viewerApiKey = await ctx.getSystemClient().apiKeys.createApiKey({
+        const viewerApiKey = await ctx.getSystemClient().apiKeys.create({
           user_id: viewerUserId,
           name: 'Viewer Key',
         });
@@ -461,7 +461,7 @@ describe('Brands (e2e)', () => {
         const roles = await ctx.getSystemClient().roles.getAll();
         const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
         if (!viewerRole) throw new Error('Viewer role not found');
-        await ctx.getSystemClient().userRoles.createUserRole({
+        await ctx.getSystemClient().userRoles.create({
           user_id: viewerUserId,
           role_id: viewerRole.id,
           tenant_id: ctx.tenant.id,

@@ -6,7 +6,7 @@ import type {
 import { BaseClient } from './base-client.js';
 
 export class UserRolesClient extends BaseClient {
-  async getUserRoles(query?: GetUserRolesQuery): Promise<UserRoleResponse[]> {
+  async getAll(query?: GetUserRolesQuery): Promise<UserRoleResponse[]> {
     const params = new URLSearchParams();
     if (query?.userId) params.append('userId', String(query.userId));
     if (query?.roleId) params.append('roleId', String(query.roleId));
@@ -15,15 +15,15 @@ export class UserRolesClient extends BaseClient {
     return this.request('GET', `/user-roles${queryString ? `?${queryString}` : ''}`);
   }
 
-  async getUserRole(id: number): Promise<UserRoleResponse> {
+  async getById(id: number): Promise<UserRoleResponse> {
     return this.request('GET', `/user-roles/${id}`);
   }
 
-  async createUserRole(request: CreateUserRoleRequest): Promise<UserRoleResponse> {
+  async create(request: CreateUserRoleRequest): Promise<UserRoleResponse> {
     return this.request('POST', '/user-roles', { body: request });
   }
 
-  async deleteUserRole(id: number): Promise<void> {
+  async delete(id: number): Promise<void> {
     return this.request('DELETE', `/user-roles/${id}`);
   }
 }

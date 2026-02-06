@@ -40,7 +40,7 @@ describe('Shops E2E', () => {
     });
 
     // Delete initial shop (we'll create our own)
-    await ctx.client.shops.deleteShop(ctx.shop.id);
+    await ctx.client.shops.delete(ctx.shop.id);
   });
 
   afterAll(async () => {
@@ -51,18 +51,18 @@ describe('Shops E2E', () => {
   describe('Authentication', () => {
     it('should return 401 without API key', async () => {
       const noAuthClient = new SalesPlannerClient({ baseUrl, apiKey: '' });
-      await expectUnauthorized(() => noAuthClient.shops.getShops());
+      await expectUnauthorized(() => noAuthClient.shops.getAll());
     });
 
     it('should return 401 with invalid API key', async () => {
       const badClient = new SalesPlannerClient({ baseUrl, apiKey: 'invalid-key' });
-      await expectUnauthorized(() => badClient.shops.getShops());
+      await expectUnauthorized(() => badClient.shops.getAll());
     });
   });
 
   describe('Shop CRUD', () => {
     it('POST /shops - tenant owner should create shop', async () => {
-      const shop = await ctx.client.shops.createShop({
+      const shop = await ctx.client.shops.create({
         title: 'Test Shop',
         tenant_id: ctx.tenant.id,
       });
@@ -73,33 +73,33 @@ describe('Shops E2E', () => {
     });
 
     it('GET /shops - tenant owner should list shops', async () => {
-      const shops = await ctx.client.shops.getShops();
+      const shops = await ctx.client.shops.getAll();
 
       expect(Array.isArray(shops)).toBe(true);
       expect(shops.some((s) => s.id === testShopId)).toBe(true);
     });
 
     it('GET /shops?tenantId=X - should filter by tenant', async () => {
-      const shops = await ctx.client.shops.getShops(ctx.tenant.id);
+      const shops = await ctx.client.shops.getAll(ctx.tenant.id);
 
       expect(shops.every((s) => s.tenant_id === ctx.tenant.id)).toBe(true);
     });
 
     it('GET /shops/:id - should return shop by id', async () => {
-      const shop = await ctx.client.shops.getShop(testShopId);
+      const shop = await ctx.client.shops.getById(testShopId);
 
       expect(shop.id).toBe(testShopId);
       expect(shop.title).toBe('Test Shop');
     });
 
     it('PUT /shops/:id - tenant owner should update shop', async () => {
-      const shop = await ctx.client.shops.updateShop(testShopId, { title: 'Updated Shop' });
+      const shop = await ctx.client.shops.update(testShopId, { title: 'Updated Shop' });
 
       expect(shop.title).toBe('Updated Shop');
     });
 
     it('GET /shops/:id - should return 404 for non-existent shop', async () => {
-      await expectNotFound(() => ctx.client.shops.getShop(999999));
+      await expectNotFound(() => ctx.client.shops.getById(999999));
     });
   });
 
@@ -110,12 +110,12 @@ describe('Shops E2E', () => {
 
     beforeAll(async () => {
       // Create tenant admin user
-      const adminUser = await ctx.getSystemClient().users.createUser({
+      const adminUser = await ctx.getSystemClient().users.create({
         email: `tenant-admin-${generateUniqueId()}@example.com`,
         name: 'Tenant Admin User',
       });
       tenantAdminUserId = adminUser.id;
-      const adminApiKey = await ctx.getSystemClient().apiKeys.createApiKey({
+      const adminApiKey = await ctx.getSystemClient().apiKeys.create({
         user_id: tenantAdminUserId,
         name: 'Admin Key',
       });
@@ -124,7 +124,7 @@ describe('Shops E2E', () => {
       const roles = await ctx.getSystemClient().roles.getAll();
       const tenantAdminRole = roles.find((r) => r.name === ROLE_NAMES.TENANT_ADMIN);
       if (!tenantAdminRole) throw new Error('Tenant Admin role not found');
-      await ctx.getSystemClient().userRoles.createUserRole({
+      await ctx.getSystemClient().userRoles.create({
         user_id: tenantAdminUserId,
         role_id: tenantAdminRole.id,
         tenant_id: ctx.tenant.id,
@@ -140,13 +140,13 @@ describe('Shops E2E', () => {
     });
 
     it('GET /shops - tenant admin should list shops in their tenant', async () => {
-      const shops = await tenantAdminClient.shops.getShops();
+      const shops = await tenantAdminClient.shops.getAll();
 
       expect(Array.isArray(shops)).toBe(true);
     });
 
     it('POST /shops - tenant admin should create shop', async () => {
-      const shop = await tenantAdminClient.shops.createShop({
+      const shop = await tenantAdminClient.shops.create({
         title: 'Admin Created Shop',
         tenant_id: ctx.tenant.id,
       });
@@ -156,7 +156,7 @@ describe('Shops E2E', () => {
     });
 
     it('PUT /shops/:id - tenant admin should update shop', async () => {
-      const shop = await tenantAdminClient.shops.updateShop(adminCreatedShopId, {
+      const shop = await tenantAdminClient.shops.update(adminCreatedShopId, {
         title: 'Admin Updated Shop',
       });
 
@@ -164,7 +164,7 @@ describe('Shops E2E', () => {
     });
 
     it('DELETE /shops/:id - tenant admin should delete shop', async () => {
-      await tenantAdminClient.shops.deleteShop(adminCreatedShopId);
+      await tenantAdminClient.shops.delete(adminCreatedShopId);
     });
   });
 
@@ -174,7 +174,7 @@ describe('Shops E2E', () => {
 
     beforeAll(async () => {
       // Create another user with their own tenant
-      const otherSetup = await ctx.getSystemClient().tenants.createTenantWithShopAndUser({
+      const otherSetup = await ctx.getSystemClient().tenants.createWithShopAndUser({
         tenantTitle: `Other Tenant ${generateUniqueId()}`,
         userEmail: `other-user-${generateUniqueId()}@example.com`,
         userName: 'Other User',
@@ -191,27 +191,27 @@ describe('Shops E2E', () => {
     });
 
     it('GET /shops/:id - should return 403 for shop in other tenant', async () => {
-      await expectForbidden(() => otherClient.shops.getShop(testShopId));
+      await expectForbidden(() => otherClient.shops.getById(testShopId));
     });
 
     it('GET /shops?tenantId=X - should return 403 for other tenant', async () => {
-      await expectForbidden(() => otherClient.shops.getShops(ctx.tenant.id));
+      await expectForbidden(() => otherClient.shops.getAll(ctx.tenant.id));
     });
 
     it('POST /shops - should return 403 when creating shop in other tenant', async () => {
       await expectForbidden(() =>
-        otherClient.shops.createShop({ title: 'Unauthorized Shop', tenant_id: ctx.tenant.id }),
+        otherClient.shops.create({ title: 'Unauthorized Shop', tenant_id: ctx.tenant.id }),
       );
     });
 
     it('PUT /shops/:id - should return 403 when updating shop in other tenant', async () => {
       await expectForbidden(() =>
-        otherClient.shops.updateShop(testShopId, { title: 'Hacked Shop' }),
+        otherClient.shops.update(testShopId, { title: 'Hacked Shop' }),
       );
     });
 
     it('DELETE /shops/:id - should return 403 when deleting shop in other tenant', async () => {
-      await expectForbidden(() => otherClient.shops.deleteShop(testShopId));
+      await expectForbidden(() => otherClient.shops.delete(testShopId));
     });
   });
 
@@ -221,7 +221,7 @@ describe('Shops E2E', () => {
 
     beforeAll(async () => {
       // Create a shop with data
-      const shop = await ctx.client.shops.createShop({
+      const shop = await ctx.client.shops.create({
         title: `Data Shop ${generateUniqueId()}`,
         tenant_id: ctx.tenant.id,
       });
@@ -247,7 +247,7 @@ describe('Shops E2E', () => {
     });
 
     it('DELETE /shops/:id/data - should delete shop data', async () => {
-      const result = await ctx.client.shops.deleteShopData(dataShopId);
+      const result = await ctx.client.shops.deleteData(dataShopId);
 
       expect(result.skusDeleted).toBe(2);
       expect(result.salesHistoryDeleted).toBe(2);
@@ -262,13 +262,13 @@ describe('Shops E2E', () => {
 
   describe('System admin access', () => {
     it('GET /shops - system admin should see all shops', async () => {
-      const shops = await ctx.getSystemClient().shops.getShops();
+      const shops = await ctx.getSystemClient().shops.getAll();
 
       expect(Array.isArray(shops)).toBe(true);
     });
 
     it('GET /shops/:id - system admin should access any shop', async () => {
-      const shop = await ctx.getSystemClient().shops.getShop(testShopId);
+      const shop = await ctx.getSystemClient().shops.getById(testShopId);
 
       expect(shop.id).toBe(testShopId);
     });
@@ -280,13 +280,13 @@ describe('Shops E2E', () => {
       let editorClient: SalesPlannerClient;
 
       beforeAll(async () => {
-        const editorUser = await ctx.getSystemClient().users.createUser({
+        const editorUser = await ctx.getSystemClient().users.create({
           email: `editor-${generateUniqueId()}@example.com`,
           name: 'Editor User',
         });
         editorUserId = editorUser.id;
 
-        const editorApiKey = await ctx.getSystemClient().apiKeys.createApiKey({
+        const editorApiKey = await ctx.getSystemClient().apiKeys.create({
           user_id: editorUserId,
           name: 'Editor Key',
         });
@@ -295,7 +295,7 @@ describe('Shops E2E', () => {
         const roles = await ctx.getSystemClient().roles.getAll();
         const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
         if (!editorRole) throw new Error('Editor role not found');
-        await ctx.getSystemClient().userRoles.createUserRole({
+        await ctx.getSystemClient().userRoles.create({
           user_id: editorUserId,
           role_id: editorRole.id,
           tenant_id: ctx.tenant.id,
@@ -308,30 +308,30 @@ describe('Shops E2E', () => {
       });
 
       it('editor should list shops', async () => {
-        const shops = await editorClient.shops.getShops();
+        const shops = await editorClient.shops.getAll();
         expect(Array.isArray(shops)).toBe(true);
         expect(shops.some((s) => s.id === testShopId)).toBe(true);
       });
 
       it('editor should get shop by id', async () => {
-        const shop = await editorClient.shops.getShop(testShopId);
+        const shop = await editorClient.shops.getById(testShopId);
         expect(shop.id).toBe(testShopId);
       });
 
       it('editor should NOT create shop', async () => {
         await expectForbidden(() =>
-          editorClient.shops.createShop({ title: 'Editor Shop', tenant_id: ctx.tenant.id }),
+          editorClient.shops.create({ title: 'Editor Shop', tenant_id: ctx.tenant.id }),
         );
       });
 
       it('editor should NOT update shop', async () => {
         await expectForbidden(() =>
-          editorClient.shops.updateShop(testShopId, { title: 'Editor Updated' }),
+          editorClient.shops.update(testShopId, { title: 'Editor Updated' }),
         );
       });
 
       it('editor should NOT delete shop', async () => {
-        await expectForbidden(() => editorClient.shops.deleteShop(testShopId));
+        await expectForbidden(() => editorClient.shops.delete(testShopId));
       });
     });
 
@@ -340,13 +340,13 @@ describe('Shops E2E', () => {
       let viewerClient: SalesPlannerClient;
 
       beforeAll(async () => {
-        const viewerUser = await ctx.getSystemClient().users.createUser({
+        const viewerUser = await ctx.getSystemClient().users.create({
           email: `viewer-${generateUniqueId()}@example.com`,
           name: 'Viewer User',
         });
         viewerUserId = viewerUser.id;
 
-        const viewerApiKey = await ctx.getSystemClient().apiKeys.createApiKey({
+        const viewerApiKey = await ctx.getSystemClient().apiKeys.create({
           user_id: viewerUserId,
           name: 'Viewer Key',
         });
@@ -355,7 +355,7 @@ describe('Shops E2E', () => {
         const roles = await ctx.getSystemClient().roles.getAll();
         const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
         if (!viewerRole) throw new Error('Viewer role not found');
-        await ctx.getSystemClient().userRoles.createUserRole({
+        await ctx.getSystemClient().userRoles.create({
           user_id: viewerUserId,
           role_id: viewerRole.id,
           tenant_id: ctx.tenant.id,
@@ -368,41 +368,41 @@ describe('Shops E2E', () => {
       });
 
       it('viewer should list shops', async () => {
-        const shops = await viewerClient.shops.getShops();
+        const shops = await viewerClient.shops.getAll();
         expect(Array.isArray(shops)).toBe(true);
         expect(shops.some((s) => s.id === testShopId)).toBe(true);
       });
 
       it('viewer should get shop by id', async () => {
-        const shop = await viewerClient.shops.getShop(testShopId);
+        const shop = await viewerClient.shops.getById(testShopId);
         expect(shop.id).toBe(testShopId);
       });
 
       it('viewer should NOT create shop', async () => {
         await expectForbidden(() =>
-          viewerClient.shops.createShop({ title: 'Viewer Shop', tenant_id: ctx.tenant.id }),
+          viewerClient.shops.create({ title: 'Viewer Shop', tenant_id: ctx.tenant.id }),
         );
       });
 
       it('viewer should NOT update shop', async () => {
         await expectForbidden(() =>
-          viewerClient.shops.updateShop(testShopId, { title: 'Viewer Updated' }),
+          viewerClient.shops.update(testShopId, { title: 'Viewer Updated' }),
         );
       });
 
       it('viewer should NOT delete shop', async () => {
-        await expectForbidden(() => viewerClient.shops.deleteShop(testShopId));
+        await expectForbidden(() => viewerClient.shops.delete(testShopId));
       });
     });
   });
 
   describe('Shop deletion', () => {
     it('DELETE /shops/:id - tenant owner should delete shop', async () => {
-      await ctx.client.shops.deleteShop(testShopId);
+      await ctx.client.shops.delete(testShopId);
     });
 
     it('GET /shops/:id - should return 404 after deletion', async () => {
-      await expectNotFound(() => ctx.client.shops.getShop(testShopId));
+      await expectNotFound(() => ctx.client.shops.getById(testShopId));
     });
   });
 });

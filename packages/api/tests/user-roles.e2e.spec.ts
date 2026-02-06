@@ -56,13 +56,13 @@ describe('User Roles (e2e)', () => {
     it('should return 401 without API key', async () => {
       const noAuthClient = new SalesPlannerClient({ baseUrl, apiKey: '' });
       await expectUnauthorized(() =>
-        noAuthClient.userRoles.getUserRoles({ tenantId: ctx.tenant.id }),
+        noAuthClient.userRoles.getAll({ tenantId: ctx.tenant.id }),
       );
     });
 
     it('should return 401 with invalid API key', async () => {
       const badClient = new SalesPlannerClient({ baseUrl, apiKey: 'invalid-key' });
-      await expectUnauthorized(() => badClient.userRoles.getUserRoles({ tenantId: ctx.tenant.id }));
+      await expectUnauthorized(() => badClient.userRoles.getAll({ tenantId: ctx.tenant.id }));
     });
   });
 
@@ -72,7 +72,7 @@ describe('User Roles (e2e)', () => {
 
     beforeAll(async () => {
       // Create a user to assign roles to
-      const targetUser = await ctx.getSystemClient().users.createUser({
+      const targetUser = await ctx.getSystemClient().users.create({
         email: `target-user-${generateUniqueId()}@example.com`,
         name: 'Target User',
       });
@@ -84,13 +84,13 @@ describe('User Roles (e2e)', () => {
     });
 
     it('tenant owner should list user roles for their tenant', async () => {
-      const userRoles = await ctx.client.userRoles.getUserRoles({ tenantId: ctx.tenant.id });
+      const userRoles = await ctx.client.userRoles.getAll({ tenantId: ctx.tenant.id });
 
       expect(Array.isArray(userRoles)).toBe(true);
     });
 
     it('tenant owner should assign editor role to user in their tenant', async () => {
-      const userRole = await ctx.client.userRoles.createUserRole({
+      const userRole = await ctx.client.userRoles.create({
         user_id: targetUserId,
         role_id: editorRoleId,
         tenant_id: ctx.tenant.id,
@@ -107,14 +107,14 @@ describe('User Roles (e2e)', () => {
     });
 
     it('tenant owner should get user role by id', async () => {
-      const userRole = await ctx.client.userRoles.getUserRole(createdUserRoleId);
+      const userRole = await ctx.client.userRoles.getById(createdUserRoleId);
 
       expect(userRole.id).toBe(createdUserRoleId);
       expect(userRole.user_id).toBe(targetUserId);
     });
 
     it('tenant owner should assign viewer role to same user', async () => {
-      const userRole = await ctx.client.userRoles.createUserRole({
+      const userRole = await ctx.client.userRoles.create({
         user_id: targetUserId,
         role_id: viewerRoleId,
         tenant_id: ctx.tenant.id,
@@ -125,8 +125,8 @@ describe('User Roles (e2e)', () => {
     });
 
     it('tenant owner should delete user role', async () => {
-      await ctx.client.userRoles.deleteUserRole(createdUserRoleId);
-      await expectNotFound(() => ctx.client.userRoles.getUserRole(createdUserRoleId));
+      await ctx.client.userRoles.delete(createdUserRoleId);
+      await expectNotFound(() => ctx.client.userRoles.getById(createdUserRoleId));
     });
   });
 
@@ -138,13 +138,13 @@ describe('User Roles (e2e)', () => {
 
     beforeAll(async () => {
       // Create tenant admin user
-      const adminUser = await ctx.getSystemClient().users.createUser({
+      const adminUser = await ctx.getSystemClient().users.create({
         email: `tenant-admin-${generateUniqueId()}@example.com`,
         name: 'Tenant Admin User',
       });
       tenantAdminUserId = adminUser.id;
 
-      const adminApiKey = await ctx.getSystemClient().apiKeys.createApiKey({
+      const adminApiKey = await ctx.getSystemClient().apiKeys.create({
         user_id: tenantAdminUserId,
         name: 'Admin Key',
       });
@@ -154,14 +154,14 @@ describe('User Roles (e2e)', () => {
       const roles = await ctx.getSystemClient().roles.getAll();
       const tenantAdminRole = roles.find((r) => r.name === ROLE_NAMES.TENANT_ADMIN);
       if (!tenantAdminRole) throw new Error('Tenant Admin role not found');
-      await ctx.getSystemClient().userRoles.createUserRole({
+      await ctx.getSystemClient().userRoles.create({
         user_id: tenantAdminUserId,
         role_id: tenantAdminRole.id,
         tenant_id: ctx.tenant.id,
       });
 
       // Create target user
-      const targetUser = await ctx.getSystemClient().users.createUser({
+      const targetUser = await ctx.getSystemClient().users.create({
         email: `admin-target-${generateUniqueId()}@example.com`,
         name: 'Admin Target User',
       });
@@ -174,13 +174,13 @@ describe('User Roles (e2e)', () => {
     });
 
     it('tenant admin should list user roles for their tenant', async () => {
-      const userRoles = await tenantAdminClient.userRoles.getUserRoles({ tenantId: ctx.tenant.id });
+      const userRoles = await tenantAdminClient.userRoles.getAll({ tenantId: ctx.tenant.id });
 
       expect(Array.isArray(userRoles)).toBe(true);
     });
 
     it('tenant admin should assign role to user in their tenant', async () => {
-      const userRole = await tenantAdminClient.userRoles.createUserRole({
+      const userRole = await tenantAdminClient.userRoles.create({
         user_id: targetUserId,
         role_id: editorRoleId,
         tenant_id: ctx.tenant.id,
@@ -194,14 +194,14 @@ describe('User Roles (e2e)', () => {
     });
 
     it('tenant admin should get user role by id', async () => {
-      const userRole = await tenantAdminClient.userRoles.getUserRole(adminCreatedRoleId);
+      const userRole = await tenantAdminClient.userRoles.getById(adminCreatedRoleId);
 
       expect(userRole.id).toBe(adminCreatedRoleId);
     });
 
     it('tenant admin should delete user role in their tenant', async () => {
-      await tenantAdminClient.userRoles.deleteUserRole(adminCreatedRoleId);
-      await expectNotFound(() => tenantAdminClient.userRoles.getUserRole(adminCreatedRoleId));
+      await tenantAdminClient.userRoles.delete(adminCreatedRoleId);
+      await expectNotFound(() => tenantAdminClient.userRoles.getById(adminCreatedRoleId));
     });
   });
 
@@ -217,12 +217,12 @@ describe('User Roles (e2e)', () => {
       });
 
       // Create a user role in other tenant
-      const targetUser = await ctx.getSystemClient().users.createUser({
+      const targetUser = await ctx.getSystemClient().users.create({
         email: `other-target-${generateUniqueId()}@example.com`,
         name: 'Other Target',
       });
 
-      const userRole = await otherCtx.client.userRoles.createUserRole({
+      const userRole = await otherCtx.client.userRoles.create({
         user_id: targetUser.id,
         role_id: viewerRoleId,
         tenant_id: otherCtx.tenant.id,
@@ -237,22 +237,22 @@ describe('User Roles (e2e)', () => {
 
     it('should return 403 when listing roles for other tenant', async () => {
       await expectForbidden(() =>
-        ctx.client.userRoles.getUserRoles({ tenantId: otherCtx.tenant.id }),
+        ctx.client.userRoles.getAll({ tenantId: otherCtx.tenant.id }),
       );
     });
 
     it('should return 403 when getting user role from other tenant', async () => {
-      await expectForbidden(() => ctx.client.userRoles.getUserRole(otherUserRoleId));
+      await expectForbidden(() => ctx.client.userRoles.getById(otherUserRoleId));
     });
 
     it('should return 403 when creating role in other tenant', async () => {
-      const targetUser = await ctx.getSystemClient().users.createUser({
+      const targetUser = await ctx.getSystemClient().users.create({
         email: `cross-target-${generateUniqueId()}@example.com`,
         name: 'Cross Target',
       });
 
       await expectForbidden(() =>
-        ctx.client.userRoles.createUserRole({
+        ctx.client.userRoles.create({
           user_id: targetUser.id,
           role_id: editorRoleId,
           tenant_id: otherCtx.tenant.id,
@@ -262,7 +262,7 @@ describe('User Roles (e2e)', () => {
     });
 
     it('should return 403 when deleting role from other tenant', async () => {
-      await expectForbidden(() => ctx.client.userRoles.deleteUserRole(otherUserRoleId));
+      await expectForbidden(() => ctx.client.userRoles.delete(otherUserRoleId));
     });
   });
 
@@ -274,19 +274,19 @@ describe('User Roles (e2e)', () => {
 
     beforeAll(async () => {
       // Create editor user
-      const editorUser = await ctx.getSystemClient().users.createUser({
+      const editorUser = await ctx.getSystemClient().users.create({
         email: `editor-${generateUniqueId()}@example.com`,
         name: 'Editor User',
       });
       editorUserId = editorUser.id;
 
-      const editorApiKey = await ctx.getSystemClient().apiKeys.createApiKey({
+      const editorApiKey = await ctx.getSystemClient().apiKeys.create({
         user_id: editorUserId,
         name: 'Editor Key',
       });
       editorClient = new SalesPlannerClient({ baseUrl, apiKey: editorApiKey.key });
 
-      await ctx.getSystemClient().userRoles.createUserRole({
+      await ctx.getSystemClient().userRoles.create({
         user_id: editorUserId,
         role_id: editorRoleId,
         tenant_id: ctx.tenant.id,
@@ -294,19 +294,19 @@ describe('User Roles (e2e)', () => {
       });
 
       // Create viewer user
-      const viewerUser = await ctx.getSystemClient().users.createUser({
+      const viewerUser = await ctx.getSystemClient().users.create({
         email: `viewer-${generateUniqueId()}@example.com`,
         name: 'Viewer User',
       });
       viewerUserId = viewerUser.id;
 
-      const viewerApiKey = await ctx.getSystemClient().apiKeys.createApiKey({
+      const viewerApiKey = await ctx.getSystemClient().apiKeys.create({
         user_id: viewerUserId,
         name: 'Viewer Key',
       });
       viewerClient = new SalesPlannerClient({ baseUrl, apiKey: viewerApiKey.key });
 
-      await ctx.getSystemClient().userRoles.createUserRole({
+      await ctx.getSystemClient().userRoles.create({
         user_id: viewerUserId,
         role_id: viewerRoleId,
         tenant_id: ctx.tenant.id,
@@ -320,17 +320,17 @@ describe('User Roles (e2e)', () => {
     });
 
     it('editor should NOT list user roles (requires tenant admin)', async () => {
-      await expectForbidden(() => editorClient.userRoles.getUserRoles({ tenantId: ctx.tenant.id }));
+      await expectForbidden(() => editorClient.userRoles.getAll({ tenantId: ctx.tenant.id }));
     });
 
     it('editor should NOT create user roles', async () => {
-      const targetUser = await ctx.getSystemClient().users.createUser({
+      const targetUser = await ctx.getSystemClient().users.create({
         email: `editor-target-${generateUniqueId()}@example.com`,
         name: 'Editor Target',
       });
 
       await expectForbidden(() =>
-        editorClient.userRoles.createUserRole({
+        editorClient.userRoles.create({
           user_id: targetUser.id,
           role_id: viewerRoleId,
           tenant_id: ctx.tenant.id,
@@ -340,17 +340,17 @@ describe('User Roles (e2e)', () => {
     });
 
     it('viewer should NOT list user roles (requires tenant admin)', async () => {
-      await expectForbidden(() => viewerClient.userRoles.getUserRoles({ tenantId: ctx.tenant.id }));
+      await expectForbidden(() => viewerClient.userRoles.getAll({ tenantId: ctx.tenant.id }));
     });
 
     it('viewer should NOT create user roles', async () => {
-      const targetUser = await ctx.getSystemClient().users.createUser({
+      const targetUser = await ctx.getSystemClient().users.create({
         email: `viewer-target-${generateUniqueId()}@example.com`,
         name: 'Viewer Target',
       });
 
       await expectForbidden(() =>
-        viewerClient.userRoles.createUserRole({
+        viewerClient.userRoles.create({
           user_id: targetUser.id,
           role_id: viewerRoleId,
           tenant_id: ctx.tenant.id,
@@ -365,7 +365,7 @@ describe('User Roles (e2e)', () => {
     let systemCreatedRoleId: number;
 
     beforeAll(async () => {
-      const targetUser = await ctx.getSystemClient().users.createUser({
+      const targetUser = await ctx.getSystemClient().users.create({
         email: `system-target-${generateUniqueId()}@example.com`,
         name: 'System Target',
       });
@@ -377,7 +377,7 @@ describe('User Roles (e2e)', () => {
     });
 
     it('system admin should list all user roles', async () => {
-      const userRoles = await ctx.getSystemClient().userRoles.getUserRoles();
+      const userRoles = await ctx.getSystemClient().userRoles.getAll();
 
       expect(Array.isArray(userRoles)).toBe(true);
     });
@@ -385,7 +385,7 @@ describe('User Roles (e2e)', () => {
     it('system admin should list user roles by tenant', async () => {
       const userRoles = await ctx
         .getSystemClient()
-        .userRoles.getUserRoles({ tenantId: ctx.tenant.id });
+        .userRoles.getAll({ tenantId: ctx.tenant.id });
 
       expect(Array.isArray(userRoles)).toBe(true);
       userRoles.forEach((ur) => {
@@ -394,7 +394,7 @@ describe('User Roles (e2e)', () => {
     });
 
     it('system admin should create user role', async () => {
-      const userRole = await ctx.getSystemClient().userRoles.createUserRole({
+      const userRole = await ctx.getSystemClient().userRoles.create({
         user_id: targetUserId,
         role_id: editorRoleId,
         tenant_id: ctx.tenant.id,
@@ -406,8 +406,8 @@ describe('User Roles (e2e)', () => {
     });
 
     it('system admin should delete user role', async () => {
-      await ctx.getSystemClient().userRoles.deleteUserRole(systemCreatedRoleId);
-      await expectNotFound(() => ctx.getSystemClient().userRoles.getUserRole(systemCreatedRoleId));
+      await ctx.getSystemClient().userRoles.delete(systemCreatedRoleId);
+      await expectNotFound(() => ctx.getSystemClient().userRoles.getById(systemCreatedRoleId));
     });
   });
 });

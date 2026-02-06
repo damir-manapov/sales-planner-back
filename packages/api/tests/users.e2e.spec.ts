@@ -44,18 +44,18 @@ describe('Users (e2e)', () => {
   describe('Authentication', () => {
     it('should return 401 without API key', async () => {
       const noAuthClient = new SalesPlannerClient({ baseUrl, apiKey: '' });
-      await expectUnauthorized(() => noAuthClient.users.getUsers());
+      await expectUnauthorized(() => noAuthClient.users.getAll());
     });
 
     it('should return 401 with invalid API key', async () => {
       const badClient = new SalesPlannerClient({ baseUrl, apiKey: 'invalid-key' });
-      await expectUnauthorized(() => badClient.users.getUsers());
+      await expectUnauthorized(() => badClient.users.getAll());
     });
   });
 
   describe('CRUD operations', () => {
     it('should list users with system admin', async () => {
-      const users = await ctx.getSystemClient().users.getUsers();
+      const users = await ctx.getSystemClient().users.getAll();
       expect(Array.isArray(users)).toBe(true);
     });
 
@@ -65,7 +65,7 @@ describe('Users (e2e)', () => {
         name: 'Test User',
       };
 
-      const user = await ctx.getSystemClient().users.createUser(newUser);
+      const user = await ctx.getSystemClient().users.create(newUser);
 
       expect(user).toHaveProperty('id');
       expect(user.email).toBe(newUser.email);
@@ -75,23 +75,23 @@ describe('Users (e2e)', () => {
     });
 
     it('should get user by id with system admin', async () => {
-      const user = await ctx.getSystemClient().users.getUser(createdUserId);
+      const user = await ctx.getSystemClient().users.getById(createdUserId);
       expect(user.id).toBe(createdUserId);
     });
 
     it('should return 404 for non-existent user', async () => {
-      await expectNotFound(() => ctx.getSystemClient().users.getUser(999999));
+      await expectNotFound(() => ctx.getSystemClient().users.getById(999999));
     });
 
     it('should return 409 on duplicate email', async () => {
       const duplicateEmail = `duplicate-${generateUniqueId()}@example.com`;
-      await ctx.getSystemClient().users.createUser({
+      await ctx.getSystemClient().users.create({
         email: duplicateEmail,
         name: 'First User',
       });
 
       await expectConflict(() =>
-        ctx.getSystemClient().users.createUser({
+        ctx.getSystemClient().users.create({
           email: duplicateEmail,
           name: 'Duplicate User',
         }),
@@ -101,8 +101,8 @@ describe('Users (e2e)', () => {
 
   describe('Delete operations', () => {
     it('should delete user with system admin', async () => {
-      await ctx.getSystemClient().users.deleteUser(createdUserId);
-      await expectNotFound(() => ctx.getSystemClient().users.getUser(createdUserId));
+      await ctx.getSystemClient().users.delete(createdUserId);
+      await expectNotFound(() => ctx.getSystemClient().users.getById(createdUserId));
     });
   });
 });

@@ -53,7 +53,7 @@ export class TestContext {
     };
 
     const setup: TenantWithShopAndApiKey =
-      await systemClient.tenants.createTenantWithShopAndUser(dto);
+      await systemClient.tenants.createWithShopAndUser(dto);
 
     const client = new SalesPlannerClient({
       baseUrl,
@@ -91,14 +91,14 @@ export class TestContext {
     const systemClient = this.getSystemClient();
 
     // Create user
-    const user = await systemClient.users.createUser({
+    const user = await systemClient.users.create({
       email,
       name,
       default_shop_id: this.shop.id,
     });
 
     // Create API key
-    const apiKeyData = await systemClient.apiKeys.createApiKey({
+    const apiKeyData = await systemClient.apiKeys.create({
       user_id: user.id,
       name: `Test key for ${name}`,
     });
@@ -110,7 +110,7 @@ export class TestContext {
 
     if (!editorRole) throw new Error('Editor role not found');
 
-    await systemClient.userRoles.createUserRole({
+    await systemClient.userRoles.create({
       user_id: user.id,
       role_id: editorRole.id,
       tenant_id: this.tenant.id,
