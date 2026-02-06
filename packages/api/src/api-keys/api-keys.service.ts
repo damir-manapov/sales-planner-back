@@ -49,7 +49,7 @@ export class ApiKeysService {
         .values({
           user_id: data.user_id,
           key: key,
-          name: data.name ?? null,
+          name: data.name,
           expires_at: data.expires_at ? new Date(data.expires_at) : null,
         })
         .returningAll()
@@ -75,7 +75,7 @@ export class ApiKeysService {
         .values({
           user_id: data.user_id,
           key: data.key,
-          name: data.name ?? null,
+          name: data.name,
           expires_at: data.expires_at ? new Date(data.expires_at) : null,
         })
         .returningAll()

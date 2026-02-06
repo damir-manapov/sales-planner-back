@@ -19,7 +19,10 @@
   },
   "overrides": [
     {
-      "includes": ["packages/api/src/common/base-entity.service.ts"],
+      "includes": [
+        "packages/api/src/common/base-entity.service.ts",
+        "packages/api/src/common/shop-scoped-repository.ts"
+      ],
       "linter": {
         "rules": {
           "suspicious": {

@@ -1,23 +1,24 @@
 import { Injectable } from '@nestjs/common';
-import type { PaginatedResponse, Sku, SkuExportItem, SkuImportResult } from '@sales-planner/shared';
-import {
-  BaseEntityService,
-  DuplicateResourceException,
-  isUniqueViolation,
-} from '../common/index.js';
-import { DatabaseService } from '../database/index.js';
-import { normalizeSkuCode, normalizeCode } from '../lib/index.js';
+import type {
+  CreateSkuDto,
+  ImportSkuItem,
+  PaginatedResponse,
+  PaginationQuery,
+  Sku,
+  SkuExportItem,
+  SkuImportResult,
+  UpdateSkuDto,
+} from '@sales-planner/shared';
+import { DuplicateResourceException } from '../common/index.js';
+import { normalizeCode, normalizeSkuCode } from '../lib/index.js';
 import { CategoriesService } from '../categories/categories.service.js';
 import { GroupsService } from '../groups/groups.service.js';
 import { StatusesService } from '../statuses/statuses.service.js';
 import { SuppliersService } from '../suppliers/suppliers.service.js';
-import type { CreateSkuDto, ImportSkuItem, PaginationQuery, UpdateSkuDto } from './skus.schema.js';
 import { ImportSkuItemSchema } from './skus.schema.js';
+import { SkusRepository } from './skus.repository.js';
 
 export type { Sku };
-
-const DEFAULT_LIMIT = 100;
-const MAX_LIMIT = 1000;
 
 interface PreparedSkuItem extends ImportSkuItem {
   category_id?: number | null;
@@ -27,139 +28,95 @@ interface PreparedSkuItem extends ImportSkuItem {
 }
 
 @Injectable()
-export class SkusService extends BaseEntityService<Sku, CreateSkuDto, UpdateSkuDto, ImportSkuItem> {
+export class SkusService {
   constructor(
-    db: DatabaseService,
+    private readonly repository: SkusRepository,
     private readonly categoriesService: CategoriesService,
     private readonly groupsService: GroupsService,
     private readonly statusesService: StatusesService,
     private readonly suppliersService: SuppliersService,
-  ) {
-    super(db, 'skus');
+  ) {}
+
+  // ============ Read Operations (delegate to repository) ============
+
+  async findById(id: number): Promise<Sku | undefined> {
+    return this.repository.findById(id);
   }
 
-  protected normalizeCode(code: string): string {
-    return normalizeSkuCode(code);
+  async findByShopId(shopId: number): Promise<Sku[]> {
+    return this.repository.findByShopId(shopId);
   }
 
-  protected validateImportItem(item: unknown) {
-    return ImportSkuItemSchema.safeParse(item);
-  }
-
-  /**
-   * Get paginated SKUs for a shop
-   */
   async findByShopIdPaginated(
     shopId: number,
-    query: PaginationQuery = {},
+    query?: PaginationQuery,
   ): Promise<PaginatedResponse<Sku>> {
-    const limit = Math.min(query.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
-    const offset = query.offset ?? 0;
-
-    // Get total count
-    const countResult = await this.db
-      .selectFrom('skus')
-      .select(this.db.fn.countAll<number>().as('count'))
-      .where('shop_id', '=', shopId)
-      .executeTakeFirstOrThrow();
-    const total = Number(countResult.count);
-
-    // Get paginated items
-    const items = await this.db
-      .selectFrom('skus')
-      .selectAll()
-      .where('shop_id', '=', shopId)
-      .orderBy('id', 'asc')
-      .limit(limit)
-      .offset(offset)
-      .execute();
-
-    return {
-      items: items as Sku[],
-      total,
-      limit,
-      offset,
-    };
+    return this.repository.findByShopIdPaginated(shopId, query);
   }
 
-  /**
-   * Override create to handle title2 and relationship IDs
-   */
+  async findByCodeAndShop(code: string, shopId: number): Promise<Sku | undefined> {
+    const normalizedCode = normalizeSkuCode(code);
+    return this.repository.findByCodeAndShop(normalizedCode, shopId);
+  }
+
+  async countByShopId(shopId: number): Promise<number> {
+    return this.repository.countByShopId(shopId);
+  }
+
+  // ============ Write Operations (business logic + repository) ============
+
   async create(dto: CreateSkuDto): Promise<Sku> {
     try {
-      const result = await this.db
-        .insertInto('skus')
-        .values({
-          code: this.normalizeCode(dto.code),
-          title: dto.title,
-          title2: dto.title2 ?? null,
-          shop_id: dto.shop_id,
-          tenant_id: dto.tenant_id,
-          category_id: dto.category_id ?? null,
-          group_id: dto.group_id ?? null,
-          status_id: dto.status_id ?? null,
-          supplier_id: dto.supplier_id ?? null,
-          updated_at: new Date(),
-        })
-        .returningAll()
-        .executeTakeFirstOrThrow();
-
-      return result as Sku;
+      return await this.repository.create({
+        code: normalizeSkuCode(dto.code),
+        title: dto.title,
+        title2: dto.title2,
+        shop_id: dto.shop_id,
+        tenant_id: dto.tenant_id,
+        category_id: dto.category_id,
+        group_id: dto.group_id,
+        status_id: dto.status_id,
+        supplier_id: dto.supplier_id,
+      });
     } catch (error) {
-      if (isUniqueViolation(error)) {
+      if (this.repository.isUniqueViolation(error)) {
         throw new DuplicateResourceException('sku', dto.code, 'this shop');
       }
       throw error;
     }
   }
 
-  /**
-   * Override update to handle title2 and relationship IDs
-   */
   async update(id: number, dto: UpdateSkuDto): Promise<Sku | undefined> {
-    // Build update object, only including fields that were provided
-    const updateData: Record<string, unknown> = {
-      updated_at: new Date(),
-    };
+    const updateData: Parameters<SkusRepository['update']>[1] = {};
 
-    if (dto.code !== undefined) {
-      updateData.code = this.normalizeCode(dto.code);
-    }
-    if (dto.title !== undefined) {
-      updateData.title = dto.title;
-    }
-    if (dto.title2 !== undefined) {
-      updateData.title2 = dto.title2;
-    }
-    if (dto.category_id !== undefined) {
-      updateData.category_id = dto.category_id;
-    }
-    if (dto.group_id !== undefined) {
-      updateData.group_id = dto.group_id;
-    }
-    if (dto.status_id !== undefined) {
-      updateData.status_id = dto.status_id;
-    }
-    if (dto.supplier_id !== undefined) {
-      updateData.supplier_id = dto.supplier_id;
-    }
+    if (dto.code !== undefined) updateData.code = normalizeSkuCode(dto.code);
+    if (dto.title !== undefined) updateData.title = dto.title;
+    if (dto.title2 !== undefined) updateData.title2 = dto.title2;
+    if (dto.category_id !== undefined) updateData.category_id = dto.category_id;
+    if (dto.group_id !== undefined) updateData.group_id = dto.group_id;
+    if (dto.status_id !== undefined) updateData.status_id = dto.status_id;
+    if (dto.supplier_id !== undefined) updateData.supplier_id = dto.supplier_id;
 
-    const result = await this.db
-      .updateTable('skus')
-      .set(updateData)
-      .where('id', '=', id)
-      .returningAll()
-      .executeTakeFirst();
-
-    return result as Sku | undefined;
+    return this.repository.update(id, updateData);
   }
+
+  async delete(id: number): Promise<void> {
+    return this.repository.delete(id);
+  }
+
+  async deleteByShopId(shopId: number): Promise<number> {
+    return this.repository.deleteByShopId(shopId);
+  }
+
+  // ============ Import/Export Operations ============
 
   async bulkUpsert(items: unknown[], shopId: number, tenantId: number): Promise<SkuImportResult> {
     const validItems: ImportSkuItem[] = [];
     const errors: string[] = [];
 
+    // Validate items
     items.forEach((item, index) => {
-      const result = this.validateImportItem(item);
+      const result = ImportSkuItemSchema.safeParse(item);
 
       if (!result.success || !result.data) {
         const identifier =
@@ -187,7 +144,7 @@ export class SkusService extends BaseEntityService<Sku, CreateSkuDto, UpdateSkuD
       };
     }
 
-    // Auto-create categories, groups, statuses, and suppliers (following sales_history pattern)
+    // Auto-create related entities
     const categoryCodes = validItems
       .filter((i) => i.category)
       .map((i) => normalizeCode(i.category as string));
@@ -204,19 +161,19 @@ export class SkusService extends BaseEntityService<Sku, CreateSkuDto, UpdateSkuD
     const [categoryResult, groupResult, statusResult, supplierResult] = await Promise.all([
       categoryCodes.length > 0
         ? this.categoriesService.findOrCreateByCode(categoryCodes, shopId, tenantId)
-        : { codeToId: new Map(), created: 0 },
+        : { codeToId: new Map<string, number>(), created: 0 },
       groupCodes.length > 0
         ? this.groupsService.findOrCreateByCode(groupCodes, shopId, tenantId)
-        : { codeToId: new Map(), created: 0 },
+        : { codeToId: new Map<string, number>(), created: 0 },
       statusCodes.length > 0
         ? this.statusesService.findOrCreateByCode(statusCodes, shopId, tenantId)
-        : { codeToId: new Map(), created: 0 },
+        : { codeToId: new Map<string, number>(), created: 0 },
       supplierCodes.length > 0
         ? this.suppliersService.findOrCreateByCode(supplierCodes, shopId, tenantId)
-        : { codeToId: new Map(), created: 0 },
+        : { codeToId: new Map<string, number>(), created: 0 },
     ]);
 
-    // Map items to include resolved IDs
+    // Prepare items with resolved IDs
     const preparedItems: PreparedSkuItem[] = validItems.map((item) => ({
       ...item,
       category_id: item.category
@@ -231,54 +188,27 @@ export class SkusService extends BaseEntityService<Sku, CreateSkuDto, UpdateSkuD
         : null,
     }));
 
-    // Get existing codes for this shop
-    const existingCodes = new Set(
-      (
-        await this.db
-          .selectFrom('skus')
-          .select('code')
-          .where('shop_id', '=', shopId)
-          .where(
-            'code',
-            'in',
-            preparedItems.map((i) => this.normalizeCode(i.code)),
-          )
-          .execute()
-      ).map((r: { code: string }) => r.code),
+    // Get existing codes for counting created vs updated
+    const normalizedCodes = preparedItems.map((i) => normalizeSkuCode(i.code));
+    const existingCodes = await this.repository.findCodesByShopId(shopId, normalizedCodes);
+
+    // Bulk upsert
+    await this.repository.bulkUpsert(
+      preparedItems.map((item) => ({
+        code: normalizeSkuCode(item.code),
+        title: item.title,
+        title2: item.title2,
+        shop_id: shopId,
+        tenant_id: tenantId,
+        category_id: item.category_id,
+        group_id: item.group_id,
+        status_id: item.status_id,
+        supplier_id: item.supplier_id,
+      })),
     );
 
-    // Use ON CONFLICT for efficient upsert
-    await this.db
-      .insertInto('skus')
-      .values(
-        preparedItems.map((item) => ({
-          code: this.normalizeCode(item.code),
-          title: item.title,
-          title2: item.title2 ?? null,
-          shop_id: shopId,
-          tenant_id: tenantId,
-          category_id: item.category_id,
-          group_id: item.group_id,
-          status_id: item.status_id,
-          supplier_id: item.supplier_id,
-          updated_at: new Date(),
-        })),
-      )
-      .onConflict((oc) =>
-        oc.columns(['code', 'shop_id']).doUpdateSet((eb) => ({
-          title: eb.ref('excluded.title'),
-          title2: eb.ref('excluded.title2'),
-          category_id: eb.ref('excluded.category_id'),
-          group_id: eb.ref('excluded.group_id'),
-          status_id: eb.ref('excluded.status_id'),
-          supplier_id: eb.ref('excluded.supplier_id'),
-          updated_at: new Date(),
-        })),
-      )
-      .execute();
-
     const created = preparedItems.filter(
-      (i) => !existingCodes.has(this.normalizeCode(i.code)),
+      (i) => !existingCodes.has(normalizeSkuCode(i.code)),
     ).length;
     const updated = preparedItems.length - created;
 
@@ -293,33 +223,8 @@ export class SkusService extends BaseEntityService<Sku, CreateSkuDto, UpdateSkuD
     };
   }
 
-  async deleteByShopId(shopId: number): Promise<number> {
-    const result = await this.db
-      .deleteFrom('skus')
-      .where('shop_id', '=', shopId)
-      .executeTakeFirst();
-    return Number(result.numDeletedRows);
-  }
-
   async exportForShop(shopId: number): Promise<SkuExportItem[]> {
-    const skus = await this.db
-      .selectFrom('skus')
-      .leftJoin('categories', 'skus.category_id', 'categories.id')
-      .leftJoin('groups', 'skus.group_id', 'groups.id')
-      .leftJoin('statuses', 'skus.status_id', 'statuses.id')
-      .leftJoin('suppliers', 'skus.supplier_id', 'suppliers.id')
-      .select([
-        'skus.code',
-        'skus.title',
-        'skus.title2',
-        'categories.code as category',
-        'groups.code as group',
-        'statuses.code as status',
-        'suppliers.code as supplier',
-      ])
-      .where('skus.shop_id', '=', shopId)
-      .orderBy('skus.code', 'asc')
-      .execute();
+    const skus = await this.repository.exportForShop(shopId);
 
     return skus.map((sku) => ({
       code: sku.code,
@@ -333,7 +238,8 @@ export class SkusService extends BaseEntityService<Sku, CreateSkuDto, UpdateSkuD
   }
 
   /**
-   * Override the base findOrCreateByCode to use SKU-specific normalization
+   * Find SKUs by code or create missing ones.
+   * Used by SalesHistory import to auto-create SKUs.
    */
   async findOrCreateByCode(
     codes: string[],
@@ -345,39 +251,6 @@ export class SkusService extends BaseEntityService<Sku, CreateSkuDto, UpdateSkuD
     }
 
     const normalizedCodes = codes.map((code) => normalizeSkuCode(code));
-    const uniqueCodes = [...new Set(normalizedCodes)];
-
-    let entities = await this.db
-      .selectFrom('skus')
-      .select(['id', 'code'])
-      .where('shop_id', '=', shopId)
-      .where('code', 'in', uniqueCodes)
-      .execute();
-
-    const existingCodes = new Set(entities.map((e) => e.code));
-    const missingCodes = uniqueCodes.filter((code) => !existingCodes.has(code));
-
-    if (missingCodes.length > 0) {
-      const newEntities = await this.db
-        .insertInto('skus')
-        .values(
-          missingCodes.map((code) => ({
-            code,
-            title: code,
-            shop_id: shopId,
-            tenant_id: tenantId,
-            updated_at: new Date(),
-          })),
-        )
-        .returning(['id', 'code'])
-        .execute();
-
-      entities = [...entities, ...newEntities];
-    }
-
-    return {
-      codeToId: new Map(entities.map((e) => [e.code, e.id])),
-      created: missingCodes.length,
-    };
+    return this.repository.findOrCreateByCode(normalizedCodes, shopId, tenantId);
   }
 }

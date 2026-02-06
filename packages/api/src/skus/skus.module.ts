@@ -9,6 +9,7 @@ import { StatusesModule } from '../statuses/statuses.module.js';
 import { SuppliersModule } from '../suppliers/suppliers.module.js';
 import { SkusController } from './skus.controller.js';
 import { SkusService } from './skus.service.js';
+import { SkusRepository } from './skus.repository.js';
 import { SkusExamplesController } from './skus-examples.controller.js';
 
 @Module({
@@ -22,7 +23,7 @@ import { SkusExamplesController } from './skus-examples.controller.js';
     SuppliersModule,
   ],
   controllers: [SkusController, SkusExamplesController],
-  providers: [SkusService, AuthGuard],
+  providers: [SkusService, SkusRepository, AuthGuard],
   exports: [SkusService],
 })
 export class SkusModule {}

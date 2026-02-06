@@ -1,4 +1,18 @@
-import { ConflictException, InternalServerErrorException } from '@nestjs/common';
+import {
+  BadRequestException,
+  ConflictException,
+  InternalServerErrorException,
+} from '@nestjs/common';
+
+/**
+ * Exception thrown when an invalid table name is provided.
+ * This is a security measure to prevent SQL injection via table names.
+ */
+export class InvalidTableNameException extends BadRequestException {
+  constructor(tableName: string) {
+    super(`Invalid table name: ${tableName}`);
+  }
+}
 
 /**
  * Exception thrown when attempting to create a resource that already exists
