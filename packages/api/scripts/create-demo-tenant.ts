@@ -1,12 +1,25 @@
 #!/usr/bin/env bun
 import 'dotenv/config';
-import { SalesPlannerClient } from '../../http-client/dist/index.js';
+import { SalesPlannerClient, ApiError } from '../../http-client/dist/index.js';
 import {
   createSlug,
   getOrCreateTenant,
   initAdminClient,
   printSuccessSummary,
 } from './tenant-setup-helpers.js';
+
+function handleError(step: string, error: unknown): never {
+  console.error('');
+  console.error(`❌ Error in ${step}:`);
+  if (error instanceof ApiError) {
+    console.error(`   HTTP ${error.status}: ${error.message}`);
+  } else if (error instanceof Error) {
+    console.error(`   ${error.message}`);
+  } else {
+    console.error(`   ${error}`);
+  }
+  process.exit(1);
+}
 
 interface DemoTenantArgs {
   tenantTitle?: string;
@@ -84,52 +97,65 @@ async function createDemoTenant(args: DemoTenantArgs) {
   console.log(`   API URL: ${apiUrl}`);
   console.log('');
 
+  // Step 1: Get or create tenant
+  let setup: Awaited<ReturnType<typeof getOrCreateTenant>>;
   try {
-    // Step 1: Get or create tenant
-    const setup = await getOrCreateTenant(
+    setup = await getOrCreateTenant(
       adminClient,
       { tenantTitle, shopTitle: 'Electronics', userEmail, userName },
       apiUrl,
     );
+  } catch (error) {
+    handleError('Step 1: Get or create tenant', error);
+  }
 
-    // Create client with user's API key for data operations
-    const userClient = new SalesPlannerClient({ baseUrl: apiUrl, apiKey: setup.apiKey });
+  // Create client with user's API key for data operations
+  const userClient = new SalesPlannerClient({ baseUrl: apiUrl, apiKey: setup.apiKey });
+  const ctx = { shop_id: setup.shop.id, tenant_id: setup.tenant.id };
 
-    // Step 2: Clear existing shop data
-    console.log('🧹 Step 2: Clearing existing shop data...');
+  // Step 2: Clear existing shop data
+  console.log('🧹 Step 2: Clearing existing shop data...');
+  try {
     const deleteResult = await userClient.shops.deleteData(setup.shop.id);
     console.log(
       `   ✅ Deleted ${deleteResult.skusDeleted} SKUs and ${deleteResult.salesHistoryDeleted} sales records`,
     );
-    console.log('');
-
-    const ctx = { shop_id: setup.shop.id, tenant_id: setup.tenant.id };
-
-    // Step 3: Import brands
-    console.log(`🏷️  Step 3: Importing ${DEMO_BRANDS.length} brands...`);
-    const brandsResult = await userClient.brands.importJson(ctx, DEMO_BRANDS);
-    console.log(`   ✅ Created ${brandsResult.created} brands`);
-    console.log('');
-
-    // Step 5: Import sales history
-    console.log(`📈 Step 5: Importing ${DEMO_SALES_DATA.length} sales history records...`);
-    const salesResult = await userClient.salesHistory.importJson(ctx, DEMO_SALES_DATA);
-    console.log(`   ✅ Created ${salesResult.created} sales records`);
-    console.log('');
-
-    // Success summary
-    printSuccessSummary(setup, [
-      `${DEMO_BRANDS.length} brands (Dell, Apple, Samsung, etc.)`,
-      `${DEMO_SKUS.length} products (laptops, phones, tablets, accessories)`,
-      `${DEMO_SALES_DATA.length} sales history records across 3 periods`,
-      'Periods: 2025-11, 2025-12, 2026-01',
-    ]);
-
-    return setup;
   } catch (error) {
-    console.error('❌ Error creating demo tenant:', error);
-    process.exit(1);
+    handleError('Step 2: Clear existing shop data', error);
   }
+  console.log('');
+
+  // Step 3: Import brands
+  console.log(`🏷️  Step 3: Importing ${DEMO_BRANDS.length} brands...`);
+  let brandsResult: Awaited<ReturnType<typeof userClient.brands.importJson>>;
+  try {
+    brandsResult = await userClient.brands.importJson(ctx, DEMO_BRANDS);
+    console.log(`   ✅ Created ${brandsResult.created} brands`);
+  } catch (error) {
+    handleError('Step 3: Import brands', error);
+  }
+  console.log('');
+
+  // Step 4: Import sales history
+  console.log(`📈 Step 4: Importing ${DEMO_SALES_DATA.length} sales history records...`);
+  let salesResult: Awaited<ReturnType<typeof userClient.salesHistory.importJson>>;
+  try {
+    salesResult = await userClient.salesHistory.importJson(ctx, DEMO_SALES_DATA);
+    console.log(`   ✅ Created ${salesResult.created} sales records`);
+  } catch (error) {
+    handleError('Step 4: Import sales history', error);
+  }
+  console.log('');
+
+  // Success summary
+  printSuccessSummary(setup, [
+    `${DEMO_BRANDS.length} brands (Dell, Apple, Samsung, etc.)`,
+    `${DEMO_SKUS.length} products (laptops, phones, tablets, accessories)`,
+    `${DEMO_SALES_DATA.length} sales history records across 3 periods`,
+    'Periods: 2025-11, 2025-12, 2026-01',
+  ]);
+
+  return setup;
 }
 
 // Parse command line arguments

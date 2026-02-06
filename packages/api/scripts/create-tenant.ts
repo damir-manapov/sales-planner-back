@@ -1,6 +1,20 @@
 #!/usr/bin/env bun
 import 'dotenv/config';
+import { ApiError } from '../../http-client/dist/index.js';
 import { createSlug, initAdminClient, printSuccessSummary } from './tenant-setup-helpers.js';
+
+function handleError(step: string, error: unknown): never {
+  console.error('');
+  console.error(`❌ Error in ${step}:`);
+  if (error instanceof ApiError) {
+    console.error(`   HTTP ${error.status}: ${error.message}`);
+  } else if (error instanceof Error) {
+    console.error(`   ${error.message}`);
+  } else {
+    console.error(`   ${error}`);
+  }
+  process.exit(1);
+}
 
 interface CreateTenantArgs {
   tenantTitle: string;
@@ -22,19 +36,19 @@ async function createTenantWithShopAndUser(args: CreateTenantArgs) {
   console.log(`API URL: ${apiUrl}`);
   console.log('');
 
+  let result: Awaited<ReturnType<typeof client.tenants.createWithShopAndUser>>;
   try {
-    const result = await client.tenants.createWithShopAndUser({
+    result = await client.tenants.createWithShopAndUser({
       tenantTitle: args.tenantTitle,
       userEmail,
       userName,
     });
-
-    printSuccessSummary(result);
-    return result;
   } catch (error) {
-    console.error('Error creating tenant:', error);
-    process.exit(1);
+    handleError('Create tenant with shop and user', error);
   }
+
+  printSuccessSummary(result);
+  return result;
 }
 
 // Parse command line arguments
