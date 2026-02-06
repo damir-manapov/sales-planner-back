@@ -2,6 +2,6 @@ import type { CodedTitledItem, CodedTitledShopScopedCreateDto, CodedTitledUpdate
 
 export type CreateMarketplaceRequest = CodedTitledItem;
 export type CreateMarketplaceDto = CodedTitledShopScopedCreateDto;
-export type UpdateMarketplaceDto = Omit<CodedTitledUpdateDto, 'code'>;
-export type UpdateMarketplaceRequest = UpdateMarketplaceDto;
+export type UpdateMarketplaceDto = CodedTitledUpdateDto;
+export type UpdateMarketplaceRequest = CodedTitledUpdateDto;
 export type ImportMarketplaceItem = CodedTitledItem;

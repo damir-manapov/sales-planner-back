@@ -18,6 +18,7 @@ export const CreateMarketplaceSchema = z.object({
 });
 
 export const UpdateMarketplaceSchema = z.object({
+  code: shortId().optional(),
   title: title().optional(),
   // Note: shop_id and tenant_id are intentionally not updatable
 });
