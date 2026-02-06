@@ -1,8 +1,6 @@
 import { NestFactory } from '@nestjs/core';
 import { ExpressAdapter } from '@nestjs/platform-express';
 import express from 'express';
-// Import from pre-built dist folder (created by buildCommand before this runs)
-import { AppModule } from '../dist/app.module.js';
 
 const server = express();
 let isAppInitialized = false;
@@ -10,6 +8,8 @@ let isAppInitialized = false;
 export default async function handler(req, res) {
   try {
     if (!isAppInitialized) {
+      // Dynamic import - resolves at runtime after build completes
+      const { AppModule } = await import('../dist/app.module.js');
       const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
       app.enableCors();
 
