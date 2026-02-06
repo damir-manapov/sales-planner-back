@@ -16,7 +16,6 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { AuthenticatedRequest, AuthGuard } from '../../auth/auth.guard.js';
 import {
   RequireReadAccess,
@@ -151,36 +150,6 @@ export class SalesHistoryController {
   @Post('import/json')
   @RequireWriteAccess()
   @UseInterceptors(FileInterceptor('file'))
-  @ApiConsumes('multipart/form-data', 'application/json')
-  @ApiBody({
-    description: 'Upload JSON file or provide JSON array in body',
-    schema: {
-      oneOf: [
-        {
-          type: 'object',
-          properties: {
-            file: {
-              type: 'string',
-              format: 'binary',
-              description: 'JSON file with array of {marketplace, period, sku, quantity} objects',
-            },
-          },
-        },
-        {
-          type: 'array',
-          items: {
-            type: 'object',
-            properties: {
-              marketplace: { type: 'string' },
-              period: { type: 'string' },
-              sku: { type: 'string' },
-              quantity: { type: 'number' },
-            },
-          },
-        },
-      ],
-    },
-  })
   async import(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
@@ -194,19 +163,6 @@ export class SalesHistoryController {
   @Post('import/csv')
   @RequireWriteAccess()
   @UseInterceptors(FileInterceptor('file'))
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-          description: 'CSV file with columns: marketplace, period, sku, quantity',
-        },
-      },
-    },
-  })
   async importCsv(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,

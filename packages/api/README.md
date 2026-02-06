@@ -2,18 +2,6 @@
 
 NestJS REST API for multi-tenant sales planning and management. Built with Kysely + PostgreSQL (Neon) with comprehensive role-based access control.
 
-## 📚 API Documentation
-
-**Interactive API documentation available via Swagger UI:**
-- **Local**: http://localhost:3000/api
-- **Production**: https://sales-planner-back.vercel.app/api
-
-Swagger UI provides:
-- Complete API endpoint reference
-- Request/response schemas for all endpoints
-- Interactive "Try it out" functionality
-- API key authentication support
-
 ## Features
 
 - **Users** - User management
@@ -70,7 +58,6 @@ Swagger UI provides:
   - Excludes technical fields, only shows user-visible fields from export operations
   - Used by UI for documentation and dynamic form generation
 - **Bootstrap** - Auto-creates systemAdmin user and seeds default roles on startup
-- **Swagger/OpenAPI** - Interactive API documentation with try-it-out functionality
 - **Request Validation** - Zod-based schema validation with type sync to `@sales-planner/shared`
 - **Error Handling** - Returns 409 Conflict for duplicate resources (email, code, period, etc.)
 - **Security** - API keys are auto-generated using `crypto.randomUUID()` (not user-provided)

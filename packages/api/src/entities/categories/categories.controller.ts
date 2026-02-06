@@ -15,7 +15,6 @@ import {
   UseInterceptors,
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
-import { ApiBody, ApiConsumes } from '@nestjs/swagger';
 import { AuthenticatedRequest, AuthGuard } from '../../auth/auth.guard.js';
 import {
   RequireReadAccess,
@@ -166,18 +165,6 @@ export class CategoriesController {
   }
 
   @Post('import/csv')
-  @ApiConsumes('multipart/form-data')
-  @ApiBody({
-    schema: {
-      type: 'object',
-      properties: {
-        file: {
-          type: 'string',
-          format: 'binary',
-        },
-      },
-    },
-  })
   @RequireWriteAccess()
   @UseInterceptors(FileInterceptor('file'))
   async importCsv(
