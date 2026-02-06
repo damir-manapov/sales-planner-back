@@ -21,7 +21,7 @@ export interface IShopScopedRepository<
   update(id: number, data: TUpdateDto): Promise<TEntity | undefined>;
   delete(id: number): Promise<void>;
   deleteByShopId(shopId: number): Promise<number>;
-  exportForShop(shopId: number): Promise<Array<{ code: string; title: string }>>;
+  exportForShop(shopId: number): Promise<Array<Record<string, unknown>>>;
   findOrCreateByCode(
     codes: string[],
     shopId: number,

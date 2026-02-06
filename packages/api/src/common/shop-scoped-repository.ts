@@ -27,6 +27,9 @@ export abstract class ShopScopedRepository<
 {
   protected readonly tableName: TableName;
 
+  /** Fields to include in exportForShop. Override in subclass to add more fields. */
+  protected readonly exportFields: readonly string[] = ['code', 'title'];
+
   constructor(
     protected readonly db: DatabaseService,
     tableName: string,
@@ -152,13 +155,13 @@ export abstract class ShopScopedRepository<
     return Number(result.numDeletedRows);
   }
 
-  async exportForShop(shopId: number): Promise<Array<{ code: string; title: string }>> {
+  async exportForShop(shopId: number): Promise<Array<Record<string, unknown>>> {
     return this.db
       .selectFrom(this.tableName as any)
-      .select(['code', 'title'])
+      .select(this.exportFields.slice() as any)
       .where('shop_id', '=', shopId)
       .orderBy('code', 'asc')
-      .execute() as Promise<Array<{ code: string; title: string }>>;
+      .execute();
   }
 
   /**
