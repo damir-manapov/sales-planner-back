@@ -59,7 +59,7 @@ describe('Tenants (e2e)', () => {
     });
 
     // Get systemAdmin role and assign it
-    const roles = await ctx.getSystemClient().roles.getRoles();
+    const roles = await ctx.getSystemClient().roles.getAll();
     const sysAdminRole = roles.find((r) => r.name === ROLE_NAMES.SYSTEM_ADMIN);
     if (sysAdminRole) {
       await ctx

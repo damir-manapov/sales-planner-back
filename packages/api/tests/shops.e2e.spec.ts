@@ -121,7 +121,7 @@ describe('Shops E2E', () => {
       });
 
       // Get tenantAdmin role and assign it
-      const roles = await ctx.getSystemClient().roles.getRoles();
+      const roles = await ctx.getSystemClient().roles.getAll();
       const tenantAdminRole = roles.find((r) => r.name === ROLE_NAMES.TENANT_ADMIN);
       if (!tenantAdminRole) throw new Error('Tenant Admin role not found');
       await ctx.getSystemClient().userRoles.createUserRole({
@@ -292,7 +292,7 @@ describe('Shops E2E', () => {
         });
         editorClient = new SalesPlannerClient({ baseUrl, apiKey: editorApiKey.key });
 
-        const roles = await ctx.getSystemClient().roles.getRoles();
+        const roles = await ctx.getSystemClient().roles.getAll();
         const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
         if (!editorRole) throw new Error('Editor role not found');
         await ctx.getSystemClient().userRoles.createUserRole({
@@ -352,7 +352,7 @@ describe('Shops E2E', () => {
         });
         viewerClient = new SalesPlannerClient({ baseUrl, apiKey: viewerApiKey.key });
 
-        const roles = await ctx.getSystemClient().roles.getRoles();
+        const roles = await ctx.getSystemClient().roles.getAll();
         const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
         if (!viewerRole) throw new Error('Viewer role not found');
         await ctx.getSystemClient().userRoles.createUserRole({

@@ -39,7 +39,7 @@ describe('User Roles (e2e)', () => {
     });
 
     // Get role IDs
-    const roles = await ctx.getSystemClient().roles.getRoles();
+    const roles = await ctx.getSystemClient().roles.getAll();
     const editorRole = roles.find((r) => r.name === ROLE_NAMES.EDITOR);
     const viewerRole = roles.find((r) => r.name === ROLE_NAMES.VIEWER);
     if (!editorRole || !viewerRole) throw new Error('Required roles not found');
@@ -151,7 +151,7 @@ describe('User Roles (e2e)', () => {
       tenantAdminClient = new SalesPlannerClient({ baseUrl, apiKey: adminApiKey.key });
 
       // Assign tenant admin role
-      const roles = await ctx.getSystemClient().roles.getRoles();
+      const roles = await ctx.getSystemClient().roles.getAll();
       const tenantAdminRole = roles.find((r) => r.name === ROLE_NAMES.TENANT_ADMIN);
       if (!tenantAdminRole) throw new Error('Tenant Admin role not found');
       await ctx.getSystemClient().userRoles.createUserRole({

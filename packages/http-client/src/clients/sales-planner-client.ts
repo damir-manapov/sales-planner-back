@@ -29,18 +29,27 @@ import type {
   UpdateMarketplaceRequest,
   ImportMarketplaceItem,
   MarketplaceExportItem,
+  Role,
+  CreateRoleRequest,
+  UpdateRoleRequest,
+  SalesHistory,
+  CreateSalesHistoryRequest,
+  UpdateSalesHistoryRequest,
+  ImportSalesHistoryItem,
+  SalesHistoryExportItem,
+  SalesHistoryImportResult,
 } from '@sales-planner/shared';
 import type { ClientConfig } from './base-client.js';
 import { ApiError } from './base-client.js';
 import { CodedEntityClient } from './coded-entity-client.js';
+import { CrudClient } from './crud-client.js';
+import { ShopScopedClient } from './shop-scoped-client.js';
 import { MeClient } from './me-client.js';
 import { MetadataClient } from './metadata-client.js';
 import { UsersClient } from './users-client.js';
 import { TenantsClient } from './tenants-client.js';
 import { ShopsClient } from './shops-client.js';
 import { SkusClient } from './skus-client.js';
-import { SalesHistoryClient } from './sales-history-client.js';
-import { RolesClient } from './roles-client.js';
 import { UserRolesClient } from './user-roles-client.js';
 import { ApiKeysClient } from './api-keys-client.js';
 
@@ -60,8 +69,8 @@ export class SalesPlannerClient {
   readonly statuses: CodedEntityClient<Status, CreateStatusRequest, UpdateStatusRequest, ImportStatusItem, StatusExportItem>;
   readonly suppliers: CodedEntityClient<Supplier, CreateSupplierRequest, UpdateSupplierRequest, ImportSupplierItem, SupplierExportItem>;
   readonly marketplaces: CodedEntityClient<Marketplace, CreateMarketplaceRequest, UpdateMarketplaceRequest, ImportMarketplaceItem, MarketplaceExportItem>;
-  readonly salesHistory: SalesHistoryClient;
-  readonly roles: RolesClient;
+  readonly salesHistory: ShopScopedClient<SalesHistory, CreateSalesHistoryRequest, UpdateSalesHistoryRequest, ImportSalesHistoryItem, SalesHistoryExportItem, SalesHistoryImportResult>;
+  readonly roles: CrudClient<Role, CreateRoleRequest, UpdateRoleRequest>;
   readonly userRoles: UserRolesClient;
   readonly apiKeys: ApiKeysClient;
 
@@ -79,8 +88,8 @@ export class SalesPlannerClient {
     this.statuses = new CodedEntityClient(config, 'statuses');
     this.suppliers = new CodedEntityClient(config, 'suppliers');
     this.marketplaces = new CodedEntityClient(config, 'marketplaces');
-    this.salesHistory = new SalesHistoryClient(config);
-    this.roles = new RolesClient(config);
+    this.salesHistory = new ShopScopedClient(config, 'sales-history');
+    this.roles = new CrudClient(config, 'roles');
     this.userRoles = new UserRolesClient(config);
     this.apiKeys = new ApiKeysClient(config);
   }
