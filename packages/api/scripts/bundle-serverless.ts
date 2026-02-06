@@ -1,11 +1,15 @@
 import * as esbuild from 'esbuild';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
-import { writeFileSync, unlinkSync } from 'fs';
+import { writeFileSync, unlinkSync, readFileSync } from 'fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const apiRoot = join(__dirname, '..');
 const repoRoot = join(apiRoot, '../..');
+
+// Read version from package.json
+const packageJson = JSON.parse(readFileSync(join(apiRoot, 'package.json'), 'utf-8'));
+const APP_VERSION = packageJson.version;
 
 // Create entry point that imports from dist (which has decorator metadata)
 const entryContent = `
@@ -67,6 +71,10 @@ try {
     ],
     sourcemap: false,
     minify: false,
+    // Inject version at build time
+    define: {
+      '__APP_VERSION__': JSON.stringify(APP_VERSION),
+    },
     // Ignore console-ninja VS Code extension
     plugins: [{
       name: 'ignore-extensions',
