@@ -47,11 +47,18 @@ export class SkusService {
     return this.repository.findByShopId(shopId);
   }
 
+  private static readonly DEFAULT_LIMIT = 100;
+  private static readonly MAX_LIMIT = 1000;
+
   async findByShopIdPaginated(
     shopId: number,
-    query?: PaginationQuery,
+    query: PaginationQuery = {},
   ): Promise<PaginatedResponse<Sku>> {
-    return this.repository.findByShopIdPaginated(shopId, query);
+    const normalizedQuery = {
+      limit: Math.min(query.limit ?? SkusService.DEFAULT_LIMIT, SkusService.MAX_LIMIT),
+      offset: query.offset ?? 0,
+    };
+    return this.repository.findByShopIdPaginated(shopId, normalizedQuery);
   }
 
   async findByCodeAndShop(code: string, shopId: number): Promise<Sku | undefined> {

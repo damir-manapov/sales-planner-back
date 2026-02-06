@@ -5,9 +5,6 @@ import type { IShopScopedRepository } from './shop-scoped-repository.interface.j
 
 export type { IShopScopedRepository } from './shop-scoped-repository.interface.js';
 
-const DEFAULT_LIMIT = 100;
-const MAX_LIMIT = 1000;
-
 /**
  * Base repository for shop-scoped entities
  * Provides pure data access operations without business logic
@@ -56,36 +53,35 @@ export abstract class ShopScopedRepository<
       .executeTakeFirst() as Promise<TEntity | undefined>;
   }
 
-  async findByShopId(shopId: number, limit?: number, offset?: number): Promise<TEntity[]> {
-    let query = this.db
+  async findByShopId(shopId: number, query?: PaginationQuery): Promise<TEntity[]> {
+    let q = this.db
       .selectFrom(this.tableName as any)
       .selectAll()
       .where('shop_id', '=', shopId)
       .orderBy('id', 'asc');
 
-    if (limit !== undefined) {
-      query = query.limit(limit);
+    if (query?.limit !== undefined) {
+      q = q.limit(query.limit);
     }
-    if (offset !== undefined) {
-      query = query.offset(offset);
+    if (query?.offset !== undefined) {
+      q = q.offset(query.offset);
     }
 
-    return query.execute() as Promise<TEntity[]>;
+    return q.execute() as Promise<TEntity[]>;
   }
 
   async findByShopIdPaginated(
     shopId: number,
     query: PaginationQuery = {},
   ): Promise<PaginatedResponse<TEntity>> {
-    const limit = Math.min(query.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
-    const offset = query.offset ?? 0;
+    const { limit, offset } = query;
 
     const [total, items] = await Promise.all([
       this.countByShopId(shopId),
-      this.findByShopId(shopId, limit, offset),
+      this.findByShopId(shopId, query),
     ]);
 
-    return { items, total, limit, offset };
+    return { items, total, limit: limit ?? 0, offset: offset ?? 0 };
   }
 
   async findByCodeAndShop(code: string, shopId: number): Promise<TEntity | undefined> {
