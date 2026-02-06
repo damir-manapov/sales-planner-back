@@ -1,5 +1,11 @@
 # @sales-planner/shared
 
+## 0.12.0
+
+### Minor Changes
+
+- Add pagination support to SKUs endpoint with PaginationQuery and PaginatedResponse types
+
 ## 0.11.1
 
 ### Patch Changes

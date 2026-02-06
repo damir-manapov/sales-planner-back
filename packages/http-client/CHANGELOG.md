@@ -1,5 +1,16 @@
 # @sales-planner/http-client
 
+## 0.14.0
+
+### Minor Changes
+
+- Add pagination support to SKUs endpoint with PaginationQuery and PaginatedResponse types
+
+### Patch Changes
+
+- Updated dependencies
+  - @sales-planner/shared@0.12.0
+
 ## 0.13.0
 
 ### Minor Changes

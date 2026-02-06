@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import type { Sku, SkuExportItem, SkuImportResult } from '@sales-planner/shared';
+import type { PaginatedResponse, Sku, SkuExportItem, SkuImportResult } from '@sales-planner/shared';
 import {
   BaseEntityService,
   DuplicateResourceException,
@@ -11,10 +11,13 @@ import { CategoriesService } from '../categories/categories.service.js';
 import { GroupsService } from '../groups/groups.service.js';
 import { StatusesService } from '../statuses/statuses.service.js';
 import { SuppliersService } from '../suppliers/suppliers.service.js';
-import type { CreateSkuDto, ImportSkuItem, UpdateSkuDto } from './skus.schema.js';
+import type { CreateSkuDto, ImportSkuItem, PaginationQuery, UpdateSkuDto } from './skus.schema.js';
 import { ImportSkuItemSchema } from './skus.schema.js';
 
 export type { Sku };
+
+const DEFAULT_LIMIT = 100;
+const MAX_LIMIT = 1000;
 
 interface PreparedSkuItem extends ImportSkuItem {
   category_id?: number | null;
@@ -41,6 +44,42 @@ export class SkusService extends BaseEntityService<Sku, CreateSkuDto, UpdateSkuD
 
   protected validateImportItem(item: unknown) {
     return ImportSkuItemSchema.safeParse(item);
+  }
+
+  /**
+   * Get paginated SKUs for a shop
+   */
+  async findByShopIdPaginated(
+    shopId: number,
+    query: PaginationQuery = {},
+  ): Promise<PaginatedResponse<Sku>> {
+    const limit = Math.min(query.limit ?? DEFAULT_LIMIT, MAX_LIMIT);
+    const offset = query.offset ?? 0;
+
+    // Get total count
+    const countResult = await this.db
+      .selectFrom('skus')
+      .select(this.db.fn.countAll<number>().as('count'))
+      .where('shop_id', '=', shopId)
+      .executeTakeFirstOrThrow();
+    const total = Number(countResult.count);
+
+    // Get paginated items
+    const items = await this.db
+      .selectFrom('skus')
+      .selectAll()
+      .where('shop_id', '=', shopId)
+      .orderBy('id', 'asc')
+      .limit(limit)
+      .offset(offset)
+      .execute();
+
+    return {
+      items: items as Sku[],
+      total,
+      limit,
+      offset,
+    };
   }
 
   /**

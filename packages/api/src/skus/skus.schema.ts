@@ -2,6 +2,7 @@ import type {
   CreateSkuDto as SharedCreateSkuDto,
   CreateSkuRequest as SharedCreateSkuRequest,
   ImportSkuItem as SharedImportSkuItem,
+  PaginationQuery as SharedPaginationQuery,
   UpdateSkuDto as SharedUpdateSkuDto,
   UpdateSkuRequest as SharedUpdateSkuRequest,
 } from '@sales-planner/shared';
@@ -45,6 +46,11 @@ export const ImportSkuItemSchema = z.object({
   supplier: z.string().optional(),
 });
 
+export const PaginationQuerySchema = z.object({
+  limit: z.coerce.number().int().min(1).max(1000).optional(),
+  offset: z.coerce.number().int().min(0).optional(),
+});
+
 // TypeScript types
 export type CreateSkuRequest = AssertCompatible<
   SharedCreateSkuRequest,
@@ -59,4 +65,8 @@ export type UpdateSkuRequest = AssertCompatible<
 export type ImportSkuItem = AssertCompatible<
   SharedImportSkuItem,
   z.infer<typeof ImportSkuItemSchema>
+>;
+export type PaginationQuery = AssertCompatible<
+  SharedPaginationQuery,
+  z.infer<typeof PaginationQuerySchema>
 >;

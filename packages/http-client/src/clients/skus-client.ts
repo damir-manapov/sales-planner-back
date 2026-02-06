@@ -6,12 +6,14 @@ import type {
   SkuExportItem,
   SkuImportResult,
   ShopContextParams,
+  PaginationQuery,
+  PaginatedResponse,
 } from '@sales-planner/shared';
 import { ImportExportBaseClient } from './import-export-base-client.js';
 
 export class SkusClient extends ImportExportBaseClient {
-  async getSkus(ctx: ShopContextParams): Promise<Sku[]> {
-    return this.request('GET', '/skus', { params: ctx });
+  async getSkus(ctx: ShopContextParams, query?: PaginationQuery): Promise<PaginatedResponse<Sku>> {
+    return this.request('GET', '/skus', { params: { ...ctx, ...query } });
   }
 
   async getSku(ctx: ShopContextParams, id: number): Promise<Sku> {

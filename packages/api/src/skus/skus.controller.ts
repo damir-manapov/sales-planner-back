@@ -8,6 +8,7 @@ import {
   ParseIntPipe,
   Post,
   Put,
+  Query,
   Req,
   Res,
   UploadedFile,
@@ -16,6 +17,7 @@ import {
 } from '@nestjs/common';
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes } from '@nestjs/swagger';
+import type { PaginatedResponse } from '@sales-planner/shared';
 import { AuthenticatedRequest, AuthGuard } from '../auth/auth.guard.js';
 import {
   RequireReadAccess,
@@ -37,6 +39,8 @@ import {
   CreateSkuSchema,
   type ImportSkuItem,
   ImportSkuItemSchema,
+  type PaginationQuery,
+  PaginationQuerySchema,
   type UpdateSkuRequest,
   UpdateSkuSchema,
 } from './skus.schema.js';
@@ -52,8 +56,9 @@ export class SkusController {
   async findAll(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-  ): Promise<Sku[]> {
-    return this.skusService.findByShopId(ctx.shopId);
+    @Query(new ZodValidationPipe(PaginationQuerySchema)) query: PaginationQuery,
+  ): Promise<PaginatedResponse<Sku>> {
+    return this.skusService.findByShopIdPaginated(ctx.shopId, query);
   }
 
   @Get('code/:code')

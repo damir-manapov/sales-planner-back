@@ -330,7 +330,7 @@ describe('Sales History (e2e)', () => {
       expect(result.skus_created).toBe(1);
       expect(result.errors).toEqual([]);
 
-      const skus = await ctx.client.skus.getSkus(ctx.shopContext);
+      const { items: skus } = await ctx.client.skus.getSkus(ctx.shopContext);
       const createdSku = skus.find((s) => s.code === normalizedSkuCode);
       expect(createdSku).toBeDefined();
       expect(createdSku?.title).toBe(normalizedSkuCode);

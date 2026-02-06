@@ -75,10 +75,37 @@ describe('SKUs (e2e)', () => {
         title: 'List SKU',
       });
 
-      const skus = await ctx.client.skus.getSkus(ctx.shopContext);
+      const response = await ctx.client.skus.getSkus(ctx.shopContext);
 
-      expect(Array.isArray(skus)).toBe(true);
-      expect(skus.length).toBeGreaterThan(0);
+      expect(response).toHaveProperty('items');
+      expect(response).toHaveProperty('total');
+      expect(Array.isArray(response.items)).toBe(true);
+      expect(response.items.length).toBeGreaterThan(0);
+    });
+
+    it('should paginate SKUs', async () => {
+      // Create 5 SKUs
+      for (let i = 0; i < 5; i++) {
+        await ctx.client.skus.createSku(ctx.shopContext, {
+          code: generateTestCode(`SKU-PAGE-${i}`),
+          title: `Pagination SKU ${i}`,
+        });
+      }
+
+      // Get first page
+      const page1 = await ctx.client.skus.getSkus(ctx.shopContext, { limit: 2, offset: 0 });
+      expect(page1.items.length).toBe(2);
+      expect(page1.limit).toBe(2);
+      expect(page1.offset).toBe(0);
+      expect(page1.total).toBeGreaterThanOrEqual(5);
+
+      // Get second page
+      const page2 = await ctx.client.skus.getSkus(ctx.shopContext, { limit: 2, offset: 2 });
+      expect(page2.items.length).toBe(2);
+      expect(page2.offset).toBe(2);
+
+      // First pages should have different items
+      expect(page1.items[0]?.id).not.toBe(page2.items[0]?.id);
     });
 
     it('should get SKU by id', async () => {
@@ -222,7 +249,7 @@ describe('SKUs (e2e)', () => {
       expect(result.created).toBe(2);
       expect(result.updated).toBe(0);
       expect(result.errors).toEqual([]);
-      const skus = await ctx.client.skus.getSkus(ctx.shopContext);
+      const { items: skus } = await ctx.client.skus.getSkus(ctx.shopContext);
       const codes = skus.map((s) => s.code);
       expect(codes).toContain(normalizeSkuCode(code1));
       expect(codes).toContain(normalizeSkuCode(code2));
@@ -270,7 +297,7 @@ describe('SKUs (e2e)', () => {
       expect(result.statuses_created).toBe(0);
       expect(result.suppliers_created).toBe(0);
 
-      const sku = (await ctx.client.skus.getSkus(ctx.shopContext)).find(
+      const sku = (await ctx.client.skus.getSkus(ctx.shopContext)).items.find(
         (s) => s.code === normalizeSkuCode(code),
       );
       expect(sku).toBeDefined();
@@ -320,7 +347,7 @@ describe('SKUs (e2e)', () => {
       expect(result.created).toBe(2);
       expect(result.updated).toBe(0);
 
-      const skus = await ctx.client.skus.getSkus(ctx.shopContext);
+      const { items: skus } = await ctx.client.skus.getSkus(ctx.shopContext);
       const codes = skus.map((s) => s.code);
       expect(codes).toContain(normalizeSkuCode(code1));
       expect(codes).toContain(normalizeSkuCode(code2));
@@ -339,7 +366,7 @@ describe('SKUs (e2e)', () => {
       expect(result.statuses_created).toBe(0);
       expect(result.suppliers_created).toBe(0);
 
-      const skus = await ctx.client.skus.getSkus(ctx.shopContext);
+      const { items: skus } = await ctx.client.skus.getSkus(ctx.shopContext);
       const createdSku = skus.find((s) => s.code === normalizeSkuCode(code));
       expect(createdSku).toBeDefined();
       expect(createdSku?.category_id ?? null).toBeNull();
@@ -365,7 +392,7 @@ describe('SKUs (e2e)', () => {
       expect(result.statuses_created).toBe(1);
       expect(result.suppliers_created).toBe(1);
 
-      const skus = await ctx.client.skus.getSkus(ctx.shopContext);
+      const { items: skus } = await ctx.client.skus.getSkus(ctx.shopContext);
       const createdSku = skus.find((s) => s.code === normalizeSkuCode(code));
       expect(createdSku).toBeDefined();
       expect(createdSku?.category_id).toBeDefined();
@@ -404,7 +431,7 @@ describe('SKUs (e2e)', () => {
       const seedCode = generateTestCode('SEED-REL');
       const seedCsv = `code,title,category,group,status,supplier\n${seedCode},Seed SKU,${category},${group},${status},${supplier}`;
       await ctx.client.skus.importCsv(ctx.shopContext, seedCsv);
-      const seedSku = (await ctx.client.skus.getSkus(ctx.shopContext)).find(
+      const seedSku = (await ctx.client.skus.getSkus(ctx.shopContext)).items.find(
         (s) => s.code === normalizeSkuCode(seedCode),
       );
       if (!seedSku) throw new Error('Seed SKU not created');
@@ -421,7 +448,7 @@ describe('SKUs (e2e)', () => {
       expect(result.statuses_created).toBe(0);
       expect(result.suppliers_created).toBe(0);
 
-      const skus = await ctx.client.skus.getSkus(ctx.shopContext);
+      const { items: skus } = await ctx.client.skus.getSkus(ctx.shopContext);
       const createdSku = skus.find((s) => s.code === normalizeSkuCode(code));
       expect(createdSku).toBeDefined();
       expect(createdSku?.category_id).toBe(seedSku.category_id);
@@ -454,7 +481,7 @@ describe('SKUs (e2e)', () => {
       expect(result.statuses_created).toBe(1);
       expect(result.suppliers_created).toBe(1);
 
-      const sku = (await ctx.client.skus.getSkus(ctx.shopContext)).find(
+      const sku = (await ctx.client.skus.getSkus(ctx.shopContext)).items.find(
         (s) => s.code === normalizeSkuCode(code),
       );
       if (!sku) throw new Error('SKU not found after update');
@@ -571,7 +598,7 @@ describe('SKUs (e2e)', () => {
       });
 
       it('tenant owner should have read access without explicit role', async () => {
-        const skus = await ownerClient.skus.getSkus(ownerCtx());
+        const { items: skus } = await ownerClient.skus.getSkus(ownerCtx());
         expect(Array.isArray(skus)).toBe(true);
         if (skus.length === 0) throw new Error('Expected at least one SKU for owner');
         const first = skus[0];
@@ -600,7 +627,7 @@ describe('SKUs (e2e)', () => {
 
       it('tenant owner should NOT access other tenants', async () => {
         await expectForbidden(() => ownerClient.skus.getSkus(ctx.shopContext));
-        const skus = await ctx.client.skus.getSkus(ctx.shopContext);
+        const { items: skus } = await ctx.client.skus.getSkus(ctx.shopContext);
         if (skus.length === 0) throw new Error('Expected at least one SKU in target tenant');
         const target = skus[0];
         if (!target) throw new Error('Expected sku');
@@ -642,7 +669,7 @@ describe('SKUs (e2e)', () => {
       });
 
       it('editor should list SKUs', async () => {
-        const skus = await editorClient.skus.getSkus(ctx.shopContext);
+        const { items: skus } = await editorClient.skus.getSkus(ctx.shopContext);
         expect(Array.isArray(skus)).toBe(true);
       });
 
@@ -655,7 +682,7 @@ describe('SKUs (e2e)', () => {
       });
 
       it('editor should update SKU', async () => {
-        const skus = await editorClient.skus.getSkus(ctx.shopContext);
+        const { items: skus } = await editorClient.skus.getSkus(ctx.shopContext);
         if (skus.length === 0) throw new Error('Expected at least one SKU for editor update');
         const firstSku = skus[0];
         if (!firstSku) throw new Error('Expected sku');
@@ -687,7 +714,7 @@ describe('SKUs (e2e)', () => {
       });
 
       it('editor should get SKU by code', async () => {
-        const skus = await editorClient.skus.getSkus(ctx.shopContext);
+        const { items: skus } = await editorClient.skus.getSkus(ctx.shopContext);
         if (skus.length === 0) throw new Error('Expected at least one SKU for editor get-by-code');
         const firstSku = skus[0];
         if (!firstSku) throw new Error('Expected sku');
@@ -729,12 +756,12 @@ describe('SKUs (e2e)', () => {
       });
 
       it('viewer should list SKUs', async () => {
-        const skus = await viewerClient.skus.getSkus(ctx.shopContext);
+        const { items: skus } = await viewerClient.skus.getSkus(ctx.shopContext);
         expect(Array.isArray(skus)).toBe(true);
       });
 
       it('viewer should get SKU by id', async () => {
-        const skus = await viewerClient.skus.getSkus(ctx.shopContext);
+        const { items: skus } = await viewerClient.skus.getSkus(ctx.shopContext);
         if (skus.length === 0) throw new Error('Expected at least one SKU for viewer get-by-id');
         const firstSku = skus[0];
         if (!firstSku) throw new Error('Expected sku');
@@ -743,7 +770,7 @@ describe('SKUs (e2e)', () => {
       });
 
       it('viewer should get SKU by code', async () => {
-        const skus = await viewerClient.skus.getSkus(ctx.shopContext);
+        const { items: skus } = await viewerClient.skus.getSkus(ctx.shopContext);
         if (skus.length === 0) throw new Error('Expected at least one SKU for viewer get-by-code');
         const firstSku = skus[0];
         if (!firstSku) throw new Error('Expected sku');
@@ -761,7 +788,7 @@ describe('SKUs (e2e)', () => {
       });
 
       it('viewer should NOT update SKU', async () => {
-        const skus = await viewerClient.skus.getSkus(ctx.shopContext);
+        const { items: skus } = await viewerClient.skus.getSkus(ctx.shopContext);
         if (skus.length > 0) {
           const firstSku = skus[0];
           if (!firstSku) throw new Error('Expected sku');
@@ -772,7 +799,7 @@ describe('SKUs (e2e)', () => {
       });
 
       it('viewer should NOT delete SKU', async () => {
-        const skus = await viewerClient.skus.getSkus(ctx.shopContext);
+        const { items: skus } = await viewerClient.skus.getSkus(ctx.shopContext);
         if (skus.length > 0) {
           const firstSku = skus[0];
           if (!firstSku) throw new Error('Expected sku');
