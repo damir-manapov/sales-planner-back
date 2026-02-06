@@ -12,9 +12,40 @@ await esbuild.build({
   target: 'node18',
   format: 'esm',
   outfile: join(apiRoot, 'api/index.bundle.mjs'),
-  // Keep all node_modules external - let Vercel resolve them at runtime
-  // This preserves NestJS decorator metadata which gets lost during bundling
-  packages: 'external',
+  // Keep node_modules external but bundle workspace packages
+  external: [
+    // NestJS and related
+    '@nestjs/*',
+    'reflect-metadata',
+    'rxjs',
+    'rxjs/*',
+    // Database
+    'kysely',
+    'pg',
+    'pg-native',
+    // Express
+    'express',
+    'body-parser',
+    'cookie-parser',
+    // Validation
+    'class-validator',
+    'class-transformer',
+    'class-transformer/*',
+    // Other common packages
+    'uuid',
+    'bcrypt',
+    'jsonwebtoken',
+    'dotenv',
+    'iterare',
+    'tslib',
+    'path-to-regexp',
+    'fast-safe-stringify',
+    // Optional/peer dependencies
+    '@nestjs/microservices',
+    '@nestjs/websockets',
+    'cache-manager',
+    'ioredis',
+  ],
   // Ignore console-ninja VS Code extension files
   plugins: [{
     name: 'ignore-console-ninja',
