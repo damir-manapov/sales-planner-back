@@ -75,15 +75,8 @@ export class SkusService {
   async create(dto: CreateSkuDto): Promise<Sku> {
     try {
       return await this.repository.create({
+        ...dto,
         code: normalizeSkuCode(dto.code),
-        title: dto.title,
-        title2: dto.title2,
-        shop_id: dto.shop_id,
-        tenant_id: dto.tenant_id,
-        category_id: dto.category_id,
-        group_id: dto.group_id,
-        status_id: dto.status_id,
-        supplier_id: dto.supplier_id,
       });
     } catch (error) {
       if (isUniqueViolation(error)) {
@@ -94,17 +87,10 @@ export class SkusService {
   }
 
   async update(id: number, dto: UpdateSkuDto): Promise<Sku | undefined> {
-    const updateData: Parameters<SkusRepository['update']>[1] = {};
-
-    if (dto.code !== undefined) updateData.code = normalizeSkuCode(dto.code);
-    if (dto.title !== undefined) updateData.title = dto.title;
-    if (dto.title2 !== undefined) updateData.title2 = dto.title2;
-    if (dto.category_id !== undefined) updateData.category_id = dto.category_id;
-    if (dto.group_id !== undefined) updateData.group_id = dto.group_id;
-    if (dto.status_id !== undefined) updateData.status_id = dto.status_id;
-    if (dto.supplier_id !== undefined) updateData.supplier_id = dto.supplier_id;
-
-    return this.repository.update(id, updateData);
+    return this.repository.update(id, {
+      ...dto,
+      ...(dto.code !== undefined && { code: normalizeSkuCode(dto.code) }),
+    });
   }
 
   async delete(id: number): Promise<void> {

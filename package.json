@@ -6,7 +6,7 @@
     "build": "pnpm -r build",
     "test": "pnpm --filter @sales-planner/api test",
     "test:e2e": "pnpm --filter @sales-planner/api test:e2e",
-    "test:e2e:local": "pnpm --filter @sales-planner/api test:e2e:local",
+    "test:e2e:remote": "pnpm --filter @sales-planner/api test:e2e:remote",
     "lint": "biome lint --error-on-warnings .",
     "lint:fix": "biome lint --write .",
     "format": "biome format --write .",
