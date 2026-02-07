@@ -284,8 +284,8 @@ ${csvMarketplace.code};777888999;2024-05;250`;
       );
       expect(newMarketplace).toBeDefined();
       // Code is normalized, title defaults to normalized code
-      expect(newMarketplace!.code).toContain('newmp');
-      expect(newMarketplace!.title).toBe(newMarketplace!.code);
+      expect(newMarketplace?.code).toContain('newmp');
+      expect(newMarketplace?.title).toBe(newMarketplace?.code);
     });
 
     it('should auto-create competitor products with title defaulting to marketplace_product_id', async () => {
@@ -314,9 +314,9 @@ ${csvMarketplace.code};777888999;2024-05;250`;
         (p) => !competitorProductsBefore.items.some((b) => b.id === p.id),
       );
       expect(newProduct).toBeDefined();
-      expect(newProduct!.marketplace_product_id).toBe(marketplaceProductId);
+      expect(newProduct?.marketplace_product_id).toBe(marketplaceProductId);
       // Title defaults to marketplace_product_id
-      expect(newProduct!.title).toBe(marketplaceProductId);
+      expect(newProduct?.title).toBe(marketplaceProductId);
     });
   });
 });

@@ -289,8 +289,8 @@ ${csvWarehouse.code};${csvSku.code};2025-04;400`;
       const newSku = skusAfter.items.find((s) => !skusBefore.items.some((b) => b.id === s.id));
       expect(newSku).toBeDefined();
       // Code is normalized, title defaults to normalized code
-      expect(newSku!.code).toContain('newsku');
-      expect(newSku!.title).toBe(newSku!.code);
+      expect(newSku?.code).toContain('newsku');
+      expect(newSku?.title).toBe(newSku?.code);
 
       const warehousesAfter = await ctx.client.warehouses.getAll(ctx.shopContext);
       expect(warehousesAfter.total).toBe(warehousesBefore.total + 1);
@@ -298,8 +298,8 @@ ${csvWarehouse.code};${csvSku.code};2025-04;400`;
         (w) => !warehousesBefore.items.some((b) => b.id === w.id),
       );
       expect(newWarehouse).toBeDefined();
-      expect(newWarehouse!.code).toContain('newwh');
-      expect(newWarehouse!.title).toBe(newWarehouse!.code);
+      expect(newWarehouse?.code).toContain('newwh');
+      expect(newWarehouse?.title).toBe(newWarehouse?.code);
     });
   });
 });

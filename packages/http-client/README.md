@@ -122,20 +122,280 @@ try {
 
 ## Types
 
-All types re-exported from `@sales-planner/shared`:
+### Query & Context Types
+
+```typescript
+// Required for all shop-scoped operations
+interface ShopContextParams {
+  shop_id: number;
+  tenant_id: number;
+}
+
+// Pagination (all getAll methods support this)
+interface PaginationQuery {
+  limit?: number;   // 1-1000, default: 100
+  offset?: number;  // default: 0
+}
+
+// Period filtering (sales history, leftovers, competitor sales)
+interface PeriodQuery {
+  period_from?: string;  // YYYY-MM format
+  period_to?: string;    // YYYY-MM format
+}
+
+// Paginated response (returned by all getAll methods)
+interface PaginatedResponse<T> {
+  items: T[];
+  total: number;
+  limit: number;
+  offset: number;
+}
+```
+
+### Entity Types
+
+All entities extend base interfaces:
+
+```typescript
+// Base for shop-scoped entities without code (e.g., SalesHistory)
+interface ShopScopedBaseEntity {
+  id: number;
+  shop_id: number;
+  tenant_id: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+// Base for coded entities (e.g., SKUs, Brands, Categories)
+interface CodedShopScopedEntity extends ShopScopedBaseEntity {
+  code: string;
+  title: string;
+}
+```
+
+#### System Entities
+
+```typescript
+interface User {
+  id: number;
+  email: string;
+  name: string;
+  default_shop_id: number | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface Tenant {
+  id: number;
+  title: string;
+  owner_id: number | null;
+  created_by: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface Shop {
+  id: number;
+  title: string;
+  tenant_id: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface Role {
+  id: number;
+  name: string;
+  description: string | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface ApiKey {
+  id: number;
+  user_id: number;
+  key: string;
+  name: string | null;
+  expires_at: Date | null;
+  last_used_at: Date | null;
+  created_at: Date;
+  updated_at: Date;
+}
+```
+
+#### Shop Data Entities
+
+Coded entities (`Sku`, `Brand`, `Category`, `Group`, `Status`, `Supplier`, `Warehouse`, `Marketplace`) extend `CodedShopScopedEntity`:
+
+```typescript
+interface Sku extends CodedShopScopedEntity {
+  title2?: string | null;
+  category_id?: number | null;
+  group_id?: number | null;
+  status_id?: number | null;
+  supplier_id?: number | null;
+}
+// Brand, Category, Group, Status, Supplier, Warehouse, Marketplace
+// all have just: id, code, title, shop_id, tenant_id, created_at, updated_at
+```
+
+#### Time-Series Entities
+
+```typescript
+interface SalesHistory {
+  id: number;
+  sku_id: number;
+  marketplace_id: number;
+  period: string;      // YYYY-MM format
+  quantity: number;
+  shop_id: number;
+  tenant_id: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface Leftover {
+  id: number;
+  sku_id: number;
+  warehouse_id: number;
+  period: string;      // YYYY-MM format
+  quantity: number;
+  shop_id: number;
+  tenant_id: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface SeasonalCoefficient {
+  id: number;
+  group_id: number;
+  month: number;       // 1-12
+  coefficient: number;
+  shop_id: number;
+  tenant_id: number;
+  created_at: Date;
+  updated_at: Date;
+}
+```
+
+#### Competitor Entities
+
+```typescript
+interface CompetitorProduct {
+  id: number;
+  marketplace_id: number;
+  marketplace_product_id: string;  // BIGINT as string
+  title: string | null;
+  brand: string | null;
+  shop_id: number;
+  tenant_id: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface CompetitorSale {
+  id: number;
+  competitor_product_id: number;
+  period: string;      // YYYY-MM format
+  quantity: number;
+  shop_id: number;
+  tenant_id: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface SkuCompetitorMapping {
+  id: number;
+  sku_id: number;
+  competitor_product_id: number;
+  shop_id: number;
+  tenant_id: number;
+  created_at: Date;
+  updated_at: Date;
+}
+```
+
+Available entity types summary:
+- `User`, `Tenant`, `Shop`, `Role`, `ApiKey` - system entities
+- `Sku`, `Brand`, `Category`, `Group`, `Status`, `Supplier`, `Warehouse`, `Marketplace` - shop data
+- `SalesHistory`, `Leftover`, `SeasonalCoefficient` - time-series data
+- `CompetitorProduct`, `CompetitorSale`, `SkuCompetitorMapping` - competitor data
+
+### Import/Export Types
+
+Import items use string codes for references (auto-resolved to IDs):
+
+```typescript
+interface ImportSkuItem {
+  code: string;
+  title: string;
+  title2?: string;
+  category?: string;  // category code, auto-resolved
+  group?: string;     // group code, auto-resolved
+  status?: string;    // status code, auto-resolved
+  supplier?: string;  // supplier code, auto-resolved
+}
+
+// Import results include auto-creation counts
+interface SkuImportResult extends ImportResult {
+  created: number;
+  updated: number;
+  errors: string[];
+  categories_created: number;
+  groups_created: number;
+  statuses_created: number;
+  suppliers_created: number;
+}
+```
+
+### All Exported Types
 
 ```typescript
 import type {
-  ShopContextParams, PaginationQuery, PaginatedResponse, PeriodQuery, SalesHistoryQuery,
-  User, Tenant, Shop, Sku, Brand, Category, Group, Status, Supplier, Warehouse, Marketplace, SalesHistory,
-  Leftover, SeasonalCoefficient, SkuCompetitorMapping, CompetitorProduct, CompetitorSale,
-  CreateSkuRequest, UpdateSkuRequest, ImportSkuItem, SkuExportItem,
-  ImportLeftoverItem, LeftoverExportItem, LeftoverQuery,
-  ImportSeasonalCoefficientItem, SeasonalCoefficientExportItem,
-  ImportSkuCompetitorMappingItem, SkuCompetitorMappingExportItem,
-  ImportCompetitorProductItem, CompetitorProductExportItem,
-  ImportCompetitorSaleItem, CompetitorSaleExportItem, CompetitorSaleQuery,
-  ImportResult, SkuImportResult, DeleteDataResult,
+  // Query & Response
+  ShopContextParams, PaginationQuery, PaginatedResponse, PeriodQuery,
+  SalesHistoryQuery, LeftoverQuery, CompetitorSaleQuery, GetUserRolesQuery,
+  
+  // System Entities
+  User, Tenant, Shop, Role, ApiKey, UserRoleResponse,
+  
+  // Shop Data Entities
+  Sku, Brand, Category, Group, Status, Supplier, Warehouse, Marketplace,
+  
+  // Time-Series Entities
+  SalesHistory, Leftover, SeasonalCoefficient,
+  
+  // Competitor Entities
+  CompetitorProduct, CompetitorSale, SkuCompetitorMapping,
+  
+  // User/Me Response Types
+  UserWithRolesAndTenants, UserRole, TenantInfo, ShopInfo,
+  
+  // Create/Update Requests
+  CreateSkuRequest, UpdateSkuRequest,
+  CreateUserRequest, UpdateUserRequest,
+  CreateTenantRequest, UpdateTenantRequest,
+  CreateShopRequest, UpdateShopRequest,
+  CreateApiKeyRequest,
+  
+  // Import Items (use string codes, auto-resolved)
+  ImportSkuItem, ImportSalesHistoryItem, ImportLeftoverItem,
+  ImportSeasonalCoefficientItem, ImportSkuCompetitorMappingItem,
+  ImportCompetitorProductItem, ImportCompetitorSaleItem,
+  ImportBrandItem, ImportCategoryItem, ImportGroupItem,
+  ImportStatusItem, ImportSupplierItem, ImportWarehouseItem, ImportMarketplaceItem,
+  
+  // Export Items
+  SkuExportItem, SalesHistoryExportItem, LeftoverExportItem,
+  SeasonalCoefficientExportItem, SkuCompetitorMappingExportItem,
+  CompetitorProductExportItem, CompetitorSaleExportItem,
+  BrandExportItem, CategoryExportItem, GroupExportItem,
+  StatusExportItem, SupplierExportItem, WarehouseExportItem, MarketplaceExportItem,
+  
+  // Results
+  ImportResult, SkuImportResult, SalesHistoryImportResult, DeleteDataResult,
+  
+  // Metadata (for UI documentation)
+  EntitiesMetadata, EntityMetadata, EntityFieldMetadata, FieldType,
 } from '@sales-planner/http-client';
 ```
 

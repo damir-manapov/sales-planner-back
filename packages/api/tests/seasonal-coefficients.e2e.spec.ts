@@ -219,9 +219,9 @@ describe('Seasonal Coefficients (e2e)', () => {
       );
       expect(newGroup).toBeDefined();
       // Code is normalized (hyphens removed, camelCase)
-      expect(newGroup!.code).toContain('newgroup');
+      expect(newGroup?.code).toContain('newgroup');
       // Title defaults to normalized code
-      expect(newGroup!.title).toBe(newGroup!.code);
+      expect(newGroup?.title).toBe(newGroup?.code);
     });
   });
 });

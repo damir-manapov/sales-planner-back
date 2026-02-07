@@ -235,8 +235,8 @@ ${csvMarketplace.code};${csvSku.code};777888999`;
       const newSku = skusAfter.items.find((s) => !skusBefore.items.some((b) => b.id === s.id));
       expect(newSku).toBeDefined();
       // Code is normalized, title defaults to normalized code
-      expect(newSku!.code).toContain('newsku');
-      expect(newSku!.title).toBe(newSku!.code);
+      expect(newSku?.code).toContain('newsku');
+      expect(newSku?.title).toBe(newSku?.code);
 
       // Verify auto-created marketplace exists with correct data
       const marketplacesAfter = await ctx.client.marketplaces.getAll(ctx.shopContext);
@@ -245,8 +245,8 @@ ${csvMarketplace.code};${csvSku.code};777888999`;
         (m) => !marketplacesBefore.items.some((b) => b.id === m.id),
       );
       expect(newMarketplace).toBeDefined();
-      expect(newMarketplace!.code).toContain('newmp');
-      expect(newMarketplace!.title).toBe(newMarketplace!.code);
+      expect(newMarketplace?.code).toContain('newmp');
+      expect(newMarketplace?.title).toBe(newMarketplace?.code);
     });
   });
 });

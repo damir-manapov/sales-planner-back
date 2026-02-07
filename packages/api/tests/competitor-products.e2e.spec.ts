@@ -214,8 +214,8 @@ ${csvMarketplace.code};777888999;CSV Product;CSV Brand`;
       );
       expect(newMarketplace).toBeDefined();
       // Code is normalized, title defaults to normalized code
-      expect(newMarketplace!.code).toContain('newmp');
-      expect(newMarketplace!.title).toBe(newMarketplace!.code);
+      expect(newMarketplace?.code).toContain('newmp');
+      expect(newMarketplace?.title).toBe(newMarketplace?.code);
     });
   });
 
