@@ -2,8 +2,15 @@
   "version": 2,
   "installCommand": "pnpm install",
   "buildCommand": "pnpm build",
-  "outputDirectory": ".",
-  "rewrites": [
-    { "source": "/(.*)", "destination": "/api/index.mjs" }
+  "functions": {
+    "api/index.mjs": {
+      "runtime": "@vercel/node"
+    }
+  },
+  "routes": [
+    {
+      "src": "/(.*)",
+      "dest": "/api/index.mjs"
+    }
   ]
 }
