@@ -2,16 +2,15 @@
   "version": 2,
   "installCommand": "pnpm install",
   "buildCommand": "pnpm build",
-  "outputDirectory": ".",
   "functions": {
-    "api/index.mjs": {
+    "api/index.js": {
       "includeFiles": "api/**"
     }
   },
   "routes": [
     {
       "src": "/(.*)",
-      "dest": "/api/index.mjs"
+      "dest": "/api/index.js"
     }
   ]
 }
