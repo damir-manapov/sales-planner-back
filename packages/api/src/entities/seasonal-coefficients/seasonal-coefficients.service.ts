@@ -53,9 +53,13 @@ export class SeasonalCoefficientsService {
     shopId: number,
     query?: SeasonalCoefficientQuery,
   ): Promise<PaginatedResponse<SeasonalCoefficient>> {
-    const { limit = 100, offset = 0 } = query ?? {};
+    const { ids, limit = 100, offset = 0 } = query ?? {};
 
-    const baseQuery = this.db.selectFrom('seasonal_coefficients').where('shop_id', '=', shopId);
+    let baseQuery = this.db.selectFrom('seasonal_coefficients').where('shop_id', '=', shopId);
+
+    if (ids && ids.length > 0) {
+      baseQuery = baseQuery.where('id', 'in', ids);
+    }
 
     const { count } = await baseQuery
       .select((eb) => eb.fn.countAll().as('count'))

@@ -1,5 +1,21 @@
 # @sales-planner/shared
 
+## 0.16.0
+
+### Minor Changes
+
+- Add ids filter to all shop-scoped entities
+
+  - All getAll endpoints now support `?ids=1,2,3` query parameter to filter by specific IDs
+  - Affects: SKUs, brands, categories, groups, statuses, suppliers, warehouses, marketplaces, sales-history, leftovers, competitor-products, competitor-sales, seasonal-coefficients, sku-competitor-mappings
+  - Added e2e tests for ids filtering on all entities
+  - Updated PaginationQuery interface to include `ids?: number[]`
+  - Updated http-client types for seasonalCoefficients and skuCompetitorMappings
+
+### Patch Changes
+
+- f9777a0: fix: improve CSV validation error messages with row numbers
+
 ## 0.15.1
 
 ### Patch Changes

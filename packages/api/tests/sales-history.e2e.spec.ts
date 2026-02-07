@@ -107,6 +107,39 @@ describe('Sales History (e2e)', () => {
       expect(records.items.length).toBeGreaterThan(0);
     });
 
+    it('should filter sales history by ids', async () => {
+      const testMarketplace = await ctx.client.marketplaces.create(ctx.shopContext, {
+        code: generateTestCode('MP-IDS'),
+        title: 'IDs Filter MP',
+      });
+      const testSku = await ctx.client.skus.create(ctx.shopContext, {
+        code: generateTestCode('SKU-IDS'),
+        title: 'IDs Filter SKU',
+      });
+
+      const record1 = await ctx.client.salesHistory.create(ctx.shopContext, {
+        sku_id: testSku.id,
+        period: '2024-03',
+        quantity: 10,
+        marketplace_id: testMarketplace.id,
+      });
+      const record2 = await ctx.client.salesHistory.create(ctx.shopContext, {
+        sku_id: testSku.id,
+        period: '2024-04',
+        quantity: 20,
+        marketplace_id: testMarketplace.id,
+      });
+
+      const filtered = await ctx.client.salesHistory.getAll(ctx.shopContext, {
+        ids: [record1.id, record2.id],
+      });
+
+      expect(filtered.items.length).toBe(2);
+      expect(filtered.items.map((r) => r.id)).toContain(record1.id);
+      expect(filtered.items.map((r) => r.id)).toContain(record2.id);
+      expect(filtered.total).toBe(2);
+    });
+
     it('should filter by period range', async () => {
       const [periodFrom, periodTo] = generateTestPeriodRange();
 

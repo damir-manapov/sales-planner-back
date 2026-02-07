@@ -108,6 +108,26 @@ describe('SKUs (e2e)', () => {
       expect(page1.items[0]?.id).not.toBe(page2.items[0]?.id);
     });
 
+    it('should filter SKUs by ids', async () => {
+      const sku1 = await ctx.client.skus.create(ctx.shopContext, {
+        code: generateTestCode('SKU-IDS-1'),
+        title: 'IDs Filter SKU 1',
+      });
+      const sku2 = await ctx.client.skus.create(ctx.shopContext, {
+        code: generateTestCode('SKU-IDS-2'),
+        title: 'IDs Filter SKU 2',
+      });
+
+      const filtered = await ctx.client.skus.getAll(ctx.shopContext, {
+        ids: [sku1.id, sku2.id],
+      });
+
+      expect(filtered.items.length).toBe(2);
+      expect(filtered.items.map((s) => s.id)).toContain(sku1.id);
+      expect(filtered.items.map((s) => s.id)).toContain(sku2.id);
+      expect(filtered.total).toBe(2);
+    });
+
     it('should get SKU by id', async () => {
       const created = await ctx.client.skus.create(ctx.shopContext, {
         code: generateTestCode('SKU-GET'),

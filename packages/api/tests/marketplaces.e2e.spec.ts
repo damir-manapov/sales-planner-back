@@ -85,6 +85,26 @@ describe('Marketplaces (e2e)', () => {
       });
     });
 
+    it('should filter marketplaces by ids', async () => {
+      const mp1 = await ctx.client.marketplaces.create(ctx.shopContext, {
+        code: generateTestCode('mp-ids-1'),
+        title: 'IDs Filter MP 1',
+      });
+      const mp2 = await ctx.client.marketplaces.create(ctx.shopContext, {
+        code: generateTestCode('mp-ids-2'),
+        title: 'IDs Filter MP 2',
+      });
+
+      const filtered = await ctx.client.marketplaces.getAll(ctx.shopContext, {
+        ids: [mp1.id, mp2.id],
+      });
+
+      expect(filtered.items.length).toBe(2);
+      expect(filtered.items.map((m) => m.id)).toContain(mp1.id);
+      expect(filtered.items.map((m) => m.id)).toContain(mp2.id);
+      expect(filtered.total).toBe(2);
+    });
+
     it('should get marketplace by id', async () => {
       const created = await ctx.client.marketplaces.create(ctx.shopContext, {
         code: generateTestCode('marketplace-get'),

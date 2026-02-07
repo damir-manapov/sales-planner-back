@@ -51,12 +51,17 @@ export abstract class ShopScopedBaseRepository<
     this.tableName = tableName;
   }
 
-  async countByShopId(shopId: number): Promise<number> {
-    const result = await this.db
+  async countByShopId(shopId: number, query?: PaginationQuery): Promise<number> {
+    let q = this.db
       .selectFrom(this.tableName as any)
       .select(this.db.fn.countAll<number>().as('count'))
-      .where('shop_id', '=', shopId)
-      .executeTakeFirstOrThrow();
+      .where('shop_id', '=', shopId);
+
+    if (query?.ids && query.ids.length > 0) {
+      q = q.where('id', 'in', query.ids);
+    }
+
+    const result = await q.executeTakeFirstOrThrow();
     return Number(result.count);
   }
 
@@ -80,8 +85,13 @@ export abstract class ShopScopedBaseRepository<
     let q = this.db
       .selectFrom(this.tableName as any)
       .selectAll()
-      .where('shop_id', '=', shopId)
-      .orderBy('id', 'asc');
+      .where('shop_id', '=', shopId);
+
+    if (query?.ids && query.ids.length > 0) {
+      q = q.where('id', 'in', query.ids);
+    }
+
+    q = q.orderBy('id', 'asc');
 
     if (query?.limit !== undefined) {
       q = q.limit(query.limit);
@@ -109,7 +119,7 @@ export abstract class ShopScopedBaseRepository<
     const { limit, offset } = query;
 
     const [total, items] = await Promise.all([
-      this.countByShopId(shopId),
+      this.countByShopId(shopId, query),
       this.findByShopId(shopId, query),
     ]);
 

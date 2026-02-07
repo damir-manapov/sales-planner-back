@@ -20,7 +20,7 @@ export interface IShopScopedBaseRepository<
   TExport = Record<string, unknown>,
   TImportItem = Record<string, unknown>,
 > {
-  countByShopId(shopId: number): Promise<number>;
+  countByShopId(shopId: number, query?: PaginationQuery): Promise<number>;
   findAll(): Promise<TEntity[]>;
   findById(id: number): Promise<TEntity | undefined>;
   findByShopId(shopId: number, query?: PaginationQuery): Promise<TEntity[]>;

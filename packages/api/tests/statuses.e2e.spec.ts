@@ -81,6 +81,26 @@ describe('Statuses (e2e)', () => {
       expect(statuses.items.length).toBeGreaterThan(0);
     });
 
+    it('should filter statuses by ids', async () => {
+      const st1 = await ctx.client.statuses.create(ctx.shopContext, {
+        code: generateTestCode('st-ids-1'),
+        title: 'IDs Filter Status 1',
+      });
+      const st2 = await ctx.client.statuses.create(ctx.shopContext, {
+        code: generateTestCode('st-ids-2'),
+        title: 'IDs Filter Status 2',
+      });
+
+      const filtered = await ctx.client.statuses.getAll(ctx.shopContext, {
+        ids: [st1.id, st2.id],
+      });
+
+      expect(filtered.items.length).toBe(2);
+      expect(filtered.items.map((s) => s.id)).toContain(st1.id);
+      expect(filtered.items.map((s) => s.id)).toContain(st2.id);
+      expect(filtered.total).toBe(2);
+    });
+
     it('should get status by id', async () => {
       const created = await ctx.client.statuses.create(ctx.shopContext, {
         code: generateTestCode('status-get'),

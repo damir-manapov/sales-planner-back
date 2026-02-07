@@ -49,8 +49,17 @@ interface PaginatedResponse<T> {
 Query parameters:
 - `limit` - Number of items per page (1-1000, default: 100)
 - `offset` - Number of items to skip (default: 0)
+- `ids` - Filter by specific IDs (array of numbers)
 
-Sales history, leftovers, and competitor sales also support period filtering:
+**ID Filtering** - All entities support filtering by IDs:
+```typescript
+// Filter any entity by specific IDs
+const { items: brands } = await client.brands.getAll(ctx, { ids: [1, 2, 3] });
+const { items: skus } = await client.skus.getAll(ctx, { ids: [10, 20, 30] });
+const { items: salesHistory } = await client.salesHistory.getAll(ctx, { ids: [100, 101] });
+```
+
+**Period Filtering** - Sales history, leftovers, and competitor sales also support period filtering:
 ```typescript
 const { items, total } = await client.salesHistory.getAll(ctx, {
   period_from: '2024-01',
@@ -66,10 +75,14 @@ const { items: leftovers } = await client.leftovers.getAll(ctx, {
 });
 ```
 
-Competitor products support filtering by IDs:
+**Combined Filtering** - Combine IDs with pagination and period filters:
 ```typescript
-const { items } = await client.competitorProducts.getAll(ctx, {
-  ids: [1, 2, 3],  // Filter by specific IDs
+// Get specific sales history records with period filter
+const { items } = await client.salesHistory.getAll(ctx, {
+  ids: [1, 2, 3],
+  period_from: '2024-01',
+  period_to: '2024-06',
+  limit: 50,
 });
 ```
 
@@ -140,6 +153,7 @@ interface ShopContextParams {
 
 // Pagination (all getAll methods support this)
 interface PaginationQuery {
+  ids?: number[];   // Filter by specific IDs
   limit?: number;   // 1-1000, default: 100
   offset?: number;  // default: 0
 }

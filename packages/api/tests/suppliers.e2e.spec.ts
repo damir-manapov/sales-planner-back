@@ -81,6 +81,26 @@ describe('Suppliers (e2e)', () => {
       expect(suppliers.items.length).toBeGreaterThan(0);
     });
 
+    it('should filter suppliers by ids', async () => {
+      const sup1 = await ctx.client.suppliers.create(ctx.shopContext, {
+        code: generateTestCode('sup-ids-1'),
+        title: 'IDs Filter Supplier 1',
+      });
+      const sup2 = await ctx.client.suppliers.create(ctx.shopContext, {
+        code: generateTestCode('sup-ids-2'),
+        title: 'IDs Filter Supplier 2',
+      });
+
+      const filtered = await ctx.client.suppliers.getAll(ctx.shopContext, {
+        ids: [sup1.id, sup2.id],
+      });
+
+      expect(filtered.items.length).toBe(2);
+      expect(filtered.items.map((s) => s.id)).toContain(sup1.id);
+      expect(filtered.items.map((s) => s.id)).toContain(sup2.id);
+      expect(filtered.total).toBe(2);
+    });
+
     it('should get supplier by id', async () => {
       const created = await ctx.client.suppliers.create(ctx.shopContext, {
         code: generateTestCode('supplier-get'),

@@ -9,6 +9,7 @@ export interface ShopContextParams {
 }
 
 export interface PaginationQuery {
+  ids?: number[];
   limit?: number;
   offset?: number;
 }

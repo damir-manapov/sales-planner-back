@@ -81,6 +81,26 @@ describe('Brands (e2e)', () => {
       expect(brands.items.length).toBeGreaterThan(0);
     });
 
+    it('should filter brands by ids', async () => {
+      const brand1 = await ctx.client.brands.create(ctx.shopContext, {
+        code: generateTestCode('brand-ids-1'),
+        title: 'IDs Filter Brand 1',
+      });
+      const brand2 = await ctx.client.brands.create(ctx.shopContext, {
+        code: generateTestCode('brand-ids-2'),
+        title: 'IDs Filter Brand 2',
+      });
+
+      const filtered = await ctx.client.brands.getAll(ctx.shopContext, {
+        ids: [brand1.id, brand2.id],
+      });
+
+      expect(filtered.items.length).toBe(2);
+      expect(filtered.items.map((b) => b.id)).toContain(brand1.id);
+      expect(filtered.items.map((b) => b.id)).toContain(brand2.id);
+      expect(filtered.total).toBe(2);
+    });
+
     it('should get brand by id', async () => {
       const created = await ctx.client.brands.create(ctx.shopContext, {
         code: generateTestCode('brand-get'),

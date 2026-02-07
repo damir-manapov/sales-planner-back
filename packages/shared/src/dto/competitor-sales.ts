@@ -27,6 +27,7 @@ export interface ImportCompetitorSaleItem {
 }
 
 export interface CompetitorSaleQuery {
+  ids?: number[];
   period_from?: string;
   period_to?: string;
   limit?: number;

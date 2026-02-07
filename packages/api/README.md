@@ -5,8 +5,9 @@ NestJS REST API for multi-tenant sales planning and management. Built with Kysel
 ## Features
 
 - **Pagination** - All list endpoints return paginated responses with `items`, `total`, `limit`, `offset`
-  - Query parameters: `limit` (1-1000, default 100), `offset` (default 0)
-  - Sales history supports additional period filtering: `period_from`, `period_to`
+  - Query parameters: `limit` (1-1000, default 100), `offset` (default 0), `ids` (comma-separated IDs to filter)
+  - Sales history, leftovers, competitor sales support additional period filtering: `period_from`, `period_to`
+  - Example: `GET /brands?shop_id=1&tenant_id=1&ids=1,2,3&limit=10`
 - **Users** - User management
 - **Tenants** - Multi-tenant support with audit trail (tracks who created each tenant)
 - **Shops** - Shop management linked to tenants

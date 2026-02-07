@@ -99,6 +99,39 @@ describe('Leftovers (e2e)', () => {
       expect(records.items.length).toBeGreaterThan(0);
     });
 
+    it('should filter leftovers by ids', async () => {
+      const testWarehouse = await ctx.client.warehouses.create(ctx.shopContext, {
+        code: generateTestCode('WH-IDS'),
+        title: 'IDs Filter WH',
+      });
+      const testSku = await ctx.client.skus.create(ctx.shopContext, {
+        code: generateTestCode('SKU-LO-IDS'),
+        title: 'IDs Filter SKU',
+      });
+
+      const record1 = await ctx.client.leftovers.create(ctx.shopContext, {
+        sku_id: testSku.id,
+        warehouse_id: testWarehouse.id,
+        period: '2024-03',
+        quantity: 10,
+      });
+      const record2 = await ctx.client.leftovers.create(ctx.shopContext, {
+        sku_id: testSku.id,
+        warehouse_id: testWarehouse.id,
+        period: '2024-04',
+        quantity: 20,
+      });
+
+      const filtered = await ctx.client.leftovers.getAll(ctx.shopContext, {
+        ids: [record1.id, record2.id],
+      });
+
+      expect(filtered.items.length).toBe(2);
+      expect(filtered.items.map((r) => r.id)).toContain(record1.id);
+      expect(filtered.items.map((r) => r.id)).toContain(record2.id);
+      expect(filtered.total).toBe(2);
+    });
+
     it('should filter by period range', async () => {
       const [periodFrom, periodTo] = generateTestPeriodRange();
 

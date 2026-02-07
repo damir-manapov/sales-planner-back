@@ -60,6 +60,7 @@ export class SkusService {
     query: PaginationQuery = {},
   ): Promise<PaginatedResponse<Sku>> {
     const normalizedQuery = {
+      ids: query.ids,
       limit: Math.min(query.limit ?? SkusService.DEFAULT_LIMIT, SkusService.MAX_LIMIT),
       offset: query.offset ?? 0,
     };

@@ -81,6 +81,26 @@ describe('Warehouses (e2e)', () => {
       expect(warehouses.items.length).toBeGreaterThan(0);
     });
 
+    it('should filter warehouses by ids', async () => {
+      const wh1 = await ctx.client.warehouses.create(ctx.shopContext, {
+        code: generateTestCode('wh-ids-1'),
+        title: 'IDs Filter Warehouse 1',
+      });
+      const wh2 = await ctx.client.warehouses.create(ctx.shopContext, {
+        code: generateTestCode('wh-ids-2'),
+        title: 'IDs Filter Warehouse 2',
+      });
+
+      const filtered = await ctx.client.warehouses.getAll(ctx.shopContext, {
+        ids: [wh1.id, wh2.id],
+      });
+
+      expect(filtered.items.length).toBe(2);
+      expect(filtered.items.map((w) => w.id)).toContain(wh1.id);
+      expect(filtered.items.map((w) => w.id)).toContain(wh2.id);
+      expect(filtered.total).toBe(2);
+    });
+
     it('should get warehouse by id', async () => {
       const created = await ctx.client.warehouses.create(ctx.shopContext, {
         code: generateTestCode('warehouse-get'),

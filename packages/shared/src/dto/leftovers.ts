@@ -29,6 +29,7 @@ export interface ImportLeftoverItem {
 }
 
 export interface LeftoverQuery {
+  ids?: number[];
   period_from?: string;
   period_to?: string;
   limit?: number;

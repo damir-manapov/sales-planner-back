@@ -81,6 +81,26 @@ describe('Groups (e2e)', () => {
       expect(groups.items.length).toBeGreaterThan(0);
     });
 
+    it('should filter groups by ids', async () => {
+      const grp1 = await ctx.client.groups.create(ctx.shopContext, {
+        code: generateTestCode('grp-ids-1'),
+        title: 'IDs Filter Group 1',
+      });
+      const grp2 = await ctx.client.groups.create(ctx.shopContext, {
+        code: generateTestCode('grp-ids-2'),
+        title: 'IDs Filter Group 2',
+      });
+
+      const filtered = await ctx.client.groups.getAll(ctx.shopContext, {
+        ids: [grp1.id, grp2.id],
+      });
+
+      expect(filtered.items.length).toBe(2);
+      expect(filtered.items.map((g) => g.id)).toContain(grp1.id);
+      expect(filtered.items.map((g) => g.id)).toContain(grp2.id);
+      expect(filtered.total).toBe(2);
+    });
+
     it('should get group by id', async () => {
       const created = await ctx.client.groups.create(ctx.shopContext, {
         code: generateTestCode('group-get'),

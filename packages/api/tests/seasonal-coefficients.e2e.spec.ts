@@ -86,6 +86,33 @@ describe('Seasonal Coefficients (e2e)', () => {
       expect(records.items.length).toBeGreaterThan(0);
     });
 
+    it('should filter seasonal coefficients by ids', async () => {
+      const testGroup = await ctx.client.groups.create(ctx.shopContext, {
+        code: generateTestCode('GRP-SC-IDS'),
+        title: 'IDs Filter Group',
+      });
+
+      const record1 = await ctx.client.seasonalCoefficients.create(ctx.shopContext, {
+        group_id: testGroup.id,
+        month: 2,
+        coefficient: 1.1,
+      });
+      const record2 = await ctx.client.seasonalCoefficients.create(ctx.shopContext, {
+        group_id: testGroup.id,
+        month: 3,
+        coefficient: 1.2,
+      });
+
+      const filtered = await ctx.client.seasonalCoefficients.getAll(ctx.shopContext, {
+        ids: [record1.id, record2.id],
+      });
+
+      expect(filtered.items.length).toBe(2);
+      expect(filtered.items.map((r) => r.id)).toContain(record1.id);
+      expect(filtered.items.map((r) => r.id)).toContain(record2.id);
+      expect(filtered.total).toBe(2);
+    });
+
     it('should get seasonal coefficient by id', async () => {
       const record = await ctx.client.seasonalCoefficients.getById(ctx.shopContext, coefficientId);
 

@@ -32,6 +32,7 @@ import type {
   ImportLeftoverItem,
   LeftoverExportItem,
   LeftoverQuery,
+  PaginationQuery,
   Status,
   CreateStatusRequest,
   UpdateStatusRequest,
@@ -172,7 +173,7 @@ export class SalesPlannerClient {
     ImportSeasonalCoefficientItem,
     SeasonalCoefficientExportItem,
     ImportResult,
-    Record<string, never>
+    PaginationQuery
   >;
   readonly skuCompetitorMappings: ShopScopedClient<
     SkuCompetitorMapping,
@@ -181,7 +182,7 @@ export class SalesPlannerClient {
     ImportSkuCompetitorMappingItem,
     SkuCompetitorMappingExportItem,
     ImportResult,
-    Record<string, never>
+    PaginationQuery
   >;
   readonly competitorProducts: ShopScopedClient<
     CompetitorProduct,

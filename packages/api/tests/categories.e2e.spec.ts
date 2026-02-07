@@ -81,6 +81,26 @@ describe('Categories (e2e)', () => {
       expect(categories.items.length).toBeGreaterThan(0);
     });
 
+    it('should filter categories by ids', async () => {
+      const cat1 = await ctx.client.categories.create(ctx.shopContext, {
+        code: generateTestCode('cat-ids-1'),
+        title: 'IDs Filter Category 1',
+      });
+      const cat2 = await ctx.client.categories.create(ctx.shopContext, {
+        code: generateTestCode('cat-ids-2'),
+        title: 'IDs Filter Category 2',
+      });
+
+      const filtered = await ctx.client.categories.getAll(ctx.shopContext, {
+        ids: [cat1.id, cat2.id],
+      });
+
+      expect(filtered.items.length).toBe(2);
+      expect(filtered.items.map((c) => c.id)).toContain(cat1.id);
+      expect(filtered.items.map((c) => c.id)).toContain(cat2.id);
+      expect(filtered.total).toBe(2);
+    });
+
     it('should get category by id', async () => {
       const created = await ctx.client.categories.create(ctx.shopContext, {
         code: generateTestCode('category-get'),

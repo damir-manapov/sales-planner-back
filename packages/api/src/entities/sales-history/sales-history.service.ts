@@ -73,10 +73,19 @@ export class SalesHistoryService {
     shopId: number,
     query?: SalesHistoryQuery,
   ): Promise<PaginatedResponse<SalesHistory>> {
-    const { period_from: periodFrom, period_to: periodTo, limit = 100, offset = 0 } = query ?? {};
+    const {
+      period_from: periodFrom,
+      period_to: periodTo,
+      ids,
+      limit = 100,
+      offset = 0,
+    } = query ?? {};
 
     let baseQuery = this.db.selectFrom('sales_history').where('shop_id', '=', shopId);
 
+    if (ids && ids.length > 0) {
+      baseQuery = baseQuery.where('id', 'in', ids);
+    }
     if (periodFrom) {
       baseQuery = baseQuery.where('period', '>=', periodToDate(periodFrom));
     }

@@ -95,6 +95,47 @@ describe('SKU Competitor Mappings (e2e)', () => {
       expect(records.items.length).toBeGreaterThan(0);
     });
 
+    it('should filter SKU competitor mappings by ids', async () => {
+      const testMarketplace = await ctx.client.marketplaces.create(ctx.shopContext, {
+        code: generateTestCode('MP-SCM-IDS'),
+        title: 'IDs Filter MP',
+      });
+      const testProduct1 = await ctx.client.competitorProducts.create(ctx.shopContext, {
+        marketplace_id: testMarketplace.id,
+        marketplace_product_id: String(Date.now()),
+      });
+      const testProduct2 = await ctx.client.competitorProducts.create(ctx.shopContext, {
+        marketplace_id: testMarketplace.id,
+        marketplace_product_id: String(Date.now() + 1),
+      });
+      const testSku1 = await ctx.client.skus.create(ctx.shopContext, {
+        code: generateTestCode('SKU-SCM-IDS-1'),
+        title: 'IDs Filter SKU 1',
+      });
+      const testSku2 = await ctx.client.skus.create(ctx.shopContext, {
+        code: generateTestCode('SKU-SCM-IDS-2'),
+        title: 'IDs Filter SKU 2',
+      });
+
+      const record1 = await ctx.client.skuCompetitorMappings.create(ctx.shopContext, {
+        sku_id: testSku1.id,
+        competitor_product_id: testProduct1.id,
+      });
+      const record2 = await ctx.client.skuCompetitorMappings.create(ctx.shopContext, {
+        sku_id: testSku2.id,
+        competitor_product_id: testProduct2.id,
+      });
+
+      const filtered = await ctx.client.skuCompetitorMappings.getAll(ctx.shopContext, {
+        ids: [record1.id, record2.id],
+      });
+
+      expect(filtered.items.length).toBe(2);
+      expect(filtered.items.map((r) => r.id)).toContain(record1.id);
+      expect(filtered.items.map((r) => r.id)).toContain(record2.id);
+      expect(filtered.total).toBe(2);
+    });
+
     it('should get SKU competitor mapping by id', async () => {
       const record = await ctx.client.skuCompetitorMappings.getById(ctx.shopContext, mappingId);
 
