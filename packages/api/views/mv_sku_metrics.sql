@@ -59,13 +59,11 @@ SELECT
   -- IDs for API responses
   s.group_id,
   s.category_id,
-  s.brand_id,
   s.status_id,
   s.supplier_id,
   -- Codes for export (denormalized for convenience)
   g.code as group_code,
   c.code as category_code,
-  b.code as brand_code,
   st.code as status_code,
   su.code as supplier_code,
   COALESCE(lps.last_period, '') as last_period,
@@ -87,7 +85,6 @@ SELECT
 FROM skus s
 LEFT JOIN groups g ON s.group_id = g.id
 LEFT JOIN categories c ON s.category_id = c.id
-LEFT JOIN brands b ON s.brand_id = b.id
 LEFT JOIN statuses st ON s.status_id = st.id
 LEFT JOIN suppliers su ON s.supplier_id = su.id
 LEFT JOIN last_period_sales lps ON s.id = lps.sku_id AND s.shop_id = lps.shop_id

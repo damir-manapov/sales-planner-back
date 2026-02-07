@@ -268,7 +268,6 @@ export interface SkuCompetitorMappings {
 }
 
 export interface Skus {
-  brand_id: number | null;
   category_id: number | null;
   code: string;
   created_at: Generated<Timestamp>;
@@ -361,13 +360,11 @@ export interface MvSkuMetrics {
   // IDs for API responses
   group_id: number | null;
   category_id: number | null;
-  brand_id: number | null;
   status_id: number | null;
   supplier_id: number | null;
   // Codes for export
   group_code: string | null;
   category_code: string | null;
-  brand_code: string | null;
   status_code: string | null;
   supplier_code: string | null;
   last_period: string;

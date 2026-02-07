@@ -382,7 +382,6 @@ interface SkuMetrics {
   // IDs for API responses (like other entities)
   group_id: number | null;
   category_id: number | null;
-  brand_id: number | null;
   status_id: number | null;
   supplier_id: number | null;
   last_period: string;        // YYYY-MM format
@@ -400,7 +399,6 @@ interface SkuMetricsExportItem {
   title: string;
   group: string | null;
   category: string | null;
-  brand: string | null;
   status: string | null;
   supplier: string | null;
   lastPeriod: string;

@@ -188,7 +188,7 @@ describe('SkuMetricsController (e2e)', () => {
       // Header should always be present with all columns, even with no data
       // Export uses simple names (not camelCase) - same pattern as SKUs export
       expect(lines[0]).toBe(
-        'code,title,group,category,brand,status,supplier,lastPeriod,lastPeriodSales,currentStock,daysOfStock,abcClass,salesRank',
+        'code,title,group,category,status,supplier,lastPeriod,lastPeriodSales,currentStock,daysOfStock,abcClass,salesRank',
       );
     });
 

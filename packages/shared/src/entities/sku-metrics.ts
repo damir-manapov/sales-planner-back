@@ -16,8 +16,6 @@ export interface SkuMetrics {
   group_id: number | null;
   /** Category ID (null if not assigned) */
   category_id: number | null;
-  /** Brand ID (null if not assigned) */
-  brand_id: number | null;
   /** Status ID (null if not assigned) */
   status_id: number | null;
   /** Supplier ID (null if not assigned) */
@@ -26,8 +24,6 @@ export interface SkuMetrics {
   group_code: string | null;
   /** Category code (for export convenience) */
   category_code: string | null;
-  /** Brand code (for export convenience) */
-  brand_code: string | null;
   /** Status code (for export convenience) */
   status_code: string | null;
   /** Supplier code (for export convenience) */
@@ -57,7 +53,6 @@ export interface SkuMetricsExportItem {
   title: string;
   group: string | null;
   category: string | null;
-  brand: string | null;
   status: string | null;
   supplier: string | null;
   lastPeriod: string;
