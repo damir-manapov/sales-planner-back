@@ -98,10 +98,7 @@ export const zodSchemas = {
     z
       .string()
       .transform(parsePeriod)
-      .refine(
-        (v) => /^\d{4}-(0[1-9]|1[0-2])$/.test(v),
-        'Must be a valid period (YYYY-MM, DD.MM.YYYY, or DD/MM/YYYY)',
-      ),
+      .pipe(z.string().regex(/^\d{4}-(0[1-9]|1[0-2])$/, 'Must be a valid period (YYYY-MM, DD.MM.YYYY, or DD/MM/YYYY)')),
 
   /** Flexible float for imports: handles comma decimal separator */
   flexibleFloat: () =>
