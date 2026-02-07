@@ -67,7 +67,11 @@ export class TenantsService {
   }
 
   async findByOwnerId(ownerId: number, query?: PaginationQuery): Promise<Tenant[]> {
-    let q = this.db.selectFrom('tenants').selectAll().where('owner_id', '=', ownerId).orderBy('id', 'asc');
+    let q = this.db
+      .selectFrom('tenants')
+      .selectAll()
+      .where('owner_id', '=', ownerId)
+      .orderBy('id', 'asc');
     if (query?.limit !== undefined) q = q.limit(query.limit);
     if (query?.offset !== undefined) q = q.offset(query.offset);
     return q.execute();

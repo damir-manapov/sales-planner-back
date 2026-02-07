@@ -1,20 +1,11 @@
 #!/usr/bin/env bun
 import 'dotenv/config';
-import { ApiError } from '../../http-client/dist/index.js';
-import { createSlug, initAdminClient, printSuccessSummary } from './tenant-setup-helpers.js';
-
-function handleError(step: string, error: unknown): never {
-  console.error('');
-  console.error(`❌ Error in ${step}:`);
-  if (error instanceof ApiError) {
-    console.error(`   HTTP ${error.status}: ${error.message}`);
-  } else if (error instanceof Error) {
-    console.error(`   ${error.message}`);
-  } else {
-    console.error(`   ${error}`);
-  }
-  process.exit(1);
-}
+import {
+  createSlug,
+  handleError,
+  initAdminClient,
+  printSuccessSummary,
+} from './tenant-setup-helpers.js';
 
 interface CreateTenantArgs {
   tenantTitle: string;

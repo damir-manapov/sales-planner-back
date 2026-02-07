@@ -1,3 +1,4 @@
+import { BadRequestException } from '@nestjs/common';
 import type {
   CodedTitledItem,
   CodedTitledShopScopedCreateDto,
@@ -97,8 +98,9 @@ export abstract class CodedShopScopedEntityService<
       .map(([code, count]) => `"${code}" (${count} times)`);
 
     if (duplicateCodes.length > 0) {
-      errors.push(`Duplicate ${this.entityName} codes found: ${duplicateCodes.slice(0, 5).join(', ')}${duplicateCodes.length > 5 ? ` and ${duplicateCodes.length - 5} more` : ''}`);
-      return { created: 0, updated: 0, errors };
+      throw new BadRequestException(
+        `Duplicate ${this.entityName} codes found in CSV: ${duplicateCodes.slice(0, 5).join(', ')}${duplicateCodes.length > 5 ? ` and ${duplicateCodes.length - 5} more` : ''}`,
+      );
     }
 
     const normalizedItems = validItems.map((item) => ({

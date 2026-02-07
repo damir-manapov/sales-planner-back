@@ -21,7 +21,11 @@ import {
   validateWriteAccess,
 } from '../../auth/access-control.js';
 import { AuthenticatedRequest, AuthGuard } from '../../auth/auth.guard.js';
-import { type PaginationQuery, PaginationQuerySchema, ZodValidationPipe } from '../../common/index.js';
+import {
+  type PaginationQuery,
+  PaginationQuerySchema,
+  ZodValidationPipe,
+} from '../../common/index.js';
 import {
   type CreateShopRequest,
   CreateShopSchema,

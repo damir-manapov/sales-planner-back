@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { SalesPlannerClient } from '@sales-planner/http-client';
+import { ApiError, SalesPlannerClient } from '@sales-planner/http-client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { ROLE_NAMES } from '../src/common/constants.js';
@@ -615,26 +615,30 @@ describe('SKUs (e2e)', () => {
       const code = generateTestCode('DUP-SKU');
       const csvContent = `code,title\n${code},First SKU\n${code},Second SKU`;
 
-      const result = await ctx.client.skus.importCsv(ctx.shopContext, csvContent);
-
-      expect(result.created).toBe(0);
-      expect(result.updated).toBe(0);
-      expect(result.errors.length).toBeGreaterThan(0);
-      expect(result.errors[0]).toContain('Duplicate SKU codes');
+      try {
+        await ctx.client.skus.importCsv(ctx.shopContext, csvContent);
+        expect.fail('Expected ApiError to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(400);
+        expect((error as ApiError).message).toContain('Duplicate SKU codes');
+      }
     });
 
     it('should reject JSON import with duplicate SKU codes', async () => {
       const code = generateTestCode('DUP-SKU-JSON');
 
-      const result = await ctx.client.skus.importJson(ctx.shopContext, [
-        { code, title: 'First' },
-        { code, title: 'Second' },
-      ]);
-
-      expect(result.created).toBe(0);
-      expect(result.updated).toBe(0);
-      expect(result.errors.length).toBeGreaterThan(0);
-      expect(result.errors[0]).toContain('Duplicate SKU codes');
+      try {
+        await ctx.client.skus.importJson(ctx.shopContext, [
+          { code, title: 'First' },
+          { code, title: 'Second' },
+        ]);
+        expect.fail('Expected ApiError to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(400);
+        expect((error as ApiError).message).toContain('Duplicate SKU codes');
+      }
     });
   });
 

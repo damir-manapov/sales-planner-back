@@ -1,9 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import type { DeleteDataResult, PaginatedResponse, PaginationQuery, Shop } from '@sales-planner/shared';
+import type {
+  DeleteDataResult,
+  PaginatedResponse,
+  PaginationQuery,
+  Shop,
+} from '@sales-planner/shared';
 import { DatabaseService } from '../../database/database.service.js';
+import { BrandsService } from '../brands/brands.service.js';
+import { CategoriesService } from '../categories/categories.service.js';
+import { GroupsService } from '../groups/groups.service.js';
 import { MarketplacesService } from '../marketplaces/marketplaces.service.js';
 import { SalesHistoryService } from '../sales-history/sales-history.service.js';
 import { SkusService } from '../skus/skus.service.js';
+import { StatusesService } from '../statuses/statuses.service.js';
+import { SuppliersService } from '../suppliers/suppliers.service.js';
 import type { CreateShopDto, UpdateShopDto } from './shops.schema.js';
 
 export type { Shop };
@@ -16,6 +26,11 @@ export class ShopsService {
     private readonly skusService: SkusService,
     private readonly salesHistoryService: SalesHistoryService,
     private readonly marketplacesService: MarketplacesService,
+    private readonly brandsService: BrandsService,
+    private readonly categoriesService: CategoriesService,
+    private readonly groupsService: GroupsService,
+    private readonly statusesService: StatusesService,
+    private readonly suppliersService: SuppliersService,
   ) {}
 
   async count(): Promise<number> {
@@ -48,7 +63,11 @@ export class ShopsService {
   }
 
   async findByTenantId(tenantId: number, query?: PaginationQuery): Promise<Shop[]> {
-    let q = this.db.selectFrom('shops').selectAll().where('tenant_id', '=', tenantId).orderBy('id', 'asc');
+    let q = this.db
+      .selectFrom('shops')
+      .selectAll()
+      .where('tenant_id', '=', tenantId)
+      .orderBy('id', 'asc');
     if (query?.limit !== undefined) q = q.limit(query.limit);
     if (query?.offset !== undefined) q = q.offset(query.offset);
     return q.execute();
@@ -94,8 +113,24 @@ export class ShopsService {
     const skusDeleted = await this.skusService.deleteByShopId(id);
 
     // Delete marketplaces
-    const marketplacesDeleted = (await this.marketplacesService.deleteByShopId(id)) ?? 0;
+    const marketplacesDeleted = await this.marketplacesService.deleteByShopId(id);
 
-    return { skusDeleted, salesHistoryDeleted, marketplacesDeleted };
+    // Delete coded entities
+    const brandsDeleted = await this.brandsService.deleteByShopId(id);
+    const categoriesDeleted = await this.categoriesService.deleteByShopId(id);
+    const groupsDeleted = await this.groupsService.deleteByShopId(id);
+    const statusesDeleted = await this.statusesService.deleteByShopId(id);
+    const suppliersDeleted = await this.suppliersService.deleteByShopId(id);
+
+    return {
+      skusDeleted,
+      salesHistoryDeleted,
+      marketplacesDeleted,
+      brandsDeleted,
+      categoriesDeleted,
+      groupsDeleted,
+      statusesDeleted,
+      suppliersDeleted,
+    };
   }
 }

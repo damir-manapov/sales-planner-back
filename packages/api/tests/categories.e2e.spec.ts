@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { SalesPlannerClient } from '@sales-planner/http-client';
+import { ApiError, SalesPlannerClient } from '@sales-planner/http-client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { ROLE_NAMES } from '../src/common/constants.js';
@@ -421,12 +421,14 @@ describe('Categories (e2e)', () => {
       const code = generateTestCode('dup-category');
       const csvContent = `code,title\n${code},First Category\n${code},Second Category`;
 
-      const result = await ctx.client.categories.importCsv(ctx.shopContext, csvContent);
-
-      expect(result.created).toBe(0);
-      expect(result.updated).toBe(0);
-      expect(result.errors.length).toBeGreaterThan(0);
-      expect(result.errors[0]).toContain('Duplicate category codes');
+      try {
+        await ctx.client.categories.importCsv(ctx.shopContext, csvContent);
+        expect.fail('Expected ApiError to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(400);
+        expect((error as ApiError).message).toContain('Duplicate category codes');
+      }
     });
   });
 

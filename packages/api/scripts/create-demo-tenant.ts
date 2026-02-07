@@ -1,25 +1,13 @@
 #!/usr/bin/env bun
 import 'dotenv/config';
-import { SalesPlannerClient, ApiError } from '../../http-client/dist/index.js';
+import { SalesPlannerClient } from '../../http-client/dist/index.js';
 import {
   createSlug,
   getOrCreateTenant,
   initAdminClient,
   printSuccessSummary,
+  runStep,
 } from './tenant-setup-helpers.js';
-
-function handleError(step: string, error: unknown): never {
-  console.error('');
-  console.error(`❌ Error in ${step}:`);
-  if (error instanceof ApiError) {
-    console.error(`   HTTP ${error.status}: ${error.message}`);
-  } else if (error instanceof Error) {
-    console.error(`   ${error.message}`);
-  } else {
-    console.error(`   ${error}`);
-  }
-  process.exit(1);
-}
 
 interface DemoTenantArgs {
   tenantTitle?: string;
@@ -98,60 +86,65 @@ async function createDemoTenant(args: DemoTenantArgs) {
   console.log('');
 
   // Step 1: Get or create tenant
-  let setup: Awaited<ReturnType<typeof getOrCreateTenant>>;
-  try {
-    setup = await getOrCreateTenant(
-      adminClient,
-      { tenantTitle, shopTitle: 'Electronics', userEmail, userName },
-      apiUrl,
-    );
-  } catch (error) {
-    handleError('Step 1: Get or create tenant', error);
-  }
+  const setup = await runStep(
+    1,
+    '🔍',
+    'Get or create tenant',
+    () =>
+      getOrCreateTenant(
+        adminClient,
+        { tenantTitle, shopTitle: 'Electronics', userEmail, userName },
+        apiUrl,
+      ),
+    (s) => `Tenant: ${s.tenant.title} (ID: ${s.tenant.id})`,
+  );
 
   // Create client with user's API key for data operations
   const userClient = new SalesPlannerClient({ baseUrl: apiUrl, apiKey: setup.apiKey });
   const ctx = { shop_id: setup.shop.id, tenant_id: setup.tenant.id };
 
   // Step 2: Clear existing shop data
-  console.log('🧹 Step 2: Clearing existing shop data...');
-  try {
-    const deleteResult = await userClient.shops.deleteData(setup.shop.id);
-    console.log(
-      `   ✅ Deleted ${deleteResult.skusDeleted} SKUs and ${deleteResult.salesHistoryDeleted} sales records`,
-    );
-  } catch (error) {
-    handleError('Step 2: Clear existing shop data', error);
-  }
-  console.log('');
+  await runStep(
+    2,
+    '🧹',
+    'Clearing existing shop data',
+    () => userClient.shops.deleteData(setup.shop.id),
+    (r) =>
+      `Deleted ${r.skusDeleted} SKUs, ${r.salesHistoryDeleted} sales, ${r.brandsDeleted} brands, ${r.categoriesDeleted} categories, ${r.groupsDeleted} groups, ${r.statusesDeleted} statuses, ${r.suppliersDeleted} suppliers`,
+  );
 
   // Step 3: Import brands
-  console.log(`🏷️  Step 3: Importing ${DEMO_BRANDS.length} brands...`);
-  let brandsResult: Awaited<ReturnType<typeof userClient.brands.importJson>>;
-  try {
-    brandsResult = await userClient.brands.importJson(ctx, DEMO_BRANDS);
-    console.log(`   ✅ Created ${brandsResult.created} brands`);
-  } catch (error) {
-    handleError('Step 3: Import brands', error);
-  }
-  console.log('');
+  const brandsResult = await runStep(
+    3,
+    '🏷️',
+    `Importing ${DEMO_BRANDS.length} brands`,
+    () => userClient.brands.importJson(ctx, DEMO_BRANDS),
+    (r) => `Created ${r.created} brands`,
+  );
 
-  // Step 4: Import sales history
-  console.log(`📈 Step 4: Importing ${DEMO_SALES_DATA.length} sales history records...`);
-  let salesResult: Awaited<ReturnType<typeof userClient.salesHistory.importJson>>;
-  try {
-    salesResult = await userClient.salesHistory.importJson(ctx, DEMO_SALES_DATA);
-    console.log(`   ✅ Created ${salesResult.created} sales records`);
-  } catch (error) {
-    handleError('Step 4: Import sales history', error);
-  }
-  console.log('');
+  // Step 4: Import SKUs
+  const skusResult = await runStep(
+    4,
+    '📦',
+    `Importing ${DEMO_SKUS.length} products`,
+    () => userClient.skus.importJson(ctx, DEMO_SKUS),
+    (r) => `Created ${r.created} products`,
+  );
+
+  // Step 5: Import sales history
+  const salesResult = await runStep(
+    5,
+    '📈',
+    `Importing ${DEMO_SALES_DATA.length} sales records`,
+    () => userClient.salesHistory.importJson(ctx, DEMO_SALES_DATA),
+    (r) => `Created ${r.created} sales records`,
+  );
 
   // Success summary
   printSuccessSummary(setup, [
-    `${DEMO_BRANDS.length} brands (Dell, Apple, Samsung, etc.)`,
-    `${DEMO_SKUS.length} products (laptops, phones, tablets, accessories)`,
-    `${DEMO_SALES_DATA.length} sales history records across 3 periods`,
+    `${brandsResult.created} brands (Dell, Apple, Samsung, etc.)`,
+    `${skusResult.created} products (laptops, phones, tablets, accessories)`,
+    `${salesResult.created} sales history records across 3 periods`,
     'Periods: 2025-11, 2025-12, 2026-01',
   ]);
 

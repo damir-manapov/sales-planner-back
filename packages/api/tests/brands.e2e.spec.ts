@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { SalesPlannerClient } from '@sales-planner/http-client';
+import { ApiError, SalesPlannerClient } from '@sales-planner/http-client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { ROLE_NAMES } from '../src/common/constants.js';
@@ -436,6 +436,20 @@ describe('Brands (e2e)', () => {
       expect(lines[0]).toBe('code,title');
       expect(lines.some((line) => line.includes(normalizeCode(code1)))).toBe(true);
       expect(lines.some((line) => line.includes(normalizeCode(code2)))).toBe(true);
+    });
+
+    it('should reject import with duplicate codes', async () => {
+      const code = generateTestCode('dup-brand');
+      const csvContent = `code,title\n${code},First Brand\n${code},Second Brand`;
+
+      try {
+        await ctx.client.brands.importCsv(ctx.shopContext, csvContent);
+        expect.fail('Expected ApiError to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(400);
+        expect((error as ApiError).message).toContain('Duplicate brand codes');
+      }
     });
   });
 

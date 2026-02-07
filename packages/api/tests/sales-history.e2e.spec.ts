@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { SalesPlannerClient } from '@sales-planner/http-client';
+import { ApiError, SalesPlannerClient } from '@sales-planner/http-client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { ROLE_NAMES } from '../src/common/constants.js';
@@ -588,12 +588,14 @@ describe('Sales History (e2e)', () => {
       const testPeriod = generateTestPeriod();
       const csvContent = `marketplace,period,sku,quantity\n${marketplace},${testPeriod},${skuCode},10\n${marketplace},${testPeriod},${skuCode},20`;
 
-      const result = await ctx.client.salesHistory.importCsv(ctx.shopContext, csvContent);
-
-      expect(result.created).toBe(0);
-      expect(result.updated).toBe(0);
-      expect(result.errors.length).toBeGreaterThan(0);
-      expect(result.errors[0]).toContain('Duplicate records');
+      try {
+        await ctx.client.salesHistory.importCsv(ctx.shopContext, csvContent);
+        expect.fail('Expected ApiError to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(400);
+        expect((error as ApiError).message).toContain('Duplicate records');
+      }
     });
 
     it('should reject JSON import with duplicate records', async () => {
@@ -601,15 +603,17 @@ describe('Sales History (e2e)', () => {
       const marketplace = generateTestCode('DUP-MP-JSON');
       const testPeriod = generateTestPeriod();
 
-      const result = await ctx.client.salesHistory.importJson(ctx.shopContext, [
-        { marketplace, period: testPeriod, sku: skuCode, quantity: 10 },
-        { marketplace, period: testPeriod, sku: skuCode, quantity: 20 },
-      ]);
-
-      expect(result.created).toBe(0);
-      expect(result.updated).toBe(0);
-      expect(result.errors.length).toBeGreaterThan(0);
-      expect(result.errors[0]).toContain('Duplicate records');
+      try {
+        await ctx.client.salesHistory.importJson(ctx.shopContext, [
+          { marketplace, period: testPeriod, sku: skuCode, quantity: 10 },
+          { marketplace, period: testPeriod, sku: skuCode, quantity: 20 },
+        ]);
+        expect.fail('Expected ApiError to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(400);
+        expect((error as ApiError).message).toContain('Duplicate records');
+      }
     });
   });
 

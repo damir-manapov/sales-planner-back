@@ -15,7 +15,11 @@ import {
 import type { PaginatedResponse } from '@sales-planner/shared';
 import { AuthenticatedRequest, AuthGuard } from '../../auth/auth.guard.js';
 import { SystemAdminGuard } from '../../auth/system-admin.guard.js';
-import { type PaginationQuery, PaginationQuerySchema, ZodValidationPipe } from '../../common/index.js';
+import {
+  type PaginationQuery,
+  PaginationQuerySchema,
+  ZodValidationPipe,
+} from '../../common/index.js';
 import {
   type CreateTenantRequest,
   CreateTenantRequestSchema,

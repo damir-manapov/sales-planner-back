@@ -166,6 +166,68 @@ describe('CSV utilities', () => {
       });
     });
 
+    describe('tricky CSV cases', () => {
+      it('should handle quoted values with semicolons inside (semicolon delimiter)', () => {
+        const csv = 'code;title\nABC;"Product A; special"\nDEF;Simple';
+        const result = fromCsv(csv, ['code', 'title']);
+        expect(result).toEqual([
+          { code: 'ABC', title: 'Product A; special' },
+          { code: 'DEF', title: 'Simple' },
+        ]);
+      });
+
+      it('should handle embedded newlines in quoted fields', () => {
+        const csv = 'code;title\nABC;"Line 1\nLine 2"\nDEF;Simple';
+        const result = fromCsv(csv, ['code', 'title']);
+        expect(result).toEqual([
+          { code: 'ABC', title: 'Line 1\nLine 2' },
+          { code: 'DEF', title: 'Simple' },
+        ]);
+      });
+
+      it('should handle escaped quotes inside quoted fields', () => {
+        const csv = 'code;title\nABC;"Product ""Special"" Edition"\nDEF;Normal';
+        const result = fromCsv(csv, ['code', 'title']);
+        expect(result).toEqual([
+          { code: 'ABC', title: 'Product "Special" Edition' },
+          { code: 'DEF', title: 'Normal' },
+        ]);
+      });
+
+      it('should handle mixed: semicolons, newlines, and quotes in one field', () => {
+        const csv =
+          'code;title;description\nABC;"Title A";"Line 1; with semi\nLine 2 ""quoted"""\nDEF;Title B;Simple';
+        const result = fromCsv(csv, ['code', 'title']);
+        expect(result).toEqual([
+          { code: 'ABC', title: 'Title A', description: 'Line 1; with semi\nLine 2 "quoted"' },
+          { code: 'DEF', title: 'Title B', description: 'Simple' },
+        ]);
+      });
+
+      it('should handle CRLF line endings', () => {
+        const csv = 'code;title\r\nABC;Product A\r\nDEF;Product B\r\n';
+        const result = fromCsv(csv, ['code', 'title']);
+        expect(result).toEqual([
+          { code: 'ABC', title: 'Product A' },
+          { code: 'DEF', title: 'Product B' },
+        ]);
+      });
+
+      it('should handle real-world product with car models in description', () => {
+        const csv = `code;title;description
+M412001;"Тормозные диски";"KIA RIO III 11-, RIO IV 17-; HYUNDAI ACCENT SOLARIS I 10-17, SOLARIS II 17-"`;
+        const result = fromCsv(csv, ['code', 'title']);
+        expect(result).toEqual([
+          {
+            code: 'M412001',
+            title: 'Тормозные диски',
+            description:
+              'KIA RIO III 11-, RIO IV 17-; HYUNDAI ACCENT SOLARIS I 10-17, SOLARIS II 17-',
+          },
+        ]);
+      });
+    });
+
     describe('real-world examples', () => {
       it('should parse brands CSV with semicolons', () => {
         const brandsCSV = `code;title

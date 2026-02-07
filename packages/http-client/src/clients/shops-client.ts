@@ -14,7 +14,9 @@ export interface GetShopsQuery extends PaginationQuery {
 
 export class ShopsClient extends BaseClient {
   async getAll(query?: GetShopsQuery): Promise<PaginatedResponse<Shop>> {
-    return this.request('GET', '/shops', { params: query as Record<string, string | number | undefined> });
+    return this.request('GET', '/shops', {
+      params: query as Record<string, string | number | undefined>,
+    });
   }
 
   async getById(id: number): Promise<Shop> {

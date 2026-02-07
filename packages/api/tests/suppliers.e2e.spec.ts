@@ -1,6 +1,6 @@
 import { INestApplication } from '@nestjs/common';
 import { Test, TestingModule } from '@nestjs/testing';
-import { SalesPlannerClient } from '@sales-planner/http-client';
+import { ApiError, SalesPlannerClient } from '@sales-planner/http-client';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { ROLE_NAMES } from '../src/common/constants.js';
@@ -381,6 +381,20 @@ describe('Suppliers (e2e)', () => {
       expect(csv).toContain('code,title');
       expect(csv).toContain(normalizeCode(code1));
       expect(csv).toContain(normalizeCode(code2));
+    });
+
+    it('should reject import with duplicate codes', async () => {
+      const code = generateTestCode('dup-supplier');
+      const csvContent = `code,title\n${code},First Supplier\n${code},Second Supplier`;
+
+      try {
+        await ctx.client.suppliers.importCsv(ctx.shopContext, csvContent);
+        expect.fail('Expected ApiError to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(400);
+        expect((error as ApiError).message).toContain('Duplicate supplier codes');
+      }
     });
   });
 

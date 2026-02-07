@@ -1,5 +1,5 @@
 import type { SalesPlannerClient } from '../../http-client/dist/index.js';
-import { SalesPlannerClient as Client } from '../../http-client/dist/index.js';
+import { SalesPlannerClient as Client, ApiError } from '../../http-client/dist/index.js';
 
 export interface TenantSetup {
   tenant: { id: number; title: string };
@@ -13,6 +13,43 @@ export interface TenantSetupConfig {
   shopTitle?: string;
   userEmail: string;
   userName: string;
+}
+
+/**
+ * Handles errors in tenant setup scripts with consistent formatting
+ */
+export function handleError(step: string, error: unknown): never {
+  console.error('');
+  console.error(`❌ Error in ${step}:`);
+  if (error instanceof ApiError) {
+    console.error(`   HTTP ${error.status}: ${error.message}`);
+  } else if (error instanceof Error) {
+    console.error(`   ${error.message}`);
+  } else {
+    console.error(`   ${error}`);
+  }
+  process.exit(1);
+}
+
+/**
+ * Executes a step with consistent logging and error handling
+ */
+export async function runStep<T>(
+  stepNumber: number,
+  emoji: string,
+  description: string,
+  action: () => Promise<T>,
+  successMessage: (result: T) => string,
+): Promise<T> {
+  console.log(`${emoji} Step ${stepNumber}: ${description}...`);
+  try {
+    const result = await action();
+    console.log(`   ✅ ${successMessage(result)}`);
+    console.log('');
+    return result;
+  } catch (error) {
+    handleError(`Step ${stepNumber}: ${description}`, error);
+  }
 }
 
 /**

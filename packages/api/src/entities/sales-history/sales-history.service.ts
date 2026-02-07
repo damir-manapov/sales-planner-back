@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import type {
   PaginatedResponse,
   SalesHistory,
@@ -293,14 +293,9 @@ export class SalesHistoryService {
       .map(([key, count]) => `"${key}" (${count} times)`);
 
     if (duplicateKeys.length > 0) {
-      errors.push(`Duplicate records found: ${duplicateKeys.slice(0, 5).join(', ')}${duplicateKeys.length > 5 ? ` and ${duplicateKeys.length - 5} more` : ''}`);
-      return {
-        created: 0,
-        updated: 0,
-        skus_created: skusCreated,
-        marketplaces_created: marketplacesCreated,
-        errors,
-      };
+      throw new BadRequestException(
+        `Duplicate records found in CSV (same sku+period+marketplace): ${duplicateKeys.slice(0, 5).join(', ')}${duplicateKeys.length > 5 ? ` and ${duplicateKeys.length - 5} more` : ''}`,
+      );
     }
 
     // Get existing records for counting

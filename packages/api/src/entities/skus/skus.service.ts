@@ -1,4 +1,4 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import { BadRequestException, Injectable, NotFoundException } from '@nestjs/common';
 import type {
   CreateSkuDto,
   ImportSkuItem,
@@ -145,16 +145,9 @@ export class SkusService {
       .map(([code, count]) => `"${code}" (${count} times)`);
 
     if (duplicateCodes.length > 0) {
-      errors.push(`Duplicate SKU codes found: ${duplicateCodes.join(', ')}`);
-      return {
-        created: 0,
-        updated: 0,
-        errors,
-        categories_created: 0,
-        groups_created: 0,
-        statuses_created: 0,
-        suppliers_created: 0,
-      };
+      throw new BadRequestException(
+        `Duplicate SKU codes found in CSV: ${duplicateCodes.join(', ')}`,
+      );
     }
 
     if (validItems.length === 0) {

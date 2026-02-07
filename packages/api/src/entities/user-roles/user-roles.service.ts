@@ -67,7 +67,11 @@ export class UserRolesService {
   }
 
   async findByUserId(userId: number, query?: PaginationQuery): Promise<UserRole[]> {
-    let q = this.db.selectFrom('user_roles').selectAll().where('user_id', '=', userId).orderBy('id', 'asc');
+    let q = this.db
+      .selectFrom('user_roles')
+      .selectAll()
+      .where('user_id', '=', userId)
+      .orderBy('id', 'asc');
     if (query?.limit !== undefined) q = q.limit(query.limit);
     if (query?.offset !== undefined) q = q.offset(query.offset);
     return q.execute();
@@ -85,7 +89,11 @@ export class UserRolesService {
   }
 
   async findByRoleId(roleId: number, query?: PaginationQuery): Promise<UserRole[]> {
-    let q = this.db.selectFrom('user_roles').selectAll().where('role_id', '=', roleId).orderBy('id', 'asc');
+    let q = this.db
+      .selectFrom('user_roles')
+      .selectAll()
+      .where('role_id', '=', roleId)
+      .orderBy('id', 'asc');
     if (query?.limit !== undefined) q = q.limit(query.limit);
     if (query?.offset !== undefined) q = q.offset(query.offset);
     return q.execute();
@@ -103,7 +111,11 @@ export class UserRolesService {
   }
 
   async findByTenantId(tenantId: number, query?: PaginationQuery): Promise<UserRole[]> {
-    let q = this.db.selectFrom('user_roles').selectAll().where('tenant_id', '=', tenantId).orderBy('id', 'asc');
+    let q = this.db
+      .selectFrom('user_roles')
+      .selectAll()
+      .where('tenant_id', '=', tenantId)
+      .orderBy('id', 'asc');
     if (query?.limit !== undefined) q = q.limit(query.limit);
     if (query?.offset !== undefined) q = q.offset(query.offset);
     return q.execute();

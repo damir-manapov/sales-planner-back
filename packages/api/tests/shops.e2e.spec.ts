@@ -249,6 +249,12 @@ describe('Shops E2E', () => {
 
       expect(result.skusDeleted).toBe(2);
       expect(result.salesHistoryDeleted).toBe(2);
+      expect(result.marketplacesDeleted).toBe(2);
+      expect(result.brandsDeleted).toBe(0);
+      expect(result.categoriesDeleted).toBe(0);
+      expect(result.groupsDeleted).toBe(0);
+      expect(result.statusesDeleted).toBe(0);
+      expect(result.suppliersDeleted).toBe(0);
     });
 
     it('GET /skus - should return empty after data deletion', async () => {

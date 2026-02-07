@@ -20,4 +20,9 @@ export interface DeleteDataResult {
   skusDeleted: number;
   salesHistoryDeleted: number;
   marketplacesDeleted: number;
+  brandsDeleted: number;
+  categoriesDeleted: number;
+  groupsDeleted: number;
+  statusesDeleted: number;
+  suppliersDeleted: number;
 }

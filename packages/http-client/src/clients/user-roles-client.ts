@@ -10,7 +10,9 @@ import { BaseClient } from './base-client.js';
 export interface GetUserRolesQueryWithPagination extends GetUserRolesQuery, PaginationQuery {}
 
 export class UserRolesClient extends BaseClient {
-  async getAll(query?: GetUserRolesQueryWithPagination): Promise<PaginatedResponse<UserRoleResponse>> {
+  async getAll(
+    query?: GetUserRolesQueryWithPagination,
+  ): Promise<PaginatedResponse<UserRoleResponse>> {
     const params: Record<string, string | number | undefined> = {};
     if (query?.userId) params.userId = query.userId;
     if (query?.roleId) params.roleId = query.roleId;

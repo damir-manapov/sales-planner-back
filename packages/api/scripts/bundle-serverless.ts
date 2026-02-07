@@ -1,7 +1,7 @@
 import * as esbuild from 'esbuild';
-import { join, dirname } from 'path';
-import { fileURLToPath } from 'url';
-import { writeFileSync, unlinkSync, readFileSync } from 'fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { writeFileSync, unlinkSync, readFileSync } from 'node:fs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const apiRoot = join(__dirname, '..');
@@ -73,21 +73,23 @@ try {
     minify: false,
     // Inject version at build time
     define: {
-      '__APP_VERSION__': JSON.stringify(APP_VERSION),
+      __APP_VERSION__: JSON.stringify(APP_VERSION),
     },
     // Ignore console-ninja VS Code extension
-    plugins: [{
-      name: 'ignore-extensions',
-      setup(build) {
-        build.onResolve({ filter: /console-ninja|wallabyjs/ }, () => ({
-          path: 'empty',
-          namespace: 'empty',
-        }));
-        build.onLoad({ filter: /.*/, namespace: 'empty' }, () => ({
-          contents: 'export default {}',
-        }));
+    plugins: [
+      {
+        name: 'ignore-extensions',
+        setup(build) {
+          build.onResolve({ filter: /console-ninja|wallabyjs/ }, () => ({
+            path: 'empty',
+            namespace: 'empty',
+          }));
+          build.onLoad({ filter: /.*/, namespace: 'empty' }, () => ({
+            contents: 'export default {}',
+          }));
+        },
       },
-    }],
+    ],
     banner: {
       js: `
 import { createRequire } from 'module';
