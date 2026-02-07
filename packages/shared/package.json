@@ -1,6 +1,6 @@
 {
   "name": "@sales-planner/shared",
-  "version": "0.17.0",
+  "version": "0.17.1",
   "description": "Shared types and DTOs for Sales Planner API",
   "author": "Damir Manapov",
   "license": "MIT",

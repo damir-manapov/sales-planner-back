@@ -379,11 +379,12 @@ interface SkuMetrics {
   tenant_id: number;
   sku_code: string;
   sku_title: string;
-  group_code: string | null;
-  category_code: string | null;
-  brand_code: string | null;
-  status_code: string | null;
-  supplier_code: string | null;
+  // IDs for API responses (like other entities)
+  group_id: number | null;
+  category_id: number | null;
+  brand_id: number | null;
+  status_id: number | null;
+  supplier_id: number | null;
   last_period: string;        // YYYY-MM format
   last_period_sales: number;  // Total sales for last period
   current_stock: number;      // Current inventory
@@ -391,6 +392,23 @@ interface SkuMetrics {
   abc_class: 'A' | 'B' | 'C'; // A=top 20%, B=next 30%, C=bottom 50%
   sales_rank: number;         // 1 = highest sales
   computed_at: Date;
+}
+
+// Export uses simple names (like SKUs export), not camelCase
+interface SkuMetricsExportItem {
+  code: string;
+  title: string;
+  group: string | null;
+  category: string | null;
+  brand: string | null;
+  status: string | null;
+  supplier: string | null;
+  lastPeriod: string;
+  lastPeriodSales: number;
+  currentStock: number;
+  daysOfStock: number | null;
+  abcClass: 'A' | 'B' | 'C';
+  salesRank: number;
 }
 
 // View management types

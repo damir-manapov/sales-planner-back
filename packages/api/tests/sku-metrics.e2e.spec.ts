@@ -186,8 +186,9 @@ describe('SkuMetricsController (e2e)', () => {
       expect(typeof csv).toBe('string');
       const lines = csv.split('\n');
       // Header should always be present with all columns, even with no data
+      // Export uses simple names (not camelCase) - same pattern as SKUs export
       expect(lines[0]).toBe(
-        'skuId,skuCode,skuTitle,groupCode,categoryCode,brandCode,statusCode,supplierCode,lastPeriod,lastPeriodSales,currentStock,daysOfStock,abcClass,salesRank,computedAt',
+        'code,title,group,category,brand,status,supplier,lastPeriod,lastPeriodSales,currentStock,daysOfStock,abcClass,salesRank',
       );
     });
 

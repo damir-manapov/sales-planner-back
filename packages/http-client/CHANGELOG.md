@@ -1,5 +1,18 @@
 # @sales-planner/http-client
 
+## 0.19.1
+
+### Patch Changes
+
+- Add IDs to SkuMetrics entity, update export to use simple field names
+
+  - Add group_id, category_id, brand_id, status_id, supplier_id to SkuMetrics
+  - Export uses simple field names (code, title, group, category) matching SKU export pattern
+  - Cast numeric fields to integer in SQL view for proper types
+
+- Updated dependencies
+  - @sales-planner/shared@0.17.1
+
 ## 0.19.0
 
 ### Minor Changes

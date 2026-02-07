@@ -84,9 +84,10 @@ NestJS REST API for multi-tenant sales planning and management. Built with Kysel
   - Used by UI for documentation and dynamic form generation
 - **Computed Entities** - Read-only aggregated data from materialized views
   - **SKU Metrics**: ABC classification, sales rank, days of stock per SKU
-    - Fields: sku_code, last_period, last_period_sales, current_stock, days_of_stock, abc_class, sales_rank
+    - API returns IDs (group_id, category_id, brand_id, status_id, supplier_id) like other entities
+    - Export uses simple field names (code, title, group, category, brand, status, supplier) like SKU export
     - ABC classification: A (top 20%), B (next 30%), C (bottom 50%) by sales
-    - Endpoints: GET /sku-metrics (list), GET /sku-metrics/:id (single), GET /sku-metrics/abc/:class (by ABC)
+    - Endpoints: GET /sku-metrics (list), GET /sku-metrics/:id (single), GET /sku-metrics/export/csv, GET /sku-metrics/export/json
   - **View Management**: GET /computed/views (list), POST /computed/refresh (refresh all), POST /computed/refresh/:view (refresh one)
   - Built on PostgreSQL materialized views with CONCURRENTLY refresh support
 - **Bootstrap** - Auto-creates systemAdmin user and seeds default roles on startup

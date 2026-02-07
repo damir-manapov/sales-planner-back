@@ -358,6 +358,13 @@ export interface MvSkuMetrics {
   tenant_id: number;
   sku_code: string;
   sku_title: string;
+  // IDs for API responses
+  group_id: number | null;
+  category_id: number | null;
+  brand_id: number | null;
+  status_id: number | null;
+  supplier_id: number | null;
+  // Codes for export
   group_code: string | null;
   category_code: string | null;
   brand_code: string | null;

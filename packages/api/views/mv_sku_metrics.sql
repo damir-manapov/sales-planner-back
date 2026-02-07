@@ -56,14 +56,21 @@ SELECT
   s.tenant_id,
   s.code as sku_code,
   s.title as sku_title,
+  -- IDs for API responses
+  s.group_id,
+  s.category_id,
+  s.brand_id,
+  s.status_id,
+  s.supplier_id,
+  -- Codes for export (denormalized for convenience)
   g.code as group_code,
   c.code as category_code,
   b.code as brand_code,
   st.code as status_code,
   su.code as supplier_code,
   COALESCE(lps.last_period, '') as last_period,
-  COALESCE(lps.last_period_sales, 0) as last_period_sales,
-  COALESCE(cs.current_stock, 0) as current_stock,
+  COALESCE(lps.last_period_sales, 0)::integer as last_period_sales,
+  COALESCE(cs.current_stock, 0)::integer as current_stock,
   CASE 
     WHEN COALESCE(lps.last_period_sales, 0) > 0 
     THEN ROUND((COALESCE(cs.current_stock, 0)::numeric / lps.last_period_sales) * 30, 1)
@@ -75,7 +82,7 @@ SELECT
     WHEN rs.sales_rank <= rs.total_skus * 0.5 THEN 'B'  -- Next 30%
     ELSE 'C'                                             -- Bottom 50%
   END as abc_class,
-  COALESCE(rs.sales_rank, 999999) as sales_rank,
+  COALESCE(rs.sales_rank, 999999)::integer as sales_rank,
   NOW() as computed_at
 FROM skus s
 LEFT JOIN groups g ON s.group_id = g.id
