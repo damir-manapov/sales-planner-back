@@ -187,6 +187,27 @@ ${csvMarketplace.code};777888999;CSV Product;CSV Brand`;
       expect(csv).toContain('marketplace');
       expect(csv).toContain('marketplace_product_id');
     });
+
+    it('should auto-create missing marketplaces on import', async () => {
+      // Get initial count
+      const marketplacesBefore = await ctx.client.marketplaces.getAll(ctx.shopContext);
+      const countBefore = marketplacesBefore.total;
+
+      const result = await ctx.client.competitorProducts.importJson(ctx.shopContext, [
+        {
+          marketplace: `newmp${generateUniqueId()}`,
+          marketplaceProductId: '999888777',
+          title: 'Auto MP Product',
+          brand: 'Auto Brand',
+        },
+      ]);
+
+      expect(result.created).toBe(1);
+
+      // Verify auto-created marketplace exists (count increased)
+      const marketplacesAfter = await ctx.client.marketplaces.getAll(ctx.shopContext);
+      expect(marketplacesAfter.total).toBe(countBefore + 1);
+    });
   });
 
   describe('Optional fields', () => {

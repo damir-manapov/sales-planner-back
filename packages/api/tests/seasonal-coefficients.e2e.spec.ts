@@ -196,5 +196,21 @@ describe('Seasonal Coefficients (e2e)', () => {
       expect(csv).toContain('month');
       expect(csv).toContain('coefficient');
     });
+
+    it('should auto-create missing groups on import', async () => {
+      // Get initial count
+      const groupsBefore = await ctx.client.groups.getAll(ctx.shopContext);
+      const countBefore = groupsBefore.total;
+
+      const result = await ctx.client.seasonalCoefficients.importJson(ctx.shopContext, [
+        { group: `newgroup${generateUniqueId()}`, month: 7, coefficient: 1.5 },
+      ]);
+
+      expect(result.created).toBe(1);
+
+      // Verify auto-created group exists (count increased)
+      const groupsAfter = await ctx.client.groups.getAll(ctx.shopContext);
+      expect(groupsAfter.total).toBe(countBefore + 1);
+    });
   });
 });

@@ -264,5 +264,29 @@ ${csvWarehouse.code};${csvSku.code};2025-04;400`;
       expect(csv).toContain('period');
       expect(csv).toContain('quantity');
     });
+
+    it('should auto-create missing SKUs and warehouses on import', async () => {
+      // Get initial counts
+      const skusBefore = await ctx.client.skus.getAll(ctx.shopContext);
+      const warehousesBefore = await ctx.client.warehouses.getAll(ctx.shopContext);
+
+      const result = await ctx.client.leftovers.importJson(ctx.shopContext, [
+        {
+          warehouse: `newwh${generateUniqueId()}`,
+          sku: `newsku${generateUniqueId()}`,
+          period: '2025-05',
+          quantity: 50,
+        },
+      ]);
+
+      expect(result.created).toBe(1);
+
+      // Verify auto-created entities exist (counts increased)
+      const skusAfter = await ctx.client.skus.getAll(ctx.shopContext);
+      expect(skusAfter.total).toBe(skusBefore.total + 1);
+
+      const warehousesAfter = await ctx.client.warehouses.getAll(ctx.shopContext);
+      expect(warehousesAfter.total).toBe(warehousesBefore.total + 1);
+    });
   });
 });
