@@ -1,5 +1,11 @@
 # @sales-planner/shared
 
+## 0.17.2
+
+### Patch Changes
+
+- 200b15f: fix: remove unused brand_id from SKU and SKU metrics
+
 ## 0.17.1
 
 ### Patch Changes

@@ -1,5 +1,13 @@
 # @sales-planner/http-client
 
+## 0.19.2
+
+### Patch Changes
+
+- 200b15f: fix: remove unused brand_id from SKU and SKU metrics
+- Updated dependencies [200b15f]
+  - @sales-planner/shared@0.17.2
+
 ## 0.19.1
 
 ### Patch Changes
