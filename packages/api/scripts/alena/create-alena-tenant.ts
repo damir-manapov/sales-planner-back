@@ -38,7 +38,10 @@ const COMPETITOR_PRODUCTS_CSV = readFileSync(
   join(__dirname, 'original/skusOfCompetitors.csv'),
   'utf-8',
 );
-const COMPETITOR_SALES_CSV = readFileSync(join(__dirname, 'original/copmetitors.csv'), 'utf-8');
+const COMPETITOR_SALES_CSV = readFileSync(
+  join(__dirname, 'original/salesOfCopmetitors.csv'),
+  'utf-8',
+);
 
 async function createAlenaTenant(args: AlenaTenantArgs) {
   const { client: adminClient, apiUrl } = initAdminClient(args.apiUrl);
