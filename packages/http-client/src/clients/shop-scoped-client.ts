@@ -31,7 +31,7 @@ export class ShopScopedClient<
 
   async getAll(ctx: ShopContextParams, query?: TQuery): Promise<PaginatedResponse<TEntity>> {
     return this.request('GET', `/${this.resourcePath}`, {
-      params: { ...ctx, ...query } as Record<string, string | number | undefined>,
+      params: { ...ctx, ...query } as Record<string, string | number | number[] | undefined>,
     });
   }
 
@@ -61,13 +61,13 @@ export class ShopScopedClient<
 
   async exportJson(ctx: ShopContextParams, query?: TQuery): Promise<TExportItem[]> {
     return this.request('GET', `/${this.resourcePath}/export/json`, {
-      params: { ...ctx, ...query } as Record<string, string | number | undefined>,
+      params: { ...ctx, ...query } as Record<string, string | number | number[] | undefined>,
     });
   }
 
   async exportCsv(ctx: ShopContextParams, query?: TQuery): Promise<string> {
     return this.requestText('GET', `/${this.resourcePath}/export/csv`, {
-      params: { ...ctx, ...query } as Record<string, string | number | undefined>,
+      params: { ...ctx, ...query } as Record<string, string | number | number[] | undefined>,
     });
   }
 

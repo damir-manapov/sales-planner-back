@@ -55,9 +55,13 @@ export class CompetitorProductsService {
     shopId: number,
     query?: CompetitorProductQuery,
   ): Promise<PaginatedResponse<CompetitorProduct>> {
-    const { limit = 100, offset = 0 } = query ?? {};
+    const { ids, limit = 100, offset = 0 } = query ?? {};
 
-    const baseQuery = this.db.selectFrom('competitor_products').where('shop_id', '=', shopId);
+    let baseQuery = this.db.selectFrom('competitor_products').where('shop_id', '=', shopId);
+
+    if (ids && ids.length > 0) {
+      baseQuery = baseQuery.where('id', 'in', ids);
+    }
 
     const { count } = await baseQuery
       .select((eb) => eb.fn.countAll().as('count'))

@@ -88,6 +88,33 @@ describe('Competitor Products (e2e)', () => {
       expect(records.items.length).toBeGreaterThan(0);
     });
 
+    it('should filter competitor products by ids', async () => {
+      // Create additional products for filtering test
+      const mp = await ctx.client.marketplaces.create(ctx.shopContext, {
+        code: generateTestCode('MP-IDS'),
+        title: 'Filter Test MP',
+      });
+
+      const product1 = await ctx.client.competitorProducts.create(ctx.shopContext, {
+        marketplace_id: mp.id,
+        marketplace_product_id: String(Date.now()),
+      });
+      const product2 = await ctx.client.competitorProducts.create(ctx.shopContext, {
+        marketplace_id: mp.id,
+        marketplace_product_id: String(Date.now() + 1),
+      });
+
+      // Filter by specific ids
+      const filtered = await ctx.client.competitorProducts.getAll(ctx.shopContext, {
+        ids: [product1.id, product2.id],
+      });
+
+      expect(filtered.items.length).toBe(2);
+      expect(filtered.items.map((p) => p.id)).toContain(product1.id);
+      expect(filtered.items.map((p) => p.id)).toContain(product2.id);
+      expect(filtered.total).toBe(2);
+    });
+
     it('should get competitor product by id', async () => {
       const record = await ctx.client.competitorProducts.getById(ctx.shopContext, productId);
 

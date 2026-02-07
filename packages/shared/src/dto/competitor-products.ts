@@ -30,6 +30,7 @@ export interface ImportCompetitorProductItem {
 }
 
 export interface CompetitorProductQuery {
+  ids?: number[];
   limit?: number;
   offset?: number;
 }

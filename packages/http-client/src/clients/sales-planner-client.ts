@@ -14,6 +14,7 @@ import type {
   UpdateCompetitorProductRequest,
   ImportCompetitorProductItem,
   CompetitorProductExportItem,
+  CompetitorProductQuery,
   CompetitorSale,
   CreateCompetitorSaleRequest,
   UpdateCompetitorSaleRequest,
@@ -189,7 +190,7 @@ export class SalesPlannerClient {
     ImportCompetitorProductItem,
     CompetitorProductExportItem,
     ImportResult,
-    Record<string, never>
+    CompetitorProductQuery
   >;
   readonly competitorSales: ShopScopedClient<
     CompetitorSale,

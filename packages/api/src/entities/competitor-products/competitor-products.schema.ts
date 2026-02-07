@@ -19,8 +19,13 @@ const CreateCompetitorProductRequestSchema = z.object({
   brand: z.string().max(255).optional(),
 });
 
-// Query schema with pagination
-export const CompetitorProductQuerySchema = PaginationQuerySchema;
+// Query schema with pagination and IDs filter
+export const CompetitorProductQuerySchema = PaginationQuerySchema.extend({
+  ids: z
+    .string()
+    .transform((val) => val.split(',').map(Number))
+    .optional(),
+});
 
 export const CreateCompetitorProductSchema = z.object({
   shop_id: id(),

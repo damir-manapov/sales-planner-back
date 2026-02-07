@@ -66,6 +66,13 @@ const { items: leftovers } = await client.leftovers.getAll(ctx, {
 });
 ```
 
+Competitor products support filtering by IDs:
+```typescript
+const { items } = await client.competitorProducts.getAll(ctx, {
+  ids: [1, 2, 3],  // Filter by specific IDs
+});
+```
+
 ## API
 
 All shop-scoped clients (`skus`, `brands`, `categories`, `groups`, `statuses`, `suppliers`, `warehouses`, `marketplaces`, `salesHistory`, `leftovers`, `seasonalCoefficients`, `skuCompetitorMappings`, `competitorProducts`, `competitorSales`) share these methods:

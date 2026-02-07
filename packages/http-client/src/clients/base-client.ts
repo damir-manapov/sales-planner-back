@@ -41,7 +41,7 @@ export class BaseClient {
     path: string,
     options?: {
       body?: unknown;
-      params?: Record<string, string | number | undefined>;
+      params?: Record<string, string | number | number[] | undefined>;
     },
   ): Promise<T> {
     const url = new URL(this.baseUrl + path);
@@ -49,7 +49,9 @@ export class BaseClient {
     if (options?.params) {
       for (const [key, value] of Object.entries(options.params)) {
         if (value !== undefined) {
-          url.searchParams.set(key, String(value));
+          // Convert arrays to comma-separated strings
+          const stringValue = Array.isArray(value) ? value.join(',') : String(value);
+          url.searchParams.set(key, stringValue);
         }
       }
     }
@@ -84,7 +86,7 @@ export class BaseClient {
     method: string,
     path: string,
     options?: {
-      params?: Record<string, string | number | undefined>;
+      params?: Record<string, string | number | number[] | undefined>;
     },
   ): Promise<string> {
     const url = new URL(this.baseUrl + path);
@@ -92,7 +94,9 @@ export class BaseClient {
     if (options?.params) {
       for (const [key, value] of Object.entries(options.params)) {
         if (value !== undefined) {
-          url.searchParams.set(key, String(value));
+          // Convert arrays to comma-separated strings
+          const stringValue = Array.isArray(value) ? value.join(',') : String(value);
+          url.searchParams.set(key, stringValue);
         }
       }
     }
