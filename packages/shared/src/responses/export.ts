@@ -20,6 +20,8 @@ export type StatusExportItem = CodedTitledItem;
 
 export type SupplierExportItem = CodedTitledItem;
 
+export type WarehouseExportItem = CodedTitledItem;
+
 export type MarketplaceExportItem = CodedTitledItem;
 
 export interface SalesHistoryExportItem {

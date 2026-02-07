@@ -1,5 +1,11 @@
 # @sales-planner/shared
 
+## 0.15.0
+
+### Minor Changes
+
+- Add warehouses entity with full CRUD, import/export, and metadata support
+
 ## 0.14.0
 
 ### Minor Changes

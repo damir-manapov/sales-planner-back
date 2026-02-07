@@ -55,7 +55,7 @@ export type CreateUserRequest = CreateUserDto;
 ```typescript
 import type { 
   // Entities
-  User, Tenant, Shop, Sku, Brand, Category, Group, Status, Supplier,
+  User, Tenant, Shop, Sku, Brand, Category, Group, Status, Supplier, Warehouse,
   SalesHistory, Role, UserRole, ApiKey, Marketplace,
 
   // Request types (HTTP layer)
@@ -66,6 +66,7 @@ import type {
   CreateGroupRequest, UpdateGroupRequest,
   CreateStatusRequest, UpdateStatusRequest,
   CreateSupplierRequest, UpdateSupplierRequest,
+  CreateWarehouseRequest, UpdateWarehouseRequest,
   CreateSalesHistoryRequest, UpdateSalesHistoryRequest,
 
   // DTO types (Service layer)
@@ -76,11 +77,12 @@ import type {
   CreateGroupDto, UpdateGroupDto,
   CreateStatusDto, UpdateStatusDto,
   CreateSupplierDto, UpdateSupplierDto,
+  CreateWarehouseDto, UpdateWarehouseDto,
   CreateSalesHistoryDto, UpdateSalesHistoryDto,
 
   // Import types
   ImportSkuItem, ImportBrandItem, ImportCategoryItem, ImportGroupItem, ImportStatusItem,
-  ImportSupplierItem, ImportSalesHistoryItem, ImportMarketplaceItem,
+  ImportSupplierItem, ImportWarehouseItem, ImportSalesHistoryItem, ImportMarketplaceItem,
 
   // Query types
   ShopContextParams, PaginationQuery, PeriodQuery, SalesHistoryQuery,
@@ -90,7 +92,7 @@ import type {
   UserWithRolesAndTenants, TenantWithShopAndApiKey,
   ImportResult, DeleteDataResult,
   SkuExportItem, BrandExportItem, CategoryExportItem, GroupExportItem, StatusExportItem,
-  SupplierExportItem, MarketplaceExportItem, SalesHistoryExportItem
+  SupplierExportItem, WarehouseExportItem, MarketplaceExportItem, SalesHistoryExportItem
 } from '@sales-planner/shared';
 ```
 
@@ -116,6 +118,7 @@ The API uses **numeric IDs** internally for referential integrity:
 | `Group` | Product group for classification (shop-scoped) |
 | `Status` | Product status for classification (shop-scoped) |
 | `Supplier` | Product supplier (shop-scoped) |
+| `Warehouse` | Storage location (shop-scoped) |
 | `SalesHistory` | Sales record for a period (uses numeric marketplace_id) |
 | `Role` | Access role |
 | `UserRole` | User-role assignment |
@@ -137,13 +140,14 @@ The API uses **numeric IDs** internally for referential integrity:
 |------|-------------|| `PaginatedResponse<T>` | `{ items: T[]; total: number; limit: number; offset: number }` || `UserWithRolesAndTenants` | User with their roles and tenants |
 | `TenantWithShopAndApiKey` | Created tenant with shop and API key |
 | `ImportResult` | `{ created: number; updated: number; errors: string[] }` |
-| `DeleteDataResult` | `{ skusDeleted, salesHistoryDeleted, marketplacesDeleted, brandsDeleted, categoriesDeleted, groupsDeleted, statusesDeleted, suppliersDeleted: number }` |
+| `DeleteDataResult` | `{ skusDeleted, salesHistoryDeleted, marketplacesDeleted, brandsDeleted, categoriesDeleted, groupsDeleted, statusesDeleted, suppliersDeleted, warehousesDeleted: number }` |
 | `SkuExportItem` | SKU data for export |
 | `BrandExportItem` | Brand data for export |
 | `CategoryExportItem` | Category data for export |
 | `GroupExportItem` | Group data for export |
 | `StatusExportItem` | Status data for export |
 | `SupplierExportItem` | Supplier data for export |
+| `WarehouseExportItem` | Warehouse data for export |
 | `MarketplaceExportItem` | Marketplace data for export |
 | `SalesHistoryExportItem` | Sales history data for export |
 

@@ -25,4 +25,5 @@ export interface DeleteDataResult {
   groupsDeleted: number;
   statusesDeleted: number;
   suppliersDeleted: number;
+  warehousesDeleted: number;
 }

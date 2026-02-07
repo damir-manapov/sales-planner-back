@@ -255,6 +255,7 @@ describe('Shops E2E', () => {
       expect(result.groupsDeleted).toBe(0);
       expect(result.statusesDeleted).toBe(0);
       expect(result.suppliersDeleted).toBe(0);
+      expect(result.warehousesDeleted).toBe(0);
     });
 
     it('GET /skus - should return empty after data deletion', async () => {

@@ -14,6 +14,7 @@ import { SalesHistoryService } from '../sales-history/sales-history.service.js';
 import { SkusService } from '../skus/skus.service.js';
 import { StatusesService } from '../statuses/statuses.service.js';
 import { SuppliersService } from '../suppliers/suppliers.service.js';
+import { WarehousesService } from '../warehouses/warehouses.service.js';
 import type { CreateShopDto, UpdateShopDto } from './shops.schema.js';
 
 export type { Shop };
@@ -31,6 +32,7 @@ export class ShopsService {
     private readonly groupsService: GroupsService,
     private readonly statusesService: StatusesService,
     private readonly suppliersService: SuppliersService,
+    private readonly warehousesService: WarehousesService,
   ) {}
 
   async count(): Promise<number> {
@@ -121,6 +123,7 @@ export class ShopsService {
     const groupsDeleted = await this.groupsService.deleteByShopId(id);
     const statusesDeleted = await this.statusesService.deleteByShopId(id);
     const suppliersDeleted = await this.suppliersService.deleteByShopId(id);
+    const warehousesDeleted = await this.warehousesService.deleteByShopId(id);
 
     return {
       skusDeleted,
@@ -131,6 +134,7 @@ export class ShopsService {
       groupsDeleted,
       statusesDeleted,
       suppliersDeleted,
+      warehousesDeleted,
     };
   }
 }

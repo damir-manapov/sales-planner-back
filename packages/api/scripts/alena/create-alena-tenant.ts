@@ -22,6 +22,7 @@ const CATEGORIES_CSV = readFileSync(join(__dirname, 'original/categories.csv'), 
 const GROUPS_CSV = readFileSync(join(__dirname, 'original/groups.csv'), 'utf-8');
 const STATUSES_CSV = readFileSync(join(__dirname, 'original/statuses.csv'), 'utf-8');
 const SUPPLIERS_CSV = readFileSync(join(__dirname, 'original/suppliers.csv'), 'utf-8');
+const WAREHOUSES_CSV = readFileSync(join(__dirname, 'original/warehouses.csv'), 'utf-8');
 
 async function createAlenaTenant(args: AlenaTenantArgs) {
   const { client: adminClient, apiUrl } = initAdminClient(args.apiUrl);
@@ -57,7 +58,7 @@ async function createAlenaTenant(args: AlenaTenantArgs) {
     'Clearing existing shop data',
     () => userClient.shops.deleteData(setup.shop.id),
     (r) =>
-      `Deleted ${r.skusDeleted} SKUs, ${r.salesHistoryDeleted} sales, ${r.brandsDeleted} brands, ${r.categoriesDeleted} categories, ${r.groupsDeleted} groups, ${r.statusesDeleted} statuses, ${r.suppliersDeleted} suppliers`,
+      `Deleted ${r.skusDeleted} SKUs, ${r.salesHistoryDeleted} sales, ${r.brandsDeleted} brands, ${r.categoriesDeleted} categories, ${r.groupsDeleted} groups, ${r.statusesDeleted} statuses, ${r.suppliersDeleted} suppliers, ${r.warehousesDeleted} warehouses`,
   );
 
   // Step 3-7: Import reference data
@@ -101,18 +102,26 @@ async function createAlenaTenant(args: AlenaTenantArgs) {
     (r) => `Created ${r.created} suppliers`,
   );
 
-  // Step 8: Import products
-  const skusResult = await runStep(
+  const warehousesResult = await runStep(
     8,
+    '🏭',
+    'Importing warehouses',
+    () => userClient.warehouses.importCsv(ctx, WAREHOUSES_CSV),
+    (r) => `Created ${r.created} warehouses`,
+  );
+
+  // Step 9: Import products
+  const skusResult = await runStep(
+    9,
     '💐',
     'Importing products',
     () => userClient.skus.importCsv(ctx, SKUS_CSV),
     (r) => `Created ${r.created} products`,
   );
 
-  // Step 9: Import sales history
+  // Step 10: Import sales history
   const salesResult = await runStep(
-    9,
+    10,
     '📈',
     'Importing sales history',
     () => userClient.salesHistory.importCsv(ctx, SALES_HISTORY_CSV),
@@ -126,6 +135,7 @@ async function createAlenaTenant(args: AlenaTenantArgs) {
     `${groupsResult.created} groups`,
     `${statusesResult.created} statuses`,
     `${suppliersResult.created} suppliers`,
+    `${warehousesResult.created} warehouses`,
     `${skusResult.created} products`,
     `${salesResult.created} sales history records`,
   ]);

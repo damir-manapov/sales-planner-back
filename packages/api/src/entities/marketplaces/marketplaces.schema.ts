@@ -46,7 +46,6 @@ export type UpdateMarketplaceRequest = AssertCompatible<
   z.infer<typeof UpdateMarketplaceSchema>
 >;
 
-// ImportMarketplaceItem uses AssertCompatible to ensure compatibility with shared type
 export type ImportMarketplaceItem = AssertCompatible<
   SharedImportMarketplaceItem,
   z.infer<typeof ImportMarketplaceItemSchema>

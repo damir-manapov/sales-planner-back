@@ -1,5 +1,16 @@
 # @sales-planner/http-client
 
+## 0.17.0
+
+### Minor Changes
+
+- Add warehouses entity with full CRUD, import/export, and metadata support
+
+### Patch Changes
+
+- Updated dependencies
+  - @sales-planner/shared@0.15.0
+
 ## 0.16.0
 
 ### Minor Changes

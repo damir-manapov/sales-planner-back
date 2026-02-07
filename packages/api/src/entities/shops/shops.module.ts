@@ -9,6 +9,7 @@ import { SalesHistoryModule } from '../sales-history/sales-history.module.js';
 import { SkusModule } from '../skus/skus.module.js';
 import { StatusesModule } from '../statuses/statuses.module.js';
 import { SuppliersModule } from '../suppliers/suppliers.module.js';
+import { WarehousesModule } from '../warehouses/warehouses.module.js';
 import { TenantsModule } from '../tenants/tenants.module.js';
 import { UserRolesModule } from '../user-roles/user-roles.module.js';
 import { ShopsController } from './shops.controller.js';
@@ -27,6 +28,7 @@ import { ShopsService } from './shops.service.js';
     GroupsModule,
     StatusesModule,
     SuppliersModule,
+    WarehousesModule,
   ],
   controllers: [ShopsController],
   providers: [ShopsService, AuthGuard],

@@ -24,6 +24,7 @@ export const VALID_TABLE_NAMES: readonly TableName[] = [
   'user_roles',
   'user_shops',
   'users',
+  'warehouses',
 ] as const;
 
 /**
@@ -39,6 +40,7 @@ export const USER_QUERYABLE_TABLES: readonly TableName[] = [
   'skus',
   'statuses',
   'suppliers',
+  'warehouses',
 ] as const;
 
 /**

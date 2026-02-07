@@ -62,7 +62,7 @@ const { items, total } = await client.salesHistory.getAll(ctx, {
 
 ## API
 
-All shop-scoped clients (`skus`, `brands`, `categories`, `groups`, `statuses`, `suppliers`, `marketplaces`, `salesHistory`) share these methods:
+All shop-scoped clients (`skus`, `brands`, `categories`, `groups`, `statuses`, `suppliers`, `warehouses`, `marketplaces`, `salesHistory`) share these methods:
 
 - `getAll(ctx, query?)` → `PaginatedResponse<T>`
 - `getById(ctx, id)`, `getByCode(ctx, code)`
@@ -117,7 +117,7 @@ All types re-exported from `@sales-planner/shared`:
 ```typescript
 import type {
   ShopContextParams, PaginationQuery, PaginatedResponse, PeriodQuery, SalesHistoryQuery,
-  User, Tenant, Shop, Sku, Brand, Category, Group, Status, Supplier, Marketplace, SalesHistory,
+  User, Tenant, Shop, Sku, Brand, Category, Group, Status, Supplier, Warehouse, Marketplace, SalesHistory,
   CreateSkuRequest, UpdateSkuRequest, ImportSkuItem, SkuExportItem,
   ImportResult, SkuImportResult, DeleteDataResult,
 } from '@sales-planner/http-client';

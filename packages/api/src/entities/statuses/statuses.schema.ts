@@ -1,6 +1,7 @@
 import type {
   CreateStatusDto as SharedCreateStatusDto,
   CreateStatusRequest as SharedCreateStatusRequest,
+  ImportStatusItem as SharedImportStatusItem,
   UpdateStatusDto as SharedUpdateStatusDto,
   UpdateStatusRequest as SharedUpdateStatusRequest,
 } from '@sales-planner/shared';
@@ -42,4 +43,7 @@ export type UpdateStatusRequest = AssertCompatible<
   SharedUpdateStatusRequest,
   z.infer<typeof UpdateStatusSchema>
 >;
-export type ImportStatusItem = z.infer<typeof ImportStatusItemSchema>;
+export type ImportStatusItem = AssertCompatible<
+  SharedImportStatusItem,
+  z.infer<typeof ImportStatusItemSchema>
+>;

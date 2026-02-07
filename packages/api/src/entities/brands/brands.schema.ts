@@ -1,6 +1,7 @@
 import type {
   CreateBrandDto as SharedCreateBrandDto,
   CreateBrandRequest as SharedCreateBrandRequest,
+  ImportBrandItem as SharedImportBrandItem,
   UpdateBrandDto as SharedUpdateBrandDto,
   UpdateBrandRequest as SharedUpdateBrandRequest,
 } from '@sales-planner/shared';
@@ -45,4 +46,7 @@ export type UpdateBrandRequest = AssertCompatible<
   SharedUpdateBrandRequest,
   z.infer<typeof UpdateBrandSchema>
 >;
-export type ImportBrandItem = z.infer<typeof ImportBrandItemSchema>;
+export type ImportBrandItem = AssertCompatible<
+  SharedImportBrandItem,
+  z.infer<typeof ImportBrandItemSchema>
+>;

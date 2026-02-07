@@ -1,6 +1,7 @@
 import type {
   CreateCategoryDto as SharedCreateCategoryDto,
   CreateCategoryRequest as SharedCreateCategoryRequest,
+  ImportCategoryItem as SharedImportCategoryItem,
   UpdateCategoryDto as SharedUpdateCategoryDto,
   UpdateCategoryRequest as SharedUpdateCategoryRequest,
 } from '@sales-planner/shared';
@@ -42,4 +43,7 @@ export type UpdateCategoryRequest = AssertCompatible<
   SharedUpdateCategoryRequest,
   z.infer<typeof UpdateCategorySchema>
 >;
-export type ImportCategoryItem = z.infer<typeof ImportCategoryItemSchema>;
+export type ImportCategoryItem = AssertCompatible<
+  SharedImportCategoryItem,
+  z.infer<typeof ImportCategoryItemSchema>
+>;

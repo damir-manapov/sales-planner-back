@@ -20,6 +20,7 @@ export interface EntitiesMetadata {
   groups: EntityMetadata;
   statuses: EntityMetadata;
   suppliers: EntityMetadata;
+  warehouses: EntityMetadata;
   marketplaces: EntityMetadata;
   skus: EntityMetadata;
   salesHistory: EntityMetadata;
@@ -123,6 +124,26 @@ export const ENTITIES_METADATA: EntitiesMetadata = {
         description: 'Supplier display name',
         required: true,
         example: 'ACME Corporation',
+      },
+    ],
+  },
+  warehouses: {
+    name: 'Warehouses',
+    description: 'Storage locations for inventory',
+    fields: [
+      {
+        name: 'code',
+        type: 'string',
+        description: 'Unique warehouse identifier',
+        required: true,
+        example: 'main-warehouse',
+      },
+      {
+        name: 'title',
+        type: 'string',
+        description: 'Warehouse display name',
+        required: true,
+        example: 'Main Warehouse',
       },
     ],
   },

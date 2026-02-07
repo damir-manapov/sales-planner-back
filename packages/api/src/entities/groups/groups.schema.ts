@@ -1,6 +1,7 @@
 import type {
   CreateGroupDto as SharedCreateGroupDto,
   CreateGroupRequest as SharedCreateGroupRequest,
+  ImportGroupItem as SharedImportGroupItem,
   UpdateGroupDto as SharedUpdateGroupDto,
   UpdateGroupRequest as SharedUpdateGroupRequest,
 } from '@sales-planner/shared';
@@ -42,4 +43,7 @@ export type UpdateGroupRequest = AssertCompatible<
   SharedUpdateGroupRequest,
   z.infer<typeof UpdateGroupSchema>
 >;
-export type ImportGroupItem = z.infer<typeof ImportGroupItemSchema>;
+export type ImportGroupItem = AssertCompatible<
+  SharedImportGroupItem,
+  z.infer<typeof ImportGroupItemSchema>
+>;

@@ -240,6 +240,16 @@ export interface Suppliers {
   updated_at: Generated<Timestamp>;
 }
 
+export interface Warehouses {
+  code: string;
+  created_at: Generated<Timestamp>;
+  id: Generated<number>;
+  shop_id: number;
+  tenant_id: number;
+  title: string;
+  updated_at: Generated<Timestamp>;
+}
+
 export interface Tenants {
   created_at: Generated<Timestamp>;
   created_by: number;
@@ -299,4 +309,5 @@ export interface DB {
   user_roles: UserRoles;
   user_shops: UserShops;
   users: Users;
+  warehouses: Warehouses;
 }

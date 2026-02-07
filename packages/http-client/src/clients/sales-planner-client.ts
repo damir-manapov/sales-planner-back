@@ -24,6 +24,11 @@ import type {
   UpdateSupplierRequest,
   ImportSupplierItem,
   SupplierExportItem,
+  Warehouse,
+  CreateWarehouseRequest,
+  UpdateWarehouseRequest,
+  ImportWarehouseItem,
+  WarehouseExportItem,
   Marketplace,
   CreateMarketplaceRequest,
   UpdateMarketplaceRequest,
@@ -99,6 +104,13 @@ export class SalesPlannerClient {
     ImportSupplierItem,
     SupplierExportItem
   >;
+  readonly warehouses: CodedEntityClient<
+    Warehouse,
+    CreateWarehouseRequest,
+    UpdateWarehouseRequest,
+    ImportWarehouseItem,
+    WarehouseExportItem
+  >;
   readonly marketplaces: CodedEntityClient<
     Marketplace,
     CreateMarketplaceRequest,
@@ -132,6 +144,7 @@ export class SalesPlannerClient {
     this.groups = new CodedEntityClient(config, 'groups');
     this.statuses = new CodedEntityClient(config, 'statuses');
     this.suppliers = new CodedEntityClient(config, 'suppliers');
+    this.warehouses = new CodedEntityClient(config, 'warehouses');
     this.marketplaces = new CodedEntityClient(config, 'marketplaces');
     this.salesHistory = new ShopScopedClient(config, 'sales-history');
     this.roles = new CrudClient(config, 'roles');

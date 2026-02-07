@@ -8,6 +8,7 @@ import { SalesHistoryService } from '../sales-history/sales-history.service.js';
 import { SkusService } from '../skus/skus.service.js';
 import { StatusesService } from '../statuses/statuses.service.js';
 import { SuppliersService } from '../suppliers/suppliers.service.js';
+import { WarehousesService } from '../warehouses/warehouses.service.js';
 import { ShopsService } from './shops.service.js';
 
 describe('ShopsService', () => {
@@ -21,6 +22,7 @@ describe('ShopsService', () => {
   let mockGroupsService: { deleteByShopId: ReturnType<typeof vi.fn> };
   let mockStatusesService: { deleteByShopId: ReturnType<typeof vi.fn> };
   let mockSuppliersService: { deleteByShopId: ReturnType<typeof vi.fn> };
+  let mockWarehousesService: { deleteByShopId: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     mockDb = {
@@ -37,6 +39,7 @@ describe('ShopsService', () => {
     mockGroupsService = { deleteByShopId: vi.fn() };
     mockStatusesService = { deleteByShopId: vi.fn() };
     mockSuppliersService = { deleteByShopId: vi.fn() };
+    mockWarehousesService = { deleteByShopId: vi.fn() };
 
     service = new ShopsService(
       mockDb as DatabaseService,
@@ -48,6 +51,7 @@ describe('ShopsService', () => {
       mockGroupsService as unknown as GroupsService,
       mockStatusesService as unknown as StatusesService,
       mockSuppliersService as unknown as SuppliersService,
+      mockWarehousesService as unknown as WarehousesService,
     );
   });
 
@@ -65,6 +69,7 @@ describe('ShopsService', () => {
       vi.mocked(mockGroupsService.deleteByShopId).mockResolvedValue(6);
       vi.mocked(mockStatusesService.deleteByShopId).mockResolvedValue(1);
       vi.mocked(mockSuppliersService.deleteByShopId).mockResolvedValue(7);
+      vi.mocked(mockWarehousesService.deleteByShopId).mockResolvedValue(8);
 
       const result = await service.deleteData(1);
 
@@ -77,6 +82,7 @@ describe('ShopsService', () => {
         groupsDeleted: 6,
         statusesDeleted: 1,
         suppliersDeleted: 7,
+        warehousesDeleted: 8,
       });
     });
 
@@ -96,6 +102,7 @@ describe('ShopsService', () => {
       vi.mocked(mockGroupsService.deleteByShopId).mockResolvedValue(0);
       vi.mocked(mockStatusesService.deleteByShopId).mockResolvedValue(0);
       vi.mocked(mockSuppliersService.deleteByShopId).mockResolvedValue(0);
+      vi.mocked(mockWarehousesService.deleteByShopId).mockResolvedValue(0);
 
       await service.deleteData(1);
 
@@ -111,6 +118,7 @@ describe('ShopsService', () => {
       vi.mocked(mockGroupsService.deleteByShopId).mockResolvedValue(0);
       vi.mocked(mockStatusesService.deleteByShopId).mockResolvedValue(0);
       vi.mocked(mockSuppliersService.deleteByShopId).mockResolvedValue(0);
+      vi.mocked(mockWarehousesService.deleteByShopId).mockResolvedValue(0);
 
       const result = await service.deleteData(999);
 
@@ -123,6 +131,7 @@ describe('ShopsService', () => {
         groupsDeleted: 0,
         statusesDeleted: 0,
         suppliersDeleted: 0,
+        warehousesDeleted: 0,
       });
     });
   });

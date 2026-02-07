@@ -15,6 +15,7 @@ import { MeModule } from './me/index.js';
 import { MetadataModule } from './metadata/index.js';
 import { StatusesModule } from './entities/statuses/index.js';
 import { SuppliersModule } from './entities/suppliers/index.js';
+import { WarehousesModule } from './entities/warehouses/index.js';
 import { RolesModule } from './roles/index.js';
 import { SalesHistoryModule } from './entities/sales-history/index.js';
 import { ShopsModule } from './entities/shops/index.js';
@@ -50,6 +51,7 @@ import { UsersModule } from './entities/users/index.js';
     GroupsModule,
     StatusesModule,
     SuppliersModule,
+    WarehousesModule,
     SalesHistoryModule,
   ],
   controllers: [AppController],

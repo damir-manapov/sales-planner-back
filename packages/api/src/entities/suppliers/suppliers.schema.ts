@@ -1,6 +1,7 @@
 import type {
   CreateSupplierDto as SharedCreateSupplierDto,
   CreateSupplierRequest as SharedCreateSupplierRequest,
+  ImportSupplierItem as SharedImportSupplierItem,
   UpdateSupplierDto as SharedUpdateSupplierDto,
   UpdateSupplierRequest as SharedUpdateSupplierRequest,
 } from '@sales-planner/shared';
@@ -42,4 +43,7 @@ export type UpdateSupplierRequest = AssertCompatible<
   SharedUpdateSupplierRequest,
   z.infer<typeof UpdateSupplierSchema>
 >;
-export type ImportSupplierItem = z.infer<typeof ImportSupplierItemSchema>;
+export type ImportSupplierItem = AssertCompatible<
+  SharedImportSupplierItem,
+  z.infer<typeof ImportSupplierItemSchema>
+>;
