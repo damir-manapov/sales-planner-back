@@ -147,8 +147,7 @@ export class LeftoversController {
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<ImportResult> {
     const duplicateKey = {
-      keyExtractor: (item: ImportLeftoverItem) =>
-        `${item.warehouse}:${item.sku}:${item.period}`,
+      keyExtractor: (item: ImportLeftoverItem) => `${item.warehouse}:${item.sku}:${item.period}`,
       keyDescription: 'warehouse+sku+period',
     };
     const items = parseAndValidateImport<ImportLeftoverItem>(
@@ -170,8 +169,7 @@ export class LeftoversController {
     @Body('data') csvData?: string,
   ): Promise<ImportResult> {
     const duplicateKey = {
-      keyExtractor: (item: ImportLeftoverItem) =>
-        `${item.warehouse}:${item.sku}:${item.period}`,
+      keyExtractor: (item: ImportLeftoverItem) => `${item.warehouse}:${item.sku}:${item.period}`,
       keyDescription: 'warehouse+sku+period',
     };
     const items = parseCsvAndValidateImport<ImportLeftoverItem>(

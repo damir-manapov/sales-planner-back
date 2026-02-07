@@ -1,3 +1,9 @@
 # False positive: JDBC connection string port/database name, not a secret
 1d254dac5ebd10d68f50bcf07d32830f129d60ce:docker-compose.yml:generic-api-key:33
 1d254dac5ebd10d68f50bcf07d32830f129d60ce:packages/api/docker-compose.yml:generic-api-key:33
+
+# False positive: keyDescription property values for duplicate detection, not actual keys
+9370b4b59d67f39fb54e4260d48c74b3b1430436:packages/api/src/entities/sales-history/sales-history.controller.ts:generic-api-key:158
+9370b4b59d67f39fb54e4260d48c74b3b1430436:packages/api/src/entities/sales-history/sales-history.controller.ts:generic-api-key:181
+9370b4b59d67f39fb54e4260d48c74b3b1430436:api/index.mjs:generic-api-key:125880
+9370b4b59d67f39fb54e4260d48c74b3b1430436:api/index.mjs:generic-api-key:125888

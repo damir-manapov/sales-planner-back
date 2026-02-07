@@ -60,10 +60,13 @@ export function fromCsv<T extends Record<string, string>>(
     });
 
     // Validate required columns exist in non-empty records
-    for (const record of nonEmptyRecords) {
+    for (let i = 0; i < nonEmptyRecords.length; i++) {
+      const record = nonEmptyRecords[i] as Record<string, string>;
       for (const column of requiredColumns) {
         if (!(column in record) || !record[column]) {
-          throw new BadRequestException(`CSV must have a "${column}" column with values`);
+          throw new BadRequestException(
+            `Row ${i + 2}: "${column}" is required but empty or missing`,
+          );
         }
       }
     }

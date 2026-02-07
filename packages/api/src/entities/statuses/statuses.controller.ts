@@ -161,12 +161,7 @@ export class StatusesController {
       keyExtractor: (item: ImportStatusItem) => item.code,
       keyDescription: 'code',
     };
-    const validatedData = parseAndValidateImport(
-      file,
-      items,
-      ImportStatusItemSchema,
-      duplicateKey,
-    );
+    const validatedData = parseAndValidateImport(file, items, ImportStatusItemSchema, duplicateKey);
     return this.statusesService.bulkUpsert(ctx.tenantId, ctx.shopId, validatedData);
   }
 

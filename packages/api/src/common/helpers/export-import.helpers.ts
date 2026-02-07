@@ -42,7 +42,8 @@ export function checkForDuplicates<T>(items: T[], options: DuplicateKeyOptions<T
       if (existing) {
         existing.rows.push(rowNum);
       } else {
-        duplicates.push({ key, rows: [seen.get(key)!, rowNum] });
+        const firstRow = seen.get(key) ?? rowNum;
+        duplicates.push({ key, rows: [firstRow, rowNum] });
       }
     } else {
       seen.set(key, rowNum);

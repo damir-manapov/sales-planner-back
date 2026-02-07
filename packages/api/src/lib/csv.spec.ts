@@ -142,7 +142,7 @@ describe('CSV utilities', () => {
       it('should throw error for missing required columns', () => {
         const csv = 'code,title\nABC,Product A\n,Product B';
         expect(() => fromCsv(csv, ['code', 'title'])).toThrow(
-          'CSV must have a "code" column with values',
+          'Row 3: "code" is required but empty or missing',
         );
       });
 
@@ -161,7 +161,7 @@ describe('CSV utilities', () => {
       it('should validate all rows have required values', () => {
         const csv = 'code;title\nABC;Product A\nDEF;\nGHI;Product C';
         expect(() => fromCsv(csv, ['code', 'title'])).toThrow(
-          'CSV must have a "title" column with values',
+          'Row 3: "title" is required but empty or missing',
         );
       });
     });
