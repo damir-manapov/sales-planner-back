@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -28,11 +27,11 @@ import {
   assertShopAccess,
   type ExpressResponse,
   parseAndValidateImport,
+  parseCsvAndValidateImport,
   sendCsvExport,
   sendJsonExport,
   ZodValidationPipe,
 } from '../../common/index.js';
-import { fromCsv } from '../../lib/index.js';
 import {
   type CreateSalesHistoryRequest,
   CreateSalesHistorySchema,
@@ -163,36 +162,15 @@ export class SalesHistoryController {
   async importCsv(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-    @UploadedFile() file: Express.Multer.File,
+    @UploadedFile() file?: Express.Multer.File,
+    @Body('data') csvData?: string,
   ): Promise<SalesHistoryImportResult> {
-    if (!file) {
-      throw new BadRequestException('File is required');
-    }
-    const content = file.buffer.toString('utf-8');
-    const records = fromCsv<{
-      marketplace: string;
-      period: string;
-      sku: string;
-      quantity: string;
-    }>(content, ['marketplace', 'period', 'sku', 'quantity']);
-
-    // Validate and transform each record with Zod
-    const validatedData = records.map((record, index) => {
-      const quantity = Number.parseFloat(record.quantity);
-      if (Number.isNaN(quantity)) {
-        throw new BadRequestException(`Invalid quantity at row ${index + 1}: ${record.quantity}`);
-      }
-      try {
-        return ImportSalesHistoryItemSchema.parse({
-          marketplace: record.marketplace,
-          period: record.period,
-          sku: record.sku,
-          quantity,
-        });
-      } catch (error) {
-        throw new BadRequestException(`Invalid data at row ${index + 1}: ${error}`);
-      }
-    });
+    const validatedData = parseCsvAndValidateImport<ImportSalesHistoryItem>(
+      file,
+      csvData,
+      ['marketplace', 'period', 'sku', 'quantity'],
+      ImportSalesHistoryItemSchema,
+    );
 
     return this.salesHistoryService.bulkUpsert(ctx.tenantId, ctx.shopId, validatedData);
   }

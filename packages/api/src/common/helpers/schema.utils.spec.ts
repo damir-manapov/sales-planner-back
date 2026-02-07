@@ -58,4 +58,34 @@ describe('zodSchemas', () => {
       expect(() => schema.parse('not a number')).toThrow();
     });
   });
+
+  describe('flexibleQuantity', () => {
+    const schema = zodSchemas.flexibleQuantity();
+
+    it('should accept numbers', () => {
+      expect(schema.parse(0)).toBe(0);
+      expect(schema.parse(42)).toBe(42);
+      expect(schema.parse(100)).toBe(100);
+    });
+
+    it('should accept string integers', () => {
+      expect(schema.parse('0')).toBe(0);
+      expect(schema.parse('42')).toBe(42);
+      expect(schema.parse('100')).toBe(100);
+    });
+
+    it('should reject negative numbers', () => {
+      expect(() => schema.parse(-1)).toThrow();
+      expect(() => schema.parse('-1')).toThrow();
+    });
+
+    it('should reject non-integer numbers', () => {
+      expect(() => schema.parse(1.5)).toThrow();
+      expect(() => schema.parse('1.5')).toThrow();
+    });
+
+    it('should reject non-numeric strings', () => {
+      expect(() => schema.parse('not a number')).toThrow();
+    });
+  });
 });

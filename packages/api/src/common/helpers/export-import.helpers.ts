@@ -1,3 +1,5 @@
+import { BadRequestException } from '@nestjs/common';
+import type { ZodType } from 'zod';
 import { fromCsv, toCsv } from '../../lib/index.js';
 
 // Use a minimal interface that works with Express Response
@@ -51,8 +53,30 @@ export function parseCsvImport<T extends Record<string, string>>(
   } else if (body) {
     csvContent = body;
   } else {
-    throw new Error('Either file or CSV body is required');
+    throw new BadRequestException('Either file or CSV body is required');
   }
 
   return fromCsv<T>(csvContent, requiredColumns);
+}
+
+/**
+ * Parse CSV file and validate each row with Zod schema.
+ * All values are passed as strings to the schema, which should handle
+ * type conversions (e.g., flexibleFloat for numbers with comma separators).
+ */
+export function parseCsvAndValidateImport<T>(
+  file: Express.Multer.File | undefined,
+  body: string | undefined,
+  requiredColumns: string[],
+  schema: ZodType<T>,
+): T[] {
+  const records = parseCsvImport<Record<string, string>>(file, body, requiredColumns);
+
+  return records.map((record, index) => {
+    try {
+      return schema.parse(record);
+    } catch (error) {
+      throw new BadRequestException(`Invalid data at row ${index + 1}: ${error}`);
+    }
+  });
 }

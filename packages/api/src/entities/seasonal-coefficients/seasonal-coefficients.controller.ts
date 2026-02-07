@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -28,11 +27,11 @@ import {
   assertShopAccess,
   type ExpressResponse,
   parseAndValidateImport,
+  parseCsvAndValidateImport,
   sendCsvExport,
   sendJsonExport,
   ZodValidationPipe,
 } from '../../common/index.js';
-import { fromCsv } from '../../lib/index.js';
 import {
   type CreateSeasonalCoefficientRequest,
   CreateSeasonalCoefficientSchema,
@@ -168,35 +167,12 @@ export class SeasonalCoefficientsController {
     @UploadedFile() file?: Express.Multer.File,
     @Body('data') csvData?: string,
   ): Promise<ImportResult> {
-    const csv = file?.buffer?.toString('utf-8') ?? csvData;
-    if (!csv) {
-      throw new BadRequestException('No CSV data provided');
-    }
-    const records = fromCsv<{
-      group: string;
-      month: string;
-      coefficient: string;
-    }>(csv, ['group', 'month', 'coefficient']);
-
-    const items = records.map((record, index) => {
-      const month = Number.parseInt(record.month, 10);
-      // Handle comma decimal separator (European format)
-      const coefficientStr = record.coefficient.replace(',', '.');
-      const coefficient = Number.parseFloat(coefficientStr);
-      if (Number.isNaN(month) || month < 1 || month > 12) {
-        throw new BadRequestException(`Invalid month at row ${index + 1}: ${record.month}`);
-      }
-      if (Number.isNaN(coefficient) || coefficient <= 0) {
-        throw new BadRequestException(
-          `Invalid coefficient at row ${index + 1}: ${record.coefficient}`,
-        );
-      }
-      return ImportSeasonalCoefficientItemSchema.parse({
-        group: record.group,
-        month,
-        coefficient,
-      });
-    });
+    const items = parseCsvAndValidateImport<ImportSeasonalCoefficientItem>(
+      file,
+      csvData,
+      ['group', 'month', 'coefficient'],
+      ImportSeasonalCoefficientItemSchema,
+    );
     return this.seasonalCoefficientsService.bulkUpsert(ctx.tenantId, ctx.shopId, items);
   }
 }

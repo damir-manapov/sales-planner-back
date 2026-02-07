@@ -10,7 +10,7 @@ import type {
 import { z } from 'zod';
 import { AssertCompatible, PaginationQuerySchema, zodSchemas } from '../../common/index.js';
 
-const { id, quantity, period, code, flexiblePeriod } = zodSchemas;
+const { id, quantity, period, code, flexiblePeriod, flexibleQuantity } = zodSchemas;
 
 // Schema for requests (omitting shop_id and tenant_id)
 const CreateSalesHistoryRequestSchema = z.object({
@@ -43,11 +43,12 @@ export const UpdateSalesHistorySchema = z.object({
   // Note: shop_id, tenant_id, sku_id, period are not updatable
 });
 
+// Import schema uses flexible types for CSV/JSON parsing
 export const ImportSalesHistoryItemSchema = z.object({
   marketplace: z.string().min(1),
   period: flexiblePeriod(),
   sku: code(),
-  quantity: quantity(),
+  quantity: flexibleQuantity(),
 });
 
 // Infer TypeScript types from schemas with compatibility checks

@@ -29,6 +29,17 @@ function parsePeriod(value: string): string {
 }
 
 /**
+ * Parse int from string, returns the parsed value.
+ * For validation, we use parseFloat to detect non-integer strings like '1.5'
+ */
+function parseFlexibleInt(value: string | number): number {
+  if (typeof value === 'number') return value;
+  // Use parseFloat to properly detect decimal values like '1.5'
+  // parseInt('1.5') would truncate to 1, which is not what we want for validation
+  return Number.parseFloat(value.replace(/[\s,]/g, ''));
+}
+
+/**
  * Parse float from string, handling comma as decimal separator
  */
 function parseFlexibleFloat(value: string | number): number {
@@ -62,6 +73,13 @@ export const zodSchemas = {
 
   /** Non-negative integer (for quantities) */
   quantity: () => z.number().int().nonnegative(),
+
+  /** Non-negative integer from string (for CSV imports) */
+  flexibleQuantity: () =>
+    z
+      .union([z.number(), z.string()])
+      .transform(parseFlexibleInt)
+      .refine((v) => !Number.isNaN(v) && Number.isInteger(v) && v >= 0, 'Must be a non-negative integer'),
 
   /** Month number 1-12 */
   month: () => z.number().int().min(1).max(12),

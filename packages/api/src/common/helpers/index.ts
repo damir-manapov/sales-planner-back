@@ -1,5 +1,10 @@
 export { assertShopAccess } from './access.helpers.js';
-export { parseCsvImport, sendCsvExport, sendJsonExport } from './export-import.helpers.js';
+export {
+  parseCsvAndValidateImport,
+  parseCsvImport,
+  sendCsvExport,
+  sendJsonExport,
+} from './export-import.helpers.js';
 export type { ExpressResponse } from './export-import.helpers.js';
 export { parseAndValidateImport, parseImportData, validateArray } from './import.helpers.js';
 export { zodSchemas } from './schema.utils.js';
