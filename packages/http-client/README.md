@@ -86,7 +86,17 @@ const result = await client.shops.deleteData(shopId);
 console.log(result); // { skusDeleted, salesHistoryDeleted, brandsDeleted, ... }
 ```
 
-Other system clients: `me`, `metadata`
+Other system clients:
+
+```typescript
+// Get current user with roles and tenants
+const me = await client.me.getMe();
+console.log(me.email, me.roles, me.tenants);
+
+// Get entities metadata (for UI documentation)
+const metadata = await client.metadata.getEntitiesMetadata();
+console.log(metadata); // { entities: [...], version: "..." }
+```
 
 ## Error Handling
 
