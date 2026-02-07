@@ -16,8 +16,9 @@ Monorepo for Sales Planner API and related packages. Multi-tenant sales planning
 - **Role-Based Access Control** - viewer, editor, tenantAdmin, tenantOwner, systemAdmin
 - **Entity Management** - SKUs, Brands, Categories, Groups, Statuses, Suppliers, Marketplaces
 - **Sales History** - Monthly sales data with composite key (SKU + marketplace + period)
+- **Computed Entities** - SKU metrics with ABC classification, sales ranking, days of stock (materialized views)
 - **Import/Export** - JSON and CSV support with auto-delimiter detection
-- **Comprehensive Testing** - 430+ e2e tests across 15 test files
+- **Comprehensive Testing** - 570+ e2e tests across 22 test files
 
 ## Quick Start
 

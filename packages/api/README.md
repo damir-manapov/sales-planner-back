@@ -82,6 +82,13 @@ NestJS REST API for multi-tenant sales planning and management. Built with Kysel
   - Includes field definitions (name, type, description, required, examples)
   - Excludes technical fields, only shows user-visible fields from export operations
   - Used by UI for documentation and dynamic form generation
+- **Computed Entities** - Read-only aggregated data from materialized views
+  - **SKU Metrics**: ABC classification, sales rank, days of stock per SKU
+    - Fields: sku_code, last_period, last_period_sales, current_stock, days_of_stock, abc_class, sales_rank
+    - ABC classification: A (top 20%), B (next 30%), C (bottom 50%) by sales
+    - Endpoints: GET /sku-metrics (list), GET /sku-metrics/:id (single), GET /sku-metrics/abc/:class (by ABC)
+  - **View Management**: GET /computed/views (list), POST /computed/refresh (refresh all), POST /computed/refresh/:view (refresh one)
+  - Built on PostgreSQL materialized views with CONCURRENTLY refresh support
 - **Bootstrap** - Auto-creates systemAdmin user and seeds default roles on startup
 - **Request Validation** - Zod-based schema validation with type sync to `@sales-planner/shared`
   - **Flexible Import Formats**: Imports accept user-friendly formats:
@@ -128,6 +135,8 @@ src/
 ├── me/                   # Current user endpoint
 ├── bootstrap/            # App initialization
 ├── lib/                  # Utility functions
+├── computed/             # Computed entities (materialized views)
+│   └── sku-metrics/     # SKU metrics read-only module
 └── metadata/             # Entity metadata API
 ```
 
@@ -678,6 +687,32 @@ bun scripts/create-demo-tenant.ts --api-url "http://localhost:3000"
   - Dell XPS, MacBook Pro, Lenovo ThinkPad
   - iPhone, Samsung Galaxy, Google Pixel
   - iPad Pro, Samsung Tab, monitors, keyboards, mice, headsets, webcams
+
+---
+
+**Apply Materialized Views Script** (`scripts/apply-views.ts`):
+
+Manages PostgreSQL materialized views for computed entities. Views are defined in `views/` folder with SQL files.
+
+```bash
+# Apply all views (drop and recreate)
+npx tsx scripts/apply-views.ts
+
+# Refresh all views (update data, no schema change)
+npx tsx scripts/apply-views.ts --refresh
+
+# Drop all views
+npx tsx scripts/apply-views.ts --drop
+```
+
+**View Definitions** (`views/`):
+- `mv_sku_metrics.sql` - SKU metrics with ABC classification, sales rank, days of stock
+- `index.ts` - View registry with dependency management
+
+**Notes:**
+- Views are applied in dependency order (respects `dependsOn` in registry)
+- Uses `CONCURRENTLY` for refresh to avoid locking
+- Requires `DATABASE_URL` environment variable
 - **21 Sales Records**: 3 months of sales history (Nov 2025 - Jan 2026)
   - Realistic quantities showing sales trends
   - Ready for forecasting and analytics testing

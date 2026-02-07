@@ -1,5 +1,21 @@
 # @sales-planner/http-client
 
+## 0.19.0
+
+### Minor Changes
+
+- Add computed entities infrastructure with SKU metrics
+
+  - Add SkuMetrics entity with ABC classification, sales ranking, days of stock
+  - Add SkuMetricsClient and ComputedEntitiesClient to http-client
+  - Support materialized views with CONCURRENTLY refresh
+  - Add export endpoints (CSV/JSON) for computed entities
+
+### Patch Changes
+
+- Updated dependencies
+  - @sales-planner/shared@0.17.0
+
 ## 0.18.0
 
 ### Minor Changes

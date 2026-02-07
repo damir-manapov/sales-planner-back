@@ -88,6 +88,8 @@ import { ShopsClient } from './shops-client.js';
 import { SkusClient } from './skus-client.js';
 import { UserRolesClient } from './user-roles-client.js';
 import { ApiKeysClient } from './api-keys-client.js';
+import { SkuMetricsClient } from './sku-metrics-client.js';
+import { ComputedEntitiesClient } from './computed-entities-client.js';
 
 export class SalesPlannerClient {
   private baseUrl: string;
@@ -205,6 +207,8 @@ export class SalesPlannerClient {
   readonly roles: CrudClient<Role, CreateRoleRequest, UpdateRoleRequest>;
   readonly userRoles: UserRolesClient;
   readonly apiKeys: ApiKeysClient;
+  readonly skuMetrics: SkuMetricsClient;
+  readonly computed: ComputedEntitiesClient;
 
   constructor(config: ClientConfig) {
     this.baseUrl = config.baseUrl.replace(/\/$/, '');
@@ -230,6 +234,8 @@ export class SalesPlannerClient {
     this.roles = new CrudClient(config, 'roles');
     this.userRoles = new UserRolesClient(config);
     this.apiKeys = new ApiKeysClient(config);
+    this.skuMetrics = new SkuMetricsClient(config);
+    this.computed = new ComputedEntitiesClient(config);
   }
 
   // Health & Info (unauthenticated)

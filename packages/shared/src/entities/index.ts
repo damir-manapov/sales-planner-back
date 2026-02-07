@@ -22,3 +22,6 @@ export * from './sku-competitor-mappings';
 export * from './competitor-sales';
 export * from './roles';
 export * from './api-keys';
+
+// Computed entities (materialized views)
+export * from './sku-metrics';

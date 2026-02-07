@@ -56,6 +56,14 @@ export function generateTestCode(prefix: string = 'TEST'): string {
 }
 
 /**
+ * Get the current period in YYYY-MM format.
+ * @returns Current period string (e.g., "2026-02")
+ */
+export function getCurrentPeriod(): string {
+  return new Date().toISOString().slice(0, 7);
+}
+
+/**
  * Get database instance from the app for direct database operations in tests.
  */
 export function getDb(app: INestApplication): Kysely<DB> {

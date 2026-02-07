@@ -128,6 +128,33 @@ const metadata = await client.metadata.getEntitiesMetadata();
 console.log(metadata); // { entities: [...], version: "..." }
 ```
 
+## Computed Entities (Read-Only)
+
+SKU metrics and materialized view management:
+
+```typescript
+const ctx = { shop_id: 1, tenant_id: 1 };
+
+// SKU Metrics - aggregated metrics from materialized views
+const { items, total } = await client.skuMetrics.list(ctx.shop_id, ctx.tenant_id);
+const metric = await client.skuMetrics.get(id, ctx.shop_id, ctx.tenant_id);
+const topProducts = await client.skuMetrics.getByAbcClass('A', ctx.shop_id, ctx.tenant_id);
+
+// Export
+const csv = await client.skuMetrics.exportCsv(ctx.shop_id, ctx.tenant_id);
+const json = await client.skuMetrics.exportJson(ctx.shop_id, ctx.tenant_id);
+
+// View Management
+const views = await client.computed.getViews(ctx.shop_id, ctx.tenant_id);
+// [{ name: 'mv_sku_metrics', description: 'SKU metrics with ABC classification' }]
+
+const result = await client.computed.refreshAll(ctx.shop_id, ctx.tenant_id);
+// { results: [...], totalDuration: 1234, success: true }
+
+const viewResult = await client.computed.refreshView('mv_sku_metrics', ctx.shop_id, ctx.tenant_id);
+// { view: 'mv_sku_metrics', duration: 500, success: true }
+```
+
 ## Error Handling
 
 ```typescript
@@ -340,6 +367,51 @@ Available entity types summary:
 - `Sku`, `Brand`, `Category`, `Group`, `Status`, `Supplier`, `Warehouse`, `Marketplace` - shop data
 - `SalesHistory`, `Leftover`, `SeasonalCoefficient` - time-series data
 - `CompetitorProduct`, `CompetitorSale`, `SkuCompetitorMapping` - competitor data
+- `SkuMetrics` - computed entity (read-only, from materialized view)
+
+#### Computed Entities
+
+```typescript
+interface SkuMetrics {
+  id: number;
+  sku_id: number;
+  shop_id: number;
+  tenant_id: number;
+  sku_code: string;
+  sku_title: string;
+  group_code: string | null;
+  category_code: string | null;
+  brand_code: string | null;
+  status_code: string | null;
+  supplier_code: string | null;
+  last_period: string;        // YYYY-MM format
+  last_period_sales: number;  // Total sales for last period
+  current_stock: number;      // Current inventory
+  days_of_stock: number | null;
+  abc_class: 'A' | 'B' | 'C'; // A=top 20%, B=next 30%, C=bottom 50%
+  sales_rank: number;         // 1 = highest sales
+  computed_at: Date;
+}
+
+// View management types
+interface ViewInfo {
+  name: string;
+  description: string;
+}
+
+interface RefreshResult {
+  view: string;
+  duration: number;
+  success: boolean;
+  error?: string;
+}
+
+interface RefreshAllResult {
+  results: RefreshResult[];
+  totalDuration: number;
+  success: boolean;
+}
+```
 
 ### Import/Export Types
 
@@ -387,6 +459,9 @@ import type {
   
   // Competitor Entities
   CompetitorProduct, CompetitorSale, SkuCompetitorMapping,
+  
+  // Computed Entities (read-only)
+  SkuMetrics,
   
   // User/Me Response Types
   UserWithRolesAndTenants, UserRole, TenantInfo, ShopInfo,

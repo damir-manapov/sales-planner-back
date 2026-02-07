@@ -140,6 +140,17 @@ The API uses **numeric IDs** internally for referential integrity:
 | `UserRole` | User-role assignment |
 | `ApiKey` | API authentication key |
 | `Marketplace` | E-commerce platform (numeric ID, shop-scoped) |
+| `SkuMetrics` | Computed SKU metrics (read-only, from materialized view) |
+
+### Computed Entities (Read-Only)
+
+| Type | Description |
+|------|-------------|
+| `SkuMetrics` | Aggregated SKU metrics from materialized view |
+| `SkuMetrics.abc_class` | ABC classification: 'A' (top 20%), 'B' (next 30%), 'C' (bottom 50%) |
+| `SkuMetrics.sales_rank` | Sales rank within shop (1 = highest) |
+| `SkuMetrics.days_of_stock` | Estimated days of stock based on sales velocity |
+| `SkuMetrics.last_period_sales` | Total sales quantity for the last period |
 
 ### Query Types
 

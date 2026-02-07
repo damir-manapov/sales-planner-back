@@ -9,6 +9,7 @@ import { BrandsModule } from './entities/brands/index.js';
 import { CategoriesModule } from './entities/categories/index.js';
 import { CompetitorProductsModule } from './entities/competitor-products/index.js';
 import { CompetitorSalesModule } from './entities/competitor-sales/index.js';
+import { ComputedEntitiesModule } from './computed/index.js';
 import { databaseConfig } from './database/database.config.js';
 import { DatabaseModule } from './database/index.js';
 import { GroupsModule } from './entities/groups/index.js';
@@ -63,6 +64,7 @@ import { UsersModule } from './entities/users/index.js';
     SkuCompetitorMappingsModule,
     CompetitorSalesModule,
     CompetitorProductsModule,
+    ComputedEntitiesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
