@@ -9,7 +9,7 @@ import type {
 import { z } from 'zod';
 import { AssertCompatible, PaginationQuerySchema, zodSchemas } from '../../common/index.js';
 
-const { id, quantity, period, code, flexiblePeriod } = zodSchemas;
+const { id, quantity, period, code, flexiblePeriod, flexibleQuantity } = zodSchemas;
 
 // Schema for requests (omitting shop_id and tenant_id)
 const CreateCompetitorSaleRequestSchema = z.object({
@@ -38,11 +38,12 @@ export const UpdateCompetitorSaleSchema = z.object({
   quantity: quantity().optional(),
 });
 
+// Import schema uses flexible types for CSV/JSON parsing
 export const ImportCompetitorSaleItemSchema = z.object({
   marketplace: code(),
   marketplaceProductId: z.string().min(1), // BIGINT as string
   period: flexiblePeriod(),
-  quantity: quantity(),
+  quantity: flexibleQuantity(),
 });
 
 // Period query for exports

@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -28,11 +27,11 @@ import {
   assertShopAccess,
   type ExpressResponse,
   parseAndValidateImport,
+  parseCsvAndValidateImport,
   sendCsvExport,
   sendJsonExport,
   ZodValidationPipe,
 } from '../../common/index.js';
-import { fromCsv } from '../../lib/index.js';
 import {
   type CompetitorSaleQuery,
   CompetitorSaleQuerySchema,
@@ -174,23 +173,12 @@ export class CompetitorSalesController {
     @UploadedFile() file?: Express.Multer.File,
     @Body('data') csvData?: string,
   ): Promise<ImportResult> {
-    const csv = file?.buffer?.toString('utf-8') ?? csvData;
-    if (!csv) {
-      throw new BadRequestException('No CSV data provided');
-    }
-    const records = fromCsv<{
-      marketplace: string;
-      marketplaceProductId: string;
-      period: string;
-      quantity: string;
-    }>(csv, ['marketplace', 'marketplaceProductId', 'period', 'quantity']);
-    const items: ImportCompetitorSaleItem[] = records.map((r) => ({
-      marketplace: r.marketplace,
-      marketplaceProductId: r.marketplaceProductId,
-      period: r.period,
-      quantity: Number(r.quantity),
-    }));
-
+    const items = parseCsvAndValidateImport<ImportCompetitorSaleItem>(
+      file,
+      csvData,
+      ['marketplace', 'marketplaceProductId', 'period', 'quantity'],
+      ImportCompetitorSaleItemSchema,
+    );
     return this.competitorSalesService.bulkUpsert(ctx.tenantId, ctx.shopId, items);
   }
 }
