@@ -54,6 +54,27 @@ NestJS REST API for multi-tenant sales planning and management. Built with Kysel
   - Auto-creates missing SKUs and marketplaces during import (by code)
   - Import converts marketplace codes to IDs, export converts IDs to codes
   - Proper file download headers for exports
+- **Warehouses** - Warehouse management linked to shops (unique code per shop)
+  - Full CRUD operations with access control
+  - Import/Export: JSON and CSV support
+  - Example endpoints for download templates
+- **Leftovers** - Inventory leftovers per warehouse/SKU/period
+  - Fields: warehouse (code), sku (code), period (YYYY-MM), quantity
+  - Period filtering: `period_from`, `period_to` query params
+  - Import/Export: JSON and CSV with flexible period formats
+- **Seasonal Coefficients** - Monthly seasonality coefficients per group
+  - Fields: group (code), month (1-12), coefficient (positive number)
+  - Import handles comma decimal separator (European format)
+- **Competitor Products** - External marketplace products for competitive analysis
+  - Fields: code, title, marketplaceProductId (external ID as string for large numbers)
+  - marketplaceProductId stored as BIGINT but exposed as string in API (JavaScript number precision)
+- **SKU Competitor Mappings** - Links SKUs to competitor products
+  - Fields: sku (code), marketplaceProductId
+  - Import uses marketplaceProductId (camelCase) for user convenience
+- **Competitor Sales** - Monthly sales data for competitor products
+  - Fields: marketplaceProductId, period (YYYY-MM), quantity
+  - Period filtering: `period_from`, `period_to` query params
+  - Import uses marketplaceProductId (camelCase) with flexible period formats
 - **Me** - Get current user data with roles and tenants
 - **Metadata** - Entity metadata API for UI documentation
   - **GET /metadata/entities** - Returns metadata describing all entities (brands, categories, groups, statuses, suppliers, marketplaces, skus, sales history) managed by shop admin
@@ -62,6 +83,10 @@ NestJS REST API for multi-tenant sales planning and management. Built with Kysel
   - Used by UI for documentation and dynamic form generation
 - **Bootstrap** - Auto-creates systemAdmin user and seeds default roles on startup
 - **Request Validation** - Zod-based schema validation with type sync to `@sales-planner/shared`
+  - **Flexible Import Formats**: Imports accept user-friendly formats:
+    - Period: `YYYY-MM`, `DD.MM.YYYY`, or `DD/MM/YYYY` (normalized to YYYY-MM)
+    - Decimals: Both comma (`,`) and dot (`.`) as decimal separator
+    - Column names: camelCase in CSV (e.g., `marketplaceProductId`)
 - **Error Handling** - Returns 409 Conflict for duplicate resources (email, code, period, etc.)
 - **Security** - API keys are auto-generated using `crypto.randomUUID()` (not user-provided)
 
@@ -75,17 +100,23 @@ src/
 │   ├── api-keys/         # API key management
 │   ├── brands/           # Brand management (shop-scoped)
 │   ├── categories/       # Category management (shop-scoped)
+│   ├── competitor-products/  # Competitor products (shop-scoped)
+│   ├── competitor-sales/     # Competitor sales data (shop-scoped)
 │   ├── groups/           # Group management (shop-scoped)
+│   ├── leftovers/        # Inventory leftovers (shop-scoped)
 │   ├── marketplaces/     # Marketplace management (shop-scoped)
 │   ├── sales-history/    # Sales history records (shop-scoped)
+│   ├── seasonal-coefficients/  # Seasonality coefficients (shop-scoped)
 │   ├── shops/            # Shop management (tenant-scoped)
+│   ├── sku-competitor-mappings/  # SKU to competitor mappings (shop-scoped)
 │   ├── skus/             # SKU management (shop-scoped)
 │   ├── statuses/         # Status management (shop-scoped)
 │   ├── suppliers/        # Supplier management (shop-scoped)
 │   ├── tenants/          # Tenant management
 │   ├── user-roles/       # Role assignments
 │   ├── user-shops/       # User-shop associations
-│   └── users/            # User management
+│   ├── users/            # User management
+│   └── warehouses/       # Warehouse management (shop-scoped)
 ├── common/               # Shared utilities and base classes
 │   ├── shop-scoped/      # Repository and service base classes
 │   ├── pipes/            # Validation pipes (Zod, query)

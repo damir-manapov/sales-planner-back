@@ -3,9 +3,14 @@ import { ApiKeysModule } from '../api-keys/api-keys.module.js';
 import { AuthGuard } from '../../auth/auth.guard.js';
 import { BrandsModule } from '../brands/brands.module.js';
 import { CategoriesModule } from '../categories/categories.module.js';
+import { CompetitorProductsModule } from '../competitor-products/competitor-products.module.js';
+import { CompetitorSalesModule } from '../competitor-sales/competitor-sales.module.js';
 import { GroupsModule } from '../groups/groups.module.js';
+import { LeftoversModule } from '../leftovers/leftovers.module.js';
 import { MarketplacesModule } from '../marketplaces/marketplaces.module.js';
 import { SalesHistoryModule } from '../sales-history/sales-history.module.js';
+import { SeasonalCoefficientsModule } from '../seasonal-coefficients/seasonal-coefficients.module.js';
+import { SkuCompetitorMappingsModule } from '../sku-competitor-mappings/sku-competitor-mappings.module.js';
 import { SkusModule } from '../skus/skus.module.js';
 import { StatusesModule } from '../statuses/statuses.module.js';
 import { SuppliersModule } from '../suppliers/suppliers.module.js';
@@ -29,6 +34,11 @@ import { ShopsService } from './shops.service.js';
     StatusesModule,
     SuppliersModule,
     WarehousesModule,
+    LeftoversModule,
+    SeasonalCoefficientsModule,
+    SkuCompetitorMappingsModule,
+    CompetitorSalesModule,
+    CompetitorProductsModule,
   ],
   controllers: [ShopsController],
   providers: [ShopsService, AuthGuard],

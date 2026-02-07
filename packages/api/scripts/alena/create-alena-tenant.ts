@@ -15,6 +15,8 @@ interface AlenaTenantArgs {
 }
 
 const __dirname = import.meta.dirname;
+
+// Read all CSVs - API handles format conversions (date formats, decimal separators, column names)
 const SKUS_CSV = readFileSync(join(__dirname, 'original/skus.csv'), 'utf-8');
 const SALES_HISTORY_CSV = readFileSync(join(__dirname, 'original/historyOfSales.csv'), 'utf-8');
 const BRANDS_CSV = readFileSync(join(__dirname, 'original/brands.csv'), 'utf-8');
@@ -23,6 +25,20 @@ const GROUPS_CSV = readFileSync(join(__dirname, 'original/groups.csv'), 'utf-8')
 const STATUSES_CSV = readFileSync(join(__dirname, 'original/statuses.csv'), 'utf-8');
 const SUPPLIERS_CSV = readFileSync(join(__dirname, 'original/suppliers.csv'), 'utf-8');
 const WAREHOUSES_CSV = readFileSync(join(__dirname, 'original/warehouses.csv'), 'utf-8');
+const LEFTOVERS_CSV = readFileSync(join(__dirname, 'original/leftovers.csv'), 'utf-8');
+const SEASONAL_COEFFICIENTS_CSV = readFileSync(
+  join(__dirname, 'original/groupSeasonalCoefficients.csv'),
+  'utf-8',
+);
+const SKU_COMPETITOR_MAPPINGS_CSV = readFileSync(
+  join(__dirname, 'original/skuToCompetitorsSku.csv'),
+  'utf-8',
+);
+const COMPETITOR_PRODUCTS_CSV = readFileSync(
+  join(__dirname, 'original/skusOfCompetitors.csv'),
+  'utf-8',
+);
+const COMPETITOR_SALES_CSV = readFileSync(join(__dirname, 'original/copmetitors.csv'), 'utf-8');
 
 async function createAlenaTenant(args: AlenaTenantArgs) {
   const { client: adminClient, apiUrl } = initAdminClient(args.apiUrl);
@@ -128,6 +144,51 @@ async function createAlenaTenant(args: AlenaTenantArgs) {
     (r) => `Created ${r.created} sales records`,
   );
 
+  // Step 11: Import leftovers (inventory)
+  const leftoversResult = await runStep(
+    11,
+    '📦',
+    'Importing leftovers (inventory)',
+    () => userClient.leftovers.importCsv(ctx, LEFTOVERS_CSV),
+    (r) => `Created ${r.created} leftover records`,
+  );
+
+  // Step 12: Import seasonal coefficients
+  const seasonalResult = await runStep(
+    12,
+    '📅',
+    'Importing seasonal coefficients',
+    () => userClient.seasonalCoefficients.importCsv(ctx, SEASONAL_COEFFICIENTS_CSV),
+    (r) => `Created ${r.created} seasonal coefficients`,
+  );
+
+  // Step 13: Import competitor products (must be before mappings and sales)
+  const competitorProductsResult = await runStep(
+    13,
+    '🏪',
+    'Importing competitor products',
+    () => userClient.competitorProducts.importCsv(ctx, COMPETITOR_PRODUCTS_CSV),
+    (r) => `Created ${r.created} competitor products`,
+  );
+
+  // Step 14: Import SKU competitor mappings
+  const mappingsResult = await runStep(
+    14,
+    '🔗',
+    'Importing SKU competitor mappings',
+    () => userClient.skuCompetitorMappings.importCsv(ctx, SKU_COMPETITOR_MAPPINGS_CSV),
+    (r) => `Created ${r.created} SKU competitor mappings`,
+  );
+
+  // Step 15: Import competitor sales
+  const competitorSalesResult = await runStep(
+    15,
+    '📊',
+    'Importing competitor sales',
+    () => userClient.competitorSales.importCsv(ctx, COMPETITOR_SALES_CSV),
+    (r) => `Created ${r.created} competitor sales records`,
+  );
+
   // Success summary
   printSuccessSummary(setup, [
     `${brandsResult.created} brands`,
@@ -138,6 +199,11 @@ async function createAlenaTenant(args: AlenaTenantArgs) {
     `${warehousesResult.created} warehouses`,
     `${skusResult.created} products`,
     `${salesResult.created} sales history records`,
+    `${leftoversResult.created} leftover records`,
+    `${seasonalResult.created} seasonal coefficients`,
+    `${competitorProductsResult.created} competitor products`,
+    `${mappingsResult.created} SKU competitor mappings`,
+    `${competitorSalesResult.created} competitor sales records`,
   ]);
 
   return setup;
@@ -166,6 +232,11 @@ Shop Data Includes:
   • 20 groups
   • 2 statuses
   • Sales history for 3 months (Nov 2025, Dec 2025, Jan 2026)
+  • Leftovers (inventory) data
+  • Seasonal coefficients
+  • Competitor products
+  • SKU competitor mappings
+  • Competitor sales data
   • Admin user: Алёна (alena@alena-flowers.com)
 
 Example:

@@ -142,12 +142,11 @@ export class SuppliersController {
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @Param('id', ParseIntPipe) id: number,
-  ): Promise<{ message: string }> {
+  ): Promise<void> {
     const supplier = await this.suppliersService.findById(id);
     assertShopAccess(supplier, ctx, 'Supplier', id);
 
     await this.suppliersService.delete(id);
-    return { message: 'Supplier deleted successfully' };
   }
 
   @Post('import/json')

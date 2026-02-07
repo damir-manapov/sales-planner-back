@@ -2,9 +2,14 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { DatabaseService } from '../../database/database.service.js';
 import { BrandsService } from '../brands/brands.service.js';
 import { CategoriesService } from '../categories/categories.service.js';
+import { CompetitorProductsService } from '../competitor-products/competitor-products.service.js';
+import { CompetitorSalesService } from '../competitor-sales/competitor-sales.service.js';
 import { GroupsService } from '../groups/groups.service.js';
+import { LeftoversService } from '../leftovers/leftovers.service.js';
 import { MarketplacesService } from '../marketplaces/marketplaces.service.js';
 import { SalesHistoryService } from '../sales-history/sales-history.service.js';
+import { SeasonalCoefficientsService } from '../seasonal-coefficients/seasonal-coefficients.service.js';
+import { SkuCompetitorMappingsService } from '../sku-competitor-mappings/sku-competitor-mappings.service.js';
 import { SkusService } from '../skus/skus.service.js';
 import { StatusesService } from '../statuses/statuses.service.js';
 import { SuppliersService } from '../suppliers/suppliers.service.js';
@@ -23,6 +28,11 @@ describe('ShopsService', () => {
   let mockStatusesService: { deleteByShopId: ReturnType<typeof vi.fn> };
   let mockSuppliersService: { deleteByShopId: ReturnType<typeof vi.fn> };
   let mockWarehousesService: { deleteByShopId: ReturnType<typeof vi.fn> };
+  let mockLeftoversService: { deleteByShopId: ReturnType<typeof vi.fn> };
+  let mockSeasonalCoefficientsService: { deleteByShopId: ReturnType<typeof vi.fn> };
+  let mockSkuCompetitorMappingsService: { deleteByShopId: ReturnType<typeof vi.fn> };
+  let mockCompetitorProductsService: { deleteByShopId: ReturnType<typeof vi.fn> };
+  let mockCompetitorSalesService: { deleteByShopId: ReturnType<typeof vi.fn> };
 
   beforeEach(() => {
     mockDb = {
@@ -40,6 +50,11 @@ describe('ShopsService', () => {
     mockStatusesService = { deleteByShopId: vi.fn() };
     mockSuppliersService = { deleteByShopId: vi.fn() };
     mockWarehousesService = { deleteByShopId: vi.fn() };
+    mockLeftoversService = { deleteByShopId: vi.fn() };
+    mockSeasonalCoefficientsService = { deleteByShopId: vi.fn() };
+    mockSkuCompetitorMappingsService = { deleteByShopId: vi.fn() };
+    mockCompetitorProductsService = { deleteByShopId: vi.fn() };
+    mockCompetitorSalesService = { deleteByShopId: vi.fn() };
 
     service = new ShopsService(
       mockDb as DatabaseService,
@@ -52,6 +67,11 @@ describe('ShopsService', () => {
       mockStatusesService as unknown as StatusesService,
       mockSuppliersService as unknown as SuppliersService,
       mockWarehousesService as unknown as WarehousesService,
+      mockLeftoversService as unknown as LeftoversService,
+      mockSeasonalCoefficientsService as unknown as SeasonalCoefficientsService,
+      mockSkuCompetitorMappingsService as unknown as SkuCompetitorMappingsService,
+      mockCompetitorSalesService as unknown as CompetitorSalesService,
+      mockCompetitorProductsService as unknown as CompetitorProductsService,
     );
   });
 
@@ -70,6 +90,11 @@ describe('ShopsService', () => {
       vi.mocked(mockStatusesService.deleteByShopId).mockResolvedValue(1);
       vi.mocked(mockSuppliersService.deleteByShopId).mockResolvedValue(7);
       vi.mocked(mockWarehousesService.deleteByShopId).mockResolvedValue(8);
+      vi.mocked(mockLeftoversService.deleteByShopId).mockResolvedValue(11);
+      vi.mocked(mockSeasonalCoefficientsService.deleteByShopId).mockResolvedValue(12);
+      vi.mocked(mockSkuCompetitorMappingsService.deleteByShopId).mockResolvedValue(13);
+      vi.mocked(mockCompetitorProductsService.deleteByShopId).mockResolvedValue(15);
+      vi.mocked(mockCompetitorSalesService.deleteByShopId).mockResolvedValue(14);
 
       const result = await service.deleteData(1);
 
@@ -83,6 +108,11 @@ describe('ShopsService', () => {
         statusesDeleted: 1,
         suppliersDeleted: 7,
         warehousesDeleted: 8,
+        leftoversDeleted: 11,
+        seasonalCoefficientsDeleted: 12,
+        skuCompetitorMappingsDeleted: 13,
+        competitorProductsDeleted: 15,
+        competitorSalesDeleted: 14,
       });
     });
 
@@ -103,6 +133,11 @@ describe('ShopsService', () => {
       vi.mocked(mockStatusesService.deleteByShopId).mockResolvedValue(0);
       vi.mocked(mockSuppliersService.deleteByShopId).mockResolvedValue(0);
       vi.mocked(mockWarehousesService.deleteByShopId).mockResolvedValue(0);
+      vi.mocked(mockLeftoversService.deleteByShopId).mockResolvedValue(0);
+      vi.mocked(mockSeasonalCoefficientsService.deleteByShopId).mockResolvedValue(0);
+      vi.mocked(mockSkuCompetitorMappingsService.deleteByShopId).mockResolvedValue(0);
+      vi.mocked(mockCompetitorProductsService.deleteByShopId).mockResolvedValue(0);
+      vi.mocked(mockCompetitorSalesService.deleteByShopId).mockResolvedValue(0);
 
       await service.deleteData(1);
 
@@ -119,6 +154,11 @@ describe('ShopsService', () => {
       vi.mocked(mockStatusesService.deleteByShopId).mockResolvedValue(0);
       vi.mocked(mockSuppliersService.deleteByShopId).mockResolvedValue(0);
       vi.mocked(mockWarehousesService.deleteByShopId).mockResolvedValue(0);
+      vi.mocked(mockLeftoversService.deleteByShopId).mockResolvedValue(0);
+      vi.mocked(mockSeasonalCoefficientsService.deleteByShopId).mockResolvedValue(0);
+      vi.mocked(mockSkuCompetitorMappingsService.deleteByShopId).mockResolvedValue(0);
+      vi.mocked(mockCompetitorProductsService.deleteByShopId).mockResolvedValue(0);
+      vi.mocked(mockCompetitorSalesService.deleteByShopId).mockResolvedValue(0);
 
       const result = await service.deleteData(999);
 
@@ -132,6 +172,11 @@ describe('ShopsService', () => {
         statusesDeleted: 0,
         suppliersDeleted: 0,
         warehousesDeleted: 0,
+        leftoversDeleted: 0,
+        seasonalCoefficientsDeleted: 0,
+        skuCompetitorMappingsDeleted: 0,
+        competitorProductsDeleted: 0,
+        competitorSalesDeleted: 0,
       });
     });
   });

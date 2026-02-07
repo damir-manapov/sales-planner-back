@@ -30,3 +30,36 @@ export interface SalesHistoryExportItem {
   sku: string;
   quantity: number;
 }
+
+export interface LeftoverExportItem {
+  warehouse: string;
+  sku: string;
+  period: string;
+  quantity: number;
+}
+
+export interface SeasonalCoefficientExportItem {
+  group: string;
+  month: number;
+  coefficient: number;
+}
+
+export interface CompetitorProductExportItem {
+  marketplace: string;
+  marketplace_product_id: string; // BIGINT as string
+  title?: string;
+  brand?: string;
+}
+
+export interface SkuCompetitorMappingExportItem {
+  sku: string;
+  marketplace: string;
+  marketplace_product_id: string; // BIGINT as string
+}
+
+export interface CompetitorSaleExportItem {
+  marketplace: string;
+  marketplace_product_id: string; // BIGINT as string
+  period: string;
+  quantity: number;
+}

@@ -56,7 +56,8 @@ export type CreateUserRequest = CreateUserDto;
 import type { 
   // Entities
   User, Tenant, Shop, Sku, Brand, Category, Group, Status, Supplier, Warehouse,
-  SalesHistory, Role, UserRole, ApiKey, Marketplace,
+  SalesHistory, Leftover, SeasonalCoefficient, SkuCompetitorMapping, CompetitorSale,
+  Role, UserRole, ApiKey, Marketplace,
 
   // Request types (HTTP layer)
   CreateUserRequest, UpdateUserRequest,
@@ -68,6 +69,10 @@ import type {
   CreateSupplierRequest, UpdateSupplierRequest,
   CreateWarehouseRequest, UpdateWarehouseRequest,
   CreateSalesHistoryRequest, UpdateSalesHistoryRequest,
+  CreateLeftoverRequest, UpdateLeftoverRequest,
+  CreateSeasonalCoefficientRequest, UpdateSeasonalCoefficientRequest,
+  CreateSkuCompetitorMappingRequest, UpdateSkuCompetitorMappingRequest,
+  CreateCompetitorSaleRequest, UpdateCompetitorSaleRequest,
 
   // DTO types (Service layer)
   CreateUserDto, UpdateUserDto,
@@ -79,20 +84,27 @@ import type {
   CreateSupplierDto, UpdateSupplierDto,
   CreateWarehouseDto, UpdateWarehouseDto,
   CreateSalesHistoryDto, UpdateSalesHistoryDto,
+  CreateLeftoverDto, UpdateLeftoverDto,
+  CreateSeasonalCoefficientDto, UpdateSeasonalCoefficientDto,
+  CreateSkuCompetitorMappingDto, UpdateSkuCompetitorMappingDto,
+  CreateCompetitorSaleDto, UpdateCompetitorSaleDto,
 
   // Import types
   ImportSkuItem, ImportBrandItem, ImportCategoryItem, ImportGroupItem, ImportStatusItem,
   ImportSupplierItem, ImportWarehouseItem, ImportSalesHistoryItem, ImportMarketplaceItem,
+  ImportLeftoverItem, ImportSeasonalCoefficientItem, ImportSkuCompetitorMappingItem, ImportCompetitorSaleItem,
 
   // Query types
   ShopContextParams, PaginationQuery, PeriodQuery, SalesHistoryQuery,
+  LeftoverQuery, CompetitorSaleQuery,
 
   // Response types
   PaginatedResponse,
   UserWithRolesAndTenants, TenantWithShopAndApiKey,
   ImportResult, DeleteDataResult,
   SkuExportItem, BrandExportItem, CategoryExportItem, GroupExportItem, StatusExportItem,
-  SupplierExportItem, WarehouseExportItem, MarketplaceExportItem, SalesHistoryExportItem
+  SupplierExportItem, WarehouseExportItem, MarketplaceExportItem, SalesHistoryExportItem,
+  LeftoverExportItem, SeasonalCoefficientExportItem, SkuCompetitorMappingExportItem, CompetitorSaleExportItem
 } from '@sales-planner/shared';
 ```
 
@@ -120,6 +132,10 @@ The API uses **numeric IDs** internally for referential integrity:
 | `Supplier` | Product supplier (shop-scoped) |
 | `Warehouse` | Storage location (shop-scoped) |
 | `SalesHistory` | Sales record for a period (uses numeric marketplace_id) |
+| `Leftover` | Inventory leftover for a warehouse/sku/period |
+| `SeasonalCoefficient` | Seasonal sales coefficient for a group/month |
+| `SkuCompetitorMapping` | Mapping between our SKU and competitor's SKU code |
+| `CompetitorSale` | Competitor sales data (marketplace + marketplace_product_id + period) |
 | `Role` | Access role |
 | `UserRole` | User-role assignment |
 | `ApiKey` | API authentication key |
@@ -133,6 +149,8 @@ The API uses **numeric IDs** internally for referential integrity:
 | `PaginationQuery` | `{ limit?: number; offset?: number }` |
 | `PeriodQuery` | `{ period_from?: string; period_to?: string }` |
 | `SalesHistoryQuery` | `PaginationQuery & PeriodQuery` |
+| `LeftoverQuery` | `PaginationQuery & PeriodQuery` |
+| `CompetitorSaleQuery` | `PaginationQuery & PeriodQuery` |
 
 ### Response Types
 
@@ -140,7 +158,7 @@ The API uses **numeric IDs** internally for referential integrity:
 |------|-------------|| `PaginatedResponse<T>` | `{ items: T[]; total: number; limit: number; offset: number }` || `UserWithRolesAndTenants` | User with their roles and tenants |
 | `TenantWithShopAndApiKey` | Created tenant with shop and API key |
 | `ImportResult` | `{ created: number; updated: number; errors: string[] }` |
-| `DeleteDataResult` | `{ skusDeleted, salesHistoryDeleted, marketplacesDeleted, brandsDeleted, categoriesDeleted, groupsDeleted, statusesDeleted, suppliersDeleted, warehousesDeleted: number }` |
+| `DeleteDataResult` | `{ skusDeleted, salesHistoryDeleted, leftoversDeleted, seasonalCoefficientsDeleted, skuCompetitorMappingsDeleted, competitorSalesDeleted, marketplacesDeleted, brandsDeleted, categoriesDeleted, groupsDeleted, statusesDeleted, suppliersDeleted, warehousesDeleted: number }` |
 | `SkuExportItem` | SKU data for export |
 | `BrandExportItem` | Brand data for export |
 | `CategoryExportItem` | Category data for export |
@@ -150,6 +168,10 @@ The API uses **numeric IDs** internally for referential integrity:
 | `WarehouseExportItem` | Warehouse data for export |
 | `MarketplaceExportItem` | Marketplace data for export |
 | `SalesHistoryExportItem` | Sales history data for export |
+| `LeftoverExportItem` | Leftover data for export |
+| `SeasonalCoefficientExportItem` | Seasonal coefficient data for export |
+| `SkuCompetitorMappingExportItem` | SKU competitor mapping data for export |
+| `CompetitorSaleExportItem` | Competitor sale data for export |
 
 ## Related Packages
 

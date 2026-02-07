@@ -10,6 +10,8 @@ export type Generated<T> =
     ? ColumnType<S, I | undefined, U>
     : ColumnType<T, T | undefined, T>;
 
+export type Int8 = ColumnType<string, bigint | number | string, bigint | number | string>;
+
 export type Json = JsonValue;
 
 export type JsonArray = JsonValue[];
@@ -55,6 +57,29 @@ export interface Categories {
   updated_at: Generated<Timestamp>;
 }
 
+export interface CompetitorProducts {
+  brand: string | null;
+  created_at: Generated<Timestamp>;
+  id: Generated<number>;
+  marketplace_id: number;
+  marketplace_product_id: Int8;
+  shop_id: number;
+  tenant_id: number;
+  title: string | null;
+  updated_at: Generated<Timestamp>;
+}
+
+export interface CompetitorSales {
+  competitor_product_id: number;
+  created_at: Generated<Timestamp>;
+  id: Generated<number>;
+  period: Timestamp;
+  quantity: Generated<number>;
+  shop_id: number;
+  tenant_id: number;
+  updated_at: Generated<Timestamp>;
+}
+
 export interface Groups {
   code: string;
   created_at: Generated<Timestamp>;
@@ -65,6 +90,18 @@ export interface Groups {
   updated_at: Generated<Timestamp>;
 }
 
+export interface Leftovers {
+  created_at: Generated<Timestamp>;
+  id: Generated<number>;
+  period: Timestamp;
+  quantity: Generated<number>;
+  shop_id: number;
+  sku_id: number;
+  tenant_id: number;
+  updated_at: Generated<Timestamp>;
+  warehouse_id: number;
+}
+
 export interface Marketplaces {
   code: string;
   created_at: Generated<Timestamp>;
@@ -73,6 +110,11 @@ export interface Marketplaces {
   tenant_id: number;
   title: string;
   updated_at: Generated<Timestamp>;
+}
+
+export interface Migrations {
+  applied_at: Generated<Timestamp | null>;
+  name: string;
 }
 
 export interface NeonAuthAccount {
@@ -196,11 +238,32 @@ export interface SalesHistory {
   updated_at: Generated<Timestamp>;
 }
 
+export interface SeasonalCoefficients {
+  coefficient: Generated<number>;
+  created_at: Generated<Timestamp>;
+  group_id: number;
+  id: Generated<number>;
+  month: number;
+  shop_id: number;
+  tenant_id: number;
+  updated_at: Generated<Timestamp>;
+}
+
 export interface Shops {
   created_at: Generated<Timestamp>;
   id: Generated<number>;
   tenant_id: number;
   title: string;
+  updated_at: Generated<Timestamp>;
+}
+
+export interface SkuCompetitorMappings {
+  competitor_product_id: number;
+  created_at: Generated<Timestamp>;
+  id: Generated<number>;
+  shop_id: number;
+  sku_id: number;
+  tenant_id: number;
   updated_at: Generated<Timestamp>;
 }
 
@@ -231,16 +294,6 @@ export interface Statuses {
 }
 
 export interface Suppliers {
-  code: string;
-  created_at: Generated<Timestamp>;
-  id: Generated<number>;
-  shop_id: number;
-  tenant_id: number;
-  title: string;
-  updated_at: Generated<Timestamp>;
-}
-
-export interface Warehouses {
   code: string;
   created_at: Generated<Timestamp>;
   id: Generated<number>;
@@ -284,12 +337,26 @@ export interface UserShops {
   user_id: number;
 }
 
+export interface Warehouses {
+  code: string;
+  created_at: Generated<Timestamp>;
+  id: Generated<number>;
+  shop_id: number;
+  tenant_id: number;
+  title: string;
+  updated_at: Generated<Timestamp>;
+}
+
 export interface DB {
   api_keys: ApiKeys;
   brands: Brands;
   categories: Categories;
+  competitor_products: CompetitorProducts;
+  competitor_sales: CompetitorSales;
   groups: Groups;
+  leftovers: Leftovers;
   marketplaces: Marketplaces;
+  migrations: Migrations;
   'neon_auth.account': NeonAuthAccount;
   'neon_auth.invitation': NeonAuthInvitation;
   'neon_auth.jwks': NeonAuthJwks;
@@ -301,7 +368,9 @@ export interface DB {
   'neon_auth.verification': NeonAuthVerification;
   roles: Roles;
   sales_history: SalesHistory;
+  seasonal_coefficients: SeasonalCoefficients;
   shops: Shops;
+  sku_competitor_mappings: SkuCompetitorMappings;
   skus: Skus;
   statuses: Statuses;
   suppliers: Suppliers;

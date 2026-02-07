@@ -142,12 +142,11 @@ export class StatusesController {
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @Param('id', ParseIntPipe) id: number,
-  ): Promise<{ message: string }> {
+  ): Promise<void> {
     const status = await this.statusesService.findById(id);
     assertShopAccess(status, ctx, 'Status', id);
 
     await this.statusesService.delete(id);
-    return { message: 'Status deleted successfully' };
   }
 
   @Post('import/json')

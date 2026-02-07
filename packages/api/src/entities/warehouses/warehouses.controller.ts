@@ -142,12 +142,11 @@ export class WarehousesController {
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @Param('id', ParseIntPipe) id: number,
-  ): Promise<{ message: string }> {
+  ): Promise<void> {
     const warehouse = await this.warehousesService.findById(id);
     assertShopAccess(warehouse, ctx, 'Warehouse', id);
 
     await this.warehousesService.delete(id);
-    return { message: 'Warehouse deleted successfully' };
   }
 
   @Post('import/json')

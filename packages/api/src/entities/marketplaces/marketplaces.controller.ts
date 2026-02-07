@@ -143,12 +143,11 @@ export class MarketplacesController {
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @Param('id', ParseIntPipe) id: number,
-  ): Promise<{ message: string }> {
+  ): Promise<void> {
     const marketplace = await this.marketplacesService.findById(id);
     assertShopAccess(marketplace, ctx, 'Marketplace', id);
 
     await this.marketplacesService.delete(id);
-    return { message: 'Marketplace deleted successfully' };
   }
 
   @Post('import/json')

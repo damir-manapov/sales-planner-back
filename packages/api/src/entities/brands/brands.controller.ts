@@ -148,12 +148,11 @@ export class BrandsController {
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @Param('id', ParseIntPipe) id: number,
-  ): Promise<{ message: string }> {
+  ): Promise<void> {
     const brand = await this.brandsService.findById(id);
     assertShopAccess(brand, ctx, 'Brand', id);
 
     await this.brandsService.delete(id);
-    return { message: 'Brand deleted successfully' };
   }
 
   @Post('import/json')

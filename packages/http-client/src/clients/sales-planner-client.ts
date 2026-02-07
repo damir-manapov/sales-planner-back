@@ -9,11 +9,28 @@ import type {
   UpdateCategoryRequest,
   ImportCategoryItem,
   CategoryExportItem,
+  CompetitorProduct,
+  CreateCompetitorProductRequest,
+  UpdateCompetitorProductRequest,
+  ImportCompetitorProductItem,
+  CompetitorProductExportItem,
+  CompetitorSale,
+  CreateCompetitorSaleRequest,
+  UpdateCompetitorSaleRequest,
+  ImportCompetitorSaleItem,
+  CompetitorSaleExportItem,
+  CompetitorSaleQuery,
   Group,
   CreateGroupRequest,
   UpdateGroupRequest,
   ImportGroupItem,
   GroupExportItem,
+  Leftover,
+  CreateLeftoverRequest,
+  UpdateLeftoverRequest,
+  ImportLeftoverItem,
+  LeftoverExportItem,
+  LeftoverQuery,
   Status,
   CreateStatusRequest,
   UpdateStatusRequest,
@@ -24,6 +41,16 @@ import type {
   UpdateSupplierRequest,
   ImportSupplierItem,
   SupplierExportItem,
+  SeasonalCoefficient,
+  CreateSeasonalCoefficientRequest,
+  UpdateSeasonalCoefficientRequest,
+  ImportSeasonalCoefficientItem,
+  SeasonalCoefficientExportItem,
+  SkuCompetitorMapping,
+  CreateSkuCompetitorMappingRequest,
+  UpdateSkuCompetitorMappingRequest,
+  ImportSkuCompetitorMappingItem,
+  SkuCompetitorMappingExportItem,
   Warehouse,
   CreateWarehouseRequest,
   UpdateWarehouseRequest,
@@ -44,6 +71,7 @@ import type {
   SalesHistoryExportItem,
   SalesHistoryImportResult,
   SalesHistoryQuery,
+  ImportResult,
 } from '@sales-planner/shared';
 import type { ClientConfig } from './base-client.js';
 import { ApiError } from './base-client.js';
@@ -127,6 +155,51 @@ export class SalesPlannerClient {
     SalesHistoryImportResult,
     SalesHistoryQuery
   >;
+  readonly leftovers: ShopScopedClient<
+    Leftover,
+    CreateLeftoverRequest,
+    UpdateLeftoverRequest,
+    ImportLeftoverItem,
+    LeftoverExportItem,
+    ImportResult,
+    LeftoverQuery
+  >;
+  readonly seasonalCoefficients: ShopScopedClient<
+    SeasonalCoefficient,
+    CreateSeasonalCoefficientRequest,
+    UpdateSeasonalCoefficientRequest,
+    ImportSeasonalCoefficientItem,
+    SeasonalCoefficientExportItem,
+    ImportResult,
+    Record<string, never>
+  >;
+  readonly skuCompetitorMappings: ShopScopedClient<
+    SkuCompetitorMapping,
+    CreateSkuCompetitorMappingRequest,
+    UpdateSkuCompetitorMappingRequest,
+    ImportSkuCompetitorMappingItem,
+    SkuCompetitorMappingExportItem,
+    ImportResult,
+    Record<string, never>
+  >;
+  readonly competitorProducts: ShopScopedClient<
+    CompetitorProduct,
+    CreateCompetitorProductRequest,
+    UpdateCompetitorProductRequest,
+    ImportCompetitorProductItem,
+    CompetitorProductExportItem,
+    ImportResult,
+    Record<string, never>
+  >;
+  readonly competitorSales: ShopScopedClient<
+    CompetitorSale,
+    CreateCompetitorSaleRequest,
+    UpdateCompetitorSaleRequest,
+    ImportCompetitorSaleItem,
+    CompetitorSaleExportItem,
+    ImportResult,
+    CompetitorSaleQuery
+  >;
   readonly roles: CrudClient<Role, CreateRoleRequest, UpdateRoleRequest>;
   readonly userRoles: UserRolesClient;
   readonly apiKeys: ApiKeysClient;
@@ -147,6 +220,11 @@ export class SalesPlannerClient {
     this.warehouses = new CodedEntityClient(config, 'warehouses');
     this.marketplaces = new CodedEntityClient(config, 'marketplaces');
     this.salesHistory = new ShopScopedClient(config, 'sales-history');
+    this.leftovers = new ShopScopedClient(config, 'leftovers');
+    this.seasonalCoefficients = new ShopScopedClient(config, 'seasonal-coefficients');
+    this.skuCompetitorMappings = new ShopScopedClient(config, 'sku-competitor-mappings');
+    this.competitorProducts = new ShopScopedClient(config, 'competitor-products');
+    this.competitorSales = new ShopScopedClient(config, 'competitor-sales');
     this.roles = new CrudClient(config, 'roles');
     this.userRoles = new UserRolesClient(config);
     this.apiKeys = new ApiKeysClient(config);

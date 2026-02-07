@@ -50,7 +50,7 @@ Query parameters:
 - `limit` - Number of items per page (1-1000, default: 100)
 - `offset` - Number of items to skip (default: 0)
 
-Sales history also supports period filtering:
+Sales history, leftovers, and competitor sales also support period filtering:
 ```typescript
 const { items, total } = await client.salesHistory.getAll(ctx, {
   period_from: '2024-01',
@@ -58,14 +58,20 @@ const { items, total } = await client.salesHistory.getAll(ctx, {
   limit: 50,
   offset: 0,
 });
+
+// Same for leftovers and competitor sales
+const { items: leftovers } = await client.leftovers.getAll(ctx, {
+  period_from: '2024-01',
+  period_to: '2024-12',
+});
 ```
 
 ## API
 
-All shop-scoped clients (`skus`, `brands`, `categories`, `groups`, `statuses`, `suppliers`, `warehouses`, `marketplaces`, `salesHistory`) share these methods:
+All shop-scoped clients (`skus`, `brands`, `categories`, `groups`, `statuses`, `suppliers`, `warehouses`, `marketplaces`, `salesHistory`, `leftovers`, `seasonalCoefficients`, `skuCompetitorMappings`, `competitorProducts`, `competitorSales`) share these methods:
 
 - `getAll(ctx, query?)` → `PaginatedResponse<T>`
-- `getById(ctx, id)`, `getByCode(ctx, code)`
+- `getById(ctx, id)`, `getByCode(ctx, code)` (where applicable)
 - `create(ctx, req)`, `update(ctx, id, req)`, `delete(ctx, id)`
 - `importJson(ctx, items)`, `importCsv(ctx, csv)`, `exportJson(ctx)`, `exportCsv(ctx)`
 - `getExampleJson()`, `getExampleCsv()` (no auth)
@@ -83,7 +89,11 @@ const { items: apiKeys } = await client.apiKeys.getAll();
 
 // Delete all shop data (SKUs, sales history, brands, categories, etc.)
 const result = await client.shops.deleteData(shopId);
-console.log(result); // { skusDeleted, salesHistoryDeleted, brandsDeleted, ... }
+console.log(result); 
+// { skusDeleted, salesHistoryDeleted, brandsDeleted, categoriesDeleted,
+//   groupsDeleted, statusesDeleted, suppliersDeleted, warehousesDeleted,
+//   leftoversDeleted, seasonalCoefficientsDeleted, skuCompetitorMappingsDeleted,
+//   competitorProductsDeleted, competitorSalesDeleted }
 ```
 
 Other system clients:
@@ -118,7 +128,13 @@ All types re-exported from `@sales-planner/shared`:
 import type {
   ShopContextParams, PaginationQuery, PaginatedResponse, PeriodQuery, SalesHistoryQuery,
   User, Tenant, Shop, Sku, Brand, Category, Group, Status, Supplier, Warehouse, Marketplace, SalesHistory,
+  Leftover, SeasonalCoefficient, SkuCompetitorMapping, CompetitorProduct, CompetitorSale,
   CreateSkuRequest, UpdateSkuRequest, ImportSkuItem, SkuExportItem,
+  ImportLeftoverItem, LeftoverExportItem, LeftoverQuery,
+  ImportSeasonalCoefficientItem, SeasonalCoefficientExportItem,
+  ImportSkuCompetitorMappingItem, SkuCompetitorMappingExportItem,
+  ImportCompetitorProductItem, CompetitorProductExportItem,
+  ImportCompetitorSaleItem, CompetitorSaleExportItem, CompetitorSaleQuery,
   ImportResult, SkuImportResult, DeleteDataResult,
 } from '@sales-planner/http-client';
 ```

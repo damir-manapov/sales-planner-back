@@ -142,12 +142,11 @@ export class GroupsController {
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @Param('id', ParseIntPipe) id: number,
-  ): Promise<{ message: string }> {
+  ): Promise<void> {
     const group = await this.groupsService.findById(id);
     assertShopAccess(group, ctx, 'Group', id);
 
     await this.groupsService.delete(id);
-    return { message: 'Group deleted successfully' };
   }
 
   @Post('import/json')

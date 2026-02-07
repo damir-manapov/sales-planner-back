@@ -7,12 +7,17 @@ import { AuthModule } from './auth/index.js';
 import { BootstrapModule } from './bootstrap/index.js';
 import { BrandsModule } from './entities/brands/index.js';
 import { CategoriesModule } from './entities/categories/index.js';
+import { CompetitorProductsModule } from './entities/competitor-products/index.js';
+import { CompetitorSalesModule } from './entities/competitor-sales/index.js';
 import { databaseConfig } from './database/database.config.js';
 import { DatabaseModule } from './database/index.js';
 import { GroupsModule } from './entities/groups/index.js';
+import { LeftoversModule } from './entities/leftovers/index.js';
 import { MarketplacesModule } from './entities/marketplaces/index.js';
 import { MeModule } from './me/index.js';
 import { MetadataModule } from './metadata/index.js';
+import { SeasonalCoefficientsModule } from './entities/seasonal-coefficients/index.js';
+import { SkuCompetitorMappingsModule } from './entities/sku-competitor-mappings/index.js';
 import { StatusesModule } from './entities/statuses/index.js';
 import { SuppliersModule } from './entities/suppliers/index.js';
 import { WarehousesModule } from './entities/warehouses/index.js';
@@ -53,6 +58,11 @@ import { UsersModule } from './entities/users/index.js';
     SuppliersModule,
     WarehousesModule,
     SalesHistoryModule,
+    LeftoversModule,
+    SeasonalCoefficientsModule,
+    SkuCompetitorMappingsModule,
+    CompetitorSalesModule,
+    CompetitorProductsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

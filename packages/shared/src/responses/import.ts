@@ -26,4 +26,9 @@ export interface DeleteDataResult {
   statusesDeleted: number;
   suppliersDeleted: number;
   warehousesDeleted: number;
+  leftoversDeleted: number;
+  seasonalCoefficientsDeleted: number;
+  skuCompetitorMappingsDeleted: number;
+  competitorSalesDeleted: number;
+  competitorProductsDeleted: number;
 }

@@ -10,7 +10,7 @@ import type {
 import { z } from 'zod';
 import { AssertCompatible, PaginationQuerySchema, zodSchemas } from '../../common/index.js';
 
-const { id, quantity, period, code } = zodSchemas;
+const { id, quantity, period, code, flexiblePeriod } = zodSchemas;
 
 // Schema for requests (omitting shop_id and tenant_id)
 const CreateSalesHistoryRequestSchema = z.object({
@@ -45,7 +45,7 @@ export const UpdateSalesHistorySchema = z.object({
 
 export const ImportSalesHistoryItemSchema = z.object({
   marketplace: z.string().min(1),
-  period: period(),
+  period: flexiblePeriod(),
   sku: code(),
   quantity: quantity(),
 });

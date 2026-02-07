@@ -8,9 +8,14 @@ import type {
 import { DatabaseService } from '../../database/database.service.js';
 import { BrandsService } from '../brands/brands.service.js';
 import { CategoriesService } from '../categories/categories.service.js';
+import { CompetitorProductsService } from '../competitor-products/competitor-products.service.js';
+import { CompetitorSalesService } from '../competitor-sales/competitor-sales.service.js';
 import { GroupsService } from '../groups/groups.service.js';
+import { LeftoversService } from '../leftovers/leftovers.service.js';
 import { MarketplacesService } from '../marketplaces/marketplaces.service.js';
 import { SalesHistoryService } from '../sales-history/sales-history.service.js';
+import { SeasonalCoefficientsService } from '../seasonal-coefficients/seasonal-coefficients.service.js';
+import { SkuCompetitorMappingsService } from '../sku-competitor-mappings/sku-competitor-mappings.service.js';
 import { SkusService } from '../skus/skus.service.js';
 import { StatusesService } from '../statuses/statuses.service.js';
 import { SuppliersService } from '../suppliers/suppliers.service.js';
@@ -33,6 +38,11 @@ export class ShopsService {
     private readonly statusesService: StatusesService,
     private readonly suppliersService: SuppliersService,
     private readonly warehousesService: WarehousesService,
+    private readonly leftoversService: LeftoversService,
+    private readonly seasonalCoefficientsService: SeasonalCoefficientsService,
+    private readonly skuCompetitorMappingsService: SkuCompetitorMappingsService,
+    private readonly competitorSalesService: CompetitorSalesService,
+    private readonly competitorProductsService: CompetitorProductsService,
   ) {}
 
   async count(): Promise<number> {
@@ -108,8 +118,15 @@ export class ShopsService {
   }
 
   async deleteData(id: number): Promise<DeleteDataResult> {
-    // Delete sales history first (references SKUs and marketplaces)
+    // Delete transactional data first (references SKUs, marketplaces, warehouses, groups, competitor_products)
     const salesHistoryDeleted = await this.salesHistoryService.deleteByShopId(id);
+    const leftoversDeleted = await this.leftoversService.deleteByShopId(id);
+    const seasonalCoefficientsDeleted = await this.seasonalCoefficientsService.deleteByShopId(id);
+
+    // Delete sku_competitor_mappings and competitor_sales BEFORE competitor_products (FK dependency)
+    const skuCompetitorMappingsDeleted = await this.skuCompetitorMappingsService.deleteByShopId(id);
+    const competitorSalesDeleted = await this.competitorSalesService.deleteByShopId(id);
+    const competitorProductsDeleted = await this.competitorProductsService.deleteByShopId(id);
 
     // Delete SKUs
     const skusDeleted = await this.skusService.deleteByShopId(id);
@@ -135,6 +152,11 @@ export class ShopsService {
       statusesDeleted,
       suppliersDeleted,
       warehousesDeleted,
+      leftoversDeleted,
+      seasonalCoefficientsDeleted,
+      skuCompetitorMappingsDeleted,
+      competitorSalesDeleted,
+      competitorProductsDeleted,
     };
   }
 }

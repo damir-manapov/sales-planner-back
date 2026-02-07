@@ -148,12 +148,11 @@ export class CategoriesController {
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @Param('id', ParseIntPipe) id: number,
-  ): Promise<{ message: string }> {
+  ): Promise<void> {
     const category = await this.categoriesService.findById(id);
     assertShopAccess(category, ctx, 'Category', id);
 
     await this.categoriesService.delete(id);
-    return { message: 'Category deleted successfully' };
   }
 
   @Post('import/json')

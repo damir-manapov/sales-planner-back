@@ -24,6 +24,11 @@ export interface EntitiesMetadata {
   marketplaces: EntityMetadata;
   skus: EntityMetadata;
   salesHistory: EntityMetadata;
+  leftovers: EntityMetadata;
+  seasonalCoefficients: EntityMetadata;
+  competitorProducts: EntityMetadata;
+  skuCompetitorMappings: EntityMetadata;
+  competitorSales: EntityMetadata;
 }
 
 export const ENTITIES_METADATA: EntitiesMetadata = {
@@ -246,6 +251,162 @@ export const ENTITIES_METADATA: EntitiesMetadata = {
         description: 'Number of units sold',
         required: true,
         example: '150',
+      },
+    ],
+  },
+  leftovers: {
+    name: 'Leftovers',
+    description: 'Inventory levels by warehouse, SKU, and period',
+    fields: [
+      {
+        name: 'warehouse',
+        type: 'string',
+        description: 'Warehouse code',
+        required: true,
+        example: 'main-warehouse',
+      },
+      {
+        name: 'sku',
+        type: 'string',
+        description: 'Product SKU code',
+        required: true,
+        example: 'IPHONE-15-PRO',
+      },
+      {
+        name: 'period',
+        type: 'period',
+        description: 'Inventory period in YYYY-MM format',
+        required: true,
+        example: '2024-01',
+      },
+      {
+        name: 'quantity',
+        type: 'number',
+        description: 'Number of units in stock',
+        required: true,
+        example: '500',
+      },
+    ],
+  },
+  seasonalCoefficients: {
+    name: 'Seasonal Coefficients',
+    description: 'Monthly demand multipliers by product group',
+    fields: [
+      {
+        name: 'group',
+        type: 'string',
+        description: 'Product group code',
+        required: true,
+        example: 'smartphones',
+      },
+      {
+        name: 'month',
+        type: 'number',
+        description: 'Month number (1-12)',
+        required: true,
+        example: '12',
+      },
+      {
+        name: 'coefficient',
+        type: 'number',
+        description: 'Demand multiplier (1.0 = normal, 1.5 = 50% higher)',
+        required: true,
+        example: '1.25',
+      },
+    ],
+  },
+  competitorProducts: {
+    name: 'Competitor Products',
+    description: 'Competitor product catalog with marketplace product IDs',
+    fields: [
+      {
+        name: 'marketplace',
+        type: 'string',
+        description: 'Marketplace code',
+        required: true,
+        example: 'ozon',
+      },
+      {
+        name: 'marketplace_product_id',
+        type: 'string',
+        description: 'Product ID on the marketplace (numeric string)',
+        required: true,
+        example: '1628467935',
+      },
+      {
+        name: 'title',
+        type: 'string',
+        description: 'Product title',
+        required: false,
+        example: 'Фильтр салонный',
+      },
+      {
+        name: 'brand',
+        type: 'string',
+        description: 'Product brand',
+        required: false,
+        example: 'mavyko',
+      },
+    ],
+  },
+  skuCompetitorMappings: {
+    name: 'SKU Competitor Mappings',
+    description: 'Mappings between your SKUs and competitor product codes',
+    fields: [
+      {
+        name: 'sku',
+        type: 'string',
+        description: 'Your product SKU code',
+        required: true,
+        example: 'IPHONE-15-PRO',
+      },
+      {
+        name: 'marketplace',
+        type: 'string',
+        description: 'Marketplace code',
+        required: true,
+        example: 'ozon',
+      },
+      {
+        name: 'marketplace_product_id',
+        type: 'string',
+        description: 'Product ID on the marketplace (numeric string)',
+        required: true,
+        example: '1628467935',
+      },
+    ],
+  },
+  competitorSales: {
+    name: 'Competitor Sales',
+    description: 'Competitor sales data by marketplace and product',
+    fields: [
+      {
+        name: 'marketplace',
+        type: 'string',
+        description: 'Marketplace code',
+        required: true,
+        example: 'ozon',
+      },
+      {
+        name: 'marketplace_product_id',
+        type: 'string',
+        description: 'Product ID on the marketplace (numeric string)',
+        required: true,
+        example: '1628467935',
+      },
+      {
+        name: 'period',
+        type: 'period',
+        description: 'Sales period in YYYY-MM format',
+        required: true,
+        example: '2024-01',
+      },
+      {
+        name: 'quantity',
+        type: 'number',
+        description: 'Number of units sold',
+        required: true,
+        example: '250',
       },
     ],
   },
