@@ -4,3 +4,8 @@ export { ShopScopedBaseRepository } from './base-repository.js';
 export { CodedShopScopedRepository } from './coded-repository.js';
 export type { IShopScopedBaseRepository } from './base-repository.interface.js';
 export type { ICodedShopScopedRepository } from './coded-repository.interface.js';
+export {
+  CodedTitledCreateSchema,
+  CodedTitledUpdateSchema,
+  CodedTitledImportSchema,
+} from './coded-entity.schemas.js';

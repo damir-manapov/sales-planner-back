@@ -5,26 +5,18 @@ import type {
   UpdateStatusDto as SharedUpdateStatusDto,
   UpdateStatusRequest as SharedUpdateStatusRequest,
 } from '@sales-planner/shared';
-import { z } from 'zod';
-import { AssertCompatible, zodSchemas } from '../../common/index.js';
+import type { z } from 'zod';
+import {
+  AssertCompatible,
+  CodedTitledCreateSchema,
+  CodedTitledImportSchema,
+  CodedTitledUpdateSchema,
+} from '../../common/index.js';
 
-const { code, title } = zodSchemas;
-
-// Zod schemas
-export const CreateStatusSchema = z.object({
-  code: code(),
-  title: title(),
-});
-
-export const UpdateStatusSchema = z.object({
-  code: code().optional(),
-  title: title().optional(),
-});
-
-export const ImportStatusItemSchema = z.object({
-  code: code(),
-  title: title(),
-});
+// Zod schemas - reuse common coded entity schemas
+export const CreateStatusSchema = CodedTitledCreateSchema;
+export const UpdateStatusSchema = CodedTitledUpdateSchema;
+export const ImportStatusItemSchema = CodedTitledImportSchema;
 
 // TypeScript types
 export type CreateStatusRequest = AssertCompatible<

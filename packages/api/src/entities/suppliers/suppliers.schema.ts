@@ -5,26 +5,18 @@ import type {
   UpdateSupplierDto as SharedUpdateSupplierDto,
   UpdateSupplierRequest as SharedUpdateSupplierRequest,
 } from '@sales-planner/shared';
-import { z } from 'zod';
-import { AssertCompatible, zodSchemas } from '../../common/index.js';
+import type { z } from 'zod';
+import {
+  AssertCompatible,
+  CodedTitledCreateSchema,
+  CodedTitledImportSchema,
+  CodedTitledUpdateSchema,
+} from '../../common/index.js';
 
-const { code, title } = zodSchemas;
-
-// Zod schemas
-export const CreateSupplierSchema = z.object({
-  code: code(),
-  title: title(),
-});
-
-export const UpdateSupplierSchema = z.object({
-  code: code().optional(),
-  title: title().optional(),
-});
-
-export const ImportSupplierItemSchema = z.object({
-  code: code(),
-  title: title(),
-});
+// Zod schemas - reuse common coded entity schemas
+export const CreateSupplierSchema = CodedTitledCreateSchema;
+export const UpdateSupplierSchema = CodedTitledUpdateSchema;
+export const ImportSupplierItemSchema = CodedTitledImportSchema;
 
 // TypeScript types
 export type CreateSupplierRequest = AssertCompatible<

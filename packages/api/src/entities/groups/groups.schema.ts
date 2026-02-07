@@ -5,26 +5,18 @@ import type {
   UpdateGroupDto as SharedUpdateGroupDto,
   UpdateGroupRequest as SharedUpdateGroupRequest,
 } from '@sales-planner/shared';
-import { z } from 'zod';
-import { AssertCompatible, zodSchemas } from '../../common/index.js';
+import type { z } from 'zod';
+import {
+  AssertCompatible,
+  CodedTitledCreateSchema,
+  CodedTitledImportSchema,
+  CodedTitledUpdateSchema,
+} from '../../common/index.js';
 
-const { code, title } = zodSchemas;
-
-// Zod schemas
-export const CreateGroupSchema = z.object({
-  code: code(),
-  title: title(),
-});
-
-export const UpdateGroupSchema = z.object({
-  code: code().optional(),
-  title: title().optional(),
-});
-
-export const ImportGroupItemSchema = z.object({
-  code: code(),
-  title: title(),
-});
+// Zod schemas - reuse common coded entity schemas
+export const CreateGroupSchema = CodedTitledCreateSchema;
+export const UpdateGroupSchema = CodedTitledUpdateSchema;
+export const ImportGroupItemSchema = CodedTitledImportSchema;
 
 // TypeScript types
 export type CreateGroupRequest = AssertCompatible<

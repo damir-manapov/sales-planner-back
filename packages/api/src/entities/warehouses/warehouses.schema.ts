@@ -5,26 +5,18 @@ import type {
   UpdateWarehouseDto as SharedUpdateWarehouseDto,
   UpdateWarehouseRequest as SharedUpdateWarehouseRequest,
 } from '@sales-planner/shared';
-import { z } from 'zod';
-import { AssertCompatible, zodSchemas } from '../../common/index.js';
+import type { z } from 'zod';
+import {
+  AssertCompatible,
+  CodedTitledCreateSchema,
+  CodedTitledImportSchema,
+  CodedTitledUpdateSchema,
+} from '../../common/index.js';
 
-const { code, title } = zodSchemas;
-
-// Zod schemas
-export const CreateWarehouseSchema = z.object({
-  code: code(),
-  title: title(),
-});
-
-export const UpdateWarehouseSchema = z.object({
-  code: code().optional(),
-  title: title().optional(),
-});
-
-export const ImportWarehouseItemSchema = z.object({
-  code: code(),
-  title: title(),
-});
+// Zod schemas - reuse common coded entity schemas
+export const CreateWarehouseSchema = CodedTitledCreateSchema;
+export const UpdateWarehouseSchema = CodedTitledUpdateSchema;
+export const ImportWarehouseItemSchema = CodedTitledImportSchema;
 
 // TypeScript types
 export type CreateWarehouseRequest = AssertCompatible<
