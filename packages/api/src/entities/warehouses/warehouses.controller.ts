@@ -28,7 +28,7 @@ import {
   assertShopAccess,
   type ExpressResponse,
   parseAndValidateImport,
-  parseCsvImport,
+  parseCsvAndValidateImport,
   type PaginationQuery,
   PaginationQuerySchema,
   sendCsvExport,
@@ -168,15 +168,14 @@ export class WarehousesController {
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @UploadedFile() file?: Express.Multer.File,
+    @Body('data') csvData?: string,
   ): Promise<ImportResult> {
-    const records = parseCsvImport<{ code: string; title: string }>(file, undefined, [
-      'code',
-      'title',
-    ]);
-    const items: ImportWarehouseItem[] = records.map((record) => ({
-      code: record.code,
-      title: record.title,
-    }));
+    const items = parseCsvAndValidateImport<ImportWarehouseItem>(
+      file,
+      csvData,
+      ['code', 'title'],
+      ImportWarehouseItemSchema,
+    );
     return this.warehousesService.bulkUpsert(ctx.tenantId, ctx.shopId, items);
   }
 }

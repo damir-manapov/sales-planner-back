@@ -28,7 +28,7 @@ import {
   assertShopAccess,
   type ExpressResponse,
   parseAndValidateImport,
-  parseCsvImport,
+  parseCsvAndValidateImport,
   sendCsvExport,
   sendJsonExport,
   ZodValidationPipe,
@@ -164,23 +164,14 @@ export class SkusController {
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @UploadedFile() file?: Express.Multer.File,
+    @Body('data') csvData?: string,
   ): Promise<SkuImportResult> {
-    const records = parseCsvImport<{
-      code: string;
-      title: string;
-      category?: string;
-      group?: string;
-      status?: string;
-      supplier?: string;
-    }>(file, undefined, ['code', 'title']);
-    const items: ImportSkuItem[] = records.map((record) => ({
-      code: record.code,
-      title: record.title,
-      category: record.category,
-      group: record.group,
-      status: record.status,
-      supplier: record.supplier,
-    }));
+    const items = parseCsvAndValidateImport<ImportSkuItem>(
+      file,
+      csvData,
+      ['code', 'title'],
+      ImportSkuItemSchema,
+    );
     return this.skusService.bulkUpsert(ctx.tenantId, ctx.shopId, items);
   }
 

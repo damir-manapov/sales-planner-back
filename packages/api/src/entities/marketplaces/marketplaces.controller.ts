@@ -29,7 +29,7 @@ import {
   assertShopAccess,
   type ExpressResponse,
   parseAndValidateImport,
-  parseCsvImport,
+  parseCsvAndValidateImport,
   type PaginationQuery,
   PaginationQuerySchema,
   sendCsvExport,
@@ -169,15 +169,14 @@ export class MarketplacesController {
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @UploadedFile() file?: Express.Multer.File,
+    @Body('data') csvData?: string,
   ): Promise<ImportResult> {
-    const records = parseCsvImport<{ code: string; title: string }>(file, undefined, [
-      'code',
-      'title',
-    ]);
-    const items: ImportMarketplaceItem[] = records.map((record) => ({
-      code: record.code,
-      title: record.title,
-    }));
+    const items = parseCsvAndValidateImport<ImportMarketplaceItem>(
+      file,
+      csvData,
+      ['code', 'title'],
+      ImportMarketplaceItemSchema,
+    );
     return this.marketplacesService.bulkUpsert(ctx.tenantId, ctx.shopId, items);
   }
 }

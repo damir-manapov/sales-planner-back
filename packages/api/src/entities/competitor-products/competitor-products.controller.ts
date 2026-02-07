@@ -27,11 +27,11 @@ import {
   assertShopAccess,
   type ExpressResponse,
   parseAndValidateImport,
+  parseCsvAndValidateImport,
   sendCsvExport,
   sendJsonExport,
   ZodValidationPipe,
 } from '../../common/index.js';
-import { fromCsv } from '../../lib/index.js';
 import {
   type CompetitorProductQuery,
   CompetitorProductQuerySchema,
@@ -166,25 +166,15 @@ export class CompetitorProductsController {
   async importCsv(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-    @UploadedFile() file: Express.Multer.File,
-    @Body('data') data?: string,
+    @UploadedFile() file?: Express.Multer.File,
+    @Body('data') csvData?: string,
   ): Promise<ImportResult> {
-    const csvContent = file?.buffer?.toString('utf-8') ?? data;
-    if (!csvContent) {
-      return { created: 0, updated: 0, errors: ['No CSV data provided'] };
-    }
-    const records = fromCsv<{
-      marketplace: string;
-      marketplaceProductId: string;
-      title?: string;
-      brand?: string;
-    }>(csvContent, ['marketplace', 'marketplaceProductId']);
-    const items: ImportCompetitorProductItem[] = records.map((r) => ({
-      marketplace: r.marketplace,
-      marketplaceProductId: r.marketplaceProductId,
-      title: r.title,
-      brand: r.brand,
-    }));
+    const items = parseCsvAndValidateImport<ImportCompetitorProductItem>(
+      file,
+      csvData,
+      ['marketplace', 'marketplaceProductId'],
+      ImportCompetitorProductItemSchema,
+    );
     return this.competitorProductsService.bulkUpsert(ctx.tenantId, ctx.shopId, items);
   }
 }

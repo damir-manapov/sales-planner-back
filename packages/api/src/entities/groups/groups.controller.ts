@@ -28,7 +28,7 @@ import {
   assertShopAccess,
   type ExpressResponse,
   parseAndValidateImport,
-  parseCsvImport,
+  parseCsvAndValidateImport,
   type PaginationQuery,
   PaginationQuerySchema,
   sendCsvExport,
@@ -168,15 +168,14 @@ export class GroupsController {
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @UploadedFile() file?: Express.Multer.File,
+    @Body('data') csvData?: string,
   ): Promise<ImportResult> {
-    const records = parseCsvImport<{ code: string; title: string }>(file, undefined, [
-      'code',
-      'title',
-    ]);
-    const items: ImportGroupItem[] = records.map((record) => ({
-      code: record.code,
-      title: record.title,
-    }));
+    const items = parseCsvAndValidateImport<ImportGroupItem>(
+      file,
+      csvData,
+      ['code', 'title'],
+      ImportGroupItemSchema,
+    );
     return this.groupsService.bulkUpsert(ctx.tenantId, ctx.shopId, items);
   }
 }

@@ -1,5 +1,4 @@
 import {
-  BadRequestException,
   Body,
   Controller,
   Delete,
@@ -28,11 +27,11 @@ import {
   assertShopAccess,
   type ExpressResponse,
   parseAndValidateImport,
+  parseCsvAndValidateImport,
   sendCsvExport,
   sendJsonExport,
   ZodValidationPipe,
 } from '../../common/index.js';
-import { fromCsv } from '../../lib/index.js';
 import {
   type CreateSkuCompetitorMappingRequest,
   CreateSkuCompetitorMappingSchema,
@@ -172,20 +171,12 @@ export class SkuCompetitorMappingsController {
     @UploadedFile() file?: Express.Multer.File,
     @Body('data') csvData?: string,
   ): Promise<ImportResult> {
-    const csv = file?.buffer?.toString('utf-8') ?? csvData;
-    if (!csv) {
-      throw new BadRequestException('No CSV data provided');
-    }
-    const records = fromCsv<{
-      marketplace: string;
-      marketplaceProductId: string;
-      sku: string;
-    }>(csv, ['marketplace', 'marketplaceProductId', 'sku']);
-    const items: ImportSkuCompetitorMappingItem[] = records.map((r) => ({
-      marketplace: r.marketplace,
-      marketplaceProductId: r.marketplaceProductId,
-      sku: r.sku,
-    }));
+    const items = parseCsvAndValidateImport<ImportSkuCompetitorMappingItem>(
+      file,
+      csvData,
+      ['marketplace', 'marketplaceProductId', 'sku'],
+      ImportSkuCompetitorMappingItemSchema,
+    );
     return this.skuCompetitorMappingsService.bulkUpsert(ctx.tenantId, ctx.shopId, items);
   }
 }
