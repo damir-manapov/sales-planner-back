@@ -140,12 +140,22 @@ async function createDemoTenant(args: DemoTenantArgs) {
     (r) => `Created ${r.created} sales records`,
   );
 
+  // Step 6: Refresh materialized views
+  await runStep(
+    6,
+    '🔄',
+    'Refreshing materialized views',
+    () => userClient.computed.refreshAll(ctx.shop_id, ctx.tenant_id),
+    (r) => `Refreshed ${r.results.length} views in ${r.totalDuration}ms`,
+  );
+
   // Success summary
   printSuccessSummary(setup, [
     `${brandsResult.created} brands (Dell, Apple, Samsung, etc.)`,
     `${skusResult.created} products (laptops, phones, tablets, accessories)`,
     `${salesResult.created} sales history records across 3 periods`,
     'Periods: 2025-11, 2025-12, 2026-01',
+    'Materialized views refreshed (SKU metrics available)',
   ]);
 
   return setup;

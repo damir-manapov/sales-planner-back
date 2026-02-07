@@ -192,6 +192,15 @@ async function createAlenaTenant(args: AlenaTenantArgs) {
     (r) => `Created ${r.created} competitor sales records`,
   );
 
+  // Step 16: Refresh materialized views
+  await runStep(
+    16,
+    '🔄',
+    'Refreshing materialized views',
+    () => userClient.computed.refreshAll(ctx.shop_id, ctx.tenant_id),
+    (r) => `Refreshed ${r.results.length} views in ${r.totalDuration}ms`,
+  );
+
   // Success summary
   printSuccessSummary(setup, [
     `${brandsResult.created} brands`,
@@ -207,6 +216,7 @@ async function createAlenaTenant(args: AlenaTenantArgs) {
     `${competitorProductsResult.created} competitor products`,
     `${mappingsResult.created} SKU competitor mappings`,
     `${competitorSalesResult.created} competitor sales records`,
+    'Materialized views refreshed (SKU metrics available)',
   ]);
 
   return setup;
