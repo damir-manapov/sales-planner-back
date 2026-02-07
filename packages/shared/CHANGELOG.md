@@ -1,5 +1,11 @@
 # @sales-planner/shared
 
+## 0.15.1
+
+### Patch Changes
+
+- fix: improve CSV validation error messages with row numbers
+
 ## 0.15.0
 
 ### Minor Changes

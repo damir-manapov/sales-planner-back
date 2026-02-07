@@ -1,5 +1,13 @@
 # @sales-planner/http-client
 
+## 0.17.1
+
+### Patch Changes
+
+- fix: improve CSV validation error messages with row numbers
+- Updated dependencies
+  - @sales-planner/shared@0.15.1
+
 ## 0.17.0
 
 ### Minor Changes
