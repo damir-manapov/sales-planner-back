@@ -180,11 +180,13 @@ export class SeasonalCoefficientsController {
 
     const items = records.map((record, index) => {
       const month = Number.parseInt(record.month, 10);
-      const coefficient = Number.parseFloat(record.coefficient);
+      // Handle comma decimal separator (European format)
+      const coefficientStr = record.coefficient.replace(',', '.');
+      const coefficient = Number.parseFloat(coefficientStr);
       if (Number.isNaN(month) || month < 1 || month > 12) {
         throw new BadRequestException(`Invalid month at row ${index + 1}: ${record.month}`);
       }
-      if (Number.isNaN(coefficient)) {
+      if (Number.isNaN(coefficient) || coefficient <= 0) {
         throw new BadRequestException(
           `Invalid coefficient at row ${index + 1}: ${record.coefficient}`,
         );
