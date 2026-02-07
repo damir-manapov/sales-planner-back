@@ -80,6 +80,10 @@ const { items: shops } = await client.shops.getAll();
 const { items: roles } = await client.roles.getAll();
 const { items: userRoles } = await client.userRoles.getAll();
 const { items: apiKeys } = await client.apiKeys.getAll();
+
+// Delete all shop data (SKUs, sales history, brands, categories, etc.)
+const result = await client.shops.deleteData(shopId);
+console.log(result); // { skusDeleted, salesHistoryDeleted, brandsDeleted, ... }
 ```
 
 Other system clients: `me`, `metadata`
@@ -105,7 +109,7 @@ import type {
   ShopContextParams, PaginationQuery, PaginatedResponse, PeriodQuery, SalesHistoryQuery,
   User, Tenant, Shop, Sku, Brand, Category, Group, Status, Supplier, Marketplace, SalesHistory,
   CreateSkuRequest, UpdateSkuRequest, ImportSkuItem, SkuExportItem,
-  ImportResult, SkuImportResult,
+  ImportResult, SkuImportResult, DeleteDataResult,
 } from '@sales-planner/http-client';
 ```
 

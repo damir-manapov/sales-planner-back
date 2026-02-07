@@ -137,7 +137,7 @@ The API uses **numeric IDs** internally for referential integrity:
 |------|-------------|| `PaginatedResponse<T>` | `{ items: T[]; total: number; limit: number; offset: number }` || `UserWithRolesAndTenants` | User with their roles and tenants |
 | `TenantWithShopAndApiKey` | Created tenant with shop and API key |
 | `ImportResult` | `{ created: number; updated: number; errors: string[] }` |
-| `DeleteDataResult` | `{ skusDeleted: number; salesHistoryDeleted: number; marketplacesDeleted: number }` |
+| `DeleteDataResult` | `{ skusDeleted, salesHistoryDeleted, marketplacesDeleted, brandsDeleted, categoriesDeleted, groupsDeleted, statusesDeleted, suppliersDeleted: number }` |
 | `SkuExportItem` | SKU data for export |
 | `BrandExportItem` | Brand data for export |
 | `CategoryExportItem` | Category data for export |
