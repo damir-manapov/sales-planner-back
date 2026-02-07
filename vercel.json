@@ -3,7 +3,8 @@
   "framework": null,
   "installCommand": "pnpm install",
   "buildCommand": "pnpm build",
+  "outputDirectory": "api",
   "rewrites": [
-    { "source": "/(.*)", "destination": "/api/index.mjs" }
+    { "source": "/(.*)", "destination": "/index.mjs" }
   ]
 }
