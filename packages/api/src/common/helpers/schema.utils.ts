@@ -79,7 +79,7 @@ export const zodSchemas = {
     z
       .union([z.number(), z.string()])
       .transform(parseFlexibleInt)
-      .refine((v) => !Number.isNaN(v) && Number.isInteger(v) && v >= 0, 'Must be a non-negative integer'),
+      .pipe(z.number().int().nonnegative()),
 
   /** Month number 1-12 */
   month: () => z.number().int().min(1).max(12),
@@ -108,5 +108,5 @@ export const zodSchemas = {
     z
       .union([z.number(), z.string()])
       .transform(parseFlexibleFloat)
-      .refine((v) => !Number.isNaN(v) && v > 0, 'Must be a positive number'),
+      .pipe(z.number().positive()),
 };
