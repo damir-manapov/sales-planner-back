@@ -158,7 +158,16 @@ export class MarketplacesController {
     @Body() items?: ImportMarketplaceItem[],
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<ImportResult> {
-    const validatedData = parseAndValidateImport(file, items, ImportMarketplaceItemSchema);
+    const duplicateKey = {
+      keyExtractor: (item: ImportMarketplaceItem) => item.code,
+      keyDescription: 'code',
+    };
+    const validatedData = parseAndValidateImport(
+      file,
+      items,
+      ImportMarketplaceItemSchema,
+      duplicateKey,
+    );
     return this.marketplacesService.bulkUpsert(ctx.tenantId, ctx.shopId, validatedData);
   }
 
@@ -171,11 +180,16 @@ export class MarketplacesController {
     @UploadedFile() file?: Express.Multer.File,
     @Body('data') csvData?: string,
   ): Promise<ImportResult> {
+    const duplicateKey = {
+      keyExtractor: (item: ImportMarketplaceItem) => item.code,
+      keyDescription: 'code',
+    };
     const items = parseCsvAndValidateImport<ImportMarketplaceItem>(
       file,
       csvData,
       ['code', 'title'],
       ImportMarketplaceItemSchema,
+      duplicateKey,
     );
     return this.marketplacesService.bulkUpsert(ctx.tenantId, ctx.shopId, items);
   }

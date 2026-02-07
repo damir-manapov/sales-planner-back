@@ -150,10 +150,15 @@ export class SeasonalCoefficientsController {
     @Body() body?: ImportSeasonalCoefficientItem[],
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<ImportResult> {
+    const duplicateKey = {
+      keyExtractor: (item: ImportSeasonalCoefficientItem) => `${item.group}:${item.month}`,
+      keyDescription: 'group+month',
+    };
     const items = parseAndValidateImport<ImportSeasonalCoefficientItem>(
       file,
       body,
       ImportSeasonalCoefficientItemSchema,
+      duplicateKey,
     );
     return this.seasonalCoefficientsService.bulkUpsert(ctx.tenantId, ctx.shopId, items);
   }
@@ -167,11 +172,16 @@ export class SeasonalCoefficientsController {
     @UploadedFile() file?: Express.Multer.File,
     @Body('data') csvData?: string,
   ): Promise<ImportResult> {
+    const duplicateKey = {
+      keyExtractor: (item: ImportSeasonalCoefficientItem) => `${item.group}:${item.month}`,
+      keyDescription: 'group+month',
+    };
     const items = parseCsvAndValidateImport<ImportSeasonalCoefficientItem>(
       file,
       csvData,
       ['group', 'month', 'coefficient'],
       ImportSeasonalCoefficientItemSchema,
+      duplicateKey,
     );
     return this.seasonalCoefficientsService.bulkUpsert(ctx.tenantId, ctx.shopId, items);
   }

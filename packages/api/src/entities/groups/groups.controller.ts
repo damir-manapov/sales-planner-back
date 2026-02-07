@@ -157,7 +157,11 @@ export class GroupsController {
     @Body() items?: ImportGroupItem[],
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<ImportResult> {
-    const validatedData = parseAndValidateImport(file, items, ImportGroupItemSchema);
+    const duplicateKey = {
+      keyExtractor: (item: ImportGroupItem) => item.code,
+      keyDescription: 'code',
+    };
+    const validatedData = parseAndValidateImport(file, items, ImportGroupItemSchema, duplicateKey);
     return this.groupsService.bulkUpsert(ctx.tenantId, ctx.shopId, validatedData);
   }
 
@@ -170,11 +174,16 @@ export class GroupsController {
     @UploadedFile() file?: Express.Multer.File,
     @Body('data') csvData?: string,
   ): Promise<ImportResult> {
+    const duplicateKey = {
+      keyExtractor: (item: ImportGroupItem) => item.code,
+      keyDescription: 'code',
+    };
     const items = parseCsvAndValidateImport<ImportGroupItem>(
       file,
       csvData,
       ['code', 'title'],
       ImportGroupItemSchema,
+      duplicateKey,
     );
     return this.groupsService.bulkUpsert(ctx.tenantId, ctx.shopId, items);
   }

@@ -1,6 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
+import { checkForDuplicates } from './export-import.helpers.js';
 import { parseAndValidateImport, parseImportData, validateArray } from './import.helpers.js';
 
 describe('import.helpers', () => {
@@ -142,6 +143,148 @@ describe('import.helpers', () => {
       const result = parseAndValidateImport(undefined, items, ComplexSchema);
 
       expect(result).toEqual(items);
+    });
+
+    it('should detect duplicates when duplicateKey is provided', () => {
+      const items = [
+        { code: 'A', value: 1 },
+        { code: 'B', value: 2 },
+        { code: 'A', value: 3 }, // duplicate code
+      ];
+
+      expect(() =>
+        parseAndValidateImport(undefined, items, TestSchema, {
+          keyExtractor: (item) => item.code,
+          keyDescription: 'code',
+        }),
+      ).toThrow(BadRequestException);
+      expect(() =>
+        parseAndValidateImport(undefined, items, TestSchema, {
+          keyExtractor: (item) => item.code,
+          keyDescription: 'code',
+        }),
+      ).toThrow('Duplicate code found: "A" in rows 1, 3');
+    });
+
+    it('should pass when no duplicates and duplicateKey is provided', () => {
+      const items = [
+        { code: 'A', value: 1 },
+        { code: 'B', value: 2 },
+        { code: 'C', value: 3 },
+      ];
+
+      const result = parseAndValidateImport(undefined, items, TestSchema, {
+        keyExtractor: (item) => item.code,
+        keyDescription: 'code',
+      });
+
+      expect(result).toEqual(items);
+    });
+  });
+
+  describe('checkForDuplicates', () => {
+    it('should not throw when no duplicates', () => {
+      const items = [
+        { code: 'A', value: 1 },
+        { code: 'B', value: 2 },
+      ];
+
+      expect(() =>
+        checkForDuplicates(items, {
+          keyExtractor: (item) => item.code,
+          keyDescription: 'code',
+        }),
+      ).not.toThrow();
+    });
+
+    it('should throw on simple duplicate', () => {
+      const items = [
+        { code: 'A', value: 1 },
+        { code: 'A', value: 2 },
+      ];
+
+      expect(() =>
+        checkForDuplicates(items, {
+          keyExtractor: (item) => item.code,
+          keyDescription: 'code',
+        }),
+      ).toThrow('Duplicate code found: "A" in rows 1, 2. Each code must be unique.');
+    });
+
+    it('should report multiple occurrences of same duplicate', () => {
+      const items = [
+        { code: 'A', value: 1 },
+        { code: 'A', value: 2 },
+        { code: 'A', value: 3 },
+      ];
+
+      expect(() =>
+        checkForDuplicates(items, {
+          keyExtractor: (item) => item.code,
+          keyDescription: 'code',
+        }),
+      ).toThrow('Duplicate code found: "A" in rows 1, 2, 3. Each code must be unique.');
+    });
+
+    it('should report multiple different duplicates', () => {
+      const items = [
+        { code: 'A', value: 1 },
+        { code: 'B', value: 2 },
+        { code: 'A', value: 3 },
+        { code: 'B', value: 4 },
+      ];
+
+      expect(() =>
+        checkForDuplicates(items, {
+          keyExtractor: (item) => item.code,
+          keyDescription: 'code',
+        }),
+      ).toThrow(
+        'Duplicate code found: "A" in rows 1, 3; "B" in rows 2, 4. Each code must be unique.',
+      );
+    });
+
+    it('should limit output to 5 duplicates', () => {
+      const items = [
+        { code: 'A', value: 1 },
+        { code: 'A', value: 2 },
+        { code: 'B', value: 3 },
+        { code: 'B', value: 4 },
+        { code: 'C', value: 5 },
+        { code: 'C', value: 6 },
+        { code: 'D', value: 7 },
+        { code: 'D', value: 8 },
+        { code: 'E', value: 9 },
+        { code: 'E', value: 10 },
+        { code: 'F', value: 11 },
+        { code: 'F', value: 12 },
+        { code: 'G', value: 13 },
+        { code: 'G', value: 14 },
+      ];
+
+      expect(() =>
+        checkForDuplicates(items, {
+          keyExtractor: (item) => item.code,
+          keyDescription: 'code',
+        }),
+      ).toThrow('and 2 more');
+    });
+
+    it('should work with composite keys', () => {
+      const items = [
+        { marketplace: 'ozon', productId: '123' },
+        { marketplace: 'wb', productId: '123' },
+        { marketplace: 'ozon', productId: '123' }, // duplicate
+      ];
+
+      expect(() =>
+        checkForDuplicates(items, {
+          keyExtractor: (item) => `${item.marketplace}:${item.productId}`,
+          keyDescription: 'marketplace+productId',
+        }),
+      ).toThrow(
+        'Duplicate marketplace+productId found: "ozon:123" in rows 1, 3. Each marketplace+productId must be unique.',
+      );
     });
   });
 });

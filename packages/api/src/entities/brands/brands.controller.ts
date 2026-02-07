@@ -163,7 +163,11 @@ export class BrandsController {
     @Body() items?: ImportBrandItem[],
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<ImportResult> {
-    const validatedData = parseAndValidateImport(file, items, ImportBrandItemSchema);
+    const duplicateKey = {
+      keyExtractor: (item: ImportBrandItem) => item.code,
+      keyDescription: 'code',
+    };
+    const validatedData = parseAndValidateImport(file, items, ImportBrandItemSchema, duplicateKey);
     return this.brandsService.bulkUpsert(ctx.tenantId, ctx.shopId, validatedData);
   }
 
@@ -176,11 +180,16 @@ export class BrandsController {
     @UploadedFile() file?: Express.Multer.File,
     @Body('data') csvData?: string,
   ): Promise<ImportResult> {
+    const duplicateKey = {
+      keyExtractor: (item: ImportBrandItem) => item.code,
+      keyDescription: 'code',
+    };
     const items = parseCsvAndValidateImport<ImportBrandItem>(
       file,
       csvData,
       ['code', 'title'],
       ImportBrandItemSchema,
+      duplicateKey,
     );
     return this.brandsService.bulkUpsert(ctx.tenantId, ctx.shopId, items);
   }

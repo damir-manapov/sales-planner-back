@@ -163,7 +163,16 @@ export class CategoriesController {
     @Body() items?: ImportCategoryItem[],
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<ImportResult> {
-    const validatedData = parseAndValidateImport(file, items, ImportCategoryItemSchema);
+    const duplicateKey = {
+      keyExtractor: (item: ImportCategoryItem) => item.code,
+      keyDescription: 'code',
+    };
+    const validatedData = parseAndValidateImport(
+      file,
+      items,
+      ImportCategoryItemSchema,
+      duplicateKey,
+    );
     return this.categoriesService.bulkUpsert(ctx.tenantId, ctx.shopId, validatedData);
   }
 
@@ -176,11 +185,16 @@ export class CategoriesController {
     @UploadedFile() file?: Express.Multer.File,
     @Body('data') csvData?: string,
   ): Promise<ImportResult> {
+    const duplicateKey = {
+      keyExtractor: (item: ImportCategoryItem) => item.code,
+      keyDescription: 'code',
+    };
     const items = parseCsvAndValidateImport<ImportCategoryItem>(
       file,
       csvData,
       ['code', 'title'],
       ImportCategoryItemSchema,
+      duplicateKey,
     );
     return this.categoriesService.bulkUpsert(ctx.tenantId, ctx.shopId, items);
   }

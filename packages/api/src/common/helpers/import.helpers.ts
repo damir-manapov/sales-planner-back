@@ -1,5 +1,6 @@
 import { BadRequestException } from '@nestjs/common';
 import type { ZodType } from 'zod';
+import { checkForDuplicates, type DuplicateKeyOptions } from './export-import.helpers.js';
 
 /**
  * Parse import data from either file upload or JSON body
@@ -43,12 +44,24 @@ export function validateArray<T>(data: unknown[], schema: ZodType<T>): T[] {
 
 /**
  * Combined helper for parsing and validating import data
+ * @param file - Multer file upload
+ * @param bodyItems - JSON body array
+ * @param schema - Zod schema for validating each item
+ * @param duplicateKey - Optional duplicate key detection options
  */
 export function parseAndValidateImport<T>(
   file: Express.Multer.File | undefined,
   bodyItems: unknown[] | undefined,
   schema: ZodType<T>,
+  duplicateKey?: DuplicateKeyOptions<T>,
 ): T[] {
   const data = parseImportData(file, bodyItems);
-  return validateArray(data, schema);
+  const validated = validateArray(data, schema);
+
+  // Check for duplicates if key extractor provided
+  if (duplicateKey) {
+    checkForDuplicates(validated, duplicateKey);
+  }
+
+  return validated;
 }

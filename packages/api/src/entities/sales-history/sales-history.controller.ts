@@ -152,7 +152,17 @@ export class SalesHistoryController {
     @Body() items?: ImportSalesHistoryItem[],
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<SalesHistoryImportResult> {
-    const validatedData = parseAndValidateImport(file, items, ImportSalesHistoryItemSchema);
+    const duplicateKey = {
+      keyExtractor: (item: ImportSalesHistoryItem) =>
+        `${item.marketplace}:${item.sku}:${item.period}`,
+      keyDescription: 'marketplace+sku+period',
+    };
+    const validatedData = parseAndValidateImport(
+      file,
+      items,
+      ImportSalesHistoryItemSchema,
+      duplicateKey,
+    );
     return this.salesHistoryService.bulkUpsert(ctx.tenantId, ctx.shopId, validatedData);
   }
 
@@ -165,11 +175,17 @@ export class SalesHistoryController {
     @UploadedFile() file?: Express.Multer.File,
     @Body('data') csvData?: string,
   ): Promise<SalesHistoryImportResult> {
+    const duplicateKey = {
+      keyExtractor: (item: ImportSalesHistoryItem) =>
+        `${item.marketplace}:${item.sku}:${item.period}`,
+      keyDescription: 'marketplace+sku+period',
+    };
     const validatedData = parseCsvAndValidateImport<ImportSalesHistoryItem>(
       file,
       csvData,
       ['marketplace', 'period', 'sku', 'quantity'],
       ImportSalesHistoryItemSchema,
+      duplicateKey,
     );
 
     return this.salesHistoryService.bulkUpsert(ctx.tenantId, ctx.shopId, validatedData);

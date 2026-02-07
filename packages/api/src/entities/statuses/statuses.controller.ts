@@ -157,7 +157,16 @@ export class StatusesController {
     @Body() items?: ImportStatusItem[],
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<ImportResult> {
-    const validatedData = parseAndValidateImport(file, items, ImportStatusItemSchema);
+    const duplicateKey = {
+      keyExtractor: (item: ImportStatusItem) => item.code,
+      keyDescription: 'code',
+    };
+    const validatedData = parseAndValidateImport(
+      file,
+      items,
+      ImportStatusItemSchema,
+      duplicateKey,
+    );
     return this.statusesService.bulkUpsert(ctx.tenantId, ctx.shopId, validatedData);
   }
 
@@ -170,11 +179,16 @@ export class StatusesController {
     @UploadedFile() file?: Express.Multer.File,
     @Body('data') csvData?: string,
   ): Promise<ImportResult> {
+    const duplicateKey = {
+      keyExtractor: (item: ImportStatusItem) => item.code,
+      keyDescription: 'code',
+    };
     const items = parseCsvAndValidateImport<ImportStatusItem>(
       file,
       csvData,
       ['code', 'title'],
       ImportStatusItemSchema,
+      duplicateKey,
     );
     return this.statusesService.bulkUpsert(ctx.tenantId, ctx.shopId, items);
   }

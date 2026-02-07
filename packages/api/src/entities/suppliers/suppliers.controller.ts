@@ -157,7 +157,16 @@ export class SuppliersController {
     @Body() items?: unknown[],
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<ImportResult> {
-    const validatedData = parseAndValidateImport(file, items, ImportSupplierItemSchema);
+    const duplicateKey = {
+      keyExtractor: (item: ImportSupplierItem) => item.code,
+      keyDescription: 'code',
+    };
+    const validatedData = parseAndValidateImport(
+      file,
+      items,
+      ImportSupplierItemSchema,
+      duplicateKey,
+    );
     return this.suppliersService.bulkUpsert(ctx.tenantId, ctx.shopId, validatedData);
   }
 
@@ -170,11 +179,16 @@ export class SuppliersController {
     @UploadedFile() file?: Express.Multer.File,
     @Body('data') csvData?: string,
   ): Promise<ImportResult> {
+    const duplicateKey = {
+      keyExtractor: (item: ImportSupplierItem) => item.code,
+      keyDescription: 'code',
+    };
     const items = parseCsvAndValidateImport<ImportSupplierItem>(
       file,
       csvData,
       ['code', 'title'],
       ImportSupplierItemSchema,
+      duplicateKey,
     );
     return this.suppliersService.bulkUpsert(ctx.tenantId, ctx.shopId, items);
   }

@@ -157,7 +157,16 @@ export class WarehousesController {
     @Body() items?: ImportWarehouseItem[],
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<ImportResult> {
-    const validatedData = parseAndValidateImport(file, items, ImportWarehouseItemSchema);
+    const duplicateKey = {
+      keyExtractor: (item: ImportWarehouseItem) => item.code,
+      keyDescription: 'code',
+    };
+    const validatedData = parseAndValidateImport(
+      file,
+      items,
+      ImportWarehouseItemSchema,
+      duplicateKey,
+    );
     return this.warehousesService.bulkUpsert(ctx.tenantId, ctx.shopId, validatedData);
   }
 
@@ -170,11 +179,16 @@ export class WarehousesController {
     @UploadedFile() file?: Express.Multer.File,
     @Body('data') csvData?: string,
   ): Promise<ImportResult> {
+    const duplicateKey = {
+      keyExtractor: (item: ImportWarehouseItem) => item.code,
+      keyDescription: 'code',
+    };
     const items = parseCsvAndValidateImport<ImportWarehouseItem>(
       file,
       csvData,
       ['code', 'title'],
       ImportWarehouseItemSchema,
+      duplicateKey,
     );
     return this.warehousesService.bulkUpsert(ctx.tenantId, ctx.shopId, items);
   }

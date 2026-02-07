@@ -154,10 +154,16 @@ export class SkuCompetitorMappingsController {
     @Body() body?: ImportSkuCompetitorMappingItem[],
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<ImportResult> {
+    const duplicateKey = {
+      keyExtractor: (item: ImportSkuCompetitorMappingItem) =>
+        `${item.sku}:${item.marketplace}:${item.marketplaceProductId}`,
+      keyDescription: 'sku+marketplace+marketplaceProductId',
+    };
     const items = parseAndValidateImport<ImportSkuCompetitorMappingItem>(
       file,
       body,
       ImportSkuCompetitorMappingItemSchema,
+      duplicateKey,
     );
     return this.skuCompetitorMappingsService.bulkUpsert(ctx.tenantId, ctx.shopId, items);
   }
@@ -171,11 +177,17 @@ export class SkuCompetitorMappingsController {
     @UploadedFile() file?: Express.Multer.File,
     @Body('data') csvData?: string,
   ): Promise<ImportResult> {
+    const duplicateKey = {
+      keyExtractor: (item: ImportSkuCompetitorMappingItem) =>
+        `${item.sku}:${item.marketplace}:${item.marketplaceProductId}`,
+      keyDescription: 'sku+marketplace+marketplaceProductId',
+    };
     const items = parseCsvAndValidateImport<ImportSkuCompetitorMappingItem>(
       file,
       csvData,
       ['marketplace', 'marketplaceProductId', 'sku'],
       ImportSkuCompetitorMappingItemSchema,
+      duplicateKey,
     );
     return this.skuCompetitorMappingsService.bulkUpsert(ctx.tenantId, ctx.shopId, items);
   }

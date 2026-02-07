@@ -153,7 +153,11 @@ export class SkusController {
     @Body() items?: ImportSkuItem[],
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<SkuImportResult> {
-    const validatedData = parseAndValidateImport(file, items, ImportSkuItemSchema);
+    const duplicateKey = {
+      keyExtractor: (item: ImportSkuItem) => item.code,
+      keyDescription: 'code',
+    };
+    const validatedData = parseAndValidateImport(file, items, ImportSkuItemSchema, duplicateKey);
     return this.skusService.bulkUpsert(ctx.tenantId, ctx.shopId, validatedData);
   }
 
@@ -166,11 +170,16 @@ export class SkusController {
     @UploadedFile() file?: Express.Multer.File,
     @Body('data') csvData?: string,
   ): Promise<SkuImportResult> {
+    const duplicateKey = {
+      keyExtractor: (item: ImportSkuItem) => item.code,
+      keyDescription: 'code',
+    };
     const items = parseCsvAndValidateImport<ImportSkuItem>(
       file,
       csvData,
       ['code', 'title'],
       ImportSkuItemSchema,
+      duplicateKey,
     );
     return this.skusService.bulkUpsert(ctx.tenantId, ctx.shopId, items);
   }

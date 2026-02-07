@@ -146,7 +146,17 @@ export class LeftoversController {
     @Body() body?: ImportLeftoverItem[],
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<ImportResult> {
-    const items = parseAndValidateImport<ImportLeftoverItem>(file, body, ImportLeftoverItemSchema);
+    const duplicateKey = {
+      keyExtractor: (item: ImportLeftoverItem) =>
+        `${item.warehouse}:${item.sku}:${item.period}`,
+      keyDescription: 'warehouse+sku+period',
+    };
+    const items = parseAndValidateImport<ImportLeftoverItem>(
+      file,
+      body,
+      ImportLeftoverItemSchema,
+      duplicateKey,
+    );
     return this.leftoversService.bulkUpsert(ctx.tenantId, ctx.shopId, items);
   }
 
@@ -159,11 +169,17 @@ export class LeftoversController {
     @UploadedFile() file?: Express.Multer.File,
     @Body('data') csvData?: string,
   ): Promise<ImportResult> {
+    const duplicateKey = {
+      keyExtractor: (item: ImportLeftoverItem) =>
+        `${item.warehouse}:${item.sku}:${item.period}`,
+      keyDescription: 'warehouse+sku+period',
+    };
     const items = parseCsvAndValidateImport<ImportLeftoverItem>(
       file,
       csvData,
       ['warehouse', 'sku', 'period', 'quantity'],
       ImportLeftoverItemSchema,
+      duplicateKey,
     );
     return this.leftoversService.bulkUpsert(ctx.tenantId, ctx.shopId, items);
   }

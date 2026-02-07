@@ -152,10 +152,16 @@ export class CompetitorProductsController {
     @Body() body?: ImportCompetitorProductItem[],
     @UploadedFile() file?: Express.Multer.File,
   ): Promise<ImportResult> {
+    const duplicateKey = {
+      keyExtractor: (item: ImportCompetitorProductItem) =>
+        `${item.marketplace}:${item.marketplaceProductId}`,
+      keyDescription: 'marketplace+marketplaceProductId',
+    };
     const items = parseAndValidateImport<ImportCompetitorProductItem>(
       file,
       body,
       ImportCompetitorProductItemSchema,
+      duplicateKey,
     );
     return this.competitorProductsService.bulkUpsert(ctx.tenantId, ctx.shopId, items);
   }
@@ -169,11 +175,17 @@ export class CompetitorProductsController {
     @UploadedFile() file?: Express.Multer.File,
     @Body('data') csvData?: string,
   ): Promise<ImportResult> {
+    const duplicateKey = {
+      keyExtractor: (item: ImportCompetitorProductItem) =>
+        `${item.marketplace}:${item.marketplaceProductId}`,
+      keyDescription: 'marketplace+marketplaceProductId',
+    };
     const items = parseCsvAndValidateImport<ImportCompetitorProductItem>(
       file,
       csvData,
       ['marketplace', 'marketplaceProductId'],
       ImportCompetitorProductItemSchema,
+      duplicateKey,
     );
     return this.competitorProductsService.bulkUpsert(ctx.tenantId, ctx.shopId, items);
   }
