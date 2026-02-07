@@ -621,7 +621,7 @@ describe('SKUs (e2e)', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(ApiError);
         expect((error as ApiError).status).toBe(400);
-        expect((error as ApiError).message).toContain('Duplicate SKU codes');
+        expect((error as ApiError).message).toContain('Duplicate code found');
       }
     });
 
@@ -637,7 +637,7 @@ describe('SKUs (e2e)', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(ApiError);
         expect((error as ApiError).status).toBe(400);
-        expect((error as ApiError).message).toContain('Duplicate SKU codes');
+        expect((error as ApiError).message).toContain('Duplicate code found');
       }
     });
   });

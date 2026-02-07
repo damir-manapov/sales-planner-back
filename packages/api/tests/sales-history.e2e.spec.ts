@@ -594,7 +594,7 @@ describe('Sales History (e2e)', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(ApiError);
         expect((error as ApiError).status).toBe(400);
-        expect((error as ApiError).message).toContain('Duplicate records');
+        expect((error as ApiError).message).toContain('Duplicate marketplace+sku+period found');
       }
     });
 
@@ -612,7 +612,7 @@ describe('Sales History (e2e)', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(ApiError);
         expect((error as ApiError).status).toBe(400);
-        expect((error as ApiError).message).toContain('Duplicate records');
+        expect((error as ApiError).message).toContain('Duplicate marketplace+sku+period found');
       }
     });
   });

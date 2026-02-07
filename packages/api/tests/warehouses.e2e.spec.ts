@@ -427,7 +427,7 @@ describe('Warehouses (e2e)', () => {
       } catch (error) {
         expect(error).toBeInstanceOf(ApiError);
         expect((error as ApiError).status).toBe(400);
-        expect((error as ApiError).message).toContain('Duplicate warehouse codes');
+        expect((error as ApiError).message).toContain('Duplicate code found');
       }
     });
   });

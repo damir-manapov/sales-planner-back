@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AuthGuard } from '../../auth/auth.guard.js';
 import { DatabaseModule } from '../../database/database.module.js';
 import { ApiKeysModule } from '../api-keys/api-keys.module.js';
@@ -9,13 +9,7 @@ import { SeasonalCoefficientsController } from './seasonal-coefficients.controll
 import { SeasonalCoefficientsService } from './seasonal-coefficients.service.js';
 
 @Module({
-  imports: [
-    DatabaseModule,
-    ApiKeysModule,
-    UserRolesModule,
-    TenantsModule,
-    forwardRef(() => GroupsModule),
-  ],
+  imports: [DatabaseModule, ApiKeysModule, UserRolesModule, TenantsModule, GroupsModule],
   controllers: [SeasonalCoefficientsController],
   providers: [SeasonalCoefficientsService, AuthGuard],
   exports: [SeasonalCoefficientsService],

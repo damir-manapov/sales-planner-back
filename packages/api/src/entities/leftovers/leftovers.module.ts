@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AuthGuard } from '../../auth/auth.guard.js';
 import { DatabaseModule } from '../../database/database.module.js';
 import { ApiKeysModule } from '../api-keys/api-keys.module.js';
@@ -15,8 +15,8 @@ import { LeftoversService } from './leftovers.service.js';
     ApiKeysModule,
     UserRolesModule,
     TenantsModule,
-    forwardRef(() => SkusModule),
-    forwardRef(() => WarehousesModule),
+    SkusModule,
+    WarehousesModule,
   ],
   controllers: [LeftoversController],
   providers: [LeftoversService, AuthGuard],

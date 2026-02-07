@@ -1,4 +1,4 @@
-import { Module, forwardRef } from '@nestjs/common';
+import { Module } from '@nestjs/common';
 import { AuthGuard } from '../../auth/auth.guard.js';
 import { DatabaseModule } from '../../database/database.module.js';
 import { ApiKeysModule } from '../api-keys/api-keys.module.js';
@@ -9,13 +9,7 @@ import { CompetitorProductsController } from './competitor-products.controller.j
 import { CompetitorProductsService } from './competitor-products.service.js';
 
 @Module({
-  imports: [
-    DatabaseModule,
-    ApiKeysModule,
-    UserRolesModule,
-    TenantsModule,
-    forwardRef(() => MarketplacesModule),
-  ],
+  imports: [DatabaseModule, ApiKeysModule, UserRolesModule, TenantsModule, MarketplacesModule],
   controllers: [CompetitorProductsController],
   providers: [CompetitorProductsService, AuthGuard],
   exports: [CompetitorProductsService],
