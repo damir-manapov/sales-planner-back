@@ -211,5 +211,42 @@ ${csvMarketplace.code};${csvSku.code};777888999`;
       expect(csv).toContain('marketplace');
       expect(csv).toContain('marketplace_product_id');
     });
+
+    it('should auto-create missing SKUs and marketplaces on import', async () => {
+      // Get initial counts
+      const skusBefore = await ctx.client.skus.getAll(ctx.shopContext);
+      const marketplacesBefore = await ctx.client.marketplaces.getAll(ctx.shopContext);
+
+      const skuCode = `newsku${generateUniqueId()}`;
+      const mpCode = `newmp${generateUniqueId()}`;
+      const result = await ctx.client.skuCompetitorMappings.importJson(ctx.shopContext, [
+        {
+          sku: skuCode,
+          marketplace: mpCode,
+          marketplaceProductId: '123456789',
+        },
+      ]);
+
+      expect(result.created).toBe(1);
+
+      // Verify auto-created SKU exists with correct data
+      const skusAfter = await ctx.client.skus.getAll(ctx.shopContext);
+      expect(skusAfter.total).toBe(skusBefore.total + 1);
+      const newSku = skusAfter.items.find((s) => !skusBefore.items.some((b) => b.id === s.id));
+      expect(newSku).toBeDefined();
+      // Code is normalized, title defaults to normalized code
+      expect(newSku!.code).toContain('newsku');
+      expect(newSku!.title).toBe(newSku!.code);
+
+      // Verify auto-created marketplace exists with correct data
+      const marketplacesAfter = await ctx.client.marketplaces.getAll(ctx.shopContext);
+      expect(marketplacesAfter.total).toBe(marketplacesBefore.total + 1);
+      const newMarketplace = marketplacesAfter.items.find(
+        (m) => !marketplacesBefore.items.some((b) => b.id === m.id),
+      );
+      expect(newMarketplace).toBeDefined();
+      expect(newMarketplace!.code).toContain('newmp');
+      expect(newMarketplace!.title).toBe(newMarketplace!.code);
+    });
   });
 });

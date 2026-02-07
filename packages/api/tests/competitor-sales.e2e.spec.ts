@@ -257,5 +257,66 @@ ${csvMarketplace.code};777888999;2024-05;250`;
       expect(csv).toContain('period');
       expect(csv).toContain('quantity');
     });
+
+    it('should auto-create missing marketplaces on import', async () => {
+      // Get initial count
+      const marketplacesBefore = await ctx.client.marketplaces.getAll(ctx.shopContext);
+      const countBefore = marketplacesBefore.total;
+
+      const mpCode = `newmp${generateUniqueId()}`;
+      const result = await ctx.client.competitorSales.importJson(ctx.shopContext, [
+        {
+          marketplace: mpCode,
+          marketplaceProductId: '999888777',
+          period: '2024-06',
+          quantity: 300,
+        },
+      ]);
+
+      expect(result.created).toBe(1);
+
+      // Verify auto-created marketplace exists with correct data
+      const marketplacesAfter = await ctx.client.marketplaces.getAll(ctx.shopContext);
+      expect(marketplacesAfter.total).toBe(countBefore + 1);
+
+      const newMarketplace = marketplacesAfter.items.find(
+        (m) => !marketplacesBefore.items.some((b) => b.id === m.id),
+      );
+      expect(newMarketplace).toBeDefined();
+      // Code is normalized, title defaults to normalized code
+      expect(newMarketplace!.code).toContain('newmp');
+      expect(newMarketplace!.title).toBe(newMarketplace!.code);
+    });
+
+    it('should auto-create competitor products with title defaulting to marketplace_product_id', async () => {
+      // Get initial count
+      const competitorProductsBefore = await ctx.client.competitorProducts.getAll(ctx.shopContext);
+      const countBefore = competitorProductsBefore.total;
+
+      // marketplace_product_id is BIGINT, use numeric string
+      const marketplaceProductId = String(Date.now());
+      const result = await ctx.client.competitorSales.importJson(ctx.shopContext, [
+        {
+          marketplace: `automp${generateUniqueId()}`,
+          marketplaceProductId,
+          period: '2024-07',
+          quantity: 100,
+        },
+      ]);
+
+      expect(result.created).toBe(1);
+
+      // Verify auto-created competitor product exists with correct data
+      const competitorProductsAfter = await ctx.client.competitorProducts.getAll(ctx.shopContext);
+      expect(competitorProductsAfter.total).toBe(countBefore + 1);
+
+      const newProduct = competitorProductsAfter.items.find(
+        (p) => !competitorProductsBefore.items.some((b) => b.id === p.id),
+      );
+      expect(newProduct).toBeDefined();
+      expect(newProduct!.marketplace_product_id).toBe(marketplaceProductId);
+      // Title defaults to marketplace_product_id
+      expect(newProduct!.title).toBe(marketplaceProductId);
+    });
   });
 });

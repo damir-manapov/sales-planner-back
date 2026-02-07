@@ -270,10 +270,12 @@ ${csvWarehouse.code};${csvSku.code};2025-04;400`;
       const skusBefore = await ctx.client.skus.getAll(ctx.shopContext);
       const warehousesBefore = await ctx.client.warehouses.getAll(ctx.shopContext);
 
+      const skuCode = `newsku${generateUniqueId()}`;
+      const warehouseCode = `newwh${generateUniqueId()}`;
       const result = await ctx.client.leftovers.importJson(ctx.shopContext, [
         {
-          warehouse: `newwh${generateUniqueId()}`,
-          sku: `newsku${generateUniqueId()}`,
+          warehouse: warehouseCode,
+          sku: skuCode,
           period: '2025-05',
           quantity: 50,
         },
@@ -281,12 +283,23 @@ ${csvWarehouse.code};${csvSku.code};2025-04;400`;
 
       expect(result.created).toBe(1);
 
-      // Verify auto-created entities exist (counts increased)
+      // Verify auto-created entities exist with correct data
       const skusAfter = await ctx.client.skus.getAll(ctx.shopContext);
       expect(skusAfter.total).toBe(skusBefore.total + 1);
+      const newSku = skusAfter.items.find((s) => !skusBefore.items.some((b) => b.id === s.id));
+      expect(newSku).toBeDefined();
+      // Code is normalized, title defaults to normalized code
+      expect(newSku!.code).toContain('newsku');
+      expect(newSku!.title).toBe(newSku!.code);
 
       const warehousesAfter = await ctx.client.warehouses.getAll(ctx.shopContext);
       expect(warehousesAfter.total).toBe(warehousesBefore.total + 1);
+      const newWarehouse = warehousesAfter.items.find(
+        (w) => !warehousesBefore.items.some((b) => b.id === w.id),
+      );
+      expect(newWarehouse).toBeDefined();
+      expect(newWarehouse!.code).toContain('newwh');
+      expect(newWarehouse!.title).toBe(newWarehouse!.code);
     });
   });
 });

@@ -193,9 +193,10 @@ ${csvMarketplace.code};777888999;CSV Product;CSV Brand`;
       const marketplacesBefore = await ctx.client.marketplaces.getAll(ctx.shopContext);
       const countBefore = marketplacesBefore.total;
 
+      const mpCode = `newmp${generateUniqueId()}`;
       const result = await ctx.client.competitorProducts.importJson(ctx.shopContext, [
         {
-          marketplace: `newmp${generateUniqueId()}`,
+          marketplace: mpCode,
           marketplaceProductId: '999888777',
           title: 'Auto MP Product',
           brand: 'Auto Brand',
@@ -204,9 +205,17 @@ ${csvMarketplace.code};777888999;CSV Product;CSV Brand`;
 
       expect(result.created).toBe(1);
 
-      // Verify auto-created marketplace exists (count increased)
+      // Verify auto-created marketplace exists with correct data
       const marketplacesAfter = await ctx.client.marketplaces.getAll(ctx.shopContext);
       expect(marketplacesAfter.total).toBe(countBefore + 1);
+
+      const newMarketplace = marketplacesAfter.items.find(
+        (m) => !marketplacesBefore.items.some((b) => b.id === m.id),
+      );
+      expect(newMarketplace).toBeDefined();
+      // Code is normalized, title defaults to normalized code
+      expect(newMarketplace!.code).toContain('newmp');
+      expect(newMarketplace!.title).toBe(newMarketplace!.code);
     });
   });
 

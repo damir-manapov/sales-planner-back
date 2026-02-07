@@ -177,12 +177,13 @@ export class CompetitorProductsService {
     }
 
     // Insert all, ignoring conflicts
+    // Title defaults to marketplace_product_id when auto-creating
     const values = items.map((item) => ({
       shop_id: shopId,
       tenant_id: tenantId,
       marketplace_id: item.marketplaceId,
       marketplace_product_id: item.marketplaceProductId,
-      title: null,
+      title: item.marketplaceProductId,
       brand: null,
       updated_at: new Date(),
     }));

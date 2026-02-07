@@ -202,15 +202,26 @@ describe('Seasonal Coefficients (e2e)', () => {
       const groupsBefore = await ctx.client.groups.getAll(ctx.shopContext);
       const countBefore = groupsBefore.total;
 
+      const groupCode = `newgroup${generateUniqueId()}`;
       const result = await ctx.client.seasonalCoefficients.importJson(ctx.shopContext, [
-        { group: `newgroup${generateUniqueId()}`, month: 7, coefficient: 1.5 },
+        { group: groupCode, month: 7, coefficient: 1.5 },
       ]);
 
       expect(result.created).toBe(1);
 
-      // Verify auto-created group exists (count increased)
+      // Verify auto-created group exists with correct data
       const groupsAfter = await ctx.client.groups.getAll(ctx.shopContext);
       expect(groupsAfter.total).toBe(countBefore + 1);
+
+      // Find the new group (it's the one not in the before list)
+      const newGroup = groupsAfter.items.find(
+        (g) => !groupsBefore.items.some((b) => b.id === g.id),
+      );
+      expect(newGroup).toBeDefined();
+      // Code is normalized (hyphens removed, camelCase)
+      expect(newGroup!.code).toContain('newgroup');
+      // Title defaults to normalized code
+      expect(newGroup!.title).toBe(newGroup!.code);
     });
   });
 });
