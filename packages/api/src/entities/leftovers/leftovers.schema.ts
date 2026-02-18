@@ -13,8 +13,8 @@ const { id, quantity, period, code, flexiblePeriod, flexibleQuantity } = zodSche
 
 // Schema for requests (omitting shop_id and tenant_id)
 const CreateLeftoverRequestSchema = z.object({
-  warehouse_id: id(),
-  sku_id: id(),
+  warehouseId: id(),
+  skuId: id(),
   period: period(),
   quantity: quantity(),
 });
@@ -22,16 +22,16 @@ const CreateLeftoverRequestSchema = z.object({
 // Query schema with period filters and pagination
 export const LeftoverQuerySchema = z
   .object({
-    period_from: period().optional(),
-    period_to: period().optional(),
+    periodFrom: period().optional(),
+    periodTo: period().optional(),
   })
   .merge(PaginationQuerySchema);
 
 export const CreateLeftoverSchema = z.object({
-  shop_id: id(),
-  tenant_id: id(),
-  warehouse_id: id(),
-  sku_id: id(),
+  shopId: id(),
+  tenantId: id(),
+  warehouseId: id(),
+  skuId: id(),
   period: period(),
   quantity: quantity(),
 });

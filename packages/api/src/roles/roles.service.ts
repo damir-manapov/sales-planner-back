@@ -2,10 +2,18 @@ import { Injectable } from '@nestjs/common';
 import type { PaginatedResponse, PaginationQuery, Role } from '@sales-planner/shared';
 import { DuplicateResourceException, isUniqueViolation } from '../common/index.js';
 import { DatabaseService } from '../database/database.service.js';
-import type { CreateRoleDto, UpdateRoleDto } from './roles.schema.js';
+
+interface CreateRoleDto {
+  name: string;
+  description?: string;
+}
+
+interface UpdateRoleDto {
+  name?: string;
+  description?: string | null;
+}
 
 export type { Role };
-export type { CreateRoleDto, UpdateRoleDto };
 
 @Injectable()
 export class RolesService {
@@ -53,7 +61,7 @@ export class RolesService {
   async update(id: number, dto: UpdateRoleDto): Promise<Role | undefined> {
     return this.db
       .updateTable('roles')
-      .set({ ...dto, updated_at: new Date() })
+      .set({ ...dto, updatedAt: new Date() })
       .where('id', '=', id)
       .returningAll()
       .executeTakeFirst();

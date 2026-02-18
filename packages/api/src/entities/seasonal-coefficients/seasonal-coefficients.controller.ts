@@ -102,16 +102,14 @@ export class SeasonalCoefficientsController {
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @Body(
-      new ZodValidationPipe(
-        CreateSeasonalCoefficientSchema.omit({ shop_id: true, tenant_id: true }),
-      ),
+      new ZodValidationPipe(CreateSeasonalCoefficientSchema.omit({ shopId: true, tenantId: true })),
     )
     dto: CreateSeasonalCoefficientRequest,
   ): Promise<SeasonalCoefficient> {
     return this.seasonalCoefficientsService.create({
       ...dto,
-      shop_id: ctx.shopId,
-      tenant_id: ctx.tenantId,
+      shopId: ctx.shopId,
+      tenantId: ctx.tenantId,
     });
   }
 

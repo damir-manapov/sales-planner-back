@@ -22,8 +22,8 @@ import { ImportSkuCompetitorMappingItemSchema } from './sku-competitor-mappings.
 export type { SkuCompetitorMapping };
 
 interface PreparedSkuCompetitorMappingItem extends ImportSkuCompetitorMappingItem {
-  sku_id: number;
-  competitor_product_id: number;
+  skuId: number;
+  competitorProductId: number;
 }
 
 @Injectable()
@@ -51,7 +51,7 @@ export class SkuCompetitorMappingsService {
     return this.db
       .selectFrom('sku_competitor_mappings')
       .selectAll()
-      .where('shop_id', '=', shopId)
+      .where('shopId', '=', shopId)
       .execute();
   }
 
@@ -61,7 +61,7 @@ export class SkuCompetitorMappingsService {
   ): Promise<PaginatedResponse<SkuCompetitorMapping>> {
     const { ids, limit = 100, offset = 0 } = query ?? {};
 
-    let baseQuery = this.db.selectFrom('sku_competitor_mappings').where('shop_id', '=', shopId);
+    let baseQuery = this.db.selectFrom('sku_competitor_mappings').where('shopId', '=', shopId);
 
     if (ids && ids.length > 0) {
       baseQuery = baseQuery.where('id', 'in', ids);
@@ -81,11 +81,11 @@ export class SkuCompetitorMappingsService {
       return await this.db
         .insertInto('sku_competitor_mappings')
         .values({
-          shop_id: dto.shop_id,
-          tenant_id: dto.tenant_id,
-          sku_id: dto.sku_id,
-          competitor_product_id: dto.competitor_product_id,
-          updated_at: new Date(),
+          shopId: dto.shopId,
+          tenantId: dto.tenantId,
+          skuId: dto.skuId,
+          competitorProductId: dto.competitorProductId,
+          updatedAt: new Date(),
         })
         .returningAll()
         .executeTakeFirstOrThrow();
@@ -93,7 +93,7 @@ export class SkuCompetitorMappingsService {
       if (isUniqueViolation(error)) {
         throw new DuplicateResourceException(
           'SKU Competitor Mapping',
-          `SKU ${dto.sku_id} competitor product ${dto.competitor_product_id}`,
+          `SKU ${dto.skuId} competitor product ${dto.competitorProductId}`,
           'this shop',
         );
       }
@@ -104,7 +104,7 @@ export class SkuCompetitorMappingsService {
   async update(id: number, dto: UpdateSkuCompetitorMappingDto): Promise<SkuCompetitorMapping> {
     const result = await this.db
       .updateTable('sku_competitor_mappings')
-      .set({ ...dto, updated_at: new Date() })
+      .set({ ...dto, updatedAt: new Date() })
       .where('id', '=', id)
       .returningAll()
       .executeTakeFirst();
@@ -122,7 +122,7 @@ export class SkuCompetitorMappingsService {
   async deleteByShopId(shopId: number): Promise<number> {
     const result = await this.db
       .deleteFrom('sku_competitor_mappings')
-      .where('shop_id', '=', shopId)
+      .where('shopId', '=', shopId)
       .executeTakeFirst();
     return Number(result.numDeletedRows);
   }
@@ -131,15 +131,15 @@ export class SkuCompetitorMappingsService {
     return this.db
       .insertInto('sku_competitor_mappings')
       .values({
-        shop_id: dto.shop_id,
-        tenant_id: dto.tenant_id,
-        sku_id: dto.sku_id,
-        competitor_product_id: dto.competitor_product_id,
-        updated_at: new Date(),
+        shopId: dto.shopId,
+        tenantId: dto.tenantId,
+        skuId: dto.skuId,
+        competitorProductId: dto.competitorProductId,
+        updatedAt: new Date(),
       })
       .onConflict((oc) =>
-        oc.columns(['shop_id', 'sku_id', 'competitor_product_id']).doUpdateSet({
-          updated_at: new Date(),
+        oc.columns(['shopId', 'skuId', 'competitorProductId']).doUpdateSet({
+          updatedAt: new Date(),
         }),
       )
       .returningAll()
@@ -246,8 +246,8 @@ export class SkuCompetitorMappingsService {
 
       validItems.push({
         ...item,
-        sku_id: skuId,
-        competitor_product_id: competitorProductId,
+        skuId: skuId,
+        competitorProductId: competitorProductId,
       });
     });
 
@@ -257,19 +257,19 @@ export class SkuCompetitorMappingsService {
 
     // Bulk upsert
     const values = validItems.map((item) => ({
-      shop_id: shopId,
-      tenant_id: tenantId,
-      sku_id: item.sku_id,
-      competitor_product_id: item.competitor_product_id,
-      updated_at: new Date(),
+      shopId: shopId,
+      tenantId: tenantId,
+      skuId: item.skuId,
+      competitorProductId: item.competitorProductId,
+      updatedAt: new Date(),
     }));
 
     await this.db
       .insertInto('sku_competitor_mappings')
       .values(values)
       .onConflict((oc) =>
-        oc.columns(['shop_id', 'sku_id', 'competitor_product_id']).doUpdateSet({
-          updated_at: new Date(),
+        oc.columns(['shopId', 'skuId', 'competitorProductId']).doUpdateSet({
+          updatedAt: new Date(),
         }),
       )
       .execute();
@@ -280,25 +280,25 @@ export class SkuCompetitorMappingsService {
   async exportCsv(shopId: number): Promise<SkuCompetitorMappingExportItem[]> {
     const rows = await this.db
       .selectFrom('sku_competitor_mappings')
-      .innerJoin('skus', 'skus.id', 'sku_competitor_mappings.sku_id')
+      .innerJoin('skus', 'skus.id', 'sku_competitor_mappings.skuId')
       .innerJoin(
         'competitor_products',
         'competitor_products.id',
-        'sku_competitor_mappings.competitor_product_id',
+        'sku_competitor_mappings.competitorProductId',
       )
-      .innerJoin('marketplaces', 'marketplaces.id', 'competitor_products.marketplace_id')
+      .innerJoin('marketplaces', 'marketplaces.id', 'competitor_products.marketplaceId')
       .select([
         'skus.code as sku',
         'marketplaces.code as marketplace',
-        'competitor_products.marketplace_product_id',
+        'competitor_products.marketplaceProductId',
       ])
-      .where('sku_competitor_mappings.shop_id', '=', shopId)
+      .where('sku_competitor_mappings.shopId', '=', shopId)
       .execute();
 
     return rows.map((row) => ({
       sku: row.sku,
       marketplace: row.marketplace,
-      marketplace_product_id: row.marketplace_product_id,
+      marketplaceProductId: row.marketplaceProductId,
     }));
   }
 }

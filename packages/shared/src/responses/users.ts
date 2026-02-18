@@ -2,11 +2,11 @@ import type { User } from '../entities/users';
 
 export interface UserRole {
   id: number;
-  role_name: string;
-  tenant_id: number | null;
-  tenant_title: string | null;
-  shop_id: number | null;
-  shop_title: string | null;
+  roleName: string;
+  tenantId: number | null;
+  tenantTitle: string | null;
+  shopId: number | null;
+  shopTitle: string | null;
 }
 
 export interface ShopInfo {
@@ -17,7 +17,7 @@ export interface ShopInfo {
 export interface TenantInfo {
   id: number;
   title: string;
-  is_owner: boolean;
+  isOwner: boolean;
   shops: ShopInfo[];
 }
 

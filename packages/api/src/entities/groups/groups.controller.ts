@@ -68,7 +68,7 @@ export class GroupsController {
     @Param('code') code: string,
   ): Promise<Group> {
     const group = await this.groupsService.findByCodeAndShop(code, ctx.shopId);
-    if (!group || group.tenant_id !== ctx.tenantId) {
+    if (!group || group.tenantId !== ctx.tenantId) {
       throw new NotFoundException(`Group with code ${code} not found`);
     }
 
@@ -118,8 +118,8 @@ export class GroupsController {
   ): Promise<Group> {
     return this.groupsService.create({
       ...body,
-      shop_id: ctx.shopId,
-      tenant_id: ctx.tenantId,
+      shopId: ctx.shopId,
+      tenantId: ctx.tenantId,
     });
   }
 

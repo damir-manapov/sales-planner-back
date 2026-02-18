@@ -18,20 +18,20 @@ export const CreateSkuSchema = z.object({
   code: code(),
   title: title(),
   title2: z.string().optional(),
-  category_id: z.number().optional(),
-  group_id: z.number().optional(),
-  status_id: z.number().optional(),
-  supplier_id: z.number().optional(),
+  categoryId: z.number().optional(),
+  groupId: z.number().optional(),
+  statusId: z.number().optional(),
+  supplierId: z.number().optional(),
 });
 
 export const UpdateSkuSchema = z.object({
   code: code().optional(),
   title: title().optional(),
   title2: z.string().optional(),
-  category_id: z.number().optional(),
-  group_id: z.number().optional(),
-  status_id: z.number().optional(),
-  supplier_id: z.number().optional(),
+  categoryId: z.number().optional(),
+  groupId: z.number().optional(),
+  statusId: z.number().optional(),
+  supplierId: z.number().optional(),
   // Note: shop_id and tenant_id are intentionally not updatable
   // Once a SKU is created in a shop/tenant, it stays there
 });

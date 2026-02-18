@@ -28,7 +28,7 @@ export abstract class CodedShopScopedRepository<
   protected override readonly exportFields: readonly string[] = ['code', 'title'];
 
   /** Override unique keys for code-based conflict resolution */
-  protected override readonly uniqueKeys: readonly string[] = ['code', 'shop_id'];
+  protected override readonly uniqueKeys: readonly string[] = ['code', 'shopId'];
 
   /** Code is the business primary key */
   protected override readonly businessPrimaryKey = 'code';
@@ -38,7 +38,7 @@ export abstract class CodedShopScopedRepository<
       .selectFrom(this.tableName as any)
       .selectAll()
       .where('code', '=', code)
-      .where('shop_id', '=', shopId)
+      .where('shopId', '=', shopId)
       .executeTakeFirst() as Promise<TEntity | undefined>;
   }
 
@@ -46,7 +46,7 @@ export abstract class CodedShopScopedRepository<
     const rows = await this.db
       .selectFrom(this.tableName as any)
       .select('code')
-      .where('shop_id', '=', shopId)
+      .where('shopId', '=', shopId)
       .where('code', 'in', codes)
       .execute();
     return new Set(rows.map((r: { code: string }) => r.code));
@@ -71,7 +71,7 @@ export abstract class CodedShopScopedRepository<
     let entities = (await this.db
       .selectFrom(this.tableName as any)
       .select(['id', 'code'])
-      .where('shop_id', '=', shopId)
+      .where('shopId', '=', shopId)
       .where('code', 'in', uniqueCodes)
       .execute()) as Array<{ id: number; code: string }>;
 
@@ -85,9 +85,9 @@ export abstract class CodedShopScopedRepository<
           missingCodes.map((code) => ({
             code,
             title: code,
-            shop_id: shopId,
-            tenant_id: tenantId,
-            updated_at: new Date(),
+            shopId: shopId,
+            tenantId: tenantId,
+            updatedAt: new Date(),
           })),
         )
         .returning(['id', 'code'])

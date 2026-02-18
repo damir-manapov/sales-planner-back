@@ -1,14 +1,14 @@
 // Seasonal coefficients
 export interface CreateSeasonalCoefficientRequest {
-  group_id: number;
+  groupId: number;
   month: number; // 1-12
   coefficient: number;
 }
 
 export interface CreateSeasonalCoefficientDto {
-  tenant_id: number;
-  shop_id: number;
-  group_id: number;
+  tenantId: number;
+  shopId: number;
+  groupId: number;
   month: number;
   coefficient: number;
 }

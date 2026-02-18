@@ -68,7 +68,7 @@ export class SuppliersController {
     @Param('code') code: string,
   ): Promise<Supplier> {
     const supplier = await this.suppliersService.findByCodeAndShop(code, ctx.shopId);
-    if (!supplier || supplier.tenant_id !== ctx.tenantId) {
+    if (!supplier || supplier.tenantId !== ctx.tenantId) {
       throw new NotFoundException(`Supplier with code ${code} not found`);
     }
 
@@ -118,8 +118,8 @@ export class SuppliersController {
   ): Promise<Supplier> {
     return this.suppliersService.create({
       ...body,
-      shop_id: ctx.shopId,
-      tenant_id: ctx.tenantId,
+      shopId: ctx.shopId,
+      tenantId: ctx.tenantId,
     });
   }
 

@@ -14,11 +14,11 @@ describe('User Schemas', () => {
       expect(result).toEqual(data);
     });
 
-    it('should validate with optional default_shop_id', () => {
+    it('should validate with optional defaultShopId', () => {
       const data = {
         email: 'test@example.com',
         name: 'Test User',
-        default_shop_id: 1,
+        defaultShopId: 1,
       };
 
       const result = CreateUserSchema.parse(data);
@@ -62,21 +62,21 @@ describe('User Schemas', () => {
       expect(() => CreateUserSchema.parse(data)).toThrow();
     });
 
-    it('should reject negative default_shop_id', () => {
+    it('should reject negative defaultShopId', () => {
       const data = {
         email: 'test@example.com',
         name: 'Test User',
-        default_shop_id: -1,
+        defaultShopId: -1,
       };
 
       expect(() => CreateUserSchema.parse(data)).toThrow();
     });
 
-    it('should reject zero default_shop_id', () => {
+    it('should reject zero defaultShopId', () => {
       const data = {
         email: 'test@example.com',
         name: 'Test User',
-        default_shop_id: 0,
+        defaultShopId: 0,
       };
 
       expect(() => CreateUserSchema.parse(data)).toThrow();
@@ -108,8 +108,8 @@ describe('User Schemas', () => {
       expect(result).toEqual(data);
     });
 
-    it('should allow null default_shop_id', () => {
-      const data = { default_shop_id: null };
+    it('should allow null defaultShopId', () => {
+      const data = { defaultShopId: null };
 
       const result = UpdateUserSchema.parse(data);
 

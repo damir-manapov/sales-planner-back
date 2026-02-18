@@ -54,7 +54,7 @@ describe('Tenants (e2e)', () => {
     });
     systemAdminUserId = adminUser.id;
     const adminApiKey = await ctx.getSystemClient().apiKeys.create({
-      user_id: systemAdminUserId,
+      userId: systemAdminUserId,
       name: 'Admin Key',
     });
 
@@ -64,7 +64,7 @@ describe('Tenants (e2e)', () => {
     if (sysAdminRole) {
       await ctx
         .getSystemClient()
-        .userRoles.create({ user_id: systemAdminUserId, role_id: sysAdminRole.id });
+        .userRoles.create({ userId: systemAdminUserId, roleId: sysAdminRole.id });
     }
 
     // Create adminClient that uses the created admin's API key
@@ -100,18 +100,18 @@ describe('Tenants (e2e)', () => {
   });
 
   describe('CRUD operations', () => {
-    it('POST /tenants - should create tenant with system admin and set created_by and owner_id', async () => {
+    it('POST /tenants - should create tenant with system admin and set createdBy and ownerId', async () => {
       const newTenant = {
         title: `Test Tenant ${generateUniqueId()}`,
-        owner_id: ctx.user.id,
+        ownerId: ctx.user.id,
       };
 
       const tenant = await adminClient.tenants.create(newTenant);
 
       expect(tenant).toHaveProperty('id');
       expect(tenant.title).toBe(newTenant.title);
-      expect(tenant.created_by).toBe(systemAdminUserId);
-      expect(tenant.owner_id).toBe(ctx.user.id);
+      expect(tenant.createdBy).toBe(systemAdminUserId);
+      expect(tenant.ownerId).toBe(ctx.user.id);
 
       createdTenantId = tenant.id;
     });
@@ -120,7 +120,7 @@ describe('Tenants (e2e)', () => {
       await expectForbidden(() =>
         userClient.tenants.create({
           title: `Test Tenant ${generateUniqueId()}`,
-          owner_id: ctx.user.id,
+          ownerId: ctx.user.id,
         }),
       );
     });
@@ -133,14 +133,14 @@ describe('Tenants (e2e)', () => {
 
       const createdTenant = tenants.items.find((t) => t.id === createdTenantId);
       expect(createdTenant).toBeDefined();
-      expect(createdTenant?.created_by).toBe(systemAdminUserId);
+      expect(createdTenant?.createdBy).toBe(systemAdminUserId);
     });
 
     it('GET /tenants/:id - should return created tenant', async () => {
       const tenant = await userClient.tenants.getById(createdTenantId);
 
       expect(tenant.id).toBe(createdTenantId);
-      expect(tenant.created_by).toBe(systemAdminUserId);
+      expect(tenant.createdBy).toBe(systemAdminUserId);
     });
 
     it('GET /tenants/:id - should return 404 for non-existent tenant', async () => {
@@ -153,7 +153,7 @@ describe('Tenants (e2e)', () => {
       const tenant = await userClient.tenants.update(createdTenantId, updatedData);
 
       expect(tenant.title).toBe(updatedData.title);
-      expect(tenant.created_by).toBe(systemAdminUserId); // Should remain unchanged
+      expect(tenant.createdBy).toBe(systemAdminUserId); // Should remain unchanged
     });
 
     it('GET /tenants/:id - should return updated tenant', async () => {
@@ -169,7 +169,7 @@ describe('Tenants (e2e)', () => {
     });
   });
 
-  describe('created_by tracking', () => {
+  describe('createdBy tracking', () => {
     it('should track different users creating different tenants', async () => {
       // Create second user
       const user2 = await ctx.getSystemClient().users.create({
@@ -180,20 +180,20 @@ describe('Tenants (e2e)', () => {
       // Create tenant for first user (by admin user)
       const tenant1 = await adminClient.tenants.create({
         title: `Tenant by User 1 ${generateUniqueId()}`,
-        owner_id: ctx.user.id,
+        ownerId: ctx.user.id,
       });
 
       // Create tenant for second user (by admin user)
       const tenant2 = await adminClient.tenants.create({
         title: `Tenant by User 2 ${generateUniqueId()}`,
-        owner_id: user2.id,
+        ownerId: user2.id,
       });
 
-      expect(tenant1.created_by).toBe(systemAdminUserId);
-      expect(tenant2.created_by).toBe(systemAdminUserId);
-      expect(tenant1.owner_id).toBe(ctx.user.id);
-      expect(tenant2.owner_id).toBe(user2.id);
-      expect(tenant1.owner_id).not.toBe(tenant2.owner_id);
+      expect(tenant1.createdBy).toBe(systemAdminUserId);
+      expect(tenant2.createdBy).toBe(systemAdminUserId);
+      expect(tenant1.ownerId).toBe(ctx.user.id);
+      expect(tenant2.ownerId).toBe(user2.id);
+      expect(tenant1.ownerId).not.toBe(tenant2.ownerId);
 
       // Cleanup
       await cleanupUser(app, user2.id);
@@ -228,12 +228,12 @@ describe('Tenants (e2e)', () => {
 
       // Verify tenant
       expect(result.tenant.title).toBe(requestData.tenantTitle);
-      expect(result.tenant.owner_id).toBe(result.user.id);
-      expect(result.tenant.created_by).toBe(result.user.id);
+      expect(result.tenant.ownerId).toBe(result.user.id);
+      expect(result.tenant.createdBy).toBe(result.user.id);
 
       // Verify shop - should use tenant title
       expect(result.shop.title).toBe(requestData.tenantTitle);
-      expect(result.shop.tenant_id).toBe(result.tenant.id);
+      expect(result.shop.tenantId).toBe(result.tenant.id);
 
       // Verify user
       expect(result.user.email).toBe(requestData.userEmail);
@@ -251,16 +251,16 @@ describe('Tenants (e2e)', () => {
       // Verify user has tenantAdmin role for the created tenant
       const hasTenantAdminRole = me.roles.some(
         (r) =>
-          r.role_name === ROLE_NAMES.TENANT_ADMIN &&
-          r.tenant_id === result.tenant.id &&
-          r.shop_id === null,
+          r.roleName === ROLE_NAMES.TENANT_ADMIN &&
+          r.tenantId === result.tenant.id &&
+          r.shopId === null,
       );
       expect(hasTenantAdminRole).toBe(true);
 
       // Verify user has access to the tenant with the created shop
       const tenant = me.tenants.find((t) => t.id === result.tenant.id);
       expect(tenant).toBeDefined();
-      expect(tenant?.is_owner).toBe(true);
+      expect(tenant?.isOwner).toBe(true);
       expect(tenant?.shops).toHaveLength(1);
       expect(tenant?.shops[0]?.id).toBe(result.shop.id);
       expect(tenant?.shops[0]?.title).toBe(requestData.tenantTitle);

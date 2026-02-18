@@ -63,9 +63,6 @@ import type {
   UpdateMarketplaceRequest,
   ImportMarketplaceItem,
   MarketplaceExportItem,
-  Role,
-  CreateRoleRequest,
-  UpdateRoleRequest,
   SalesHistory,
   CreateSalesHistoryRequest,
   UpdateSalesHistoryRequest,
@@ -78,7 +75,7 @@ import type {
 import type { ClientConfig } from './base-client.js';
 import { ApiError } from './base-client.js';
 import { CodedEntityClient } from './coded-entity-client.js';
-import { CrudClient } from './crud-client.js';
+import { RolesClient } from './roles-client.js';
 import { ShopScopedClient } from './shop-scoped-client.js';
 import { MeClient } from './me-client.js';
 import { MetadataClient } from './metadata-client.js';
@@ -87,6 +84,7 @@ import { TenantsClient } from './tenants-client.js';
 import { ShopsClient } from './shops-client.js';
 import { SkusClient } from './skus-client.js';
 import { UserRolesClient } from './user-roles-client.js';
+import { UserShopsClient } from './user-shops-client.js';
 import { ApiKeysClient } from './api-keys-client.js';
 import { SkuMetricsClient } from './sku-metrics-client.js';
 import { ComputedEntitiesClient } from './computed-entities-client.js';
@@ -204,8 +202,9 @@ export class SalesPlannerClient {
     ImportResult,
     CompetitorSaleQuery
   >;
-  readonly roles: CrudClient<Role, CreateRoleRequest, UpdateRoleRequest>;
+  readonly roles: RolesClient;
   readonly userRoles: UserRolesClient;
+  readonly userShops: UserShopsClient;
   readonly apiKeys: ApiKeysClient;
   readonly skuMetrics: SkuMetricsClient;
   readonly computed: ComputedEntitiesClient;
@@ -231,8 +230,9 @@ export class SalesPlannerClient {
     this.skuCompetitorMappings = new ShopScopedClient(config, 'sku-competitor-mappings');
     this.competitorProducts = new ShopScopedClient(config, 'competitor-products');
     this.competitorSales = new ShopScopedClient(config, 'competitor-sales');
-    this.roles = new CrudClient(config, 'roles');
+    this.roles = new RolesClient(config);
     this.userRoles = new UserRolesClient(config);
+    this.userShops = new UserShopsClient(config);
     this.apiKeys = new ApiKeysClient(config);
     this.skuMetrics = new SkuMetricsClient(config);
     this.computed = new ComputedEntitiesClient(config);

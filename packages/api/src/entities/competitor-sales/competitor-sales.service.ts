@@ -26,7 +26,7 @@ export type { CompetitorSale };
 type CompetitorSaleRow = Selectable<CompetitorSalesTable>;
 
 interface PreparedCompetitorSaleItem extends ImportCompetitorSaleItem {
-  competitor_product_id: number;
+  competitorProductId: number;
   periodDate: Date;
 }
 
@@ -63,7 +63,7 @@ export class CompetitorSalesService {
     const rows = await this.db
       .selectFrom('competitor_sales')
       .selectAll()
-      .where('shop_id', '=', shopId)
+      .where('shopId', '=', shopId)
       .execute();
     return rows.map((r) => this.mapRow(r));
   }
@@ -72,15 +72,9 @@ export class CompetitorSalesService {
     shopId: number,
     query?: CompetitorSaleQuery,
   ): Promise<PaginatedResponse<CompetitorSale>> {
-    const {
-      period_from: periodFrom,
-      period_to: periodTo,
-      ids,
-      limit = 100,
-      offset = 0,
-    } = query ?? {};
+    const { periodFrom, periodTo, ids, limit = 100, offset = 0 } = query ?? {};
 
-    let baseQuery = this.db.selectFrom('competitor_sales').where('shop_id', '=', shopId);
+    let baseQuery = this.db.selectFrom('competitor_sales').where('shopId', '=', shopId);
 
     if (ids && ids.length > 0) {
       baseQuery = baseQuery.where('id', 'in', ids);
@@ -116,12 +110,12 @@ export class CompetitorSalesService {
       const result = await this.db
         .insertInto('competitor_sales')
         .values({
-          shop_id: dto.shop_id,
-          tenant_id: dto.tenant_id,
-          competitor_product_id: dto.competitor_product_id,
+          shopId: dto.shopId,
+          tenantId: dto.tenantId,
+          competitorProductId: dto.competitorProductId,
           period: periodToDate(dto.period),
           quantity: dto.quantity,
-          updated_at: new Date(),
+          updatedAt: new Date(),
         })
         .returningAll()
         .executeTakeFirstOrThrow();
@@ -131,7 +125,7 @@ export class CompetitorSalesService {
       if (isUniqueViolation(error)) {
         throw new DuplicateResourceException(
           'Competitor sale',
-          `competitor product ${dto.competitor_product_id} period ${dto.period}`,
+          `competitor product ${dto.competitorProductId} period ${dto.period}`,
           'this shop',
         );
       }
@@ -142,7 +136,7 @@ export class CompetitorSalesService {
   async update(id: number, dto: UpdateCompetitorSaleDto): Promise<CompetitorSale> {
     const result = await this.db
       .updateTable('competitor_sales')
-      .set({ ...dto, updated_at: new Date() })
+      .set({ ...dto, updatedAt: new Date() })
       .where('id', '=', id)
       .returningAll()
       .executeTakeFirst();
@@ -159,7 +153,7 @@ export class CompetitorSalesService {
   async deleteByShopId(shopId: number): Promise<number> {
     const result = await this.db
       .deleteFrom('competitor_sales')
-      .where('shop_id', '=', shopId)
+      .where('shopId', '=', shopId)
       .executeTakeFirst();
     return Number(result.numDeletedRows);
   }
@@ -169,17 +163,17 @@ export class CompetitorSalesService {
     const result = await this.db
       .insertInto('competitor_sales')
       .values({
-        shop_id: dto.shop_id,
-        tenant_id: dto.tenant_id,
-        competitor_product_id: dto.competitor_product_id,
+        shopId: dto.shopId,
+        tenantId: dto.tenantId,
+        competitorProductId: dto.competitorProductId,
         period: periodDate,
         quantity: dto.quantity,
-        updated_at: new Date(),
+        updatedAt: new Date(),
       })
       .onConflict((oc) =>
-        oc.columns(['shop_id', 'competitor_product_id', 'period']).doUpdateSet({
+        oc.columns(['shopId', 'competitorProductId', 'period']).doUpdateSet({
           quantity: dto.quantity,
-          updated_at: new Date(),
+          updatedAt: new Date(),
         }),
       )
       .returningAll()
@@ -273,7 +267,7 @@ export class CompetitorSalesService {
 
       validItems.push({
         ...item,
-        competitor_product_id: competitorProductId,
+        competitorProductId: competitorProductId,
         periodDate: periodToDate(item.period),
       });
     });
@@ -284,21 +278,21 @@ export class CompetitorSalesService {
 
     // Bulk upsert
     const values = validItems.map((item) => ({
-      shop_id: shopId,
-      tenant_id: tenantId,
-      competitor_product_id: item.competitor_product_id,
+      shopId: shopId,
+      tenantId: tenantId,
+      competitorProductId: item.competitorProductId,
       period: item.periodDate,
       quantity: item.quantity,
-      updated_at: new Date(),
+      updatedAt: new Date(),
     }));
 
     await this.db
       .insertInto('competitor_sales')
       .values(values)
       .onConflict((oc) =>
-        oc.columns(['shop_id', 'competitor_product_id', 'period']).doUpdateSet((eb) => ({
+        oc.columns(['shopId', 'competitorProductId', 'period']).doUpdateSet((eb) => ({
           quantity: eb.ref('excluded.quantity'),
-          updated_at: new Date(),
+          updatedAt: new Date(),
         })),
       )
       .execute();
@@ -320,16 +314,16 @@ export class CompetitorSalesService {
       .innerJoin(
         'competitor_products',
         'competitor_products.id',
-        'competitor_sales.competitor_product_id',
+        'competitor_sales.competitorProductId',
       )
-      .innerJoin('marketplaces', 'marketplaces.id', 'competitor_products.marketplace_id')
+      .innerJoin('marketplaces', 'marketplaces.id', 'competitor_products.marketplaceId')
       .select([
         'marketplaces.code as marketplace',
-        'competitor_products.marketplace_product_id',
+        'competitor_products.marketplaceProductId',
         'competitor_sales.period',
         'competitor_sales.quantity',
       ])
-      .where('competitor_sales.shop_id', '=', shopId);
+      .where('competitor_sales.shopId', '=', shopId);
 
     if (periodFrom) {
       query = query.where('competitor_sales.period', '>=', periodToDate(periodFrom));
@@ -342,7 +336,7 @@ export class CompetitorSalesService {
 
     return rows.map((row) => ({
       marketplace: row.marketplace,
-      marketplace_product_id: row.marketplace_product_id,
+      marketplaceProductId: row.marketplaceProductId,
       period: dateToPeriod(row.period),
       quantity: row.quantity,
     }));

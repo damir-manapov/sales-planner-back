@@ -50,18 +50,18 @@ export class SkuMetricsController {
   ): Promise<void> {
     const items = await this.skuMetricsService.findByShopId(ctx.shopId);
     const exportData = items.map((item) => ({
-      code: item.sku_code,
-      title: item.sku_title,
-      group: item.group_code,
-      category: item.category_code,
-      status: item.status_code,
-      supplier: item.supplier_code,
-      lastPeriod: item.last_period,
-      lastPeriodSales: item.last_period_sales,
-      currentStock: item.current_stock,
-      daysOfStock: item.days_of_stock,
-      abcClass: item.abc_class,
-      salesRank: item.sales_rank,
+      code: item.skuCode,
+      title: item.skuTitle,
+      group: item.groupCode,
+      category: item.categoryCode,
+      status: item.statusCode,
+      supplier: item.supplierCode,
+      lastPeriod: item.lastPeriod,
+      lastPeriodSales: item.lastPeriodSales,
+      currentStock: item.currentStock,
+      daysOfStock: item.daysOfStock,
+      abcClass: item.abcClass,
+      salesRank: item.salesRank,
     }));
     return sendCsvExport(res, exportData, 'sku-metrics', [
       'code',
@@ -101,7 +101,7 @@ export class SkuMetricsController {
     if (!item) {
       throw new NotFoundException(`SKU metrics with id ${id} not found`);
     }
-    if (item.shop_id !== ctx.shopId || item.tenant_id !== ctx.tenantId) {
+    if (item.shopId !== ctx.shopId || item.tenantId !== ctx.tenantId) {
       throw new NotFoundException(`SKU metrics with id ${id} not found in this shop/tenant`);
     }
     return item;

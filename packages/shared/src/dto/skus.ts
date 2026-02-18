@@ -3,10 +3,10 @@ import type { CodedTitledItem, CodedTitledShopScopedCreateDto, CodedTitledUpdate
 /** SKU optional fields */
 interface SkuOptionalFields {
   title2?: string;
-  category_id?: number;
-  group_id?: number;
-  status_id?: number;
-  supplier_id?: number;
+  categoryId?: number;
+  groupId?: number;
+  statusId?: number;
+  supplierId?: number;
 }
 
 export interface CreateSkuRequest extends CodedTitledItem, SkuOptionalFields {}

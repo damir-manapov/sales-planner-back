@@ -57,7 +57,7 @@ export class ShopsService {
     const result = await this.db
       .selectFrom('shops')
       .select(this.db.fn.countAll<number>().as('count'))
-      .where('tenant_id', '=', tenantId)
+      .where('tenantId', '=', tenantId)
       .executeTakeFirstOrThrow();
     return Number(result.count);
   }
@@ -78,7 +78,7 @@ export class ShopsService {
     let q = this.db
       .selectFrom('shops')
       .selectAll()
-      .where('tenant_id', '=', tenantId)
+      .where('tenantId', '=', tenantId)
       .orderBy('id', 'asc');
     if (query?.limit !== undefined) q = q.limit(query.limit);
     if (query?.offset !== undefined) q = q.offset(query.offset);
@@ -107,7 +107,7 @@ export class ShopsService {
   async update(id: number, dto: Partial<CreateShopDto>): Promise<Shop | undefined> {
     return this.db
       .updateTable('shops')
-      .set({ ...dto, updated_at: new Date() })
+      .set({ ...dto, updatedAt: new Date() })
       .where('id', '=', id)
       .returningAll()
       .executeTakeFirst();

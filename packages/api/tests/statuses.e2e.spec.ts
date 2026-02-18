@@ -65,8 +65,8 @@ describe('Statuses (e2e)', () => {
       expect(status).toHaveProperty('id');
       expect(status.code).toBe(normalizeCode(newStatus.code));
       expect(status.title).toBe(newStatus.title);
-      expect(status.shop_id).toBe(ctx.shop.id);
-      expect(status.tenant_id).toBe(ctx.tenant.id);
+      expect(status.shopId).toBe(ctx.shop.id);
+      expect(status.tenantId).toBe(ctx.tenant.id);
     });
 
     it('should list statuses', async () => {
@@ -263,8 +263,8 @@ describe('Statuses (e2e)', () => {
     it('should return 403 when accessing other tenant', async () => {
       await expectForbidden(() =>
         ctx.client.statuses.getAll({
-          shop_id: otherCtx.shop.id,
-          tenant_id: otherCtx.tenant.id,
+          shopId: otherCtx.shop.id,
+          tenantId: otherCtx.tenant.id,
         }),
       );
     });
@@ -272,7 +272,7 @@ describe('Statuses (e2e)', () => {
     it('should return 403 when creating for other tenant', async () => {
       await expectForbidden(() =>
         ctx.client.statuses.create(
-          { shop_id: ctx.shop.id, tenant_id: otherCtx.tenant.id },
+          { shopId: ctx.shop.id, tenantId: otherCtx.tenant.id },
           { code: 'forbidden-status', title: 'Should Fail' },
         ),
       );
@@ -288,8 +288,8 @@ describe('Statuses (e2e)', () => {
       await expectForbidden(() =>
         ctx.client.statuses.getByCode(
           {
-            shop_id: ctx.shop.id,
-            tenant_id: otherCtx.tenant.id,
+            shopId: ctx.shop.id,
+            tenantId: otherCtx.tenant.id,
           },
           otherStatus.code,
         ),
@@ -310,7 +310,7 @@ describe('Statuses (e2e)', () => {
 
       expect(status1.code).toBe(normalizeCode(sharedCode));
       expect(status2.code).toBe(normalizeCode(sharedCode));
-      expect(status1.tenant_id).not.toBe(status2.tenant_id);
+      expect(status1.tenantId).not.toBe(status2.tenantId);
     });
   });
 
@@ -477,7 +477,7 @@ describe('Statuses (e2e)', () => {
         editorUserId = editorUser.id;
 
         const editorApiKey = await ctx.getSystemClient().apiKeys.create({
-          user_id: editorUserId,
+          userId: editorUserId,
           name: 'Editor Key',
         });
         editorClient = new SalesPlannerClient({ baseUrl, apiKey: editorApiKey.key });
@@ -486,10 +486,10 @@ describe('Statuses (e2e)', () => {
         const editorRole = roles.items.find((r) => r.name === ROLE_NAMES.EDITOR);
         if (!editorRole) throw new Error('Editor role not found');
         await ctx.getSystemClient().userRoles.create({
-          user_id: editorUserId,
-          role_id: editorRole.id,
-          tenant_id: ctx.tenant.id,
-          shop_id: ctx.shop.id,
+          userId: editorUserId,
+          roleId: editorRole.id,
+          tenantId: ctx.tenant.id,
+          shopId: ctx.shop.id,
         });
       });
 
@@ -565,7 +565,7 @@ describe('Statuses (e2e)', () => {
         viewerUserId = viewerUser.id;
 
         const viewerApiKey = await ctx.getSystemClient().apiKeys.create({
-          user_id: viewerUserId,
+          userId: viewerUserId,
           name: 'Viewer Key',
         });
         viewerClient = new SalesPlannerClient({ baseUrl, apiKey: viewerApiKey.key });
@@ -574,10 +574,10 @@ describe('Statuses (e2e)', () => {
         const viewerRole = roles.items.find((r) => r.name === ROLE_NAMES.VIEWER);
         if (!viewerRole) throw new Error('Viewer role not found');
         await ctx.getSystemClient().userRoles.create({
-          user_id: viewerUserId,
-          role_id: viewerRole.id,
-          tenant_id: ctx.tenant.id,
-          shop_id: ctx.shop.id,
+          userId: viewerUserId,
+          roleId: viewerRole.id,
+          tenantId: ctx.tenant.id,
+          shopId: ctx.shop.id,
         });
       });
 

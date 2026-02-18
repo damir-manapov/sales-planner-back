@@ -77,20 +77,20 @@ describe('Me (e2e)', () => {
     expect(me.roles.length).toBeGreaterThanOrEqual(1); // Should have at least tenantAdmin role
 
     // Verify tenantAdmin role (assigned by with-shop-and-user endpoint)
-    const tenantAdminRole = me.roles.find((r) => r.role_name === ROLE_NAMES.TENANT_ADMIN);
+    const tenantAdminRole = me.roles.find((r) => r.roleName === ROLE_NAMES.TENANT_ADMIN);
     expect(tenantAdminRole).toBeTruthy();
-    expect(tenantAdminRole).toHaveProperty('tenant_id', ctx.tenant.id);
-    expect(tenantAdminRole?.tenant_title).toBeTruthy();
-    expect(tenantAdminRole).toHaveProperty('shop_id', null); // Tenant-level role
+    expect(tenantAdminRole).toHaveProperty('tenantId', ctx.tenant.id);
+    expect(tenantAdminRole?.tenantTitle).toBeTruthy();
+    expect(tenantAdminRole).toHaveProperty('shopId', null); // Tenant-level role
 
     // Verify derived tenantOwner role
-    const ownerRole = me.roles.find((r) => r.role_name === ROLE_NAMES.TENANT_OWNER);
+    const ownerRole = me.roles.find((r) => r.roleName === ROLE_NAMES.TENANT_OWNER);
     expect(ownerRole).toBeTruthy();
-    expect(ownerRole).toHaveProperty('role_name', ROLE_NAMES.TENANT_OWNER);
-    expect(ownerRole).toHaveProperty('tenant_id', ctx.tenant.id);
-    expect(ownerRole?.tenant_title).toBeTruthy();
-    expect(ownerRole).toHaveProperty('shop_id', null);
-    expect(ownerRole).toHaveProperty('shop_title', null);
+    expect(ownerRole).toHaveProperty('roleName', ROLE_NAMES.TENANT_OWNER);
+    expect(ownerRole).toHaveProperty('tenantId', ctx.tenant.id);
+    expect(ownerRole?.tenantTitle).toBeTruthy();
+    expect(ownerRole).toHaveProperty('shopId', null);
+    expect(ownerRole).toHaveProperty('shopTitle', null);
 
     // Check tenants
     expect(Array.isArray(me.tenants)).toBe(true);
@@ -100,7 +100,7 @@ describe('Me (e2e)', () => {
     expect(tenant).toBeDefined();
     expect(tenant).toHaveProperty('id', ctx.tenant.id);
     expect(tenant?.title).toBeTruthy();
-    expect(tenant).toHaveProperty('is_owner', true);
+    expect(tenant).toHaveProperty('isOwner', true);
 
     // Verify shops are included in tenant (tenant admin sees all shops)
     expect(Array.isArray(tenant?.shops)).toBe(true);

@@ -40,7 +40,7 @@ export abstract class ReadOnlyShopScopedRepository<TEntity>
     let q = this.db
       .selectFrom(this.tableName as any)
       .select(this.db.fn.countAll<number>().as('count'))
-      .where('shop_id', '=', shopId);
+      .where('shopId', '=', shopId);
 
     if (query?.ids && query.ids.length > 0) {
       q = q.where('id', 'in', query.ids);
@@ -62,7 +62,7 @@ export abstract class ReadOnlyShopScopedRepository<TEntity>
     let q = this.db
       .selectFrom(this.tableName as any)
       .selectAll()
-      .where('shop_id', '=', shopId);
+      .where('shopId', '=', shopId);
 
     if (query?.ids && query.ids.length > 0) {
       q = q.where('id', 'in', query.ids);

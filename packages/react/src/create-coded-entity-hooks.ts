@@ -7,7 +7,7 @@ import type {
   ShopContextParams,
 } from '@sales-planner/shared';
 import { useSalesPlannerClient } from './provider.js';
-import { queryKeys, toShopContextParams } from './keys.js';
+import { queryKeys } from './keys.js';
 import type { ShopContext } from './keys.js';
 
 type CodedEntityClientLike<TEntity, TCreate, TUpdate, TImport, TExport> = {
@@ -42,7 +42,7 @@ export function createCodedEntityHooks<TEntity, TCreate, TUpdate, TImport, TExpo
     const client = useSalesPlannerClient();
     return useQuery({
       queryKey: queryKeys.entityList(entityName, ctx, query as Record<string, unknown> | undefined),
-      queryFn: () => getClient(client).getAll(toShopContextParams(ctx), query),
+      queryFn: () => getClient(client).getAll(ctx, query),
       ...options,
     });
   }
@@ -55,7 +55,7 @@ export function createCodedEntityHooks<TEntity, TCreate, TUpdate, TImport, TExpo
     const client = useSalesPlannerClient();
     return useQuery({
       queryKey: queryKeys.entityDetail(entityName, ctx, id),
-      queryFn: () => getClient(client).getById(toShopContextParams(ctx), id),
+      queryFn: () => getClient(client).getById(ctx, id),
       ...options,
     });
   }
@@ -68,7 +68,7 @@ export function createCodedEntityHooks<TEntity, TCreate, TUpdate, TImport, TExpo
     const client = useSalesPlannerClient();
     return useQuery({
       queryKey: queryKeys.entityByCode(entityName, ctx, code),
-      queryFn: () => getClient(client).getByCode(toShopContextParams(ctx), code),
+      queryFn: () => getClient(client).getByCode(ctx, code),
       ...options,
     });
   }
@@ -80,7 +80,7 @@ export function createCodedEntityHooks<TEntity, TCreate, TUpdate, TImport, TExpo
     const client = useSalesPlannerClient();
     return useQuery({
       queryKey: queryKeys.entityExport(entityName, ctx, 'json'),
-      queryFn: () => getClient(client).exportJson(toShopContextParams(ctx)),
+      queryFn: () => getClient(client).exportJson(ctx),
       enabled: false, // manual trigger only
       ...options,
     });
@@ -93,7 +93,7 @@ export function createCodedEntityHooks<TEntity, TCreate, TUpdate, TImport, TExpo
     const client = useSalesPlannerClient();
     return useQuery({
       queryKey: queryKeys.entityExport(entityName, ctx, 'csv'),
-      queryFn: () => getClient(client).exportCsv(toShopContextParams(ctx)),
+      queryFn: () => getClient(client).exportCsv(ctx),
       enabled: false,
       ...options,
     });
@@ -106,7 +106,7 @@ export function createCodedEntityHooks<TEntity, TCreate, TUpdate, TImport, TExpo
     const client = useSalesPlannerClient();
     const queryClient = useQueryClient();
     return useMutation({
-      mutationFn: (request: TCreate) => getClient(client).create(toShopContextParams(ctx), request),
+      mutationFn: (request: TCreate) => getClient(client).create(ctx, request),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: queryKeys.entity(entityName, ctx) });
       },
@@ -122,7 +122,7 @@ export function createCodedEntityHooks<TEntity, TCreate, TUpdate, TImport, TExpo
     const queryClient = useQueryClient();
     return useMutation({
       mutationFn: ({ id, data }: { id: number; data: TUpdate }) =>
-        getClient(client).update(toShopContextParams(ctx), id, data),
+        getClient(client).update(ctx, id, data),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: queryKeys.entity(entityName, ctx) });
       },
@@ -137,7 +137,7 @@ export function createCodedEntityHooks<TEntity, TCreate, TUpdate, TImport, TExpo
     const client = useSalesPlannerClient();
     const queryClient = useQueryClient();
     return useMutation({
-      mutationFn: (id: number) => getClient(client).delete(toShopContextParams(ctx), id),
+      mutationFn: (id: number) => getClient(client).delete(ctx, id),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: queryKeys.entity(entityName, ctx) });
       },
@@ -152,8 +152,7 @@ export function createCodedEntityHooks<TEntity, TCreate, TUpdate, TImport, TExpo
     const client = useSalesPlannerClient();
     const queryClient = useQueryClient();
     return useMutation({
-      mutationFn: (items: TImport[]) =>
-        getClient(client).importJson(toShopContextParams(ctx), items),
+      mutationFn: (items: TImport[]) => getClient(client).importJson(ctx, items),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: queryKeys.entity(entityName, ctx) });
       },
@@ -168,8 +167,7 @@ export function createCodedEntityHooks<TEntity, TCreate, TUpdate, TImport, TExpo
     const client = useSalesPlannerClient();
     const queryClient = useQueryClient();
     return useMutation({
-      mutationFn: (csvContent: string) =>
-        getClient(client).importCsv(toShopContextParams(ctx), csvContent),
+      mutationFn: (csvContent: string) => getClient(client).importCsv(ctx, csvContent),
       onSuccess: () => {
         queryClient.invalidateQueries({ queryKey: queryKeys.entity(entityName, ctx) });
       },

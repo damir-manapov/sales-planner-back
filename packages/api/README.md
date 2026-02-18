@@ -6,8 +6,8 @@ NestJS REST API for multi-tenant sales planning and management. Built with Kysel
 
 - **Pagination** - All list endpoints return paginated responses with `items`, `total`, `limit`, `offset`
   - Query parameters: `limit` (1-1000, default 100), `offset` (default 0), `ids` (comma-separated IDs to filter)
-  - Sales history, leftovers, competitor sales support additional period filtering: `period_from`, `period_to`
-  - Example: `GET /brands?shop_id=1&tenant_id=1&ids=1,2,3&limit=10`
+  - Sales history, leftovers, competitor sales support additional period filtering: `periodFrom`, `periodTo`
+  - Example: `GET /brands?shopId=1&tenantId=1&ids=1,2,3&limit=10`
 - **Users** - User management
 - **Tenants** - Multi-tenant support with audit trail (tracks who created each tenant)
 - **Shops** - Shop management linked to tenants
@@ -46,11 +46,11 @@ NestJS REST API for multi-tenant sales planning and management. Built with Kysel
   - Example endpoints for download templates
 - **SKUs** - SKU management linked to shops (unique code per shop)
   - Fields: code, title, title2 (optional extended title)
-  - Supports classification via brand_code, category_code, group_code, status_code, supplier_code (all optional)
+  - Supports classification via brandCode, categoryCode, groupCode, statusCode, supplierCode (all optional)
   - Import/Export: JSON and CSV file upload support
   - Proper file download headers for exports
-- **Sales History** - Monthly sales data per SKU (shop-level entity with numeric marketplace_id)
-  - Create endpoint requires numeric `marketplace_id` (foreign key to marketplaces table)
+- **Sales History** - Monthly sales data per SKU (shop-level entity with numeric marketplaceId)
+  - Create endpoint requires numeric `marketplaceId` (foreign key to marketplaces table)
   - Import/Export: JSON and CSV file upload support with marketplace **code** column
   - Auto-creates missing SKUs and marketplaces during import (by code)
   - Import converts marketplace codes to IDs, export converts IDs to codes
@@ -61,7 +61,7 @@ NestJS REST API for multi-tenant sales planning and management. Built with Kysel
   - Example endpoints for download templates
 - **Leftovers** - Inventory leftovers per warehouse/SKU/period
   - Fields: warehouse (code), sku (code), period (YYYY-MM), quantity
-  - Period filtering: `period_from`, `period_to` query params
+  - Period filtering: `periodFrom`, `periodTo` query params
   - Import/Export: JSON and CSV with flexible period formats
 - **Seasonal Coefficients** - Monthly seasonality coefficients per group
   - Fields: group (code), month (1-12), coefficient (positive number)
@@ -74,7 +74,7 @@ NestJS REST API for multi-tenant sales planning and management. Built with Kysel
   - Import uses marketplaceProductId (camelCase) for user convenience
 - **Competitor Sales** - Monthly sales data for competitor products
   - Fields: marketplaceProductId, period (YYYY-MM), quantity
-  - Period filtering: `period_from`, `period_to` query params
+  - Period filtering: `periodFrom`, `periodTo` query params
   - Import uses marketplaceProductId (camelCase) with flexible period formats
 - **Me** - Get current user data with roles and tenants
 - **Metadata** - Entity metadata API for UI documentation
@@ -84,7 +84,7 @@ NestJS REST API for multi-tenant sales planning and management. Built with Kysel
   - Used by UI for documentation and dynamic form generation
 - **Computed Entities** - Read-only aggregated data from materialized views
   - **SKU Metrics**: ABC classification, sales rank, days of stock per SKU
-    - API returns IDs (group_id, category_id, brand_id, status_id, supplier_id) like other entities
+    - API returns IDs (groupId, categoryId, brandId, statusId, supplierId) like other entities
     - Export uses simple field names (code, title, group, category, brand, status, supplier) like SKU export
     - ABC classification: A (top 20%), B (next 30%), C (bottom 50%) by sales
     - Endpoints: GET /sku-metrics (list), GET /sku-metrics/:id (single), GET /sku-metrics/export/csv, GET /sku-metrics/export/json
@@ -276,7 +276,7 @@ export interface CreateSkuRequest {
   code: string;
   title: string;
   title2?: string;  // optional extended title
-  // shop_id, tenant_id omitted - injected by @ShopContext decorator
+  // shopId, tenantId omitted - injected by @ShopContext decorator
 }
 
 // DTO types - Service layer (includes all fields)
@@ -284,8 +284,8 @@ export interface CreateSkuDto {
   code: string;
   title: string;
   title2?: string;
-  shop_id: number;
-  tenant_id: number;
+  shopId: number;
+  tenantId: number;
 }
 ```
 
@@ -308,7 +308,7 @@ export type CreateSkuRequest = AssertCompatible<
 >;
 export type CreateSkuDto = AssertCompatible<
   SharedCreateSkuDto,
-  z.infer<typeof CreateSkuSchema> & { shop_id: number; tenant_id: number }
+  z.infer<typeof CreateSkuSchema> & { shopId: number; tenantId: number }
 >;
 ```
 
@@ -323,14 +323,14 @@ async create(
   // Merge request with context to create full DTO
   return this.skusService.create({
     ...dto,
-    shop_id: ctx.shopId,
-    tenant_id: ctx.tenantId,
+    shopId: ctx.shopId,
+    tenantId: ctx.tenantId,
   });
 }
 
 // Service - Business logic uses DTO types
 async create(dto: CreateSkuDto): Promise<Sku> {
-  // dto has all fields including shop_id, tenant_id
+  // dto has all fields including shopId, tenantId
   return this.db.insertInto('skus').values(dto)...
 }
 ```
@@ -352,21 +352,21 @@ The API implements a hierarchical role-based access control system:
 | `viewer` | Shop | Explicit | Read-only access to a specific shop's resources |
 | `editor` | Shop | Explicit | Read/write access to a specific shop's resources |
 | `tenantAdmin` | Tenant | Explicit | Full access to all shops within a tenant |
-| `tenantOwner` | Tenant | **Derived** | Full access to owned tenant (from `tenants.owner_id`) |
+| `tenantOwner` | Tenant | **Derived** | Full access to owned tenant (from `tenants.ownerId`) |
 | `systemAdmin` | Global | Explicit | Full access to all tenants and shops |
 
 ### Role Assignment
 
-- **Shop-level roles** (`viewer`, `editor`): Assigned with `tenant_id` and `shop_id`
-- **Tenant-level roles** (`tenantAdmin`): Assigned with `tenant_id` only (no `shop_id`)
-- **Tenant owner** (`tenantOwner`): **Automatically derived** from `tenants.owner_id` - no explicit assignment needed
+- **Shop-level roles** (`viewer`, `editor`): Assigned with `tenantId` and `shopId`
+- **Tenant-level roles** (`tenantAdmin`): Assigned with `tenantId` only (no `shopId`)
+- **Tenant owner** (`tenantOwner`): **Automatically derived** from `tenants.ownerId` - no explicit assignment needed
 - **System-level roles** (`systemAdmin`): No tenant or shop scope
 
 ### Access Control Logic
 
 **Shop-level resources** (SKUs, Sales History):
 1. **System admin**: Full access to everything
-2. **Tenant owner**: Full access to all shops in tenants they own (derived from `tenants.owner_id`)
+2. **Tenant owner**: Full access to all shops in tenants they own (derived from `tenants.ownerId`)
 3. **Tenant admin**: Full access to all shops in their tenant
 4. **Shop-level roles**:
    - `viewer` or `editor`: Read access to the specific shop
@@ -397,10 +397,10 @@ Response includes:
 - User basic info (id, name, email)
 - Roles with scope (including tenant/shop titles where applicable)
   - Explicit roles from `user_roles` table
-  - Derived `tenantOwner` role for tenants where `owner_id` matches the user
+  - Derived `tenantOwner` role for tenants where `ownerId` matches the user
 - Tenants the user has access to (with ownership flag and shops array)
-  - Each tenant includes: `{ id, title, is_owner, shops: [{id, title}] }`
-  - Each tenant includes an array of shops: `{ id, title, is_owner, shops: [{id, title}] }`
+  - Each tenant includes: `{ id, title, isOwner, shops: [{id, title}] }`
+  - Each tenant includes an array of shops: `{ id, title, isOwner, shops: [{id, title}] }`
 
 ### Decorator-Based Access Control
 
@@ -411,7 +411,7 @@ The API uses NestJS decorators for clean, declarative access control in controll
 - `@RequireWriteAccess()` - Validates user has write access (editor, tenantAdmin, tenantOwner, or systemAdmin)
 
 **Context Decorator:**
-- `@ShopContext()` - Automatically extracts and validates `shop_id` and `tenant_id` from query parameters
+- `@ShopContext()` - Automatically extracts and validates `shopId` and `tenantId` from query parameters
 
 **Example:**
 ```typescript
@@ -427,14 +427,14 @@ async create(
   @ShopContext() ctx: ShopContextType,
   @Body() dto: CreateSkuDto,
 ): Promise<Sku> {
-  return this.skusService.create({ ...dto, shop_id: ctx.shopId, tenant_id: ctx.tenantId });
+  return this.skusService.create({ ...dto, shopId: ctx.shopId, tenantId: ctx.tenantId });
 }
 ```
 
 The decorators work with `AuthGuard` which:
 1. Validates the API key
 2. Checks access level metadata from decorators
-3. Extracts and validates `shop_id`/`tenant_id` from query params
+3. Extracts and validates `shopId`/`tenantId` from query params
 4. Verifies user has appropriate role-based access
 5. Throws `BadRequestException` for missing parameters or `ForbiddenException` for insufficient permissions
 
@@ -564,7 +564,7 @@ describe('My Feature (e2e)', () => {
 
 **TestContext API:**
 - `ctx.client` - Authenticated SalesPlannerClient for the test user
-- `ctx.shopContext` - `{ shop_id, tenant_id }` object for API calls
+- `ctx.shopContext` - `{ shopId, tenantId }` object for API calls
 - `ctx.tenant` - Created tenant object
 - `ctx.shop` - Created shop object
 - `ctx.user` - Created user object
@@ -796,22 +796,22 @@ sales-planner-back/
 | `/api-keys/:id` | GET, PUT, DELETE | API key CRUD |
 | `/marketplaces` | GET, POST | List/create marketplaces |
 | `/marketplaces/:id` | GET, PUT, DELETE | Marketplace CRUD |
-| `/skus` | GET, POST | List/create SKUs (requires `shop_id` and `tenant_id` query params) |
+| `/skus` | GET, POST | List/create SKUs (requires `shopId` and `tenantId` query params) |
 | `/skus/examples/json` | GET | Download example JSON file for import (no auth required) |
 | `/skus/examples/csv` | GET | Download example CSV file for import (no auth required) |
 | `/skus/export/json` | GET | Export all SKUs as JSON with file download headers |
 | `/skus/export/csv` | GET | Export all SKUs as CSV with file download headers |
 | `/skus/import/json` | POST | Import/upsert SKUs from JSON file or array |
 | `/skus/import/csv` | POST | Import/upsert SKUs from CSV file |
-| `/skus/:id` | GET, PUT, DELETE | SKU CRUD (requires `shop_id` and `tenant_id` query params) |
-| `/sales-history` | GET, POST | List/create sales history (requires `shop_id` and `tenant_id` query params) |
+| `/skus/:id` | GET, PUT, DELETE | SKU CRUD (requires `shopId` and `tenantId` query params) |
+| `/sales-history` | GET, POST | List/create sales history (requires `shopId` and `tenantId` query params) |
 | `/sales-history/examples/json` | GET | Download example JSON file for import (no auth required) |
 | `/sales-history/examples/csv` | GET | Download example CSV file for import (no auth required) |
 | `/sales-history/export/json` | GET | Export sales history as JSON with file download headers (supports period filters) |
 | `/sales-history/export/csv` | GET | Export sales history as CSV with file download headers (supports period filters) |
 | `/sales-history/import/json` | POST | Import/upsert sales history from JSON file or array (auto-creates missing SKUs) |
 | `/sales-history/import/csv` | POST | Import/upsert sales history from CSV file (auto-creates missing SKUs) |
-| `/sales-history/:id` | GET, PUT, DELETE | Sales history CRUD (requires `shop_id` and `tenant_id` query params) |
+| `/sales-history/:id` | GET, PUT, DELETE | Sales history CRUD (requires `shopId` and `tenantId` query params) |
 
 ### Pagination
 
@@ -837,15 +837,15 @@ All list endpoints return paginated responses:
 ```bash
 # Get first page (default limit=100)
 curl -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/brands?shop_id=1&tenant_id=1"
+  "http://localhost:3000/brands?shopId=1&tenantId=1"
 
 # Get specific page with custom limit
 curl -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/brands?shop_id=1&tenant_id=1&limit=20&offset=40"
+  "http://localhost:3000/brands?shopId=1&tenantId=1&limit=20&offset=40"
 
 # Sales history with period filter and pagination
 curl -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/sales-history?shop_id=1&tenant_id=1&period_from=2024-01&period_to=2024-12&limit=50&offset=0"
+  "http://localhost:3000/sales-history?shopId=1&tenantId=1&periodFrom=2024-01&periodTo=2024-12&limit=50&offset=0"
 
 # System entities (users, tenants, shops) also support pagination
 curl -H "x-api-key: $API_KEY" \
@@ -862,7 +862,7 @@ curl -H "x-api-key: $API_KEY" \
 - `GET /suppliers` - Suppliers list
 - `GET /marketplaces` - Marketplaces list
 - `GET /skus` - SKUs list
-- `GET /sales-history` - Sales history list (also supports `period_from`, `period_to` filters)
+- `GET /sales-history` - Sales history list (also supports `periodFrom`, `periodTo` filters)
 
 *System Entities:*
 - `GET /users` - Users list
@@ -874,10 +874,10 @@ curl -H "x-api-key: $API_KEY" \
 
 ### Tenant Management
 
-Tenant endpoints require authentication. When creating a tenant, the `created_by` field is automatically set to the authenticated user's ID:
+Tenant endpoints require authentication. When creating a tenant, the `createdBy` field is automatically set to the authenticated user's ID:
 
 ```bash
-# Create a tenant (created_by is set automatically to authenticated user)
+# Create a tenant (createdBy is set automatically to authenticated user)
 curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
   "http://localhost:3000/tenants" \
   -d '{"title": "My Tenant"}'
@@ -900,14 +900,14 @@ curl -X POST -H "x-api-key: $SYSTEM_ADMIN_API_KEY" -H "Content-Type: application
 
 # Response includes tenant, shop, user, and generated API key:
 # {
-#   "tenant": { "id": 1, "title": "New Company", "owner_id": 123, ... },
-#   "shop": { "id": 1, "title": "New Company", "tenant_id": 1 },
+#   "tenant": { "id": 1, "title": "New Company", "ownerId": 123, ... },
+#   "shop": { "id": 1, "title": "New Company", "tenantId": 1 },
 #   "user": { "id": 123, "email": "owner@company.com", "name": "Company Owner" },
 #   "apiKey": "sk_abc123..."
 # }
 ```
 
-The `created_by` field tracks which user created each tenant and cannot be manually set - it's always derived from the authenticated user.
+The `createdBy` field tracks which user created each tenant and cannot be manually set - it's always derived from the authenticated user.
 
 **Create Tenant with Shop and User** (`POST /tenants/with-shop-and-user`):
 - Only `systemAdmin` can use this endpoint
@@ -919,7 +919,7 @@ The `created_by` field tracks which user created each tenant and cannot be manua
 
 ### SKU Endpoints
 
-All SKU endpoints (except examples) require `shop_id` and `tenant_id` query parameters for access control:
+All SKU endpoints (except examples) require `shopId` and `tenantId` query parameters for access control:
 
 ```bash
 # Download example JSON format
@@ -930,36 +930,36 @@ curl -O http://localhost:3000/skus/examples/csv
 
 # List SKUs for a shop
 curl -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/skus?shop_id=1&tenant_id=1"
+  "http://localhost:3000/skus?shopId=1&tenantId=1"
 
 # Create a SKU
 curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
-  "http://localhost:3000/skus?shop_id=1&tenant_id=1" \
+  "http://localhost:3000/skus?shopId=1&tenantId=1" \
   -d '{"code": "SKU-001", "title": "Product 1"}'
 
 # Import SKUs from JSON (upserts by code)
 # Option 1: Upload a JSON file
 curl -X POST -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/skus/import/json?shop_id=1&tenant_id=1" \
+  "http://localhost:3000/skus/import/json?shopId=1&tenantId=1" \
   -F 'file=@skus.json'
 
 # Option 2: Send JSON directly in body
 curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
-  "http://localhost:3000/skus/import/json?shop_id=1&tenant_id=1" \
+  "http://localhost:3000/skus/import/json?shopId=1&tenantId=1" \
   -d '[{"code": "SKU-001", "title": "Product 1"}, {"code": "SKU-002", "title": "Product 2"}]'
 
 # Import SKUs from CSV (upserts by code)
 curl -X POST -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/skus/import/csv?shop_id=1&tenant_id=1" \
+  "http://localhost:3000/skus/import/csv?shopId=1&tenantId=1" \
   -F 'file=@skus.csv'
 
 # Export SKUs as JSON (downloads as file with proper headers)
 curl -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/skus/export/json?shop_id=1&tenant_id=1" -o skus.json
+  "http://localhost:3000/skus/export/json?shopId=1&tenantId=1" -o skus.json
 
 # Export SKUs as CSV (downloads as file with proper headers)
 curl -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/skus/export/csv?shop_id=1&tenant_id=1" -o skus.csv
+  "http://localhost:3000/skus/export/csv?shopId=1&tenantId=1" -o skus.csv
 ```
 
 SKU JSON format:
@@ -979,7 +979,7 @@ SKU-002,Product 2
 
 ### Brands Endpoints
 
-Brands are shop-scoped entities with unique codes per shop. All endpoints (except examples) require `shop_id` and `tenant_id` query parameters for access control.
+Brands are shop-scoped entities with unique codes per shop. All endpoints (except examples) require `shopId` and `tenantId` query parameters for access control.
 
 **Available Endpoints:**
 - `GET /brands/examples/json` - Download example JSON (no auth)
@@ -1013,25 +1013,25 @@ curl -O http://localhost:3000/brands/examples/csv
 ```bash
 # List all brands for a shop
 curl -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/brands?shop_id=1&tenant_id=1"
+  "http://localhost:3000/brands?shopId=1&tenantId=1"
 
 # Create a single brand
 curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
-  "http://localhost:3000/brands?shop_id=1&tenant_id=1" \
+  "http://localhost:3000/brands?shopId=1&tenantId=1" \
   -d '{"code": "apple", "title": "Apple"}'
 
 # Get brand by ID
 curl -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/brands/1?shop_id=1&tenant_id=1"
+  "http://localhost:3000/brands/1?shopId=1&tenantId=1"
 
 # Update brand
 curl -X PUT -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
-  "http://localhost:3000/brands/1?shop_id=1&tenant_id=1" \
+  "http://localhost:3000/brands/1?shopId=1&tenantId=1" \
   -d '{"title": "Apple Inc."}'
 
 # Delete brand
 curl -X DELETE -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/brands/1?shop_id=1&tenant_id=1"
+  "http://localhost:3000/brands/1?shopId=1&tenantId=1"
 ```
 
 #### Import Operations (Bulk Upsert)
@@ -1043,12 +1043,12 @@ Import endpoints perform **upsert** operations: insert new brands or update exis
 ```bash
 # Option 1: Upload a JSON file
 curl -X POST -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/brands/import/json?shop_id=1&tenant_id=1" \
+  "http://localhost:3000/brands/import/json?shopId=1&tenantId=1" \
   -F 'file=@brands.json'
 
 # Option 2: Send JSON array directly in body
 curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
-  "http://localhost:3000/brands/import/json?shop_id=1&tenant_id=1" \
+  "http://localhost:3000/brands/import/json?shopId=1&tenantId=1" \
   -d '[{"code": "apple", "title": "Apple"}, {"code": "samsung", "title": "Samsung"}]'
 ```
 
@@ -1057,7 +1057,7 @@ curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
 ```bash
 # Import brands from CSV file
 curl -X POST -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/brands/import/csv?shop_id=1&tenant_id=1" \
+  "http://localhost:3000/brands/import/csv?shopId=1&tenantId=1" \
   -F 'file=@brands.csv'
 ```
 
@@ -1077,13 +1077,13 @@ Export endpoints return all brands for the shop with proper download headers.
 ```bash
 # Export as JSON file
 curl -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/brands/export/json?shop_id=1&tenant_id=1" \
+  "http://localhost:3000/brands/export/json?shopId=1&tenantId=1" \
   -o brands.json
 # Downloads: brands.json with Content-Disposition header
 
 # Export as CSV file
 curl -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/brands/export/csv?shop_id=1&tenant_id=1" \
+  "http://localhost:3000/brands/export/csv?shopId=1&tenantId=1" \
   -o brands.csv
 # Downloads: brands.csv with Content-Disposition header
 ```
@@ -1134,7 +1134,7 @@ dell;Dell
 
 ### Sales History Endpoints
 
-All sales history endpoints (except examples) require `shop_id` and `tenant_id` query parameters for access control.
+All sales history endpoints (except examples) require `shopId` and `tenantId` query parameters for access control.
 Period is specified in `YYYY-MM` format (stored as DATE, first of month).
 
 ```bash
@@ -1146,52 +1146,52 @@ curl -O http://localhost:3000/sales-history/examples/csv
 
 # List sales history for a shop
 curl -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/sales-history?shop_id=1&tenant_id=1"
+  "http://localhost:3000/sales-history?shopId=1&tenantId=1"
 
 # Filter by period range
 curl -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/sales-history?shop_id=1&tenant_id=1&period_from=2026-01&period_to=2026-12"
+  "http://localhost:3000/sales-history?shopId=1&tenantId=1&periodFrom=2026-01&periodTo=2026-12"
 
 # Create a sales history record
 curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
-  "http://localhost:3000/sales-history?shop_id=1&tenant_id=1" \
-  -d '{"sku_id": 1, "period": "2026-01", "quantity": 100}'
+  "http://localhost:3000/sales-history?shopId=1&tenantId=1" \
+  -d '{"skuId": 1, "period": "2026-01", "quantity": 100}'
 
 # Import sales history (upserts by sku_code + period, auto-creates missing SKUs)
 # Option 1: Upload a JSON file
 curl -X POST -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/sales-history/import/json?shop_id=1&tenant_id=1" \
+  "http://localhost:3000/sales-history/import/json?shopId=1&tenantId=1" \
   -F 'file=@sales-history.json'
 
 # Option 2: Send JSON directly in body
 curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
-  "http://localhost:3000/sales-history/import/json?shop_id=1&tenant_id=1" \
+  "http://localhost:3000/sales-history/import/json?shopId=1&tenantId=1" \
   -d '[{"sku_code": "SKU-001", "period": "2026-01", "quantity": 100}]'
 
 # Import sales history from CSV
 curl -X POST -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/sales-history/import/csv?shop_id=1&tenant_id=1" \
+  "http://localhost:3000/sales-history/import/csv?shopId=1&tenantId=1" \
   -F 'file=@sales-history.csv'
 
 # Export sales history as JSON (downloads as file with proper headers)
 curl -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/sales-history/export/json?shop_id=1&tenant_id=1" -o sales-history.json
+  "http://localhost:3000/sales-history/export/json?shopId=1&tenantId=1" -o sales-history.json
 
 # Export sales history as CSV (downloads as file with proper headers)
 curl -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/sales-history/export/csv?shop_id=1&tenant_id=1" -o sales-history.csv
+  "http://localhost:3000/sales-history/export/csv?shopId=1&tenantId=1" -o sales-history.csv
 
 # Export sales history as CSV
 curl -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/sales-history/export/csv?shop_id=1&tenant_id=1"
+  "http://localhost:3000/sales-history/export/csv?shopId=1&tenantId=1"
 
 # Export with period filter (works for both JSON and CSV)
 curl -H "x-api-key: $API_KEY" \
-  "http://localhost:3000/sales-history/export/json?shop_id=1&tenant_id=1&period_from=2026-01&period_to=2026-12"
+  "http://localhost:3000/sales-history/export/json?shopId=1&tenantId=1&periodFrom=2026-01&periodTo=2026-12"
 
 # Import sales history from CSV (upserts by sku_code + period, auto-creates missing SKUs)
 curl -X POST -H "x-api-key: $API_KEY" -H "Content-Type: application/json" \
-  "http://localhost:3000/sales-history/import/csv?shop_id=1&tenant_id=1" \
+  "http://localhost:3000/sales-history/import/csv?shopId=1&tenantId=1" \
   -d '{"content": "sku_code,period,quantity\nSKU-001,2026-01,100\nSKU-002,2026-01,50"}'
 ```
 

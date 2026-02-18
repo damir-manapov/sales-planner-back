@@ -18,7 +18,7 @@ const client = new SalesPlannerClient({
   apiKey: 'your-api-key',
 });
 
-const ctx = { tenant_id: 1, shop_id: 1 };
+const ctx = { tenantId: 1, shopId: 1 };
 
 // CRUD (all list endpoints return paginated responses)
 const { items: brands, total } = await client.brands.getAll(ctx);
@@ -62,16 +62,16 @@ const { items: salesHistory } = await client.salesHistory.getAll(ctx, { ids: [10
 **Period Filtering** - Sales history, leftovers, and competitor sales also support period filtering:
 ```typescript
 const { items, total } = await client.salesHistory.getAll(ctx, {
-  period_from: '2024-01',
-  period_to: '2024-12',
+  periodFrom: '2024-01',
+  periodTo: '2024-12',
   limit: 50,
   offset: 0,
 });
 
 // Same for leftovers and competitor sales
 const { items: leftovers } = await client.leftovers.getAll(ctx, {
-  period_from: '2024-01',
-  period_to: '2024-12',
+  periodFrom: '2024-01',
+  periodTo: '2024-12',
 });
 ```
 
@@ -80,8 +80,8 @@ const { items: leftovers } = await client.leftovers.getAll(ctx, {
 // Get specific sales history records with period filter
 const { items } = await client.salesHistory.getAll(ctx, {
   ids: [1, 2, 3],
-  period_from: '2024-01',
-  period_to: '2024-06',
+  periodFrom: '2024-01',
+  periodTo: '2024-06',
   limit: 50,
 });
 ```
@@ -96,16 +96,24 @@ All shop-scoped clients (`skus`, `brands`, `categories`, `groups`, `statuses`, `
 - `importJson(ctx, items)`, `importCsv(ctx, csv)`, `exportJson(ctx)`, `exportCsv(ctx)`
 - `getExampleJson()`, `getExampleCsv()` (no auth)
 
-System clients (`users`, `tenants`, `shops`, `roles`, `userRoles`, `apiKeys`) also return paginated responses:
+System clients (`users`, `tenants`, `shops`, `roles`, `userRoles`, `userShops`, `apiKeys`) also return paginated responses:
 
 ```typescript
 // All system getAll() methods return PaginatedResponse<T>
 const { items: users, total } = await client.users.getAll();
 const { items: tenants } = await client.tenants.getAll({ limit: 10 });
 const { items: shops } = await client.shops.getAll();
-const { items: roles } = await client.roles.getAll();
 const { items: userRoles } = await client.userRoles.getAll();
 const { items: apiKeys } = await client.apiKeys.getAll();
+
+// Roles are predefined and read-only (available to all authenticated users)
+const { items: roles } = await client.roles.getAll();
+const role = await client.roles.getById(1);
+
+// User-shop assignments
+const userShops = await client.userShops.getAll({ shopId: 1 });
+await client.userShops.create({ userId: 1, shopId: 1 });
+await client.userShops.delete(assignmentId);
 
 // Delete all shop data (SKUs, sales history, brands, categories, etc.)
 const result = await client.shops.deleteData(shopId);
@@ -133,25 +141,25 @@ console.log(metadata); // { entities: [...], version: "..." }
 SKU metrics and materialized view management:
 
 ```typescript
-const ctx = { shop_id: 1, tenant_id: 1 };
+const ctx = { shopId: 1, tenantId: 1 };
 
 // SKU Metrics - aggregated metrics from materialized views
-const { items, total } = await client.skuMetrics.list(ctx.shop_id, ctx.tenant_id);
-const metric = await client.skuMetrics.get(id, ctx.shop_id, ctx.tenant_id);
-const topProducts = await client.skuMetrics.getByAbcClass('A', ctx.shop_id, ctx.tenant_id);
+const { items, total } = await client.skuMetrics.list(ctx);
+const metric = await client.skuMetrics.get(ctx, id);
+const topProducts = await client.skuMetrics.getByAbcClass(ctx, 'A');
 
 // Export
-const csv = await client.skuMetrics.exportCsv(ctx.shop_id, ctx.tenant_id);
-const json = await client.skuMetrics.exportJson(ctx.shop_id, ctx.tenant_id);
+const csv = await client.skuMetrics.exportCsv(ctx);
+const json = await client.skuMetrics.exportJson(ctx);
 
 // View Management
-const views = await client.computed.getViews(ctx.shop_id, ctx.tenant_id);
+const views = await client.computed.getViews(ctx);
 // [{ name: 'mv_sku_metrics', description: 'SKU metrics with ABC classification' }]
 
-const result = await client.computed.refreshAll(ctx.shop_id, ctx.tenant_id);
+const result = await client.computed.refreshAll(ctx);
 // { results: [...], totalDuration: 1234, success: true }
 
-const viewResult = await client.computed.refreshView('mv_sku_metrics', ctx.shop_id, ctx.tenant_id);
+const viewResult = await client.computed.refreshView(ctx, 'mv_sku_metrics');
 // { view: 'mv_sku_metrics', duration: 500, success: true }
 ```
 
@@ -174,8 +182,8 @@ try {
 ```typescript
 // Required for all shop-scoped operations
 interface ShopContextParams {
-  shop_id: number;
-  tenant_id: number;
+  shopId: number;
+  tenantId: number;
 }
 
 // Pagination (all getAll methods support this)
@@ -187,8 +195,8 @@ interface PaginationQuery {
 
 // Period filtering (sales history, leftovers, competitor sales)
 interface PeriodQuery {
-  period_from?: string;  // YYYY-MM format
-  period_to?: string;    // YYYY-MM format
+  periodFrom?: string;  // YYYY-MM format
+  periodTo?: string;    // YYYY-MM format
 }
 
 // Paginated response (returned by all getAll methods)
@@ -208,10 +216,10 @@ All entities extend base interfaces:
 // Base for shop-scoped entities without code (e.g., SalesHistory)
 interface ShopScopedBaseEntity {
   id: number;
-  shop_id: number;
-  tenant_id: number;
-  created_at: Date;
-  updated_at: Date;
+  shopId: number;
+  tenantId: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 // Base for coded entities (e.g., SKUs, Brands, Categories)
@@ -228,45 +236,45 @@ interface User {
   id: number;
   email: string;
   name: string;
-  default_shop_id: number | null;
-  created_at: Date;
-  updated_at: Date;
+  defaultShopId: number | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface Tenant {
   id: number;
   title: string;
-  owner_id: number | null;
-  created_by: number;
-  created_at: Date;
-  updated_at: Date;
+  ownerId: number | null;
+  createdBy: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface Shop {
   id: number;
   title: string;
-  tenant_id: number;
-  created_at: Date;
-  updated_at: Date;
+  tenantId: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface Role {
   id: number;
   name: string;
   description: string | null;
-  created_at: Date;
-  updated_at: Date;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface ApiKey {
   id: number;
-  user_id: number;
+  userId: number;
   key: string;
   name: string | null;
-  expires_at: Date | null;
-  last_used_at: Date | null;
-  created_at: Date;
-  updated_at: Date;
+  expiresAt: Date | null;
+  lastUsedAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
 }
 ```
 
@@ -277,13 +285,13 @@ Coded entities (`Sku`, `Brand`, `Category`, `Group`, `Status`, `Supplier`, `Ware
 ```typescript
 interface Sku extends CodedShopScopedEntity {
   title2?: string | null;
-  category_id?: number | null;
-  group_id?: number | null;
-  status_id?: number | null;
-  supplier_id?: number | null;
+  categoryId?: number | null;
+  groupId?: number | null;
+  statusId?: number | null;
+  supplierId?: number | null;
 }
 // Brand, Category, Group, Status, Supplier, Warehouse, Marketplace
-// all have just: id, code, title, shop_id, tenant_id, created_at, updated_at
+// all have just: id, code, title, shopId, tenantId, createdAt, updatedAt
 ```
 
 #### Time-Series Entities
@@ -291,37 +299,37 @@ interface Sku extends CodedShopScopedEntity {
 ```typescript
 interface SalesHistory {
   id: number;
-  sku_id: number;
-  marketplace_id: number;
+  skuId: number;
+  marketplaceId: number;
   period: string;      // YYYY-MM format
   quantity: number;
-  shop_id: number;
-  tenant_id: number;
-  created_at: Date;
-  updated_at: Date;
+  shopId: number;
+  tenantId: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface Leftover {
   id: number;
-  sku_id: number;
-  warehouse_id: number;
+  skuId: number;
+  warehouseId: number;
   period: string;      // YYYY-MM format
   quantity: number;
-  shop_id: number;
-  tenant_id: number;
-  created_at: Date;
-  updated_at: Date;
+  shopId: number;
+  tenantId: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface SeasonalCoefficient {
   id: number;
-  group_id: number;
+  groupId: number;
   month: number;       // 1-12
   coefficient: number;
-  shop_id: number;
-  tenant_id: number;
-  created_at: Date;
-  updated_at: Date;
+  shopId: number;
+  tenantId: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 ```
 
@@ -330,40 +338,40 @@ interface SeasonalCoefficient {
 ```typescript
 interface CompetitorProduct {
   id: number;
-  marketplace_id: number;
-  marketplace_product_id: string;  // BIGINT as string
+  marketplaceId: number;
+  marketplaceProductId: string;  // BIGINT as string
   title: string | null;
   brand: string | null;
-  shop_id: number;
-  tenant_id: number;
-  created_at: Date;
-  updated_at: Date;
+  shopId: number;
+  tenantId: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface CompetitorSale {
   id: number;
-  competitor_product_id: number;
+  competitorProductId: number;
   period: string;      // YYYY-MM format
   quantity: number;
-  shop_id: number;
-  tenant_id: number;
-  created_at: Date;
-  updated_at: Date;
+  shopId: number;
+  tenantId: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 interface SkuCompetitorMapping {
   id: number;
-  sku_id: number;
-  competitor_product_id: number;
-  shop_id: number;
-  tenant_id: number;
-  created_at: Date;
-  updated_at: Date;
+  skuId: number;
+  competitorProductId: number;
+  shopId: number;
+  tenantId: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 ```
 
 Available entity types summary:
-- `User`, `Tenant`, `Shop`, `Role`, `ApiKey` - system entities
+- `User`, `Tenant`, `Shop`, `Role`, `UserShop`, `ApiKey` - system entities
 - `Sku`, `Brand`, `Category`, `Group`, `Status`, `Supplier`, `Warehouse`, `Marketplace` - shop data
 - `SalesHistory`, `Leftover`, `SeasonalCoefficient` - time-series data
 - `CompetitorProduct`, `CompetitorSale`, `SkuCompetitorMapping` - competitor data
@@ -374,23 +382,23 @@ Available entity types summary:
 ```typescript
 interface SkuMetrics {
   id: number;
-  sku_id: number;
-  shop_id: number;
-  tenant_id: number;
-  sku_code: string;
-  sku_title: string;
+  skuId: number;
+  shopId: number;
+  tenantId: number;
+  skuCode: string;
+  skuTitle: string;
   // IDs for API responses (like other entities)
-  group_id: number | null;
-  category_id: number | null;
-  status_id: number | null;
-  supplier_id: number | null;
-  last_period: string;        // YYYY-MM format
-  last_period_sales: number;  // Total sales for last period
-  current_stock: number;      // Current inventory
-  days_of_stock: number | null;
-  abc_class: 'A' | 'B' | 'C'; // A=top 20%, B=next 30%, C=bottom 50%
-  sales_rank: number;         // 1 = highest sales
-  computed_at: Date;
+  groupId: number | null;
+  categoryId: number | null;
+  statusId: number | null;
+  supplierId: number | null;
+  lastPeriod: string;        // YYYY-MM format
+  lastPeriodSales: number;  // Total sales for last period
+  currentStock: number;      // Current inventory
+  daysOfStock: number | null;
+  abcClass: 'A' | 'B' | 'C'; // A=top 20%, B=next 30%, C=bottom 50%
+  salesRank: number;         // 1 = highest sales
+  computedAt: Date;
 }
 
 // Export uses simple names (like SKUs export), not camelCase
@@ -449,10 +457,10 @@ interface SkuImportResult extends ImportResult {
   created: number;
   updated: number;
   errors: string[];
-  categories_created: number;
-  groups_created: number;
-  statuses_created: number;
-  suppliers_created: number;
+  categoriesCreated: number;
+  groupsCreated: number;
+  statusesCreated: number;
+  suppliersCreated: number;
 }
 ```
 
@@ -462,54 +470,61 @@ interface SkuImportResult extends ImportResult {
 import type {
   // Query & Response
   ShopContextParams, PaginationQuery, PaginatedResponse, PeriodQuery,
-  SalesHistoryQuery, LeftoverQuery, CompetitorSaleQuery, GetUserRolesQuery,
-  
+  SalesHistoryQuery, LeftoverQuery, CompetitorSaleQuery,
+  GetUserRolesQuery, GetUserShopsQuery,
+
   // System Entities
-  User, Tenant, Shop, Role, ApiKey, UserRoleResponse,
-  
+  User, Tenant, Shop, Role, UserShop, ApiKey, UserRoleResponse,
+
   // Shop Data Entities
   Sku, Brand, Category, Group, Status, Supplier, Warehouse, Marketplace,
-  
+
   // Time-Series Entities
   SalesHistory, Leftover, SeasonalCoefficient,
-  
+
   // Competitor Entities
   CompetitorProduct, CompetitorSale, SkuCompetitorMapping,
-  
+
   // Computed Entities (read-only)
   SkuMetrics,
-  
+
   // User/Me Response Types
   UserWithRolesAndTenants, UserRole, TenantInfo, ShopInfo,
-  
+
   // Create/Update Requests
   CreateSkuRequest, UpdateSkuRequest,
   CreateUserRequest, UpdateUserRequest,
   CreateTenantRequest, UpdateTenantRequest,
   CreateShopRequest, UpdateShopRequest,
   CreateApiKeyRequest,
-  
+  CreateUserShopDto,
+
   // Import Items (use string codes, auto-resolved)
   ImportSkuItem, ImportSalesHistoryItem, ImportLeftoverItem,
   ImportSeasonalCoefficientItem, ImportSkuCompetitorMappingItem,
   ImportCompetitorProductItem, ImportCompetitorSaleItem,
   ImportBrandItem, ImportCategoryItem, ImportGroupItem,
   ImportStatusItem, ImportSupplierItem, ImportWarehouseItem, ImportMarketplaceItem,
-  
+
   // Export Items
-  SkuExportItem, SalesHistoryExportItem, LeftoverExportItem,
+  SkuExportItem, SkuMetricsExportItem, SalesHistoryExportItem, LeftoverExportItem,
   SeasonalCoefficientExportItem, SkuCompetitorMappingExportItem,
   CompetitorProductExportItem, CompetitorSaleExportItem,
   BrandExportItem, CategoryExportItem, GroupExportItem,
   StatusExportItem, SupplierExportItem, WarehouseExportItem, MarketplaceExportItem,
-  
+
   // Results
   ImportResult, SkuImportResult, SalesHistoryImportResult, DeleteDataResult,
-  
+
   // Metadata (for UI documentation)
   EntitiesMetadata, EntityMetadata, EntityFieldMetadata, FieldType,
 } from '@sales-planner/http-client';
 ```
+
+## Related Packages
+
+- `@sales-planner/shared` — TypeScript types (included as dependency)
+- `@sales-planner/react` — React hooks powered by TanStack Query
 
 ## License
 

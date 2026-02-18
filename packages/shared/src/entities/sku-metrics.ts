@@ -7,41 +7,41 @@
 
 export interface SkuMetrics {
   id: number;
-  sku_id: number;
-  shop_id: number;
-  tenant_id: number;
-  sku_code: string;
-  sku_title: string;
+  skuId: number;
+  shopId: number;
+  tenantId: number;
+  skuCode: string;
+  skuTitle: string;
   /** Group ID (null if not assigned) */
-  group_id: number | null;
+  groupId: number | null;
   /** Category ID (null if not assigned) */
-  category_id: number | null;
+  categoryId: number | null;
   /** Status ID (null if not assigned) */
-  status_id: number | null;
+  statusId: number | null;
   /** Supplier ID (null if not assigned) */
-  supplier_id: number | null;
+  supplierId: number | null;
   /** Group code (for export convenience) */
-  group_code: string | null;
+  groupCode: string | null;
   /** Category code (for export convenience) */
-  category_code: string | null;
+  categoryCode: string | null;
   /** Status code (for export convenience) */
-  status_code: string | null;
+  statusCode: string | null;
   /** Supplier code (for export convenience) */
-  supplier_code: string | null;
+  supplierCode: string | null;
   /** Period in YYYY-MM format */
-  last_period: string;
+  lastPeriod: string;
   /** Total sales quantity for the last period */
-  last_period_sales: number;
+  lastPeriodSales: number;
   /** Current stock across all warehouses */
-  current_stock: number;
+  currentStock: number;
   /** Estimated days of stock based on sales velocity */
-  days_of_stock: number | null;
+  daysOfStock: number | null;
   /** ABC classification: A (top 20%), B (next 30%), C (bottom 50%) */
-  abc_class: 'A' | 'B' | 'C';
+  abcClass: 'A' | 'B' | 'C';
   /** Sales rank within the shop (1 = highest sales) */
-  sales_rank: number;
+  salesRank: number;
   /** When this metric was last computed */
-  computed_at: Date;
+  computedAt: Date;
 }
 
 /**

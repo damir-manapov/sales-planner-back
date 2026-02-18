@@ -1,5 +1,42 @@
 # @sales-planner/http-client
 
+## 0.20.0
+
+### Minor Changes
+
+- feat: camelCase API field names
+
+  BREAKING CHANGE: All API field names converted from snake_case to camelCase using Kysely CamelCasePlugin.
+
+  - All entity fields: `shop_id` → `shopId`, `tenant_id` → `tenantId`, `created_at` → `createdAt`, etc.
+  - All DTO/request fields: `sku_id` → `skuId`, `marketplace_id` → `marketplaceId`, etc.
+  - Query params: `shop_id` → `shopId`, `tenant_id` → `tenantId`, `period_from` → `periodFrom`, etc.
+  - ShopContextParams: `{ shop_id, tenant_id }` → `{ shopId, tenantId }`
+  - PeriodQuery: `{ period_from, period_to }` → `{ periodFrom, periodTo }`
+  - Removed `toShopContextParams()` from react package (ShopContext ≡ ShopContextParams now)
+  - DB columns remain snake_case in PostgreSQL; Kysely CamelCasePlugin maps automatically
+
+### Patch Changes
+
+- Updated dependencies
+  - @sales-planner/shared@0.18.0
+
+## 0.19.4
+
+### Patch Changes
+
+- Unify SkuMetricsClient and ComputedEntitiesClient to accept ShopContextParams instead of positional (shopId, tenantId) args, matching ShopScopedClient convention.
+- Updated dependencies
+  - @sales-planner/shared@0.17.4
+
+## 0.19.3
+
+### Patch Changes
+
+- Fix user_shops: add id serial PK, updated_at field, unique constraint on (user_id, shop_id). Clean up roles module.
+- Updated dependencies
+  - @sales-planner/shared@0.17.3
+
 ## 0.19.2
 
 ### Patch Changes

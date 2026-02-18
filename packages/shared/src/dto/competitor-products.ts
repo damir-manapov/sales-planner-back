@@ -1,16 +1,16 @@
 // Competitor products
 export interface CreateCompetitorProductRequest {
-  marketplace_id: number;
-  marketplace_product_id: string; // BIGINT as string
+  marketplaceId: number;
+  marketplaceProductId: string; // BIGINT as string
   title?: string;
   brand?: string;
 }
 
 export interface CreateCompetitorProductDto {
-  tenant_id: number;
-  shop_id: number;
-  marketplace_id: number;
-  marketplace_product_id: string; // BIGINT as string
+  tenantId: number;
+  shopId: number;
+  marketplaceId: number;
+  marketplaceProductId: string; // BIGINT as string
   title?: string;
   brand?: string;
 }

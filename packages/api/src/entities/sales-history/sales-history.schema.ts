@@ -14,28 +14,28 @@ const { id, quantity, period, code, flexiblePeriod, flexibleQuantity } = zodSche
 
 // Schema for requests (omitting shop_id and tenant_id)
 const CreateSalesHistoryRequestSchema = z.object({
-  sku_id: id(),
+  skuId: id(),
   period: period(),
   quantity: quantity(),
-  marketplace_id: id(),
+  marketplaceId: id(),
 });
 
 // Zod schemas
 export const PeriodQuerySchema = z.object({
-  period_from: period().optional(),
-  period_to: period().optional(),
+  periodFrom: period().optional(),
+  periodTo: period().optional(),
 });
 
 // Combined query schema for sales history with period filters and pagination
 export const SalesHistoryQuerySchema = PeriodQuerySchema.merge(PaginationQuerySchema);
 
 export const CreateSalesHistorySchema = z.object({
-  shop_id: id(),
-  tenant_id: id(),
-  sku_id: id(),
+  shopId: id(),
+  tenantId: id(),
+  skuId: id(),
   period: period(),
   quantity: quantity(),
-  marketplace_id: id(),
+  marketplaceId: id(),
 });
 
 export const UpdateSalesHistorySchema = z.object({

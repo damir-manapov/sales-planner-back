@@ -77,7 +77,7 @@ export class UsersController {
     // Tenant admins can view users that have roles in their tenants
     const userRoles = await this.userRolesService.findByUserId(id);
     const hasAccessToUser = userRoles.some(
-      (ur) => ur.tenant_id && hasTenantAccess(req.user, ur.tenant_id),
+      (ur) => ur.tenantId && hasTenantAccess(req.user, ur.tenantId),
     );
 
     if (!hasAccessToUser) {
@@ -128,7 +128,7 @@ export class UsersController {
 
     // Check user has roles only in tenants the admin manages
     const allRolesInManagedTenants = userRoles.every(
-      (ur) => ur.tenant_id && hasTenantAccess(req.user, ur.tenant_id),
+      (ur) => ur.tenantId && hasTenantAccess(req.user, ur.tenantId),
     );
 
     if (!allRolesInManagedTenants) {

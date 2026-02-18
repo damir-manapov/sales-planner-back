@@ -13,8 +13,8 @@ const { id, code } = zodSchemas;
 
 // Schema for requests (omitting shop_id and tenant_id)
 const CreateCompetitorProductRequestSchema = z.object({
-  marketplace_id: id(),
-  marketplace_product_id: z.string().min(1), // BIGINT as string
+  marketplaceId: id(),
+  marketplaceProductId: z.string().min(1), // BIGINT as string
   title: z.string().max(1000).optional(),
   brand: z.string().max(255).optional(),
 });
@@ -28,10 +28,10 @@ export const CompetitorProductQuerySchema = PaginationQuerySchema.extend({
 });
 
 export const CreateCompetitorProductSchema = z.object({
-  shop_id: id(),
-  tenant_id: id(),
-  marketplace_id: id(),
-  marketplace_product_id: z.string().min(1), // BIGINT as string
+  shopId: id(),
+  tenantId: id(),
+  marketplaceId: id(),
+  marketplaceProductId: z.string().min(1), // BIGINT as string
   title: z.string().max(1000).optional(),
   brand: z.string().max(255).optional(),
 });

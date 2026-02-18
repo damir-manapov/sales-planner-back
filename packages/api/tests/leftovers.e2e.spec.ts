@@ -75,19 +75,19 @@ describe('Leftovers (e2e)', () => {
     it('should create leftover record', async () => {
       const testPeriod = generateTestPeriod();
       const record = await ctx.client.leftovers.create(ctx.shopContext, {
-        sku_id: skuId,
-        warehouse_id: warehouseId,
+        skuId: skuId,
+        warehouseId: warehouseId,
         period: testPeriod,
         quantity: 100,
       });
 
       expect(record).toHaveProperty('id');
-      expect(record.sku_id).toBe(skuId);
-      expect(record.warehouse_id).toBe(warehouseId);
+      expect(record.skuId).toBe(skuId);
+      expect(record.warehouseId).toBe(warehouseId);
       expect(record.period).toBe(testPeriod);
       expect(record.quantity).toBe(100);
-      expect(record.shop_id).toBe(ctx.shop.id);
-      expect(record.tenant_id).toBe(ctx.tenant.id);
+      expect(record.shopId).toBe(ctx.shop.id);
+      expect(record.tenantId).toBe(ctx.tenant.id);
 
       leftoverId = record.id;
     });
@@ -110,14 +110,14 @@ describe('Leftovers (e2e)', () => {
       });
 
       const record1 = await ctx.client.leftovers.create(ctx.shopContext, {
-        sku_id: testSku.id,
-        warehouse_id: testWarehouse.id,
+        skuId: testSku.id,
+        warehouseId: testWarehouse.id,
         period: '2024-03',
         quantity: 10,
       });
       const record2 = await ctx.client.leftovers.create(ctx.shopContext, {
-        sku_id: testSku.id,
-        warehouse_id: testWarehouse.id,
+        skuId: testSku.id,
+        warehouseId: testWarehouse.id,
         period: '2024-04',
         quantity: 20,
       });
@@ -141,21 +141,21 @@ describe('Leftovers (e2e)', () => {
       });
 
       await ctx.client.leftovers.create(ctx.shopContext, {
-        sku_id: skuId,
-        warehouse_id: rangeWarehouse.id,
+        skuId: skuId,
+        warehouseId: rangeWarehouse.id,
         period: periodFrom,
         quantity: 50,
       });
       await ctx.client.leftovers.create(ctx.shopContext, {
-        sku_id: skuId,
-        warehouse_id: rangeWarehouse.id,
+        skuId: skuId,
+        warehouseId: rangeWarehouse.id,
         period: periodTo,
         quantity: 60,
       });
 
       const records = await ctx.client.leftovers.getAll(ctx.shopContext, {
-        period_from: periodFrom,
-        period_to: periodTo,
+        periodFrom: periodFrom,
+        periodTo: periodTo,
       });
 
       expect(Array.isArray(records.items)).toBe(true);
@@ -186,16 +186,16 @@ describe('Leftovers (e2e)', () => {
       });
 
       await ctx.client.leftovers.create(ctx.shopContext, {
-        sku_id: skuId,
-        warehouse_id: uniqueWarehouse.id,
+        skuId: skuId,
+        warehouseId: uniqueWarehouse.id,
         period: testPeriod,
         quantity: 10,
       });
 
       await expectConflict(() =>
         ctx.client.leftovers.create(ctx.shopContext, {
-          sku_id: skuId,
-          warehouse_id: uniqueWarehouse.id,
+          skuId: skuId,
+          warehouseId: uniqueWarehouse.id,
           period: testPeriod,
           quantity: 20,
         }),
@@ -210,8 +210,8 @@ describe('Leftovers (e2e)', () => {
       });
 
       const record = await ctx.client.leftovers.create(ctx.shopContext, {
-        sku_id: skuId,
-        warehouse_id: deleteWarehouse.id,
+        skuId: skuId,
+        warehouseId: deleteWarehouse.id,
         period: testPeriod,
         quantity: 10,
       });

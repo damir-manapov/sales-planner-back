@@ -4,8 +4,8 @@
  */
 export interface UserRoleResponse {
   id: number;
-  user_id: number;
-  role_id: number;
-  tenant_id: number | null;
-  shop_id: number | null;
+  userId: number;
+  roleId: number;
+  tenantId: number | null;
+  shopId: number | null;
 }

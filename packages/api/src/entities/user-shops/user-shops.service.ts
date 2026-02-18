@@ -16,19 +16,19 @@ export class UserShopsService {
   }
 
   async findByUserId(userId: number): Promise<UserShop[]> {
-    return this.db.selectFrom('user_shops').selectAll().where('user_id', '=', userId).execute();
+    return this.db.selectFrom('user_shops').selectAll().where('userId', '=', userId).execute();
   }
 
   async findByShopId(shopId: number): Promise<UserShop[]> {
-    return this.db.selectFrom('user_shops').selectAll().where('shop_id', '=', shopId).execute();
+    return this.db.selectFrom('user_shops').selectAll().where('shopId', '=', shopId).execute();
   }
 
   async findByTenantId(tenantId: number): Promise<UserShop[]> {
     return this.db
       .selectFrom('user_shops')
       .selectAll('user_shops')
-      .innerJoin('shops', 'shops.id', 'user_shops.shop_id')
-      .where('shops.tenant_id', '=', tenantId)
+      .innerJoin('shops', 'shops.id', 'user_shops.shopId')
+      .where('shops.tenantId', '=', tenantId)
       .execute();
   }
 
@@ -43,7 +43,7 @@ export class UserShopsService {
       if (isUniqueViolation(error)) {
         throw new DuplicateResourceException(
           'User Shop',
-          `User ${dto.user_id} - Shop ${dto.shop_id}`,
+          `User ${dto.userId} - Shop ${dto.shopId}`,
         );
       }
       throw error;
@@ -57,8 +57,8 @@ export class UserShopsService {
   async deleteByUserAndShop(userId: number, shopId: number): Promise<void> {
     await this.db
       .deleteFrom('user_shops')
-      .where('user_id', '=', userId)
-      .where('shop_id', '=', shopId)
+      .where('userId', '=', userId)
+      .where('shopId', '=', shopId)
       .execute();
   }
 }

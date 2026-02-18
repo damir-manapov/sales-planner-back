@@ -43677,9 +43677,9 @@ var require_side_channel = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/qs@6.14.1/node_modules/qs/lib/formats.js
+// ../../node_modules/.pnpm/qs@6.15.0/node_modules/qs/lib/formats.js
 var require_formats = __commonJS({
-  "../../node_modules/.pnpm/qs@6.14.1/node_modules/qs/lib/formats.js"(exports, module) {
+  "../../node_modules/.pnpm/qs@6.15.0/node_modules/qs/lib/formats.js"(exports, module) {
     "use strict";
     var replace = String.prototype.replace;
     var percentTwenties = /%20/g;
@@ -43703,9 +43703,9 @@ var require_formats = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/qs@6.14.1/node_modules/qs/lib/utils.js
+// ../../node_modules/.pnpm/qs@6.15.0/node_modules/qs/lib/utils.js
 var require_utils8 = __commonJS({
-  "../../node_modules/.pnpm/qs@6.14.1/node_modules/qs/lib/utils.js"(exports, module) {
+  "../../node_modules/.pnpm/qs@6.15.0/node_modules/qs/lib/utils.js"(exports, module) {
     "use strict";
     var formats = require_formats();
     var getSideChannel = require_side_channel();
@@ -43728,7 +43728,7 @@ var require_utils8 = __commonJS({
     var hexTable = (function() {
       var array = [];
       for (var i = 0; i < 256; ++i) {
-        array.push("%" + ((i < 16 ? "0" : "") + i.toString(16)).toUpperCase());
+        array[array.length] = "%" + ((i < 16 ? "0" : "") + i.toString(16)).toUpperCase();
       }
       return array;
     })();
@@ -43740,7 +43740,7 @@ var require_utils8 = __commonJS({
           var compacted = [];
           for (var j = 0; j < obj.length; ++j) {
             if (typeof obj[j] !== "undefined") {
-              compacted.push(obj[j]);
+              compacted[compacted.length] = obj[j];
             }
           }
           item.obj[item.prop] = compacted;
@@ -43762,12 +43762,18 @@ var require_utils8 = __commonJS({
       }
       if (typeof source !== "object" && typeof source !== "function") {
         if (isArray(target)) {
-          target.push(source);
+          var nextIndex = target.length;
+          if (options && typeof options.arrayLimit === "number" && nextIndex > options.arrayLimit) {
+            return markOverflow(arrayToObject(target.concat(source), options), nextIndex);
+          }
+          target[nextIndex] = source;
         } else if (target && typeof target === "object") {
           if (isOverflow(target)) {
             var newIndex = getMaxIndex(target) + 1;
             target[newIndex] = source;
             setMaxIndex(target, newIndex);
+          } else if (options && options.strictMerge) {
+            return [target, source];
           } else if (options && (options.plainObjects || options.allowPrototypes) || !has.call(Object.prototype, source)) {
             target[source] = true;
           }
@@ -43786,7 +43792,11 @@ var require_utils8 = __commonJS({
           }
           return markOverflow(result, getMaxIndex(source) + 1);
         }
-        return [target].concat(source);
+        var combined = [target].concat(source);
+        if (options && typeof options.arrayLimit === "number" && combined.length > options.arrayLimit) {
+          return markOverflow(arrayToObject(combined, options), combined.length - 1);
+        }
+        return combined;
       }
       var mergeTarget = target;
       if (isArray(target) && !isArray(source)) {
@@ -43799,7 +43809,7 @@ var require_utils8 = __commonJS({
             if (targetItem && typeof targetItem === "object" && item && typeof item === "object") {
               target[i] = merge2(targetItem, item, options);
             } else {
-              target.push(item);
+              target[target.length] = item;
             }
           } else {
             target[i] = item;
@@ -43813,6 +43823,15 @@ var require_utils8 = __commonJS({
           acc[key] = merge2(acc[key], value, options);
         } else {
           acc[key] = value;
+        }
+        if (isOverflow(source) && !isOverflow(acc)) {
+          markOverflow(acc, getMaxIndex(source));
+        }
+        if (isOverflow(acc)) {
+          var keyNum = parseInt(key, 10);
+          if (String(keyNum) === key && keyNum >= 0 && keyNum > getMaxIndex(acc)) {
+            setMaxIndex(acc, keyNum);
+          }
         }
         return acc;
       }, mergeTarget);
@@ -43891,8 +43910,8 @@ var require_utils8 = __commonJS({
           var key = keys[j];
           var val = obj[key];
           if (typeof val === "object" && val !== null && refs.indexOf(val) === -1) {
-            queue.push({ obj, prop: key });
-            refs.push(val);
+            queue[queue.length] = { obj, prop: key };
+            refs[refs.length] = val;
           }
         }
       }
@@ -43925,7 +43944,7 @@ var require_utils8 = __commonJS({
       if (isArray(val)) {
         var mapped = [];
         for (var i = 0; i < val.length; i += 1) {
-          mapped.push(fn(val[i]));
+          mapped[mapped.length] = fn(val[i]);
         }
         return mapped;
       }
@@ -43941,15 +43960,16 @@ var require_utils8 = __commonJS({
       isBuffer,
       isOverflow,
       isRegExp,
+      markOverflow,
       maybeMap,
       merge
     };
   }
 });
 
-// ../../node_modules/.pnpm/qs@6.14.1/node_modules/qs/lib/stringify.js
+// ../../node_modules/.pnpm/qs@6.15.0/node_modules/qs/lib/stringify.js
 var require_stringify = __commonJS({
-  "../../node_modules/.pnpm/qs@6.14.1/node_modules/qs/lib/stringify.js"(exports, module) {
+  "../../node_modules/.pnpm/qs@6.15.0/node_modules/qs/lib/stringify.js"(exports, module) {
     "use strict";
     var getSideChannel = require_side_channel();
     var utils = require_utils8();
@@ -44230,9 +44250,9 @@ var require_stringify = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/qs@6.14.1/node_modules/qs/lib/parse.js
+// ../../node_modules/.pnpm/qs@6.15.0/node_modules/qs/lib/parse.js
 var require_parse = __commonJS({
-  "../../node_modules/.pnpm/qs@6.14.1/node_modules/qs/lib/parse.js"(exports, module) {
+  "../../node_modules/.pnpm/qs@6.15.0/node_modules/qs/lib/parse.js"(exports, module) {
     "use strict";
     var utils = require_utils8();
     var has = Object.prototype.hasOwnProperty;
@@ -44257,6 +44277,7 @@ var require_parse = __commonJS({
       parseArrays: true,
       plainObjects: false,
       strictDepth: false,
+      strictMerge: true,
       strictNullHandling: false,
       throwOnLimitExceeded: false
     };
@@ -44337,9 +44358,15 @@ var require_parse = __commonJS({
         if (part.indexOf("[]=") > -1) {
           val = isArray(val) ? [val] : val;
         }
+        if (options.comma && isArray(val) && val.length > options.arrayLimit) {
+          if (options.throwOnLimitExceeded) {
+            throw new RangeError("Array limit exceeded. Only " + options.arrayLimit + " element" + (options.arrayLimit === 1 ? "" : "s") + " allowed in an array.");
+          }
+          val = utils.combine([], val, options.arrayLimit, options.plainObjects);
+        }
         if (key !== null) {
           var existing = has.call(obj, key);
-          if (existing && options.duplicates === "combine") {
+          if (existing && (options.duplicates === "combine" || part.indexOf("[]=") > -1)) {
             obj[key] = utils.combine(
               obj[key],
               val,
@@ -44379,11 +44406,17 @@ var require_parse = __commonJS({
           var cleanRoot = root.charAt(0) === "[" && root.charAt(root.length - 1) === "]" ? root.slice(1, -1) : root;
           var decodedRoot = options.decodeDotInKeys ? cleanRoot.replace(/%2E/g, ".") : cleanRoot;
           var index = parseInt(decodedRoot, 10);
+          var isValidArrayIndex = !isNaN(index) && root !== decodedRoot && String(index) === decodedRoot && index >= 0 && options.parseArrays;
           if (!options.parseArrays && decodedRoot === "") {
             obj = { 0: leaf };
-          } else if (!isNaN(index) && root !== decodedRoot && String(index) === decodedRoot && index >= 0 && (options.parseArrays && index <= options.arrayLimit)) {
+          } else if (isValidArrayIndex && index < options.arrayLimit) {
             obj = [];
             obj[index] = leaf;
+          } else if (isValidArrayIndex && options.throwOnLimitExceeded) {
+            throw new RangeError("Array limit exceeded. Only " + options.arrayLimit + " element" + (options.arrayLimit === 1 ? "" : "s") + " allowed in an array.");
+          } else if (isValidArrayIndex) {
+            obj[index] = leaf;
+            utils.markOverflow(obj, index);
           } else if (decodedRoot !== "__proto__") {
             obj[decodedRoot] = leaf;
           }
@@ -44413,7 +44446,7 @@ var require_parse = __commonJS({
             return;
           }
         }
-        keys.push(parent);
+        keys[keys.length] = parent;
       }
       var i = 0;
       while ((segment = child.exec(key)) !== null && i < options.depth) {
@@ -44424,13 +44457,13 @@ var require_parse = __commonJS({
             return;
           }
         }
-        keys.push(segment[1]);
+        keys[keys.length] = segment[1];
       }
       if (segment) {
         if (options.strictDepth === true) {
           throw new RangeError("Input depth exceeded depth option of " + options.depth + " and strictDepth is true");
         }
-        keys.push("[" + key.slice(segment.index) + "]");
+        keys[keys.length] = "[" + key.slice(segment.index) + "]";
       }
       return keys;
     };
@@ -44490,6 +44523,7 @@ var require_parse = __commonJS({
         parseArrays: opts.parseArrays !== false,
         plainObjects: typeof opts.plainObjects === "boolean" ? opts.plainObjects : defaults.plainObjects,
         strictDepth: typeof opts.strictDepth === "boolean" ? !!opts.strictDepth : defaults.strictDepth,
+        strictMerge: typeof opts.strictMerge === "boolean" ? !!opts.strictMerge : defaults.strictMerge,
         strictNullHandling: typeof opts.strictNullHandling === "boolean" ? opts.strictNullHandling : defaults.strictNullHandling,
         throwOnLimitExceeded: typeof opts.throwOnLimitExceeded === "boolean" ? opts.throwOnLimitExceeded : false
       };
@@ -44515,9 +44549,9 @@ var require_parse = __commonJS({
   }
 });
 
-// ../../node_modules/.pnpm/qs@6.14.1/node_modules/qs/lib/index.js
+// ../../node_modules/.pnpm/qs@6.15.0/node_modules/qs/lib/index.js
 var require_lib4 = __commonJS({
-  "../../node_modules/.pnpm/qs@6.14.1/node_modules/qs/lib/index.js"(exports, module) {
+  "../../node_modules/.pnpm/qs@6.15.0/node_modules/qs/lib/index.js"(exports, module) {
     "use strict";
     var stringify = require_stringify();
     var parse = require_parse();
@@ -97115,7 +97149,10 @@ var require_database_service = __commonJS({
         super({
           dialect: new _kysely.PostgresDialect({
             pool: new _pg.default.Pool(poolConfig)
-          })
+          }),
+          plugins: [
+            new _kysely.CamelCasePlugin()
+          ]
         });
       }
     };
@@ -97295,7 +97332,7 @@ var require_base_repository = __commonJS({
     var _index = require_database();
     var ShopScopedBaseRepository = class ShopScopedBaseRepository2 {
       async countByShopId(shopId, query) {
-        let q = this.db.selectFrom(this.tableName).select(this.db.fn.countAll().as("count")).where("shop_id", "=", shopId);
+        let q = this.db.selectFrom(this.tableName).select(this.db.fn.countAll().as("count")).where("shopId", "=", shopId);
         if (query?.ids && query.ids.length > 0) {
           q = q.where("id", "in", query.ids);
         }
@@ -97309,7 +97346,7 @@ var require_base_repository = __commonJS({
         return this.db.selectFrom(this.tableName).selectAll().where("id", "=", id).executeTakeFirst();
       }
       async findByShopId(shopId, query) {
-        let q = this.db.selectFrom(this.tableName).selectAll().where("shop_id", "=", shopId);
+        let q = this.db.selectFrom(this.tableName).selectAll().where("shopId", "=", shopId);
         if (query?.ids && query.ids.length > 0) {
           q = q.where("id", "in", query.ids);
         }
@@ -97323,7 +97360,7 @@ var require_base_repository = __commonJS({
         return q.execute();
       }
       async findByTenantId(tenantId) {
-        return this.db.selectFrom(this.tableName).selectAll().where("tenant_id", "=", tenantId).orderBy("id", "asc").execute();
+        return this.db.selectFrom(this.tableName).selectAll().where("tenantId", "=", tenantId).orderBy("id", "asc").execute();
       }
       async findByShopIdPaginated(shopId, query = {}) {
         const { limit, offset } = query;
@@ -97341,13 +97378,13 @@ var require_base_repository = __commonJS({
       async create(data) {
         const result = await this.db.insertInto(this.tableName).values({
           ...data,
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         }).returningAll().executeTakeFirstOrThrow();
         return result;
       }
       async update(id, data) {
         const updateData = {
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         };
         for (const [key, value] of Object.entries(data)) {
           if (value !== void 0 && !ShopScopedBaseRepository2.IMMUTABLE_FIELDS.has(key)) {
@@ -97361,11 +97398,11 @@ var require_base_repository = __commonJS({
         await this.db.deleteFrom(this.tableName).where("id", "=", id).execute();
       }
       async deleteByShopId(shopId) {
-        const result = await this.db.deleteFrom(this.tableName).where("shop_id", "=", shopId).executeTakeFirst();
+        const result = await this.db.deleteFrom(this.tableName).where("shopId", "=", shopId).executeTakeFirst();
         return Number(result.numDeletedRows);
       }
       async exportForShop(shopId) {
-        return this.db.selectFrom(this.tableName).select(this.exportFields.slice()).where("shop_id", "=", shopId).orderBy("id", "asc").execute();
+        return this.db.selectFrom(this.tableName).select(this.exportFields.slice()).where("shopId", "=", shopId).orderBy("id", "asc").execute();
       }
       /**
       * Bulk upsert items. Returns counts of created and updated items.
@@ -97378,14 +97415,14 @@ var require_base_repository = __commonJS({
             updated: 0
           };
         }
-        const primaryKey = this.businessPrimaryKey ?? this.uniqueKeys.find((k) => k !== "shop_id") ?? "id";
+        const primaryKey = this.businessPrimaryKey ?? this.uniqueKeys.find((k) => k !== "shopId") ?? "id";
         const keyValues = items.map((item) => item[primaryKey]);
-        const existingResult = await this.db.selectFrom(this.tableName).select(this.db.fn.countAll().as("count")).where("shop_id", "=", shopId).where(primaryKey, "in", keyValues).executeTakeFirstOrThrow();
+        const existingResult = await this.db.selectFrom(this.tableName).select(this.db.fn.countAll().as("count")).where("shopId", "=", shopId).where(primaryKey, "in", keyValues).executeTakeFirstOrThrow();
         const updated = Number(existingResult.count);
         const created = items.length - updated;
         const sampleItem = items[0];
         const updateSet = {
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         };
         for (const key of Object.keys(sampleItem)) {
           if (!ShopScopedBaseRepository2.IMMUTABLE_FIELDS.has(key)) {
@@ -97394,9 +97431,9 @@ var require_base_repository = __commonJS({
         }
         await this.db.insertInto(this.tableName).values(items.map((item) => ({
           ...item,
-          shop_id: shopId,
-          tenant_id: tenantId,
-          updated_at: /* @__PURE__ */ new Date()
+          shopId,
+          tenantId,
+          updatedAt: /* @__PURE__ */ new Date()
         }))).onConflict((oc) => oc.columns(this.uniqueKeys.slice()).doUpdateSet(updateSet)).execute();
         return {
           created,
@@ -97415,10 +97452,10 @@ var require_base_repository = __commonJS({
     };
     ShopScopedBaseRepository.IMMUTABLE_FIELDS = /* @__PURE__ */ new Set([
       "id",
-      "shop_id",
-      "tenant_id",
-      "created_at",
-      "updated_at"
+      "shopId",
+      "tenantId",
+      "createdAt",
+      "updatedAt"
     ]);
   }
 });
@@ -97439,10 +97476,10 @@ var require_coded_repository = __commonJS({
     var _baserepository = require_base_repository();
     var CodedShopScopedRepository = class CodedShopScopedRepository extends _baserepository.ShopScopedBaseRepository {
       async findByCodeAndShop(code, shopId) {
-        return this.db.selectFrom(this.tableName).selectAll().where("code", "=", code).where("shop_id", "=", shopId).executeTakeFirst();
+        return this.db.selectFrom(this.tableName).selectAll().where("code", "=", code).where("shopId", "=", shopId).executeTakeFirst();
       }
       async findCodesByShopId(shopId, codes) {
-        const rows = await this.db.selectFrom(this.tableName).select("code").where("shop_id", "=", shopId).where("code", "in", codes).execute();
+        const rows = await this.db.selectFrom(this.tableName).select("code").where("shopId", "=", shopId).where("code", "in", codes).execute();
         return new Set(rows.map((r) => r.code));
       }
       /**
@@ -97463,16 +97500,16 @@ var require_coded_repository = __commonJS({
         let entities = await this.db.selectFrom(this.tableName).select([
           "id",
           "code"
-        ]).where("shop_id", "=", shopId).where("code", "in", uniqueCodes).execute();
+        ]).where("shopId", "=", shopId).where("code", "in", uniqueCodes).execute();
         const existingCodes = new Set(entities.map((e) => e.code));
         const missingCodes = uniqueCodes.filter((code) => !existingCodes.has(code));
         if (missingCodes.length > 0) {
           const newEntities = await this.db.insertInto(this.tableName).values(missingCodes.map((code) => ({
             code,
             title: code,
-            shop_id: shopId,
-            tenant_id: tenantId,
-            updated_at: /* @__PURE__ */ new Date()
+            shopId,
+            tenantId,
+            updatedAt: /* @__PURE__ */ new Date()
           }))).returning([
             "id",
             "code"
@@ -97498,7 +97535,7 @@ var require_coded_repository = __commonJS({
         ], /** Override unique keys for code-based conflict resolution */
         this.uniqueKeys = [
           "code",
-          "shop_id"
+          "shopId"
         ], /** Code is the business primary key */
         this.businessPrimaryKey = "code";
       }
@@ -97522,7 +97559,7 @@ var require_read_only_repository = __commonJS({
     var _index = require_database();
     var ReadOnlyShopScopedRepository = class ReadOnlyShopScopedRepository {
       async countByShopId(shopId, query) {
-        let q = this.db.selectFrom(this.tableName).select(this.db.fn.countAll().as("count")).where("shop_id", "=", shopId);
+        let q = this.db.selectFrom(this.tableName).select(this.db.fn.countAll().as("count")).where("shopId", "=", shopId);
         if (query?.ids && query.ids.length > 0) {
           q = q.where("id", "in", query.ids);
         }
@@ -97533,7 +97570,7 @@ var require_read_only_repository = __commonJS({
         return this.db.selectFrom(this.tableName).selectAll().where("id", "=", id).executeTakeFirst();
       }
       async findByShopId(shopId, query) {
-        let q = this.db.selectFrom(this.tableName).selectAll().where("shop_id", "=", shopId);
+        let q = this.db.selectFrom(this.tableName).selectAll().where("shopId", "=", shopId);
         if (query?.ids && query.ids.length > 0) {
           q = q.where("id", "in", query.ids);
         }
@@ -113891,7 +113928,7 @@ var require_access_helpers = __commonJS({
       if (!entity) {
         throw new _common.NotFoundException(`${entityName} with id ${id} not found`);
       }
-      if (entity.shop_id !== ctx.shopId || entity.tenant_id !== ctx.tenantId) {
+      if (entity.shopId !== ctx.shopId || entity.tenantId !== ctx.tenantId) {
         throw new _common.NotFoundException(`${entityName} with id ${id} not found in this shop/tenant`);
       }
     }
@@ -114257,7 +114294,7 @@ var require_api_keys_service = __commonJS({
         return Number(result.count);
       }
       async countByUserId(userId) {
-        const result = await this.db.selectFrom("api_keys").select(this.db.fn.countAll().as("count")).where("user_id", "=", userId).executeTakeFirstOrThrow();
+        const result = await this.db.selectFrom("api_keys").select(this.db.fn.countAll().as("count")).where("userId", "=", userId).executeTakeFirstOrThrow();
         return Number(result.count);
       }
       async findAll(query) {
@@ -114285,7 +114322,7 @@ var require_api_keys_service = __commonJS({
         return this.db.selectFrom("api_keys").selectAll().where("key", "=", key).executeTakeFirst();
       }
       async findByUserId(userId, query) {
-        let q = this.db.selectFrom("api_keys").selectAll().where("user_id", "=", userId).orderBy("id", "asc");
+        let q = this.db.selectFrom("api_keys").selectAll().where("userId", "=", userId).orderBy("id", "asc");
         if (query?.limit !== void 0) q = q.limit(query.limit);
         if (query?.offset !== void 0) q = q.offset(query.offset);
         return q.execute();
@@ -114305,12 +114342,12 @@ var require_api_keys_service = __commonJS({
       async findValidByKey(key) {
         const apiKey = await this.findByKey(key);
         if (!apiKey) return null;
-        if (apiKey.expires_at && new Date(apiKey.expires_at) < /* @__PURE__ */ new Date()) {
+        if (apiKey.expiresAt && new Date(apiKey.expiresAt) < /* @__PURE__ */ new Date()) {
           return null;
         }
         await this.db.updateTable("api_keys").set({
-          last_used_at: /* @__PURE__ */ new Date(),
-          updated_at: /* @__PURE__ */ new Date()
+          lastUsedAt: /* @__PURE__ */ new Date(),
+          updatedAt: /* @__PURE__ */ new Date()
         }).where("id", "=", apiKey.id).execute();
         return apiKey;
       }
@@ -114318,10 +114355,10 @@ var require_api_keys_service = __commonJS({
         const key = crypto.randomUUID();
         try {
           return this.db.insertInto("api_keys").values({
-            user_id: data.user_id,
+            userId: data.userId,
             key,
             name: data.name,
-            expires_at: data.expires_at ? new Date(data.expires_at) : null
+            expiresAt: data.expiresAt ? new Date(data.expiresAt) : null
           }).returningAll().executeTakeFirstOrThrow();
         } catch (error) {
           if ((0, _index.isUniqueViolation)(error)) {
@@ -114334,10 +114371,10 @@ var require_api_keys_service = __commonJS({
       async createWithKey(data) {
         try {
           return this.db.insertInto("api_keys").values({
-            user_id: data.user_id,
+            userId: data.userId,
             key: data.key,
             name: data.name,
-            expires_at: data.expires_at ? new Date(data.expires_at) : null
+            expiresAt: data.expiresAt ? new Date(data.expiresAt) : null
           }).returningAll().executeTakeFirstOrThrow();
         } catch (error) {
           if ((0, _index.isUniqueViolation)(error)) {
@@ -114349,15 +114386,15 @@ var require_api_keys_service = __commonJS({
       async update(id, data) {
         return this.db.updateTable("api_keys").set({
           ...data,
-          expires_at: data.expires_at ? new Date(data.expires_at) : null,
-          updated_at: /* @__PURE__ */ new Date()
+          expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
+          updatedAt: /* @__PURE__ */ new Date()
         }).where("id", "=", id).returningAll().executeTakeFirst();
       }
       async delete(id) {
         return this.db.deleteFrom("api_keys").where("id", "=", id).returningAll().executeTakeFirst();
       }
       async deleteByUserId(userId) {
-        return this.db.deleteFrom("api_keys").where("user_id", "=", userId).execute();
+        return this.db.deleteFrom("api_keys").where("userId", "=", userId).execute();
       }
       constructor(db) {
         this.db = db;
@@ -114427,7 +114464,7 @@ var require_tenants_service = __commonJS({
         return Number(result.count);
       }
       async countByOwnerId(ownerId) {
-        const result = await this.db.selectFrom("tenants").select(this.db.fn.countAll().as("count")).where("owner_id", "=", ownerId).executeTakeFirstOrThrow();
+        const result = await this.db.selectFrom("tenants").select(this.db.fn.countAll().as("count")).where("ownerId", "=", ownerId).executeTakeFirstOrThrow();
         return Number(result.count);
       }
       async findAll(query) {
@@ -114452,7 +114489,7 @@ var require_tenants_service = __commonJS({
         return this.db.selectFrom("tenants").selectAll().where("id", "=", id).executeTakeFirst();
       }
       async findByOwnerId(ownerId, query) {
-        let q = this.db.selectFrom("tenants").selectAll().where("owner_id", "=", ownerId).orderBy("id", "asc");
+        let q = this.db.selectFrom("tenants").selectAll().where("ownerId", "=", ownerId).orderBy("id", "asc");
         if (query?.limit !== void 0) q = q.limit(query.limit);
         if (query?.offset !== void 0) q = q.offset(query.offset);
         return q.execute();
@@ -114475,7 +114512,7 @@ var require_tenants_service = __commonJS({
       async update(id, dto) {
         return this.db.updateTable("tenants").set({
           ...dto,
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         }).where("id", "=", id).returningAll().executeTakeFirst();
       }
       async delete(id) {
@@ -114486,29 +114523,29 @@ var require_tenants_service = __commonJS({
           const user = await trx.insertInto("users").values({
             email: dto.userEmail,
             name: dto.userName,
-            updated_at: /* @__PURE__ */ new Date()
+            updatedAt: /* @__PURE__ */ new Date()
           }).returningAll().executeTakeFirstOrThrow();
           const apiKeyValue = `sk_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
           await trx.insertInto("api_keys").values({
-            user_id: user.id,
+            userId: user.id,
             key: apiKeyValue,
             name: "Default API Key"
           }).execute();
           const tenant = await trx.insertInto("tenants").values({
             title: dto.tenantTitle,
-            owner_id: user.id,
-            created_by: user.id
+            ownerId: user.id,
+            createdBy: user.id
           }).returningAll().executeTakeFirstOrThrow();
           const shop = await trx.insertInto("shops").values({
             title: dto.shopTitle || dto.tenantTitle,
-            tenant_id: tenant.id
+            tenantId: tenant.id
           }).returningAll().executeTakeFirstOrThrow();
           const tenantAdminRole = await trx.selectFrom("roles").select("id").where("name", "=", _constants.ROLE_NAMES.TENANT_ADMIN).executeTakeFirst();
           if (tenantAdminRole) {
             await trx.insertInto("user_roles").values({
-              user_id: user.id,
-              role_id: tenantAdminRole.id,
-              tenant_id: tenant.id
+              userId: user.id,
+              roleId: tenantAdminRole.id,
+              tenantId: tenant.id
             }).execute();
           }
           return {
@@ -114516,7 +114553,7 @@ var require_tenants_service = __commonJS({
             shop: {
               id: shop.id,
               title: shop.title,
-              tenant_id: shop.tenant_id
+              tenantId: shop.tenantId
             },
             user: {
               id: user.id,
@@ -114572,15 +114609,15 @@ var require_user_roles_service = __commonJS({
         return Number(result.count);
       }
       async countByTenantId(tenantId) {
-        const result = await this.db.selectFrom("user_roles").select(this.db.fn.countAll().as("count")).where("tenant_id", "=", tenantId).executeTakeFirstOrThrow();
+        const result = await this.db.selectFrom("user_roles").select(this.db.fn.countAll().as("count")).where("tenantId", "=", tenantId).executeTakeFirstOrThrow();
         return Number(result.count);
       }
       async countByUserId(userId) {
-        const result = await this.db.selectFrom("user_roles").select(this.db.fn.countAll().as("count")).where("user_id", "=", userId).executeTakeFirstOrThrow();
+        const result = await this.db.selectFrom("user_roles").select(this.db.fn.countAll().as("count")).where("userId", "=", userId).executeTakeFirstOrThrow();
         return Number(result.count);
       }
       async countByRoleId(roleId) {
-        const result = await this.db.selectFrom("user_roles").select(this.db.fn.countAll().as("count")).where("role_id", "=", roleId).executeTakeFirstOrThrow();
+        const result = await this.db.selectFrom("user_roles").select(this.db.fn.countAll().as("count")).where("roleId", "=", roleId).executeTakeFirstOrThrow();
         return Number(result.count);
       }
       async findAll(query) {
@@ -114602,7 +114639,7 @@ var require_user_roles_service = __commonJS({
         };
       }
       async findByUserId(userId, query) {
-        let q = this.db.selectFrom("user_roles").selectAll().where("user_id", "=", userId).orderBy("id", "asc");
+        let q = this.db.selectFrom("user_roles").selectAll().where("userId", "=", userId).orderBy("id", "asc");
         if (query?.limit !== void 0) q = q.limit(query.limit);
         if (query?.offset !== void 0) q = q.offset(query.offset);
         return q.execute();
@@ -114620,7 +114657,7 @@ var require_user_roles_service = __commonJS({
         };
       }
       async findByRoleId(roleId, query) {
-        let q = this.db.selectFrom("user_roles").selectAll().where("role_id", "=", roleId).orderBy("id", "asc");
+        let q = this.db.selectFrom("user_roles").selectAll().where("roleId", "=", roleId).orderBy("id", "asc");
         if (query?.limit !== void 0) q = q.limit(query.limit);
         if (query?.offset !== void 0) q = q.offset(query.offset);
         return q.execute();
@@ -114638,7 +114675,7 @@ var require_user_roles_service = __commonJS({
         };
       }
       async findByTenantId(tenantId, query) {
-        let q = this.db.selectFrom("user_roles").selectAll().where("tenant_id", "=", tenantId).orderBy("id", "asc");
+        let q = this.db.selectFrom("user_roles").selectAll().where("tenantId", "=", tenantId).orderBy("id", "asc");
         if (query?.limit !== void 0) q = q.limit(query.limit);
         if (query?.offset !== void 0) q = q.offset(query.offset);
         return q.execute();
@@ -114659,9 +114696,9 @@ var require_user_roles_service = __commonJS({
         return this.db.selectFrom("user_roles").selectAll().where("id", "=", id).executeTakeFirst();
       }
       async hasRole(userId, roleName, tenantId) {
-        let query = this.db.selectFrom("user_roles").innerJoin("roles", "roles.id", "user_roles.role_id").select("user_roles.id").where("user_roles.user_id", "=", userId).where("roles.name", "=", roleName);
+        let query = this.db.selectFrom("user_roles").innerJoin("roles", "roles.id", "user_roles.roleId").select("user_roles.id").where("user_roles.userId", "=", userId).where("roles.name", "=", roleName);
         if (tenantId !== void 0) {
-          query = query.where("user_roles.tenant_id", "=", tenantId);
+          query = query.where("user_roles.tenantId", "=", tenantId);
         }
         const result = await query.executeTakeFirst();
         return !!result;
@@ -114671,7 +114708,7 @@ var require_user_roles_service = __commonJS({
           return this.db.insertInto("user_roles").values(dto).returningAll().executeTakeFirstOrThrow();
         } catch (error) {
           if ((0, _index.isUniqueViolation)(error)) {
-            throw new _index.DuplicateResourceException("User Role", `User ${dto.user_id} - Role ${dto.role_id}`);
+            throw new _index.DuplicateResourceException("User Role", `User ${dto.userId} - Role ${dto.roleId}`);
           }
           throw error;
         }
@@ -114680,14 +114717,14 @@ var require_user_roles_service = __commonJS({
         await this.db.deleteFrom("user_roles").where("id", "=", id).execute();
       }
       async deleteByUserAndRole(userId, roleId) {
-        await this.db.deleteFrom("user_roles").where("user_id", "=", userId).where("role_id", "=", roleId).execute();
+        await this.db.deleteFrom("user_roles").where("userId", "=", userId).where("roleId", "=", roleId).execute();
       }
       async findByUserIdWithRoleNames(userId) {
-        return this.db.selectFrom("user_roles").innerJoin("roles", "roles.id", "user_roles.role_id").select([
-          "user_roles.tenant_id",
-          "user_roles.shop_id",
-          "roles.name as role_name"
-        ]).where("user_roles.user_id", "=", userId).execute();
+        return this.db.selectFrom("user_roles").innerJoin("roles", "roles.id", "user_roles.roleId").select([
+          "user_roles.tenantId",
+          "user_roles.shopId",
+          "roles.name as roleName"
+        ]).where("user_roles.userId", "=", userId).execute();
       }
       constructor(db) {
         this.db = db;
@@ -114852,10 +114889,10 @@ var require_decorators3 = __commonJS({
     var ShopContext = (0, _common.createParamDecorator)((_data, ctx) => {
       const request = ctx.switchToHttp().getRequest();
       const query = request.query;
-      const shopId = Number.parseInt(query.shop_id ?? "", 10);
-      const tenantId = Number.parseInt(query.tenant_id ?? "", 10);
+      const shopId = Number.parseInt(query.shopId ?? "", 10);
+      const tenantId = Number.parseInt(query.tenantId ?? "", 10);
       if (Number.isNaN(shopId) || Number.isNaN(tenantId)) {
-        throw new Error("shop_id and tenant_id are required as query parameters");
+        throw new Error("shopId and tenantId are required as query parameters");
       }
       return {
         shopId,
@@ -114906,17 +114943,17 @@ var require_auth_guard = __commonJS({
         if (!validApiKey) {
           throw new _common.UnauthorizedException("Invalid or expired API key");
         }
-        const userRolesWithNames = await this.userRolesService.findByUserIdWithRoleNames(validApiKey.user_id);
-        const isSystemAdmin = userRolesWithNames.some((ur) => ur.tenant_id === null && ur.shop_id === null && ur.role_name === _constants.ROLE_NAMES.SYSTEM_ADMIN);
+        const userRolesWithNames = await this.userRolesService.findByUserIdWithRoleNames(validApiKey.userId);
+        const isSystemAdmin = userRolesWithNames.some((ur) => ur.tenantId === null && ur.shopId === null && ur.roleName === _constants.ROLE_NAMES.SYSTEM_ADMIN);
         const tenantIds = [
-          ...new Set(userRolesWithNames.filter((ur) => ur.tenant_id !== null).map((ur) => ur.tenant_id))
+          ...new Set(userRolesWithNames.filter((ur) => ur.tenantId !== null).map((ur) => ur.tenantId))
         ];
         const tenantRolesMap = /* @__PURE__ */ new Map();
         for (const ur of userRolesWithNames) {
-          if (ur.tenant_id !== null && ur.shop_id === null) {
-            const roles = tenantRolesMap.get(ur.tenant_id) || [];
-            roles.push(ur.role_name);
-            tenantRolesMap.set(ur.tenant_id, roles);
+          if (ur.tenantId !== null && ur.shopId === null) {
+            const roles = tenantRolesMap.get(ur.tenantId) || [];
+            roles.push(ur.roleName);
+            tenantRolesMap.set(ur.tenantId, roles);
           }
         }
         const tenantRoles = Array.from(tenantRolesMap.entries()).map(([tenantId, roles]) => ({
@@ -114925,17 +114962,17 @@ var require_auth_guard = __commonJS({
         }));
         const shopRolesMap = /* @__PURE__ */ new Map();
         for (const ur of userRolesWithNames) {
-          if (ur.shop_id !== null) {
-            const roles = shopRolesMap.get(ur.shop_id) || [];
-            roles.push(ur.role_name);
-            shopRolesMap.set(ur.shop_id, roles);
+          if (ur.shopId !== null) {
+            const roles = shopRolesMap.get(ur.shopId) || [];
+            roles.push(ur.roleName);
+            shopRolesMap.set(ur.shopId, roles);
           }
         }
         const shopRoles = Array.from(shopRolesMap.entries()).map(([shopId, roles]) => ({
           shopId,
           roles
         }));
-        const ownedTenants = await this.tenantsService.findByOwnerId(validApiKey.user_id);
+        const ownedTenants = await this.tenantsService.findByOwnerId(validApiKey.userId);
         const ownedTenantIds = ownedTenants.map((t) => t.id);
         const allTenantIds = [
           .../* @__PURE__ */ new Set([
@@ -114944,7 +114981,7 @@ var require_auth_guard = __commonJS({
           ])
         ];
         request.user = {
-          id: validApiKey.user_id,
+          id: validApiKey.userId,
           tenantIds: allTenantIds,
           ownedTenantIds,
           tenantRoles,
@@ -114954,10 +114991,10 @@ var require_auth_guard = __commonJS({
         const accessLevel = this.reflector.get(_decorators.ACCESS_LEVEL_KEY, context.getHandler());
         if (accessLevel && accessLevel !== _decorators.AccessLevel.NONE) {
           const query = request.query;
-          const shopId = Number.parseInt(query.shop_id ?? "", 10);
-          const tenantId = Number.parseInt(query.tenant_id ?? "", 10);
+          const shopId = Number.parseInt(query.shopId ?? "", 10);
+          const tenantId = Number.parseInt(query.tenantId ?? "", 10);
           if (Number.isNaN(shopId) || Number.isNaN(tenantId)) {
-            throw new _common.BadRequestException("shop_id and tenant_id are required");
+            throw new _common.BadRequestException("shopId and tenantId are required");
           }
           if (!request.user.tenantIds.includes(tenantId)) {
             throw new _common.ForbiddenException("Access to this tenant is not allowed");
@@ -114998,6 +115035,171 @@ var require_auth_guard = __commonJS({
   }
 });
 
+// dist/entities/api-keys/api-keys.schema.js
+var require_api_keys_schema = __commonJS({
+  "dist/entities/api-keys/api-keys.schema.js"(exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", {
+      value: true
+    });
+    function _export(target, all) {
+      for (var name2 in all) Object.defineProperty(target, name2, {
+        enumerable: true,
+        get: Object.getOwnPropertyDescriptor(all, name2).get
+      });
+    }
+    _export(exports, {
+      get CreateApiKeySchema() {
+        return CreateApiKeySchema;
+      },
+      get UpdateApiKeySchema() {
+        return UpdateApiKeySchema;
+      }
+    });
+    var _zod = require_zod();
+    var _index = require_common3();
+    var { id, name } = _index.zodSchemas;
+    var CreateApiKeySchema = _zod.z.object({
+      userId: id(),
+      name: name().optional(),
+      expiresAt: _zod.z.string().datetime().optional()
+    });
+    var UpdateApiKeySchema = _zod.z.object({
+      name: name().nullable().optional(),
+      expiresAt: _zod.z.string().datetime().nullable().optional()
+    });
+  }
+});
+
+// dist/entities/api-keys/api-keys.controller.js
+var require_api_keys_controller = __commonJS({
+  "dist/entities/api-keys/api-keys.controller.js"(exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", {
+      value: true
+    });
+    Object.defineProperty(exports, "ApiKeysController", {
+      enumerable: true,
+      get: function() {
+        return ApiKeysController;
+      }
+    });
+    var _common = require_common();
+    var _authguard = require_auth_guard();
+    var _index = require_common3();
+    var _apikeysschema = require_api_keys_schema();
+    var _apikeysservice = require_api_keys_service();
+    function _ts_decorate(decorators, target, key, desc) {
+      var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
+      if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
+      else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
+      return c > 3 && r && Object.defineProperty(target, key, r), r;
+    }
+    function _ts_metadata(k, v) {
+      if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
+    }
+    function _ts_param(paramIndex, decorator) {
+      return function(target, key) {
+        decorator(target, key, paramIndex);
+      };
+    }
+    var ApiKeysController = class ApiKeysController {
+      async findAll(req, userId, query) {
+        if (req.user.isSystemAdmin) {
+          if (userId) {
+            return this.apiKeysService.findByUserIdPaginated(Number.parseInt(userId, 10), query);
+          }
+          return this.apiKeysService.findAllPaginated(query);
+        }
+        return this.apiKeysService.findByUserIdPaginated(req.user.id, query);
+      }
+      async findById(req, id) {
+        const apiKey = await this.apiKeysService.findById(id);
+        if (!apiKey) {
+          throw new _common.NotFoundException(`API key with id ${id} not found`);
+        }
+        if (!req.user.isSystemAdmin && apiKey.userId !== req.user.id) {
+          throw new _common.ForbiddenException("Cannot access API keys of other users");
+        }
+        return apiKey;
+      }
+      async create(req, dto) {
+        if (!req.user.isSystemAdmin && dto.userId !== req.user.id) {
+          throw new _common.ForbiddenException("Cannot create API keys for other users");
+        }
+        return this.apiKeysService.create(dto);
+      }
+      async delete(req, id) {
+        const apiKey = await this.apiKeysService.findById(id);
+        if (!apiKey) {
+          throw new _common.NotFoundException(`API key with id ${id} not found`);
+        }
+        if (!req.user.isSystemAdmin && apiKey.userId !== req.user.id) {
+          throw new _common.ForbiddenException("Cannot delete API keys of other users");
+        }
+        await this.apiKeysService.delete(id);
+      }
+      constructor(apiKeysService) {
+        this.apiKeysService = apiKeysService;
+      }
+    };
+    _ts_decorate([
+      (0, _common.Get)(),
+      _ts_param(0, (0, _common.Req)()),
+      _ts_param(1, (0, _common.Query)("userId")),
+      _ts_param(2, (0, _common.Query)(new _index.ZodValidationPipe(_index.PaginationQuerySchema))),
+      _ts_metadata("design:type", Function),
+      _ts_metadata("design:paramtypes", [
+        typeof _authguard.AuthenticatedRequest === "undefined" ? Object : _authguard.AuthenticatedRequest,
+        String,
+        typeof PaginationQuery === "undefined" ? Object : PaginationQuery
+      ]),
+      _ts_metadata("design:returntype", Promise)
+    ], ApiKeysController.prototype, "findAll", null);
+    _ts_decorate([
+      (0, _common.Get)(":id"),
+      _ts_param(0, (0, _common.Req)()),
+      _ts_param(1, (0, _common.Param)("id", _common.ParseIntPipe)),
+      _ts_metadata("design:type", Function),
+      _ts_metadata("design:paramtypes", [
+        typeof _authguard.AuthenticatedRequest === "undefined" ? Object : _authguard.AuthenticatedRequest,
+        Number
+      ]),
+      _ts_metadata("design:returntype", Promise)
+    ], ApiKeysController.prototype, "findById", null);
+    _ts_decorate([
+      (0, _common.Post)(),
+      _ts_param(0, (0, _common.Req)()),
+      _ts_param(1, (0, _common.Body)(new _index.ZodValidationPipe(_apikeysschema.CreateApiKeySchema))),
+      _ts_metadata("design:type", Function),
+      _ts_metadata("design:paramtypes", [
+        typeof _authguard.AuthenticatedRequest === "undefined" ? Object : _authguard.AuthenticatedRequest,
+        typeof CreateApiKeyRequest === "undefined" ? Object : CreateApiKeyRequest
+      ]),
+      _ts_metadata("design:returntype", Promise)
+    ], ApiKeysController.prototype, "create", null);
+    _ts_decorate([
+      (0, _common.Delete)(":id"),
+      _ts_param(0, (0, _common.Req)()),
+      _ts_param(1, (0, _common.Param)("id", _common.ParseIntPipe)),
+      _ts_metadata("design:type", Function),
+      _ts_metadata("design:paramtypes", [
+        typeof _authguard.AuthenticatedRequest === "undefined" ? Object : _authguard.AuthenticatedRequest,
+        Number
+      ]),
+      _ts_metadata("design:returntype", Promise)
+    ], ApiKeysController.prototype, "delete", null);
+    ApiKeysController = _ts_decorate([
+      (0, _common.Controller)("api-keys"),
+      (0, _common.UseGuards)(_authguard.AuthGuard),
+      _ts_metadata("design:type", Function),
+      _ts_metadata("design:paramtypes", [
+        typeof _apikeysservice.ApiKeysService === "undefined" ? Object : _apikeysservice.ApiKeysService
+      ])
+    ], ApiKeysController);
+  }
+});
+
 // dist/auth/system-admin.guard.js
 var require_system_admin_guard = __commonJS({
   "dist/auth/system-admin.guard.js"(exports) {
@@ -115030,158 +115232,6 @@ var require_system_admin_guard = __commonJS({
     SystemAdminGuard = _ts_decorate([
       (0, _common.Injectable)()
     ], SystemAdminGuard);
-  }
-});
-
-// dist/entities/api-keys/api-keys.schema.js
-var require_api_keys_schema = __commonJS({
-  "dist/entities/api-keys/api-keys.schema.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", {
-      value: true
-    });
-    function _export(target, all) {
-      for (var name2 in all) Object.defineProperty(target, name2, {
-        enumerable: true,
-        get: Object.getOwnPropertyDescriptor(all, name2).get
-      });
-    }
-    _export(exports, {
-      get CreateApiKeySchema() {
-        return CreateApiKeySchema;
-      },
-      get UpdateApiKeySchema() {
-        return UpdateApiKeySchema;
-      }
-    });
-    var _zod = require_zod();
-    var _index = require_common3();
-    var { id, name } = _index.zodSchemas;
-    var CreateApiKeySchema = _zod.z.object({
-      user_id: id(),
-      name: name().optional(),
-      expires_at: _zod.z.string().datetime().optional()
-    });
-    var UpdateApiKeySchema = _zod.z.object({
-      name: name().nullable().optional(),
-      expires_at: _zod.z.string().datetime().nullable().optional()
-    });
-  }
-});
-
-// dist/entities/api-keys/api-keys.controller.js
-var require_api_keys_controller = __commonJS({
-  "dist/entities/api-keys/api-keys.controller.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", {
-      value: true
-    });
-    Object.defineProperty(exports, "ApiKeysController", {
-      enumerable: true,
-      get: function() {
-        return ApiKeysController;
-      }
-    });
-    var _common = require_common();
-    var _authguard = require_auth_guard();
-    var _systemadminguard = require_system_admin_guard();
-    var _index = require_common3();
-    var _apikeysschema = require_api_keys_schema();
-    var _apikeysservice = require_api_keys_service();
-    function _ts_decorate(decorators, target, key, desc) {
-      var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-      if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-      else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-      return c > 3 && r && Object.defineProperty(target, key, r), r;
-    }
-    function _ts_metadata(k, v) {
-      if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-    }
-    function _ts_param(paramIndex, decorator) {
-      return function(target, key) {
-        decorator(target, key, paramIndex);
-      };
-    }
-    var ApiKeysController = class ApiKeysController {
-      async findAll(userId, query) {
-        if (userId) {
-          return this.apiKeysService.findByUserIdPaginated(Number.parseInt(userId, 10), query);
-        }
-        return this.apiKeysService.findAllPaginated(query);
-      }
-      async findById(id) {
-        return this.apiKeysService.findById(id);
-      }
-      async create(dto) {
-        return this.apiKeysService.create(dto);
-      }
-      async update(id, dto) {
-        return this.apiKeysService.update(id, dto);
-      }
-      async delete(id) {
-        return this.apiKeysService.delete(id);
-      }
-      constructor(apiKeysService) {
-        this.apiKeysService = apiKeysService;
-      }
-    };
-    _ts_decorate([
-      (0, _common.Get)(),
-      _ts_param(0, (0, _common.Query)("user_id")),
-      _ts_param(1, (0, _common.Query)(new _index.ZodValidationPipe(_index.PaginationQuerySchema))),
-      _ts_metadata("design:type", Function),
-      _ts_metadata("design:paramtypes", [
-        String,
-        typeof PaginationQuery === "undefined" ? Object : PaginationQuery
-      ]),
-      _ts_metadata("design:returntype", Promise)
-    ], ApiKeysController.prototype, "findAll", null);
-    _ts_decorate([
-      (0, _common.Get)(":id"),
-      _ts_param(0, (0, _common.Param)("id", _common.ParseIntPipe)),
-      _ts_metadata("design:type", Function),
-      _ts_metadata("design:paramtypes", [
-        Number
-      ]),
-      _ts_metadata("design:returntype", Promise)
-    ], ApiKeysController.prototype, "findById", null);
-    _ts_decorate([
-      (0, _common.Post)(),
-      _ts_param(0, (0, _common.Body)(new _index.ZodValidationPipe(_apikeysschema.CreateApiKeySchema))),
-      _ts_metadata("design:type", Function),
-      _ts_metadata("design:paramtypes", [
-        typeof CreateApiKeyRequest === "undefined" ? Object : CreateApiKeyRequest
-      ]),
-      _ts_metadata("design:returntype", Promise)
-    ], ApiKeysController.prototype, "create", null);
-    _ts_decorate([
-      (0, _common.Put)(":id"),
-      _ts_param(0, (0, _common.Param)("id", _common.ParseIntPipe)),
-      _ts_param(1, (0, _common.Body)(new _index.ZodValidationPipe(_apikeysschema.UpdateApiKeySchema))),
-      _ts_metadata("design:type", Function),
-      _ts_metadata("design:paramtypes", [
-        Number,
-        typeof UpdateApiKeyRequest === "undefined" ? Object : UpdateApiKeyRequest
-      ]),
-      _ts_metadata("design:returntype", Promise)
-    ], ApiKeysController.prototype, "update", null);
-    _ts_decorate([
-      (0, _common.Delete)(":id"),
-      _ts_param(0, (0, _common.Param)("id", _common.ParseIntPipe)),
-      _ts_metadata("design:type", Function),
-      _ts_metadata("design:paramtypes", [
-        Number
-      ]),
-      _ts_metadata("design:returntype", Promise)
-    ], ApiKeysController.prototype, "delete", null);
-    ApiKeysController = _ts_decorate([
-      (0, _common.Controller)("api-keys"),
-      (0, _common.UseGuards)(_authguard.AuthGuard, _systemadminguard.SystemAdminGuard),
-      _ts_metadata("design:type", Function),
-      _ts_metadata("design:paramtypes", [
-        typeof _apikeysservice.ApiKeysService === "undefined" ? Object : _apikeysservice.ApiKeysService
-      ])
-    ], ApiKeysController);
   }
 });
 
@@ -115240,10 +115290,10 @@ var require_user_roles_controller = __commonJS({
         }
         let roles = await this.userRolesService.findByTenantId(tid);
         if (userId) {
-          roles = roles.filter((r) => r.user_id === Number(userId));
+          roles = roles.filter((r) => r.userId === Number(userId));
         }
         if (roleId) {
-          roles = roles.filter((r) => r.role_id === Number(roleId));
+          roles = roles.filter((r) => r.roleId === Number(roleId));
         }
         return {
           items: roles,
@@ -115258,7 +115308,7 @@ var require_user_roles_controller = __commonJS({
           throw new _common.NotFoundException(`UserRole with id ${id} not found`);
         }
         if (!req.user.isSystemAdmin) {
-          if (!userRole.tenant_id || !(0, _accesscontrol.hasTenantAccess)(req.user, userRole.tenant_id)) {
+          if (!userRole.tenantId || !(0, _accesscontrol.hasTenantAccess)(req.user, userRole.tenantId)) {
             throw new _common.ForbiddenException("Access to this user role is not allowed");
           }
         }
@@ -115266,10 +115316,10 @@ var require_user_roles_controller = __commonJS({
       }
       async create(req, dto) {
         if (!req.user.isSystemAdmin) {
-          if (!dto.tenant_id) {
-            throw new _common.ForbiddenException("tenant_id is required");
+          if (!dto.tenantId) {
+            throw new _common.ForbiddenException("tenantId is required");
           }
-          (0, _accesscontrol.validateTenantAdminAccess)(req.user, dto.tenant_id);
+          (0, _accesscontrol.validateTenantAdminAccess)(req.user, dto.tenantId);
         }
         return this.userRolesService.create(dto);
       }
@@ -115279,7 +115329,7 @@ var require_user_roles_controller = __commonJS({
           throw new _common.NotFoundException(`UserRole with id ${id} not found`);
         }
         if (!req.user.isSystemAdmin) {
-          if (!userRole.tenant_id || !(0, _accesscontrol.hasTenantAccess)(req.user, userRole.tenant_id)) {
+          if (!userRole.tenantId || !(0, _accesscontrol.hasTenantAccess)(req.user, userRole.tenantId)) {
             throw new _common.ForbiddenException("Cannot delete user role from another tenant");
           }
         }
@@ -115430,16 +115480,16 @@ var require_tenants_schema = __commonJS({
     var { title, email, name, id } = _index.zodSchemas;
     var CreateTenantRequestSchema = _zod.z.object({
       title: title(),
-      owner_id: id().optional()
+      ownerId: id().optional()
     });
     var CreateTenantSchema = _zod.z.object({
       title: title(),
-      owner_id: id().optional(),
-      created_by: id().optional()
+      ownerId: id().optional(),
+      createdBy: id().optional()
     });
     var UpdateTenantSchema = _zod.z.object({
       title: title().optional(),
-      owner_id: id().nullable().optional()
+      ownerId: id().nullable().optional()
     });
     var CreateTenantWithShopSchema = _zod.z.object({
       tenantTitle: title(),
@@ -115500,7 +115550,7 @@ var require_tenants_controller = __commonJS({
       async create(req, dto) {
         return this.tenantsService.create({
           ...dto,
-          created_by: req.user.id
+          createdBy: req.user.id
         });
       }
       async update(id, dto) {
@@ -115523,7 +115573,7 @@ var require_tenants_controller = __commonJS({
     _ts_decorate([
       (0, _common.Get)(),
       _ts_param(0, (0, _common.Req)()),
-      _ts_param(1, (0, _common.Query)("owner_id")),
+      _ts_param(1, (0, _common.Query)("ownerId")),
       _ts_param(2, (0, _common.Query)(new _index.ZodValidationPipe(_index.PaginationQuerySchema))),
       _ts_metadata("design:type", Function),
       _ts_metadata("design:paramtypes", [
@@ -115780,7 +115830,7 @@ var require_app_controller = __commonJS({
     function _ts_metadata(k, v) {
       if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
     }
-    var APP_VERSION = true ? "0.10.3" : "0.0.0";
+    var APP_VERSION = true ? "0.10.5" : "0.0.0";
     var AppController = class AppController {
       getHello() {
         return this.appService.getHello();
@@ -116110,7 +116160,7 @@ var require_marketplaces_controller = __commonJS({
       }
       async findByCode(_req, ctx, code) {
         const marketplace = await this.marketplacesService.findByCodeAndShop(code, ctx.shopId);
-        if (!marketplace || marketplace.tenant_id !== ctx.tenantId) {
+        if (!marketplace || marketplace.tenantId !== ctx.tenantId) {
           throw new _common.NotFoundException(`Marketplace with code ${code} not found`);
         }
         return marketplace;
@@ -116134,8 +116184,8 @@ var require_marketplaces_controller = __commonJS({
       async create(_req, ctx, dto) {
         return this.marketplacesService.create({
           ...dto,
-          shop_id: ctx.shopId,
-          tenant_id: ctx.tenantId
+          shopId: ctx.shopId,
+          tenantId: ctx.tenantId
         });
       }
       async update(_req, ctx, id, dto) {
@@ -116434,41 +116484,6 @@ var require_marketplaces_module = __commonJS({
   }
 });
 
-// dist/roles/roles.schema.js
-var require_roles_schema = __commonJS({
-  "dist/roles/roles.schema.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", {
-      value: true
-    });
-    function _export(target, all) {
-      for (var name in all) Object.defineProperty(target, name, {
-        enumerable: true,
-        get: Object.getOwnPropertyDescriptor(all, name).get
-      });
-    }
-    _export(exports, {
-      get CreateRoleSchema() {
-        return CreateRoleSchema;
-      },
-      get UpdateRoleSchema() {
-        return UpdateRoleSchema;
-      }
-    });
-    var _zod = require_zod();
-    var _index = require_common3();
-    var { code, description } = _index.zodSchemas;
-    var CreateRoleSchema = _zod.z.object({
-      name: code(),
-      description: description().optional()
-    });
-    var UpdateRoleSchema = _zod.z.object({
-      name: code().optional(),
-      description: description().nullable().optional()
-    });
-  }
-});
-
 // dist/roles/roles.service.js
 var require_roles_service = __commonJS({
   "dist/roles/roles.service.js"(exports) {
@@ -116536,7 +116551,7 @@ var require_roles_service = __commonJS({
       async update(id, dto) {
         return this.db.updateTable("roles").set({
           ...dto,
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         }).where("id", "=", id).returningAll().executeTakeFirst();
       }
       async delete(id) {
@@ -116571,9 +116586,7 @@ var require_roles_controller = __commonJS({
     });
     var _common = require_common();
     var _authguard = require_auth_guard();
-    var _systemadminguard = require_system_admin_guard();
     var _index = require_common3();
-    var _rolesschema = require_roles_schema();
     var _rolesservice = require_roles_service();
     function _ts_decorate(decorators, target, key, desc) {
       var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -116600,19 +116613,6 @@ var require_roles_controller = __commonJS({
         }
         return role;
       }
-      async create(dto) {
-        return this.rolesService.create(dto);
-      }
-      async update(id, dto) {
-        const role = await this.rolesService.update(id, dto);
-        if (!role) {
-          throw new _common.NotFoundException(`Role with id ${id} not found`);
-        }
-        return role;
-      }
-      async delete(id) {
-        await this.rolesService.delete(id);
-      }
       constructor(rolesService) {
         this.rolesService = rolesService;
       }
@@ -116635,38 +116635,9 @@ var require_roles_controller = __commonJS({
       ]),
       _ts_metadata("design:returntype", Promise)
     ], RolesController.prototype, "findById", null);
-    _ts_decorate([
-      (0, _common.Post)(),
-      _ts_param(0, (0, _common.Body)(new _index.ZodValidationPipe(_rolesschema.CreateRoleSchema))),
-      _ts_metadata("design:type", Function),
-      _ts_metadata("design:paramtypes", [
-        typeof CreateRoleRequest === "undefined" ? Object : CreateRoleRequest
-      ]),
-      _ts_metadata("design:returntype", Promise)
-    ], RolesController.prototype, "create", null);
-    _ts_decorate([
-      (0, _common.Put)(":id"),
-      _ts_param(0, (0, _common.Param)("id", _common.ParseIntPipe)),
-      _ts_param(1, (0, _common.Body)(new _index.ZodValidationPipe(_rolesschema.UpdateRoleSchema))),
-      _ts_metadata("design:type", Function),
-      _ts_metadata("design:paramtypes", [
-        Number,
-        typeof UpdateRoleRequest === "undefined" ? Object : UpdateRoleRequest
-      ]),
-      _ts_metadata("design:returntype", Promise)
-    ], RolesController.prototype, "update", null);
-    _ts_decorate([
-      (0, _common.Delete)(":id"),
-      _ts_param(0, (0, _common.Param)("id", _common.ParseIntPipe)),
-      _ts_metadata("design:type", Function),
-      _ts_metadata("design:paramtypes", [
-        Number
-      ]),
-      _ts_metadata("design:returntype", Promise)
-    ], RolesController.prototype, "delete", null);
     RolesController = _ts_decorate([
       (0, _common.Controller)("roles"),
-      (0, _common.UseGuards)(_authguard.AuthGuard, _systemadminguard.SystemAdminGuard),
+      (0, _common.UseGuards)(_authguard.AuthGuard),
       _ts_metadata("design:type", Function),
       _ts_metadata("design:paramtypes", [
         typeof _rolesservice.RolesService === "undefined" ? Object : _rolesservice.RolesService
@@ -116689,9 +116660,8 @@ var require_roles_module = __commonJS({
       }
     });
     var _common = require_common();
-    var _apikeysmodule = require_api_keys_module();
     var _authguard = require_auth_guard();
-    var _systemadminguard = require_system_admin_guard();
+    var _apikeysmodule = require_api_keys_module();
     var _tenantsmodule = require_tenants_module();
     var _userrolesmodule = require_user_roles_module();
     var _rolescontroller = require_roles_controller();
@@ -116716,8 +116686,7 @@ var require_roles_module = __commonJS({
         ],
         providers: [
           _rolesservice.RolesService,
-          _authguard.AuthGuard,
-          _systemadminguard.SystemAdminGuard
+          _authguard.AuthGuard
         ],
         exports: [
           _rolesservice.RolesService
@@ -116754,12 +116723,12 @@ var require_users_schema = __commonJS({
     var CreateUserSchema = _zod.z.object({
       email: email(),
       name: name(),
-      default_shop_id: id().optional()
+      defaultShopId: id().optional()
     });
     var UpdateUserSchema = _zod.z.object({
       email: email().optional(),
       name: name().optional(),
-      default_shop_id: id().nullable().optional()
+      defaultShopId: id().nullable().optional()
     });
   }
 });
@@ -116797,7 +116766,7 @@ var require_users_service = __commonJS({
         return Number(result.count);
       }
       async countByTenantId(tenantId) {
-        const result = await this.db.selectFrom("users").innerJoin("user_roles", "user_roles.user_id", "users.id").select(this.db.fn.count("users.id").distinct().as("count")).where("user_roles.tenant_id", "=", tenantId).executeTakeFirstOrThrow();
+        const result = await this.db.selectFrom("users").innerJoin("user_roles", "user_roles.userId", "users.id").select(this.db.fn.count("users.id").distinct().as("count")).where("user_roles.tenantId", "=", tenantId).executeTakeFirstOrThrow();
         return Number(result.count);
       }
       async findAll(query) {
@@ -116829,7 +116798,7 @@ var require_users_service = __commonJS({
           const result = await this.db.insertInto("users").values({
             email: dto.email,
             name: dto.name,
-            updated_at: /* @__PURE__ */ new Date()
+            updatedAt: /* @__PURE__ */ new Date()
           }).returningAll().executeTakeFirstOrThrow();
           return result;
         } catch (error) {
@@ -116842,14 +116811,14 @@ var require_users_service = __commonJS({
       async update(id, dto) {
         return this.db.updateTable("users").set({
           ...dto,
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         }).where("id", "=", id).returningAll().executeTakeFirst();
       }
       async delete(id) {
         await this.db.deleteFrom("users").where("id", "=", id).execute();
       }
       async findByTenantId(tenantId, query) {
-        let q = this.db.selectFrom("users").selectAll("users").innerJoin("user_roles", "user_roles.user_id", "users.id").where("user_roles.tenant_id", "=", tenantId).groupBy("users.id").orderBy("users.id", "asc");
+        let q = this.db.selectFrom("users").selectAll("users").innerJoin("user_roles", "user_roles.userId", "users.id").where("user_roles.tenantId", "=", tenantId).groupBy("users.id").orderBy("users.id", "asc");
         if (query?.limit !== void 0) q = q.limit(query.limit);
         if (query?.offset !== void 0) q = q.offset(query.offset);
         return q.execute();
@@ -116871,58 +116840,58 @@ var require_users_service = __commonJS({
         if (!user) {
           return null;
         }
-        const rolesResult = await this.db.selectFrom("user_roles").innerJoin("roles", "roles.id", "user_roles.role_id").leftJoin("tenants", "tenants.id", "user_roles.tenant_id").leftJoin("shops", "shops.id", "user_roles.shop_id").select("user_roles.id").select((0, _kysely.sql)`roles.name`.as("role_name")).select("user_roles.tenant_id").select((0, _kysely.sql)`tenants.title`.as("tenant_title")).select("user_roles.shop_id").select((0, _kysely.sql)`shops.title`.as("shop_title")).where("user_roles.user_id", "=", userId).execute();
+        const rolesResult = await this.db.selectFrom("user_roles").innerJoin("roles", "roles.id", "user_roles.roleId").leftJoin("tenants", "tenants.id", "user_roles.tenantId").leftJoin("shops", "shops.id", "user_roles.shopId").select("user_roles.id").select((0, _kysely.sql)`roles.name`.as("roleName")).select("user_roles.tenantId").select((0, _kysely.sql)`tenants.title`.as("tenantTitle")).select("user_roles.shopId").select((0, _kysely.sql)`shops.title`.as("shopTitle")).where("user_roles.userId", "=", userId).execute();
         const roles = rolesResult.map((r) => ({
           id: r.id,
-          role_name: r.role_name,
-          tenant_id: r.tenant_id,
-          tenant_title: r.tenant_title,
-          shop_id: r.shop_id,
-          shop_title: r.shop_title
+          roleName: r.roleName,
+          tenantId: r.tenantId,
+          tenantTitle: r.tenantTitle,
+          shopId: r.shopId,
+          shopTitle: r.shopTitle
         }));
-        const ownedTenantsResult = await this.db.selectFrom("tenants").select("id").select("title").where("owner_id", "=", userId).execute();
+        const ownedTenantsResult = await this.db.selectFrom("tenants").select("id").select("title").where("ownerId", "=", userId).execute();
         for (const ownedTenant of ownedTenantsResult) {
           roles.push({
             id: 0,
-            role_name: "tenantOwner",
-            tenant_id: ownedTenant.id,
-            tenant_title: ownedTenant.title,
-            shop_id: null,
-            shop_title: null
+            roleName: "tenantOwner",
+            tenantId: ownedTenant.id,
+            tenantTitle: ownedTenant.title,
+            shopId: null,
+            shopTitle: null
           });
         }
         const tenantIds = [
           .../* @__PURE__ */ new Set([
-            ...roles.filter((r) => r.tenant_id !== null).map((r) => r.tenant_id),
+            ...roles.filter((r) => r.tenantId !== null).map((r) => r.tenantId),
             ...ownedTenantsResult.map((t) => t.id)
           ])
         ];
-        const tenantsResult = await this.db.selectFrom("tenants").select("id").select("title").select("owner_id").where("id", "in", tenantIds.length > 0 ? tenantIds : [
+        const tenantsResult = await this.db.selectFrom("tenants").select("id").select("title").select("ownerId").where("id", "in", tenantIds.length > 0 ? tenantIds : [
           -1
         ]).execute();
         const fullAccessTenantIds = /* @__PURE__ */ new Set();
         for (const tenant of tenantsResult) {
-          if (tenant.owner_id === userId) {
+          if (tenant.ownerId === userId) {
             fullAccessTenantIds.add(tenant.id);
             continue;
           }
-          const hasTenantAdmin = roles.some((r) => r.tenant_id === tenant.id && r.role_name === _constants.ROLE_NAMES.TENANT_ADMIN && r.shop_id === null);
+          const hasTenantAdmin = roles.some((r) => r.tenantId === tenant.id && r.roleName === _constants.ROLE_NAMES.TENANT_ADMIN && r.shopId === null);
           if (hasTenantAdmin) {
             fullAccessTenantIds.add(tenant.id);
           }
         }
-        const shopLevelRoleShopIds = new Set(roles.filter((r) => r.shop_id !== null).map((r) => r.shop_id));
-        const shopsResult = await this.db.selectFrom("shops").select("id").select("title").select("tenant_id").where("tenant_id", "in", tenantIds.length > 0 ? tenantIds : [
+        const shopLevelRoleShopIds = new Set(roles.filter((r) => r.shopId !== null).map((r) => r.shopId));
+        const shopsResult = await this.db.selectFrom("shops").select("id").select("title").select("tenantId").where("tenantId", "in", tenantIds.length > 0 ? tenantIds : [
           -1
         ]).execute();
         const shopsByTenant = shopsResult.reduce((acc, shop) => {
-          const hasFullTenantAccess = fullAccessTenantIds.has(shop.tenant_id);
+          const hasFullTenantAccess = fullAccessTenantIds.has(shop.tenantId);
           const hasShopLevelRole = shopLevelRoleShopIds.has(shop.id);
           if (hasFullTenantAccess || hasShopLevelRole) {
-            if (!acc[shop.tenant_id]) {
-              acc[shop.tenant_id] = [];
+            if (!acc[shop.tenantId]) {
+              acc[shop.tenantId] = [];
             }
-            acc[shop.tenant_id]?.push({
+            acc[shop.tenantId]?.push({
               id: shop.id,
               title: shop.title
             });
@@ -116932,7 +116901,7 @@ var require_users_service = __commonJS({
         const tenants = tenantsResult.map((t) => ({
           id: t.id,
           title: t.title,
-          is_owner: t.owner_id === userId,
+          isOwner: t.ownerId === userId,
           shops: shopsByTenant[t.id] || []
         }));
         return {
@@ -117015,7 +116984,7 @@ var require_users_controller = __commonJS({
           return user;
         }
         const userRoles = await this.userRolesService.findByUserId(id);
-        const hasAccessToUser = userRoles.some((ur) => ur.tenant_id && (0, _accesscontrol.hasTenantAccess)(req.user, ur.tenant_id));
+        const hasAccessToUser = userRoles.some((ur) => ur.tenantId && (0, _accesscontrol.hasTenantAccess)(req.user, ur.tenantId));
         if (!hasAccessToUser) {
           throw new _common.ForbiddenException("Access to this user is not allowed");
         }
@@ -117042,7 +117011,7 @@ var require_users_controller = __commonJS({
           return this.usersService.delete(id);
         }
         const userRoles = await this.userRolesService.findByUserId(id);
-        const allRolesInManagedTenants = userRoles.every((ur) => ur.tenant_id && (0, _accesscontrol.hasTenantAccess)(req.user, ur.tenant_id));
+        const allRolesInManagedTenants = userRoles.every((ur) => ur.tenantId && (0, _accesscontrol.hasTenantAccess)(req.user, ur.tenantId));
         if (!allRolesInManagedTenants) {
           throw new _common.ForbiddenException("Cannot delete user with roles in other tenants");
         }
@@ -117249,7 +117218,7 @@ var require_bootstrap_service = __commonJS({
           return;
         }
         const existingApiKey = await this.apiKeysService.findByKey(systemAdminKey);
-        let adminUser = existingApiKey ? await this.usersService.findById(existingApiKey.user_id) : void 0;
+        let adminUser = existingApiKey ? await this.usersService.findById(existingApiKey.userId) : void 0;
         if (!adminUser) {
           this.logger.log("Creating system admin user...");
           try {
@@ -117258,7 +117227,7 @@ var require_bootstrap_service = __commonJS({
               name: "System Admin"
             });
             await this.apiKeysService.createWithKey({
-              user_id: adminUser.id,
+              userId: adminUser.id,
               key: systemAdminKey,
               name: "System Admin Key"
             });
@@ -117275,8 +117244,8 @@ var require_bootstrap_service = __commonJS({
         if (!hasRole) {
           this.logger.log("Assigning systemAdmin role to user...");
           await this.userRolesService.create({
-            user_id: adminUser.id,
-            role_id: systemAdminRole.id
+            userId: adminUser.id,
+            roleId: systemAdminRole.id
           });
         }
         this.logger.log("System admin initialization complete");
@@ -117526,7 +117495,7 @@ var require_brands_controller = __commonJS({
       }
       async findByCode(_req, ctx, code) {
         const brand = await this.brandsService.findByCodeAndShop(code, ctx.shopId);
-        if (!brand || brand.tenant_id !== ctx.tenantId) {
+        if (!brand || brand.tenantId !== ctx.tenantId) {
           throw new _common.NotFoundException(`Brand with code ${code} not found`);
         }
         return brand;
@@ -117550,8 +117519,8 @@ var require_brands_controller = __commonJS({
       async create(_req, ctx, body) {
         return this.brandsService.create({
           ...body,
-          shop_id: ctx.shopId,
-          tenant_id: ctx.tenantId
+          shopId: ctx.shopId,
+          tenantId: ctx.tenantId
         });
       }
       async update(_req, ctx, id, body) {
@@ -118030,7 +117999,7 @@ var require_categories_controller = __commonJS({
       }
       async findByCode(_req, ctx, code) {
         const category = await this.categoriesService.findByCodeAndShop(code, ctx.shopId);
-        if (!category || category.tenant_id !== ctx.tenantId) {
+        if (!category || category.tenantId !== ctx.tenantId) {
           throw new _common.NotFoundException(`Category with code ${code} not found`);
         }
         return category;
@@ -118054,8 +118023,8 @@ var require_categories_controller = __commonJS({
       async create(_req, ctx, body) {
         return this.categoriesService.create({
           ...body,
-          shop_id: ctx.shopId,
-          tenant_id: ctx.tenantId
+          shopId: ctx.shopId,
+          tenantId: ctx.tenantId
         });
       }
       async update(_req, ctx, id, body) {
@@ -118413,8 +118382,8 @@ var require_competitor_products_schema = __commonJS({
     var _index = require_common3();
     var { id, code } = _index.zodSchemas;
     var CreateCompetitorProductRequestSchema = _zod.z.object({
-      marketplace_id: id(),
-      marketplace_product_id: _zod.z.string().min(1),
+      marketplaceId: id(),
+      marketplaceProductId: _zod.z.string().min(1),
       title: _zod.z.string().max(1e3).optional(),
       brand: _zod.z.string().max(255).optional()
     });
@@ -118422,10 +118391,10 @@ var require_competitor_products_schema = __commonJS({
       ids: _zod.z.string().transform((val) => val.split(",").map(Number)).optional()
     });
     var CreateCompetitorProductSchema = _zod.z.object({
-      shop_id: id(),
-      tenant_id: id(),
-      marketplace_id: id(),
-      marketplace_product_id: _zod.z.string().min(1),
+      shopId: id(),
+      tenantId: id(),
+      marketplaceId: id(),
+      marketplaceProductId: _zod.z.string().min(1),
       title: _zod.z.string().max(1e3).optional(),
       brand: _zod.z.string().max(255).optional()
     });
@@ -118477,11 +118446,11 @@ var require_competitor_products_service = __commonJS({
         return this.db.selectFrom("competitor_products").selectAll().where("id", "=", id).executeTakeFirst();
       }
       async findByShopId(shopId) {
-        return this.db.selectFrom("competitor_products").selectAll().where("shop_id", "=", shopId).execute();
+        return this.db.selectFrom("competitor_products").selectAll().where("shopId", "=", shopId).execute();
       }
       async findByShopIdPaginated(shopId, query) {
         const { ids, limit = 100, offset = 0 } = query ?? {};
-        let baseQuery = this.db.selectFrom("competitor_products").where("shop_id", "=", shopId);
+        let baseQuery = this.db.selectFrom("competitor_products").where("shopId", "=", shopId);
         if (ids && ids.length > 0) {
           baseQuery = baseQuery.where("id", "in", ids);
         }
@@ -118497,17 +118466,17 @@ var require_competitor_products_service = __commonJS({
       async create(dto) {
         try {
           return await this.db.insertInto("competitor_products").values({
-            shop_id: dto.shop_id,
-            tenant_id: dto.tenant_id,
-            marketplace_id: dto.marketplace_id,
-            marketplace_product_id: dto.marketplace_product_id,
+            shopId: dto.shopId,
+            tenantId: dto.tenantId,
+            marketplaceId: dto.marketplaceId,
+            marketplaceProductId: dto.marketplaceProductId,
             title: dto.title ?? null,
             brand: dto.brand ?? null,
-            updated_at: /* @__PURE__ */ new Date()
+            updatedAt: /* @__PURE__ */ new Date()
           }).returningAll().executeTakeFirstOrThrow();
         } catch (error) {
           if ((0, _index.isUniqueViolation)(error)) {
-            throw new _index.DuplicateResourceException("Competitor Product", `marketplace ${dto.marketplace_id} product ${dto.marketplace_product_id}`, "this shop");
+            throw new _index.DuplicateResourceException("Competitor Product", `marketplace ${dto.marketplaceId} product ${dto.marketplaceProductId}`, "this shop");
           }
           throw error;
         }
@@ -118515,7 +118484,7 @@ var require_competitor_products_service = __commonJS({
       async update(id, dto) {
         const result = await this.db.updateTable("competitor_products").set({
           ...dto,
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         }).where("id", "=", id).returningAll().executeTakeFirst();
         if (!result) {
           throw new _common.NotFoundException(`Competitor product with id ${id} not found`);
@@ -118526,7 +118495,7 @@ var require_competitor_products_service = __commonJS({
         await this.db.deleteFrom("competitor_products").where("id", "=", id).execute();
       }
       async deleteByShopId(shopId) {
-        const result = await this.db.deleteFrom("competitor_products").where("shop_id", "=", shopId).executeTakeFirst();
+        const result = await this.db.deleteFrom("competitor_products").where("shopId", "=", shopId).executeTakeFirst();
         return Number(result.numDeletedRows);
       }
       /**
@@ -118534,22 +118503,22 @@ var require_competitor_products_service = __commonJS({
       * Used for auto-creating when importing sku_competitor_mappings or competitor_sales.
       */
       async findOrCreate(tenantId, shopId, marketplaceId, marketplaceProductId) {
-        const existing = await this.db.selectFrom("competitor_products").selectAll().where("shop_id", "=", shopId).where("marketplace_id", "=", marketplaceId).where("marketplace_product_id", "=", marketplaceProductId).executeTakeFirst();
+        const existing = await this.db.selectFrom("competitor_products").selectAll().where("shopId", "=", shopId).where("marketplaceId", "=", marketplaceId).where("marketplaceProductId", "=", marketplaceProductId).executeTakeFirst();
         if (existing) {
           return existing;
         }
         return this.db.insertInto("competitor_products").values({
-          shop_id: shopId,
-          tenant_id: tenantId,
-          marketplace_id: marketplaceId,
-          marketplace_product_id: marketplaceProductId,
+          shopId,
+          tenantId,
+          marketplaceId,
+          marketplaceProductId,
           title: null,
           brand: null,
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         }).onConflict((oc) => oc.columns([
-          "shop_id",
-          "marketplace_id",
-          "marketplace_product_id"
+          "shopId",
+          "marketplaceId",
+          "marketplaceProductId"
         ]).doNothing()).returningAll().executeTakeFirstOrThrow();
       }
       /**
@@ -118561,18 +118530,18 @@ var require_competitor_products_service = __commonJS({
           return /* @__PURE__ */ new Map();
         }
         const values = items.map((item) => ({
-          shop_id: shopId,
-          tenant_id: tenantId,
-          marketplace_id: item.marketplaceId,
-          marketplace_product_id: item.marketplaceProductId,
+          shopId,
+          tenantId,
+          marketplaceId: item.marketplaceId,
+          marketplaceProductId: item.marketplaceProductId,
           title: item.marketplaceProductId,
           brand: null,
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         }));
         await this.db.insertInto("competitor_products").values(values).onConflict((oc) => oc.columns([
-          "shop_id",
-          "marketplace_id",
-          "marketplace_product_id"
+          "shopId",
+          "marketplaceId",
+          "marketplaceProductId"
         ]).doNothing()).execute();
         const uniqueItems = [
           ...new Set(items.map((i) => `${i.marketplaceId}:${i.marketplaceProductId}`))
@@ -118582,12 +118551,12 @@ var require_competitor_products_service = __commonJS({
         ];
         const records = await this.db.selectFrom("competitor_products").select([
           "id",
-          "marketplace_id",
-          "marketplace_product_id"
-        ]).where("shop_id", "=", shopId).where("marketplace_id", "in", marketplaceIds).execute();
+          "marketplaceId",
+          "marketplaceProductId"
+        ]).where("shopId", "=", shopId).where("marketplaceId", "in", marketplaceIds).execute();
         const result = /* @__PURE__ */ new Map();
         for (const record of records) {
-          const key = `${record.marketplace_id}:${record.marketplace_product_id}`;
+          const key = `${record.marketplaceId}:${record.marketplaceProductId}`;
           if (uniqueItems.includes(key)) {
             result.set(key, record.id);
           }
@@ -118596,21 +118565,21 @@ var require_competitor_products_service = __commonJS({
       }
       async upsert(dto) {
         return this.db.insertInto("competitor_products").values({
-          shop_id: dto.shop_id,
-          tenant_id: dto.tenant_id,
-          marketplace_id: dto.marketplace_id,
-          marketplace_product_id: dto.marketplace_product_id,
+          shopId: dto.shopId,
+          tenantId: dto.tenantId,
+          marketplaceId: dto.marketplaceId,
+          marketplaceProductId: dto.marketplaceProductId,
           title: dto.title ?? null,
           brand: dto.brand ?? null,
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         }).onConflict((oc) => oc.columns([
-          "shop_id",
-          "marketplace_id",
-          "marketplace_product_id"
+          "shopId",
+          "marketplaceId",
+          "marketplaceProductId"
         ]).doUpdateSet({
           title: dto.title ?? null,
           brand: dto.brand ?? null,
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         })).returningAll().executeTakeFirstOrThrow();
       }
       async bulkUpsert(tenantId, shopId, items) {
@@ -118651,7 +118620,7 @@ var require_competitor_products_service = __commonJS({
           }
           validItems.push({
             ...item,
-            marketplace_id: marketplaceId
+            marketplaceId
           });
         });
         if (validItems.length === 0) {
@@ -118662,22 +118631,22 @@ var require_competitor_products_service = __commonJS({
           };
         }
         const values = validItems.map((item) => ({
-          shop_id: shopId,
-          tenant_id: tenantId,
-          marketplace_id: item.marketplace_id,
-          marketplace_product_id: item.marketplaceProductId,
+          shopId,
+          tenantId,
+          marketplaceId: item.marketplaceId,
+          marketplaceProductId: item.marketplaceProductId,
           title: item.title ?? null,
           brand: item.brand ?? null,
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         }));
         await this.db.insertInto("competitor_products").values(values).onConflict((oc) => oc.columns([
-          "shop_id",
-          "marketplace_id",
-          "marketplace_product_id"
+          "shopId",
+          "marketplaceId",
+          "marketplaceProductId"
         ]).doUpdateSet((eb) => ({
           title: eb.ref("excluded.title"),
           brand: eb.ref("excluded.brand"),
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         }))).execute();
         return {
           created: validItems.length,
@@ -118686,15 +118655,15 @@ var require_competitor_products_service = __commonJS({
         };
       }
       async exportCsv(shopId) {
-        const rows = await this.db.selectFrom("competitor_products").innerJoin("marketplaces", "marketplaces.id", "competitor_products.marketplace_id").select([
+        const rows = await this.db.selectFrom("competitor_products").innerJoin("marketplaces", "marketplaces.id", "competitor_products.marketplaceId").select([
           "marketplaces.code as marketplace",
-          "competitor_products.marketplace_product_id",
+          "competitor_products.marketplaceProductId",
           "competitor_products.title",
           "competitor_products.brand"
-        ]).where("competitor_products.shop_id", "=", shopId).execute();
+        ]).where("competitor_products.shopId", "=", shopId).execute();
         return rows.map((row) => ({
           marketplace: row.marketplace,
-          marketplace_product_id: row.marketplace_product_id,
+          marketplaceProductId: row.marketplaceProductId,
           title: row.title ?? void 0,
           brand: row.brand ?? void 0
         }));
@@ -118761,7 +118730,7 @@ var require_competitor_products_controller = __commonJS({
         const items = await this.competitorProductsService.exportCsv(ctx.shopId);
         (0, _index.sendCsvExport)(res, items, "competitor-products.csv", [
           "marketplace",
-          "marketplace_product_id",
+          "marketplaceProductId",
           "title",
           "brand"
         ]);
@@ -118774,8 +118743,8 @@ var require_competitor_products_controller = __commonJS({
       async create(_req, ctx, dto) {
         return this.competitorProductsService.create({
           ...dto,
-          shop_id: ctx.shopId,
-          tenant_id: ctx.tenantId
+          shopId: ctx.shopId,
+          tenantId: ctx.tenantId
         });
       }
       async update(_req, ctx, id, dto) {
@@ -118873,8 +118842,8 @@ var require_competitor_products_controller = __commonJS({
       _ts_param(0, (0, _common.Req)()),
       _ts_param(1, (0, _decorators.ShopContext)()),
       _ts_param(2, (0, _common.Body)(new _index.ZodValidationPipe(_competitorproductsschema.CreateCompetitorProductSchema.omit({
-        shop_id: true,
-        tenant_id: true
+        shopId: true,
+        tenantId: true
       })))),
       _ts_metadata("design:type", Function),
       _ts_metadata("design:paramtypes", [
@@ -119073,18 +119042,18 @@ var require_competitor_sales_schema = __commonJS({
     var _index = require_common3();
     var { id, quantity, period, code, flexiblePeriod, flexibleQuantity } = _index.zodSchemas;
     var CreateCompetitorSaleRequestSchema = _zod.z.object({
-      competitor_product_id: id(),
+      competitorProductId: id(),
       period: period(),
       quantity: quantity()
     });
     var CompetitorSaleQuerySchema = _zod.z.object({
-      period_from: period().optional(),
-      period_to: period().optional()
+      periodFrom: period().optional(),
+      periodTo: period().optional()
     }).merge(_index.PaginationQuerySchema);
     var CreateCompetitorSaleSchema = _zod.z.object({
-      shop_id: id(),
-      tenant_id: id(),
-      competitor_product_id: id(),
+      shopId: id(),
+      tenantId: id(),
+      competitorProductId: id(),
       period: period(),
       quantity: quantity()
     });
@@ -119098,8 +119067,8 @@ var require_competitor_sales_schema = __commonJS({
       quantity: flexibleQuantity()
     });
     var PeriodQuerySchema = _zod.z.object({
-      period_from: period().optional(),
-      period_to: period().optional()
+      periodFrom: period().optional(),
+      periodTo: period().optional()
     });
   }
 });
@@ -119149,12 +119118,12 @@ var require_competitor_sales_service = __commonJS({
         return row ? this.mapRow(row) : void 0;
       }
       async findByShopId(shopId) {
-        const rows = await this.db.selectFrom("competitor_sales").selectAll().where("shop_id", "=", shopId).execute();
+        const rows = await this.db.selectFrom("competitor_sales").selectAll().where("shopId", "=", shopId).execute();
         return rows.map((r) => this.mapRow(r));
       }
       async findByShopAndPeriod(shopId, query) {
-        const { period_from: periodFrom, period_to: periodTo, ids, limit = 100, offset = 0 } = query ?? {};
-        let baseQuery = this.db.selectFrom("competitor_sales").where("shop_id", "=", shopId);
+        const { periodFrom, periodTo, ids, limit = 100, offset = 0 } = query ?? {};
+        let baseQuery = this.db.selectFrom("competitor_sales").where("shopId", "=", shopId);
         if (ids && ids.length > 0) {
           baseQuery = baseQuery.where("id", "in", ids);
         }
@@ -119176,17 +119145,17 @@ var require_competitor_sales_service = __commonJS({
       async create(dto) {
         try {
           const result = await this.db.insertInto("competitor_sales").values({
-            shop_id: dto.shop_id,
-            tenant_id: dto.tenant_id,
-            competitor_product_id: dto.competitor_product_id,
+            shopId: dto.shopId,
+            tenantId: dto.tenantId,
+            competitorProductId: dto.competitorProductId,
             period: (0, _index2.periodToDate)(dto.period),
             quantity: dto.quantity,
-            updated_at: /* @__PURE__ */ new Date()
+            updatedAt: /* @__PURE__ */ new Date()
           }).returningAll().executeTakeFirstOrThrow();
           return this.mapRow(result);
         } catch (error) {
           if ((0, _index.isUniqueViolation)(error)) {
-            throw new _index.DuplicateResourceException("Competitor sale", `competitor product ${dto.competitor_product_id} period ${dto.period}`, "this shop");
+            throw new _index.DuplicateResourceException("Competitor sale", `competitor product ${dto.competitorProductId} period ${dto.period}`, "this shop");
           }
           throw error;
         }
@@ -119194,7 +119163,7 @@ var require_competitor_sales_service = __commonJS({
       async update(id, dto) {
         const result = await this.db.updateTable("competitor_sales").set({
           ...dto,
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         }).where("id", "=", id).returningAll().executeTakeFirst();
         if (!result) {
           throw new _common.NotFoundException(`Competitor sale record with id ${id} not found`);
@@ -119205,25 +119174,25 @@ var require_competitor_sales_service = __commonJS({
         await this.db.deleteFrom("competitor_sales").where("id", "=", id).execute();
       }
       async deleteByShopId(shopId) {
-        const result = await this.db.deleteFrom("competitor_sales").where("shop_id", "=", shopId).executeTakeFirst();
+        const result = await this.db.deleteFrom("competitor_sales").where("shopId", "=", shopId).executeTakeFirst();
         return Number(result.numDeletedRows);
       }
       async upsert(dto) {
         const periodDate = (0, _index2.periodToDate)(dto.period);
         const result = await this.db.insertInto("competitor_sales").values({
-          shop_id: dto.shop_id,
-          tenant_id: dto.tenant_id,
-          competitor_product_id: dto.competitor_product_id,
+          shopId: dto.shopId,
+          tenantId: dto.tenantId,
+          competitorProductId: dto.competitorProductId,
           period: periodDate,
           quantity: dto.quantity,
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         }).onConflict((oc) => oc.columns([
-          "shop_id",
-          "competitor_product_id",
+          "shopId",
+          "competitorProductId",
           "period"
         ]).doUpdateSet({
           quantity: dto.quantity,
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         })).returningAll().executeTakeFirstOrThrow();
         return this.mapRow(result);
       }
@@ -119291,7 +119260,7 @@ var require_competitor_sales_service = __commonJS({
           }
           validItems.push({
             ...item,
-            competitor_product_id: competitorProductId,
+            competitorProductId,
             periodDate: (0, _index2.periodToDate)(item.period)
           });
         });
@@ -119303,20 +119272,20 @@ var require_competitor_sales_service = __commonJS({
           };
         }
         const values = validItems.map((item) => ({
-          shop_id: shopId,
-          tenant_id: tenantId,
-          competitor_product_id: item.competitor_product_id,
+          shopId,
+          tenantId,
+          competitorProductId: item.competitorProductId,
           period: item.periodDate,
           quantity: item.quantity,
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         }));
         await this.db.insertInto("competitor_sales").values(values).onConflict((oc) => oc.columns([
-          "shop_id",
-          "competitor_product_id",
+          "shopId",
+          "competitorProductId",
           "period"
         ]).doUpdateSet((eb) => ({
           quantity: eb.ref("excluded.quantity"),
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         }))).execute();
         return {
           created: validItems.length,
@@ -119328,12 +119297,12 @@ var require_competitor_sales_service = __commonJS({
         return this.exportForShop(shopId);
       }
       async exportForShop(shopId, periodFrom, periodTo) {
-        let query = this.db.selectFrom("competitor_sales").innerJoin("competitor_products", "competitor_products.id", "competitor_sales.competitor_product_id").innerJoin("marketplaces", "marketplaces.id", "competitor_products.marketplace_id").select([
+        let query = this.db.selectFrom("competitor_sales").innerJoin("competitor_products", "competitor_products.id", "competitor_sales.competitorProductId").innerJoin("marketplaces", "marketplaces.id", "competitor_products.marketplaceId").select([
           "marketplaces.code as marketplace",
-          "competitor_products.marketplace_product_id",
+          "competitor_products.marketplaceProductId",
           "competitor_sales.period",
           "competitor_sales.quantity"
-        ]).where("competitor_sales.shop_id", "=", shopId);
+        ]).where("competitor_sales.shopId", "=", shopId);
         if (periodFrom) {
           query = query.where("competitor_sales.period", ">=", (0, _index2.periodToDate)(periodFrom));
         }
@@ -119343,7 +119312,7 @@ var require_competitor_sales_service = __commonJS({
         const rows = await query.orderBy("competitor_sales.period", "desc").execute();
         return rows.map((row) => ({
           marketplace: row.marketplace,
-          marketplace_product_id: row.marketplace_product_id,
+          marketplaceProductId: row.marketplaceProductId,
           period: (0, _index2.dateToPeriod)(row.period),
           quantity: row.quantity
         }));
@@ -119406,21 +119375,21 @@ var require_competitor_sales_controller = __commonJS({
       }
       async exportJson(_req, ctx, res, periodFrom, periodTo) {
         _competitorsalesschema.PeriodQuerySchema.parse({
-          period_from: periodFrom,
-          period_to: periodTo
+          periodFrom,
+          periodTo
         });
         const items = await this.competitorSalesService.exportForShop(ctx.shopId, periodFrom, periodTo);
         (0, _index.sendJsonExport)(res, items, "competitor-sales.json");
       }
       async exportCsv(_req, ctx, res, periodFrom, periodTo) {
         _competitorsalesschema.PeriodQuerySchema.parse({
-          period_from: periodFrom,
-          period_to: periodTo
+          periodFrom,
+          periodTo
         });
         const items = await this.competitorSalesService.exportForShop(ctx.shopId, periodFrom, periodTo);
         (0, _index.sendCsvExport)(res, items, "competitor-sales.csv", [
           "marketplace",
-          "marketplace_product_id",
+          "marketplaceProductId",
           "period",
           "quantity"
         ]);
@@ -119433,8 +119402,8 @@ var require_competitor_sales_controller = __commonJS({
       async create(_req, ctx, dto) {
         return this.competitorSalesService.create({
           ...dto,
-          shop_id: ctx.shopId,
-          tenant_id: ctx.tenantId
+          shopId: ctx.shopId,
+          tenantId: ctx.tenantId
         });
       }
       async update(_req, ctx, id, dto) {
@@ -119492,8 +119461,8 @@ var require_competitor_sales_controller = __commonJS({
       _ts_param(0, (0, _common.Req)()),
       _ts_param(1, (0, _decorators.ShopContext)()),
       _ts_param(2, (0, _common.Res)()),
-      _ts_param(3, (0, _common.Query)("period_from")),
-      _ts_param(4, (0, _common.Query)("period_to")),
+      _ts_param(3, (0, _common.Query)("periodFrom")),
+      _ts_param(4, (0, _common.Query)("periodTo")),
       _ts_metadata("design:type", Function),
       _ts_metadata("design:paramtypes", [
         typeof _authguard.AuthenticatedRequest === "undefined" ? Object : _authguard.AuthenticatedRequest,
@@ -119510,8 +119479,8 @@ var require_competitor_sales_controller = __commonJS({
       _ts_param(0, (0, _common.Req)()),
       _ts_param(1, (0, _decorators.ShopContext)()),
       _ts_param(2, (0, _common.Res)()),
-      _ts_param(3, (0, _common.Query)("period_from")),
-      _ts_param(4, (0, _common.Query)("period_to")),
+      _ts_param(3, (0, _common.Query)("periodFrom")),
+      _ts_param(4, (0, _common.Query)("periodTo")),
       _ts_metadata("design:type", Function),
       _ts_metadata("design:paramtypes", [
         typeof _authguard.AuthenticatedRequest === "undefined" ? Object : _authguard.AuthenticatedRequest,
@@ -119542,8 +119511,8 @@ var require_competitor_sales_controller = __commonJS({
       _ts_param(0, (0, _common.Req)()),
       _ts_param(1, (0, _decorators.ShopContext)()),
       _ts_param(2, (0, _common.Body)(new _index.ZodValidationPipe(_competitorsalesschema.CreateCompetitorSaleSchema.omit({
-        shop_id: true,
-        tenant_id: true
+        shopId: true,
+        tenantId: true
       })))),
       _ts_metadata("design:type", Function),
       _ts_metadata("design:paramtypes", [
@@ -119767,7 +119736,7 @@ var require_sku_metrics_repository = __commonJS({
       * Find SKU metrics with optional ABC class filter
       */
       async findByAbcClass(shopId, abcClass) {
-        return this.db.selectFrom("mv_sku_metrics").selectAll().where("shop_id", "=", shopId).where("abc_class", "=", abcClass).orderBy("sales_rank", "asc").execute();
+        return this.db.selectFrom("mv_sku_metrics").selectAll().where("shopId", "=", shopId).where("abcClass", "=", abcClass).orderBy("salesRank", "asc").execute();
       }
       constructor(db) {
         super(db, "mv_sku_metrics", _index1.USER_QUERYABLE_TABLES);
@@ -119873,18 +119842,18 @@ var require_sku_metrics_controller = __commonJS({
       async exportCsv(_req, ctx, res) {
         const items = await this.skuMetricsService.findByShopId(ctx.shopId);
         const exportData = items.map((item) => ({
-          code: item.sku_code,
-          title: item.sku_title,
-          group: item.group_code,
-          category: item.category_code,
-          status: item.status_code,
-          supplier: item.supplier_code,
-          lastPeriod: item.last_period,
-          lastPeriodSales: item.last_period_sales,
-          currentStock: item.current_stock,
-          daysOfStock: item.days_of_stock,
-          abcClass: item.abc_class,
-          salesRank: item.sales_rank
+          code: item.skuCode,
+          title: item.skuTitle,
+          group: item.groupCode,
+          category: item.categoryCode,
+          status: item.statusCode,
+          supplier: item.supplierCode,
+          lastPeriod: item.lastPeriod,
+          lastPeriodSales: item.lastPeriodSales,
+          currentStock: item.currentStock,
+          daysOfStock: item.daysOfStock,
+          abcClass: item.abcClass,
+          salesRank: item.salesRank
         }));
         return (0, _index.sendCsvExport)(res, exportData, "sku-metrics", [
           "code",
@@ -119910,7 +119879,7 @@ var require_sku_metrics_controller = __commonJS({
         if (!item) {
           throw new _common.NotFoundException(`SKU metrics with id ${id} not found`);
         }
-        if (item.shop_id !== ctx.shopId || item.tenant_id !== ctx.tenantId) {
+        if (item.shopId !== ctx.shopId || item.tenantId !== ctx.tenantId) {
           throw new _common.NotFoundException(`SKU metrics with id ${id} not found in this shop/tenant`);
         }
         return item;
@@ -120568,7 +120537,7 @@ var require_groups_controller = __commonJS({
       }
       async findByCode(_req, ctx, code) {
         const group = await this.groupsService.findByCodeAndShop(code, ctx.shopId);
-        if (!group || group.tenant_id !== ctx.tenantId) {
+        if (!group || group.tenantId !== ctx.tenantId) {
           throw new _common.NotFoundException(`Group with code ${code} not found`);
         }
         return group;
@@ -120592,8 +120561,8 @@ var require_groups_controller = __commonJS({
       async create(_req, ctx, body) {
         return this.groupsService.create({
           ...body,
-          shop_id: ctx.shopId,
-          tenant_id: ctx.tenantId
+          shopId: ctx.shopId,
+          tenantId: ctx.tenantId
         });
       }
       async update(_req, ctx, id, body) {
@@ -121068,7 +121037,7 @@ var require_statuses_controller = __commonJS({
       }
       async findByCode(_req, ctx, code) {
         const status = await this.statusesService.findByCodeAndShop(code, ctx.shopId);
-        if (!status || status.tenant_id !== ctx.tenantId) {
+        if (!status || status.tenantId !== ctx.tenantId) {
           throw new _common.NotFoundException(`Status with code ${code} not found`);
         }
         return status;
@@ -121092,8 +121061,8 @@ var require_statuses_controller = __commonJS({
       async create(_req, ctx, body) {
         return this.statusesService.create({
           ...body,
-          shop_id: ctx.shopId,
-          tenant_id: ctx.tenantId
+          shopId: ctx.shopId,
+          tenantId: ctx.tenantId
         });
       }
       async update(_req, ctx, id, body) {
@@ -121542,7 +121511,7 @@ var require_suppliers_controller = __commonJS({
       }
       async findByCode(_req, ctx, code) {
         const supplier = await this.suppliersService.findByCodeAndShop(code, ctx.shopId);
-        if (!supplier || supplier.tenant_id !== ctx.tenantId) {
+        if (!supplier || supplier.tenantId !== ctx.tenantId) {
           throw new _common.NotFoundException(`Supplier with code ${code} not found`);
         }
         return supplier;
@@ -121566,8 +121535,8 @@ var require_suppliers_controller = __commonJS({
       async create(_req, ctx, body) {
         return this.suppliersService.create({
           ...body,
-          shop_id: ctx.shopId,
-          tenant_id: ctx.tenantId
+          shopId: ctx.shopId,
+          tenantId: ctx.tenantId
         });
       }
       async update(_req, ctx, id, body) {
@@ -121898,19 +121867,19 @@ var require_skus_schema = __commonJS({
       code: code(),
       title: title(),
       title2: _zod.z.string().optional(),
-      category_id: _zod.z.number().optional(),
-      group_id: _zod.z.number().optional(),
-      status_id: _zod.z.number().optional(),
-      supplier_id: _zod.z.number().optional()
+      categoryId: _zod.z.number().optional(),
+      groupId: _zod.z.number().optional(),
+      statusId: _zod.z.number().optional(),
+      supplierId: _zod.z.number().optional()
     });
     var UpdateSkuSchema = _zod.z.object({
       code: code().optional(),
       title: title().optional(),
       title2: _zod.z.string().optional(),
-      category_id: _zod.z.number().optional(),
-      group_id: _zod.z.number().optional(),
-      status_id: _zod.z.number().optional(),
-      supplier_id: _zod.z.number().optional()
+      categoryId: _zod.z.number().optional(),
+      groupId: _zod.z.number().optional(),
+      statusId: _zod.z.number().optional(),
+      supplierId: _zod.z.number().optional()
     });
     var ImportSkuItemSchema = _zod.z.object({
       code: code(),
@@ -121968,15 +121937,15 @@ var require_skus_repository = __commonJS({
         await this.db.insertInto("skus").values(items.map((item) => ({
           code: item.code,
           title: item.title,
-          shop_id: shopId,
-          tenant_id: tenantId,
-          updated_at: /* @__PURE__ */ new Date()
+          shopId,
+          tenantId,
+          updatedAt: /* @__PURE__ */ new Date()
         }))).onConflict((oc) => oc.columns([
           "code",
-          "shop_id"
+          "shopId"
         ]).doUpdateSet((eb) => ({
           title: eb.ref("excluded.title"),
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         }))).execute();
         return {
           created,
@@ -121992,28 +121961,28 @@ var require_skus_repository = __commonJS({
           code: item.code,
           title: item.title,
           title2: item.title2,
-          shop_id: shopId,
-          tenant_id: tenantId,
-          category_id: item.category_id,
-          group_id: item.group_id,
-          status_id: item.status_id,
-          supplier_id: item.supplier_id,
-          updated_at: /* @__PURE__ */ new Date()
+          shopId,
+          tenantId,
+          categoryId: item.categoryId,
+          groupId: item.groupId,
+          statusId: item.statusId,
+          supplierId: item.supplierId,
+          updatedAt: /* @__PURE__ */ new Date()
         }))).onConflict((oc) => oc.columns([
           "code",
-          "shop_id"
+          "shopId"
         ]).doUpdateSet((eb) => ({
           title: eb.ref("excluded.title"),
           title2: eb.ref("excluded.title2"),
-          category_id: eb.ref("excluded.category_id"),
-          group_id: eb.ref("excluded.group_id"),
-          status_id: eb.ref("excluded.status_id"),
-          supplier_id: eb.ref("excluded.supplier_id"),
-          updated_at: /* @__PURE__ */ new Date()
+          categoryId: eb.ref("excluded.categoryId"),
+          groupId: eb.ref("excluded.groupId"),
+          statusId: eb.ref("excluded.statusId"),
+          supplierId: eb.ref("excluded.supplierId"),
+          updatedAt: /* @__PURE__ */ new Date()
         }))).execute();
       }
       async exportForShop(shopId) {
-        const rows = await this.db.selectFrom("skus").leftJoin("categories", "skus.category_id", "categories.id").leftJoin("groups", "skus.group_id", "groups.id").leftJoin("statuses", "skus.status_id", "statuses.id").leftJoin("suppliers", "skus.supplier_id", "suppliers.id").select([
+        const rows = await this.db.selectFrom("skus").leftJoin("categories", "skus.categoryId", "categories.id").leftJoin("groups", "skus.groupId", "groups.id").leftJoin("statuses", "skus.statusId", "statuses.id").leftJoin("suppliers", "skus.supplierId", "suppliers.id").select([
           "skus.code",
           "skus.title",
           "skus.title2",
@@ -122021,7 +121990,7 @@ var require_skus_repository = __commonJS({
           "groups.code as group",
           "statuses.code as status",
           "suppliers.code as supplier"
-        ]).where("skus.shop_id", "=", shopId).orderBy("skus.code", "asc").execute();
+        ]).where("skus.shopId", "=", shopId).orderBy("skus.code", "asc").execute();
         return rows.map((row) => ({
           code: row.code,
           title: row.title,
@@ -122166,10 +122135,10 @@ var require_skus_service = __commonJS({
             created: 0,
             updated: 0,
             errors,
-            categories_created: 0,
-            groups_created: 0,
-            statuses_created: 0,
-            suppliers_created: 0
+            categoriesCreated: 0,
+            groupsCreated: 0,
+            statusesCreated: 0,
+            suppliersCreated: 0
           };
         }
         const categoryCodes = validItems.filter((i) => i.category).map((i) => (0, _index1.normalizeCode)(i.category));
@@ -122196,10 +122165,10 @@ var require_skus_service = __commonJS({
         ]);
         const preparedItems = validItems.map((item) => ({
           ...item,
-          category_id: item.category ? categoryResult.codeToId.get((0, _index1.normalizeCode)(item.category)) : void 0,
-          group_id: item.group ? groupResult.codeToId.get((0, _index1.normalizeCode)(item.group)) : void 0,
-          status_id: item.status ? statusResult.codeToId.get((0, _index1.normalizeCode)(item.status)) : void 0,
-          supplier_id: item.supplier ? supplierResult.codeToId.get((0, _index1.normalizeCode)(item.supplier)) : void 0
+          categoryId: item.category ? categoryResult.codeToId.get((0, _index1.normalizeCode)(item.category)) : void 0,
+          groupId: item.group ? groupResult.codeToId.get((0, _index1.normalizeCode)(item.group)) : void 0,
+          statusId: item.status ? statusResult.codeToId.get((0, _index1.normalizeCode)(item.status)) : void 0,
+          supplierId: item.supplier ? supplierResult.codeToId.get((0, _index1.normalizeCode)(item.supplier)) : void 0
         }));
         const normalizedCodes = preparedItems.map((i) => (0, _index1.normalizeSkuCode)(i.code));
         const existingCodes = await this.repository.findCodesByShopId(shopId, normalizedCodes);
@@ -122207,10 +122176,10 @@ var require_skus_service = __commonJS({
           code: (0, _index1.normalizeSkuCode)(item.code),
           title: item.title,
           title2: item.title2,
-          category_id: item.category_id,
-          group_id: item.group_id,
-          status_id: item.status_id,
-          supplier_id: item.supplier_id
+          categoryId: item.categoryId,
+          groupId: item.groupId,
+          statusId: item.statusId,
+          supplierId: item.supplierId
         })));
         const created = preparedItems.filter((i) => !existingCodes.has((0, _index1.normalizeSkuCode)(i.code))).length;
         const updated = preparedItems.length - created;
@@ -122218,10 +122187,10 @@ var require_skus_service = __commonJS({
           created,
           updated,
           errors,
-          categories_created: categoryResult.created,
-          groups_created: groupResult.created,
-          statuses_created: statusResult.created,
-          suppliers_created: supplierResult.created
+          categoriesCreated: categoryResult.created,
+          groupsCreated: groupResult.created,
+          statusesCreated: statusResult.created,
+          suppliersCreated: supplierResult.created
         };
       }
       async exportForShop(shopId) {
@@ -122314,7 +122283,7 @@ var require_skus_controller = __commonJS({
       }
       async findByCode(_req, ctx, code) {
         const sku = await this.skusService.findByCodeAndShop(code, ctx.shopId);
-        if (!sku || sku.tenant_id !== ctx.tenantId) {
+        if (!sku || sku.tenantId !== ctx.tenantId) {
           throw new _common.NotFoundException(`SKU with code ${code} not found`);
         }
         return sku;
@@ -122343,8 +122312,8 @@ var require_skus_controller = __commonJS({
       async create(_req, ctx, dto) {
         return this.skusService.create({
           ...dto,
-          shop_id: ctx.shopId,
-          tenant_id: ctx.tenantId
+          shopId: ctx.shopId,
+          tenantId: ctx.tenantId
         });
       }
       async update(_req, ctx, id, dto) {
@@ -122802,7 +122771,7 @@ var require_warehouses_controller = __commonJS({
       }
       async findByCode(_req, ctx, code) {
         const warehouse = await this.warehousesService.findByCodeAndShop(code, ctx.shopId);
-        if (!warehouse || warehouse.tenant_id !== ctx.tenantId) {
+        if (!warehouse || warehouse.tenantId !== ctx.tenantId) {
           throw new _common.NotFoundException(`Warehouse with code ${code} not found`);
         }
         return warehouse;
@@ -122826,8 +122795,8 @@ var require_warehouses_controller = __commonJS({
       async create(_req, ctx, body) {
         return this.warehousesService.create({
           ...body,
-          shop_id: ctx.shopId,
-          tenant_id: ctx.tenantId
+          shopId: ctx.shopId,
+          tenantId: ctx.tenantId
         });
       }
       async update(_req, ctx, id, body) {
@@ -123155,20 +123124,20 @@ var require_leftovers_schema = __commonJS({
     var _index = require_common3();
     var { id, quantity, period, code, flexiblePeriod, flexibleQuantity } = _index.zodSchemas;
     var CreateLeftoverRequestSchema = _zod.z.object({
-      warehouse_id: id(),
-      sku_id: id(),
+      warehouseId: id(),
+      skuId: id(),
       period: period(),
       quantity: quantity()
     });
     var LeftoverQuerySchema = _zod.z.object({
-      period_from: period().optional(),
-      period_to: period().optional()
+      periodFrom: period().optional(),
+      periodTo: period().optional()
     }).merge(_index.PaginationQuerySchema);
     var CreateLeftoverSchema = _zod.z.object({
-      shop_id: id(),
-      tenant_id: id(),
-      warehouse_id: id(),
-      sku_id: id(),
+      shopId: id(),
+      tenantId: id(),
+      warehouseId: id(),
+      skuId: id(),
       period: period(),
       quantity: quantity()
     });
@@ -123229,12 +123198,12 @@ var require_leftovers_service = __commonJS({
         return row ? this.mapRow(row) : void 0;
       }
       async findByShopId(shopId) {
-        const rows = await this.db.selectFrom("leftovers").selectAll().where("shop_id", "=", shopId).execute();
+        const rows = await this.db.selectFrom("leftovers").selectAll().where("shopId", "=", shopId).execute();
         return rows.map((r) => this.mapRow(r));
       }
       async findByShopAndPeriod(shopId, query) {
-        const { period_from: periodFrom, period_to: periodTo, ids, limit = 100, offset = 0 } = query ?? {};
-        let baseQuery = this.db.selectFrom("leftovers").where("shop_id", "=", shopId);
+        const { periodFrom, periodTo, ids, limit = 100, offset = 0 } = query ?? {};
+        let baseQuery = this.db.selectFrom("leftovers").where("shopId", "=", shopId);
         if (ids && ids.length > 0) {
           baseQuery = baseQuery.where("id", "in", ids);
         }
@@ -123256,18 +123225,18 @@ var require_leftovers_service = __commonJS({
       async create(dto) {
         try {
           const result = await this.db.insertInto("leftovers").values({
-            shop_id: dto.shop_id,
-            tenant_id: dto.tenant_id,
-            warehouse_id: dto.warehouse_id,
-            sku_id: dto.sku_id,
+            shopId: dto.shopId,
+            tenantId: dto.tenantId,
+            warehouseId: dto.warehouseId,
+            skuId: dto.skuId,
             period: (0, _index2.periodToDate)(dto.period),
             quantity: dto.quantity,
-            updated_at: /* @__PURE__ */ new Date()
+            updatedAt: /* @__PURE__ */ new Date()
           }).returningAll().executeTakeFirstOrThrow();
           return this.mapRow(result);
         } catch (error) {
           if ((0, _index.isUniqueViolation)(error)) {
-            throw new _index.DuplicateResourceException("Leftover", `SKU ${dto.sku_id} warehouse ${dto.warehouse_id} period ${dto.period}`, "this shop");
+            throw new _index.DuplicateResourceException("Leftover", `SKU ${dto.skuId} warehouse ${dto.warehouseId} period ${dto.period}`, "this shop");
           }
           throw error;
         }
@@ -123275,7 +123244,7 @@ var require_leftovers_service = __commonJS({
       async update(id, dto) {
         const result = await this.db.updateTable("leftovers").set({
           ...dto,
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         }).where("id", "=", id).returningAll().executeTakeFirst();
         if (!result) {
           throw new _common.NotFoundException(`Leftover record with id ${id} not found`);
@@ -123286,27 +123255,27 @@ var require_leftovers_service = __commonJS({
         await this.db.deleteFrom("leftovers").where("id", "=", id).execute();
       }
       async deleteByShopId(shopId) {
-        const result = await this.db.deleteFrom("leftovers").where("shop_id", "=", shopId).executeTakeFirst();
+        const result = await this.db.deleteFrom("leftovers").where("shopId", "=", shopId).executeTakeFirst();
         return Number(result.numDeletedRows);
       }
       async upsert(dto) {
         const periodDate = (0, _index2.periodToDate)(dto.period);
         const result = await this.db.insertInto("leftovers").values({
-          shop_id: dto.shop_id,
-          tenant_id: dto.tenant_id,
-          warehouse_id: dto.warehouse_id,
-          sku_id: dto.sku_id,
+          shopId: dto.shopId,
+          tenantId: dto.tenantId,
+          warehouseId: dto.warehouseId,
+          skuId: dto.skuId,
           period: periodDate,
           quantity: dto.quantity,
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         }).onConflict((oc) => oc.columns([
-          "shop_id",
-          "warehouse_id",
-          "sku_id",
+          "shopId",
+          "warehouseId",
+          "skuId",
           "period"
         ]).doUpdateSet({
           quantity: dto.quantity,
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         })).returningAll().executeTakeFirstOrThrow();
         return this.mapRow(result);
       }
@@ -123356,8 +123325,8 @@ var require_leftovers_service = __commonJS({
           }
           validItems.push({
             ...item,
-            sku_id: skuId,
-            warehouse_id: warehouseId,
+            skuId,
+            warehouseId,
             periodDate: (0, _index2.periodToDate)(item.period)
           });
         });
@@ -123369,22 +123338,22 @@ var require_leftovers_service = __commonJS({
           };
         }
         const values = validItems.map((item) => ({
-          shop_id: shopId,
-          tenant_id: tenantId,
-          sku_id: item.sku_id,
-          warehouse_id: item.warehouse_id,
+          shopId,
+          tenantId,
+          skuId: item.skuId,
+          warehouseId: item.warehouseId,
           period: item.periodDate,
           quantity: item.quantity,
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         }));
         await this.db.insertInto("leftovers").values(values).onConflict((oc) => oc.columns([
-          "shop_id",
-          "warehouse_id",
-          "sku_id",
+          "shopId",
+          "warehouseId",
+          "skuId",
           "period"
         ]).doUpdateSet((eb) => ({
           quantity: eb.ref("excluded.quantity"),
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         }))).execute();
         return {
           created: validItems.length,
@@ -123396,12 +123365,12 @@ var require_leftovers_service = __commonJS({
         return this.exportForShop(shopId);
       }
       async exportForShop(shopId, periodFrom, periodTo) {
-        let query = this.db.selectFrom("leftovers").innerJoin("skus", "skus.id", "leftovers.sku_id").innerJoin("warehouses", "warehouses.id", "leftovers.warehouse_id").select([
+        let query = this.db.selectFrom("leftovers").innerJoin("skus", "skus.id", "leftovers.skuId").innerJoin("warehouses", "warehouses.id", "leftovers.warehouseId").select([
           "warehouses.code as warehouse",
           "skus.code as sku",
           "leftovers.period",
           "leftovers.quantity"
-        ]).where("leftovers.shop_id", "=", shopId);
+        ]).where("leftovers.shopId", "=", shopId);
         if (periodFrom) {
           query = query.where("leftovers.period", ">=", (0, _index2.periodToDate)(periodFrom));
         }
@@ -123493,8 +123462,8 @@ var require_leftovers_controller = __commonJS({
       async create(_req, ctx, dto) {
         return this.leftoversService.create({
           ...dto,
-          shop_id: ctx.shopId,
-          tenant_id: ctx.tenantId
+          shopId: ctx.shopId,
+          tenantId: ctx.tenantId
         });
       }
       async update(_req, ctx, id, dto) {
@@ -123552,8 +123521,8 @@ var require_leftovers_controller = __commonJS({
       _ts_param(0, (0, _common.Req)()),
       _ts_param(1, (0, _decorators.ShopContext)()),
       _ts_param(2, (0, _common.Res)()),
-      _ts_param(3, (0, _common.Query)("period_from")),
-      _ts_param(4, (0, _common.Query)("period_to")),
+      _ts_param(3, (0, _common.Query)("periodFrom")),
+      _ts_param(4, (0, _common.Query)("periodTo")),
       _ts_metadata("design:type", Function),
       _ts_metadata("design:paramtypes", [
         typeof _authguard.AuthenticatedRequest === "undefined" ? Object : _authguard.AuthenticatedRequest,
@@ -123570,8 +123539,8 @@ var require_leftovers_controller = __commonJS({
       _ts_param(0, (0, _common.Req)()),
       _ts_param(1, (0, _decorators.ShopContext)()),
       _ts_param(2, (0, _common.Res)()),
-      _ts_param(3, (0, _common.Query)("period_from")),
-      _ts_param(4, (0, _common.Query)("period_to")),
+      _ts_param(3, (0, _common.Query)("periodFrom")),
+      _ts_param(4, (0, _common.Query)("periodTo")),
       _ts_metadata("design:type", Function),
       _ts_metadata("design:paramtypes", [
         typeof _authguard.AuthenticatedRequest === "undefined" ? Object : _authguard.AuthenticatedRequest,
@@ -123602,8 +123571,8 @@ var require_leftovers_controller = __commonJS({
       _ts_param(0, (0, _common.Req)()),
       _ts_param(1, (0, _decorators.ShopContext)()),
       _ts_param(2, (0, _common.Body)(new _index.ZodValidationPipe(_leftoversschema.CreateLeftoverSchema.omit({
-        shop_id: true,
-        tenant_id: true
+        shopId: true,
+        tenantId: true
       })))),
       _ts_metadata("design:type", Function),
       _ts_metadata("design:paramtypes", [
@@ -123809,7 +123778,7 @@ var require_me_controller = __commonJS({
         if (!validApiKey) {
           throw new _common.UnauthorizedException("Invalid or expired API key");
         }
-        const user = await this.usersService.getUserWithRolesAndTenants(validApiKey.user_id);
+        const user = await this.usersService.getUserWithRolesAndTenants(validApiKey.userId);
         if (!user) {
           throw new _common.NotFoundException("User not found");
         }
@@ -124069,6 +124038,14 @@ var require_api_keys2 = __commonJS({
   }
 });
 
+// ../shared/dist/entities/user-shops.js
+var require_user_shops = __commonJS({
+  "../shared/dist/entities/user-shops.js"(exports) {
+    "use strict";
+    Object.defineProperty(exports, "__esModule", { value: true });
+  }
+});
+
 // ../shared/dist/entities/sku-metrics.js
 var require_sku_metrics2 = __commonJS({
   "../shared/dist/entities/sku-metrics.js"(exports) {
@@ -124118,6 +124095,7 @@ var require_entities = __commonJS({
     __exportStar2(require_competitor_sales2(), exports);
     __exportStar2(require_roles(), exports);
     __exportStar2(require_api_keys2(), exports);
+    __exportStar2(require_user_shops(), exports);
     __exportStar2(require_sku_metrics2(), exports);
   }
 });
@@ -124274,9 +124252,9 @@ var require_api_keys3 = __commonJS({
   }
 });
 
-// ../shared/dist/dto/roles.js
-var require_roles2 = __commonJS({
-  "../shared/dist/dto/roles.js"(exports) {
+// ../shared/dist/dto/user-shops.js
+var require_user_shops2 = __commonJS({
+  "../shared/dist/dto/user-shops.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", { value: true });
   }
@@ -124330,7 +124308,7 @@ var require_dto = __commonJS({
     __exportStar2(require_competitor_sales3(), exports);
     __exportStar2(require_marketplaces3(), exports);
     __exportStar2(require_api_keys3(), exports);
-    __exportStar2(require_roles2(), exports);
+    __exportStar2(require_user_shops2(), exports);
     __exportStar2(require_user_roles(), exports);
   }
 });
@@ -124960,15 +124938,15 @@ var require_seasonal_coefficients_schema = __commonJS({
     var _index = require_common3();
     var { id, code, month, flexibleMonth, coefficient, flexibleFloat } = _index.zodSchemas;
     var CreateSeasonalCoefficientRequestSchema = _zod.z.object({
-      group_id: id(),
+      groupId: id(),
       month: month(),
       coefficient: coefficient()
     });
     var SeasonalCoefficientQuerySchema = _index.PaginationQuerySchema;
     var CreateSeasonalCoefficientSchema = _zod.z.object({
-      shop_id: id(),
-      tenant_id: id(),
-      group_id: id(),
+      shopId: id(),
+      tenantId: id(),
+      groupId: id(),
       month: month(),
       coefficient: coefficient()
     });
@@ -125018,16 +124996,16 @@ var require_seasonal_coefficients_service = __commonJS({
         return this.db.selectFrom("seasonal_coefficients").selectAll().where("id", "=", id).executeTakeFirst();
       }
       async findByShopId(shopId) {
-        return this.db.selectFrom("seasonal_coefficients").selectAll().where("shop_id", "=", shopId).execute();
+        return this.db.selectFrom("seasonal_coefficients").selectAll().where("shopId", "=", shopId).execute();
       }
       async findByShopIdPaginated(shopId, query) {
         const { ids, limit = 100, offset = 0 } = query ?? {};
-        let baseQuery = this.db.selectFrom("seasonal_coefficients").where("shop_id", "=", shopId);
+        let baseQuery = this.db.selectFrom("seasonal_coefficients").where("shopId", "=", shopId);
         if (ids && ids.length > 0) {
           baseQuery = baseQuery.where("id", "in", ids);
         }
         const { count } = await baseQuery.select((eb) => eb.fn.countAll().as("count")).executeTakeFirstOrThrow();
-        const items = await baseQuery.selectAll().orderBy("group_id", "asc").orderBy("month", "asc").limit(limit).offset(offset).execute();
+        const items = await baseQuery.selectAll().orderBy("groupId", "asc").orderBy("month", "asc").limit(limit).offset(offset).execute();
         return {
           items,
           total: Number(count),
@@ -125038,23 +125016,23 @@ var require_seasonal_coefficients_service = __commonJS({
       async create(dto) {
         try {
           return await this.db.insertInto("seasonal_coefficients").values({
-            shop_id: dto.shop_id,
-            tenant_id: dto.tenant_id,
-            group_id: dto.group_id,
+            shopId: dto.shopId,
+            tenantId: dto.tenantId,
+            groupId: dto.groupId,
             month: dto.month,
             coefficient: dto.coefficient,
-            updated_at: /* @__PURE__ */ new Date()
+            updatedAt: /* @__PURE__ */ new Date()
           }).returningAll().executeTakeFirstOrThrow();
         } catch (error) {
           if ((0, _index.isUniqueViolation)(error)) {
-            throw new _index.DuplicateResourceException("Seasonal Coefficient", `group ${dto.group_id} month ${dto.month}`, "this shop");
+            throw new _index.DuplicateResourceException("Seasonal Coefficient", `group ${dto.groupId} month ${dto.month}`, "this shop");
           }
           throw error;
         }
       }
       async update(id, dto) {
         const updateData = {
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         };
         if (dto.coefficient !== void 0) {
           updateData.coefficient = dto.coefficient;
@@ -125069,24 +125047,24 @@ var require_seasonal_coefficients_service = __commonJS({
         await this.db.deleteFrom("seasonal_coefficients").where("id", "=", id).execute();
       }
       async deleteByShopId(shopId) {
-        const result = await this.db.deleteFrom("seasonal_coefficients").where("shop_id", "=", shopId).executeTakeFirst();
+        const result = await this.db.deleteFrom("seasonal_coefficients").where("shopId", "=", shopId).executeTakeFirst();
         return Number(result.numDeletedRows);
       }
       async upsert(dto) {
         return this.db.insertInto("seasonal_coefficients").values({
-          shop_id: dto.shop_id,
-          tenant_id: dto.tenant_id,
-          group_id: dto.group_id,
+          shopId: dto.shopId,
+          tenantId: dto.tenantId,
+          groupId: dto.groupId,
           month: dto.month,
           coefficient: dto.coefficient,
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         }).onConflict((oc) => oc.columns([
-          "shop_id",
-          "group_id",
+          "shopId",
+          "groupId",
           "month"
         ]).doUpdateSet({
           coefficient: dto.coefficient,
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         })).returningAll().executeTakeFirstOrThrow();
       }
       async bulkUpsert(tenantId, shopId, items) {
@@ -125127,7 +125105,7 @@ var require_seasonal_coefficients_service = __commonJS({
           }
           validItems.push({
             ...item,
-            group_id: groupId
+            groupId
           });
         });
         if (validItems.length === 0) {
@@ -125138,20 +125116,20 @@ var require_seasonal_coefficients_service = __commonJS({
           };
         }
         const values = validItems.map((item) => ({
-          shop_id: shopId,
-          tenant_id: tenantId,
-          group_id: item.group_id,
+          shopId,
+          tenantId,
+          groupId: item.groupId,
           month: item.month,
           coefficient: item.coefficient,
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         }));
         await this.db.insertInto("seasonal_coefficients").values(values).onConflict((oc) => oc.columns([
-          "shop_id",
-          "group_id",
+          "shopId",
+          "groupId",
           "month"
         ]).doUpdateSet((eb) => ({
           coefficient: eb.ref("excluded.coefficient"),
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         }))).execute();
         return {
           created: validItems.length,
@@ -125160,11 +125138,11 @@ var require_seasonal_coefficients_service = __commonJS({
         };
       }
       async exportCsv(shopId) {
-        const rows = await this.db.selectFrom("seasonal_coefficients").innerJoin("groups", "groups.id", "seasonal_coefficients.group_id").select([
+        const rows = await this.db.selectFrom("seasonal_coefficients").innerJoin("groups", "groups.id", "seasonal_coefficients.groupId").select([
           "groups.code as group",
           "seasonal_coefficients.month",
           "seasonal_coefficients.coefficient"
-        ]).where("seasonal_coefficients.shop_id", "=", shopId).orderBy("groups.code", "asc").orderBy("seasonal_coefficients.month", "asc").execute();
+        ]).where("seasonal_coefficients.shopId", "=", shopId).orderBy("groups.code", "asc").orderBy("seasonal_coefficients.month", "asc").execute();
         return rows.map((row) => ({
           group: row.group,
           month: row.month,
@@ -125245,8 +125223,8 @@ var require_seasonal_coefficients_controller = __commonJS({
       async create(_req, ctx, dto) {
         return this.seasonalCoefficientsService.create({
           ...dto,
-          shop_id: ctx.shopId,
-          tenant_id: ctx.tenantId
+          shopId: ctx.shopId,
+          tenantId: ctx.tenantId
         });
       }
       async update(_req, ctx, id, dto) {
@@ -125345,8 +125323,8 @@ var require_seasonal_coefficients_controller = __commonJS({
       _ts_param(0, (0, _common.Req)()),
       _ts_param(1, (0, _decorators.ShopContext)()),
       _ts_param(2, (0, _common.Body)(new _index.ZodValidationPipe(_seasonalcoefficientsschema.CreateSeasonalCoefficientSchema.omit({
-        shop_id: true,
-        tenant_id: true
+        shopId: true,
+        tenantId: true
       })))),
       _ts_metadata("design:type", Function),
       _ts_metadata("design:paramtypes", [
@@ -125542,18 +125520,18 @@ var require_sku_competitor_mappings_schema = __commonJS({
     var _index = require_common3();
     var { id, code } = _index.zodSchemas;
     var CreateSkuCompetitorMappingRequestSchema = _zod.z.object({
-      sku_id: id(),
-      competitor_product_id: id()
+      skuId: id(),
+      competitorProductId: id()
     });
     var SkuCompetitorMappingQuerySchema = _index.PaginationQuerySchema;
     var CreateSkuCompetitorMappingSchema = _zod.z.object({
-      shop_id: id(),
-      tenant_id: id(),
-      sku_id: id(),
-      competitor_product_id: id()
+      shopId: id(),
+      tenantId: id(),
+      skuId: id(),
+      competitorProductId: id()
     });
     var UpdateSkuCompetitorMappingSchema = _zod.z.object({
-      competitor_product_id: id().optional()
+      competitorProductId: id().optional()
     });
     var ImportSkuCompetitorMappingItemSchema = _zod.z.object({
       sku: code(),
@@ -125600,11 +125578,11 @@ var require_sku_competitor_mappings_service = __commonJS({
         return this.db.selectFrom("sku_competitor_mappings").selectAll().where("id", "=", id).executeTakeFirst();
       }
       async findByShopId(shopId) {
-        return this.db.selectFrom("sku_competitor_mappings").selectAll().where("shop_id", "=", shopId).execute();
+        return this.db.selectFrom("sku_competitor_mappings").selectAll().where("shopId", "=", shopId).execute();
       }
       async findByShopIdPaginated(shopId, query) {
         const { ids, limit = 100, offset = 0 } = query ?? {};
-        let baseQuery = this.db.selectFrom("sku_competitor_mappings").where("shop_id", "=", shopId);
+        let baseQuery = this.db.selectFrom("sku_competitor_mappings").where("shopId", "=", shopId);
         if (ids && ids.length > 0) {
           baseQuery = baseQuery.where("id", "in", ids);
         }
@@ -125620,15 +125598,15 @@ var require_sku_competitor_mappings_service = __commonJS({
       async create(dto) {
         try {
           return await this.db.insertInto("sku_competitor_mappings").values({
-            shop_id: dto.shop_id,
-            tenant_id: dto.tenant_id,
-            sku_id: dto.sku_id,
-            competitor_product_id: dto.competitor_product_id,
-            updated_at: /* @__PURE__ */ new Date()
+            shopId: dto.shopId,
+            tenantId: dto.tenantId,
+            skuId: dto.skuId,
+            competitorProductId: dto.competitorProductId,
+            updatedAt: /* @__PURE__ */ new Date()
           }).returningAll().executeTakeFirstOrThrow();
         } catch (error) {
           if ((0, _index.isUniqueViolation)(error)) {
-            throw new _index.DuplicateResourceException("SKU Competitor Mapping", `SKU ${dto.sku_id} competitor product ${dto.competitor_product_id}`, "this shop");
+            throw new _index.DuplicateResourceException("SKU Competitor Mapping", `SKU ${dto.skuId} competitor product ${dto.competitorProductId}`, "this shop");
           }
           throw error;
         }
@@ -125636,7 +125614,7 @@ var require_sku_competitor_mappings_service = __commonJS({
       async update(id, dto) {
         const result = await this.db.updateTable("sku_competitor_mappings").set({
           ...dto,
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         }).where("id", "=", id).returningAll().executeTakeFirst();
         if (!result) {
           throw new _common.NotFoundException(`SKU competitor mapping with id ${id} not found`);
@@ -125647,22 +125625,22 @@ var require_sku_competitor_mappings_service = __commonJS({
         await this.db.deleteFrom("sku_competitor_mappings").where("id", "=", id).execute();
       }
       async deleteByShopId(shopId) {
-        const result = await this.db.deleteFrom("sku_competitor_mappings").where("shop_id", "=", shopId).executeTakeFirst();
+        const result = await this.db.deleteFrom("sku_competitor_mappings").where("shopId", "=", shopId).executeTakeFirst();
         return Number(result.numDeletedRows);
       }
       async upsert(dto) {
         return this.db.insertInto("sku_competitor_mappings").values({
-          shop_id: dto.shop_id,
-          tenant_id: dto.tenant_id,
-          sku_id: dto.sku_id,
-          competitor_product_id: dto.competitor_product_id,
-          updated_at: /* @__PURE__ */ new Date()
+          shopId: dto.shopId,
+          tenantId: dto.tenantId,
+          skuId: dto.skuId,
+          competitorProductId: dto.competitorProductId,
+          updatedAt: /* @__PURE__ */ new Date()
         }).onConflict((oc) => oc.columns([
-          "shop_id",
-          "sku_id",
-          "competitor_product_id"
+          "shopId",
+          "skuId",
+          "competitorProductId"
         ]).doUpdateSet({
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         })).returningAll().executeTakeFirstOrThrow();
       }
       async bulkUpsert(tenantId, shopId, items) {
@@ -125738,8 +125716,8 @@ var require_sku_competitor_mappings_service = __commonJS({
           }
           validItems.push({
             ...item,
-            sku_id: skuId,
-            competitor_product_id: competitorProductId
+            skuId,
+            competitorProductId
           });
         });
         if (validItems.length === 0) {
@@ -125750,18 +125728,18 @@ var require_sku_competitor_mappings_service = __commonJS({
           };
         }
         const values = validItems.map((item) => ({
-          shop_id: shopId,
-          tenant_id: tenantId,
-          sku_id: item.sku_id,
-          competitor_product_id: item.competitor_product_id,
-          updated_at: /* @__PURE__ */ new Date()
+          shopId,
+          tenantId,
+          skuId: item.skuId,
+          competitorProductId: item.competitorProductId,
+          updatedAt: /* @__PURE__ */ new Date()
         }));
         await this.db.insertInto("sku_competitor_mappings").values(values).onConflict((oc) => oc.columns([
-          "shop_id",
-          "sku_id",
-          "competitor_product_id"
+          "shopId",
+          "skuId",
+          "competitorProductId"
         ]).doUpdateSet({
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         })).execute();
         return {
           created: validItems.length,
@@ -125770,15 +125748,15 @@ var require_sku_competitor_mappings_service = __commonJS({
         };
       }
       async exportCsv(shopId) {
-        const rows = await this.db.selectFrom("sku_competitor_mappings").innerJoin("skus", "skus.id", "sku_competitor_mappings.sku_id").innerJoin("competitor_products", "competitor_products.id", "sku_competitor_mappings.competitor_product_id").innerJoin("marketplaces", "marketplaces.id", "competitor_products.marketplace_id").select([
+        const rows = await this.db.selectFrom("sku_competitor_mappings").innerJoin("skus", "skus.id", "sku_competitor_mappings.skuId").innerJoin("competitor_products", "competitor_products.id", "sku_competitor_mappings.competitorProductId").innerJoin("marketplaces", "marketplaces.id", "competitor_products.marketplaceId").select([
           "skus.code as sku",
           "marketplaces.code as marketplace",
-          "competitor_products.marketplace_product_id"
-        ]).where("sku_competitor_mappings.shop_id", "=", shopId).execute();
+          "competitor_products.marketplaceProductId"
+        ]).where("sku_competitor_mappings.shopId", "=", shopId).execute();
         return rows.map((row) => ({
           sku: row.sku,
           marketplace: row.marketplace,
-          marketplace_product_id: row.marketplace_product_id
+          marketplaceProductId: row.marketplaceProductId
         }));
       }
       constructor(db, skusService, marketplacesService, competitorProductsService) {
@@ -125848,7 +125826,7 @@ var require_sku_competitor_mappings_controller = __commonJS({
         (0, _index.sendCsvExport)(res, items, "sku-competitor-mappings.csv", [
           "sku",
           "marketplace",
-          "marketplace_product_id"
+          "marketplaceProductId"
         ]);
       }
       async findById(_req, ctx, id) {
@@ -125859,8 +125837,8 @@ var require_sku_competitor_mappings_controller = __commonJS({
       async create(_req, ctx, dto) {
         return this.skuCompetitorMappingsService.create({
           ...dto,
-          shop_id: ctx.shopId,
-          tenant_id: ctx.tenantId
+          shopId: ctx.shopId,
+          tenantId: ctx.tenantId
         });
       }
       async update(_req, ctx, id, dto) {
@@ -125959,8 +125937,8 @@ var require_sku_competitor_mappings_controller = __commonJS({
       _ts_param(0, (0, _common.Req)()),
       _ts_param(1, (0, _decorators.ShopContext)()),
       _ts_param(2, (0, _common.Body)(new _index.ZodValidationPipe(_skucompetitormappingsschema.CreateSkuCompetitorMappingSchema.omit({
-        shop_id: true,
-        tenant_id: true
+        shopId: true,
+        tenantId: true
       })))),
       _ts_metadata("design:type", Function),
       _ts_metadata("design:paramtypes", [
@@ -126209,7 +126187,7 @@ var require_warehouses3 = __commonJS({
 });
 
 // dist/roles/index.js
-var require_roles3 = __commonJS({
+var require_roles2 = __commonJS({
   "dist/roles/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", {
@@ -126268,23 +126246,23 @@ var require_sales_history_schema = __commonJS({
     var _index = require_common3();
     var { id, quantity, period, code, flexiblePeriod, flexibleQuantity } = _index.zodSchemas;
     var CreateSalesHistoryRequestSchema = _zod.z.object({
-      sku_id: id(),
+      skuId: id(),
       period: period(),
       quantity: quantity(),
-      marketplace_id: id()
+      marketplaceId: id()
     });
     var PeriodQuerySchema = _zod.z.object({
-      period_from: period().optional(),
-      period_to: period().optional()
+      periodFrom: period().optional(),
+      periodTo: period().optional()
     });
     var SalesHistoryQuerySchema = PeriodQuerySchema.merge(_index.PaginationQuerySchema);
     var CreateSalesHistorySchema = _zod.z.object({
-      shop_id: id(),
-      tenant_id: id(),
-      sku_id: id(),
+      shopId: id(),
+      tenantId: id(),
+      skuId: id(),
       period: period(),
       quantity: quantity(),
-      marketplace_id: id()
+      marketplaceId: id()
     });
     var UpdateSalesHistorySchema = _zod.z.object({
       quantity: quantity().optional()
@@ -126344,12 +126322,12 @@ var require_sales_history_service = __commonJS({
         return row ? this.mapRow(row) : void 0;
       }
       async findByShopId(shopId) {
-        const rows = await this.db.selectFrom("sales_history").selectAll().where("shop_id", "=", shopId).execute();
+        const rows = await this.db.selectFrom("sales_history").selectAll().where("shopId", "=", shopId).execute();
         return rows.map((r) => this.mapRow(r));
       }
       async findByShopAndPeriod(shopId, query) {
-        const { period_from: periodFrom, period_to: periodTo, ids, limit = 100, offset = 0 } = query ?? {};
-        let baseQuery = this.db.selectFrom("sales_history").where("shop_id", "=", shopId);
+        const { periodFrom, periodTo, ids, limit = 100, offset = 0 } = query ?? {};
+        let baseQuery = this.db.selectFrom("sales_history").where("shopId", "=", shopId);
         if (ids && ids.length > 0) {
           baseQuery = baseQuery.where("id", "in", ids);
         }
@@ -126369,24 +126347,24 @@ var require_sales_history_service = __commonJS({
         };
       }
       async findBySkuId(skuId) {
-        const rows = await this.db.selectFrom("sales_history").selectAll().where("sku_id", "=", skuId).orderBy("period", "desc").execute();
+        const rows = await this.db.selectFrom("sales_history").selectAll().where("skuId", "=", skuId).orderBy("period", "desc").execute();
         return rows.map((r) => this.mapRow(r));
       }
       async create(dto) {
         try {
           const result = await this.db.insertInto("sales_history").values({
-            shop_id: dto.shop_id,
-            tenant_id: dto.tenant_id,
-            sku_id: dto.sku_id,
+            shopId: dto.shopId,
+            tenantId: dto.tenantId,
+            skuId: dto.skuId,
             period: (0, _index2.periodToDate)(dto.period),
             quantity: dto.quantity,
-            marketplace_id: dto.marketplace_id,
-            updated_at: /* @__PURE__ */ new Date()
+            marketplaceId: dto.marketplaceId,
+            updatedAt: /* @__PURE__ */ new Date()
           }).returningAll().executeTakeFirstOrThrow();
           return this.mapRow(result);
         } catch (error) {
           if ((0, _index.isUniqueViolation)(error)) {
-            throw new _index.DuplicateResourceException("Sales History", `SKU ${dto.sku_id} for period ${dto.period}`, "this shop");
+            throw new _index.DuplicateResourceException("Sales History", `SKU ${dto.skuId} for period ${dto.period}`, "this shop");
           }
           throw error;
         }
@@ -126394,7 +126372,7 @@ var require_sales_history_service = __commonJS({
       async update(id, dto) {
         const result = await this.db.updateTable("sales_history").set({
           ...dto,
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         }).where("id", "=", id).returningAll().executeTakeFirst();
         if (!result) {
           throw new _common.NotFoundException(`Sales history record with id ${id} not found`);
@@ -126405,27 +126383,27 @@ var require_sales_history_service = __commonJS({
         await this.db.deleteFrom("sales_history").where("id", "=", id).execute();
       }
       async deleteByShopId(shopId) {
-        const result = await this.db.deleteFrom("sales_history").where("shop_id", "=", shopId).executeTakeFirst();
+        const result = await this.db.deleteFrom("sales_history").where("shopId", "=", shopId).executeTakeFirst();
         return Number(result.numDeletedRows);
       }
       async upsert(dto) {
         const periodDate = (0, _index2.periodToDate)(dto.period);
         const result = await this.db.insertInto("sales_history").values({
-          shop_id: dto.shop_id,
-          tenant_id: dto.tenant_id,
-          sku_id: dto.sku_id,
+          shopId: dto.shopId,
+          tenantId: dto.tenantId,
+          skuId: dto.skuId,
           period: periodDate,
           quantity: dto.quantity,
-          marketplace_id: dto.marketplace_id,
-          updated_at: /* @__PURE__ */ new Date()
+          marketplaceId: dto.marketplaceId,
+          updatedAt: /* @__PURE__ */ new Date()
         }).onConflict((oc) => oc.columns([
-          "shop_id",
-          "sku_id",
+          "shopId",
+          "skuId",
           "period",
-          "marketplace_id"
+          "marketplaceId"
         ]).doUpdateSet({
           quantity: dto.quantity,
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         })).returningAll().executeTakeFirstOrThrow();
         return this.mapRow(result);
       }
@@ -126434,8 +126412,8 @@ var require_sales_history_service = __commonJS({
           return {
             created: 0,
             updated: 0,
-            skus_created: 0,
-            marketplaces_created: 0,
+            skusCreated: 0,
+            marketplacesCreated: 0,
             errors: []
           };
         }
@@ -126454,8 +126432,8 @@ var require_sales_history_service = __commonJS({
           return {
             created: 0,
             updated: 0,
-            skus_created: 0,
-            marketplaces_created: 0,
+            skusCreated: 0,
+            marketplacesCreated: 0,
             errors
           };
         }
@@ -126485,9 +126463,9 @@ var require_sales_history_service = __commonJS({
           if (skuId && marketplaceId) {
             validItems.push({
               ...item,
-              sku_id: skuId,
+              skuId,
               periodDate: (0, _index2.periodToDate)(item.period),
-              marketplace_id: marketplaceId
+              marketplaceId
             });
           }
         });
@@ -126495,14 +126473,14 @@ var require_sales_history_service = __commonJS({
           return {
             created: 0,
             updated: 0,
-            skus_created: skusCreated,
-            marketplaces_created: marketplacesCreated,
+            skusCreated,
+            marketplacesCreated,
             errors
           };
         }
         const keyCounts = /* @__PURE__ */ new Map();
         for (const item of validItems) {
-          const key = `${item.sku_id}-${item.period}-${item.marketplace_id}`;
+          const key = `${item.skuId}-${item.period}-${item.marketplaceId}`;
           keyCounts.set(key, (keyCounts.get(key) || 0) + 1);
         }
         const duplicateKeys = [
@@ -126512,44 +126490,44 @@ var require_sales_history_service = __commonJS({
           throw new _common.BadRequestException(`Duplicate records found in CSV (same sku+period+marketplace): ${duplicateKeys.slice(0, 5).join(", ")}${duplicateKeys.length > 5 ? ` and ${duplicateKeys.length - 5} more` : ""}`);
         }
         const existingKeys = new Set((await this.db.selectFrom("sales_history").select([
-          "sku_id",
-          (0, _kysely.sql)`to_char(period, 'YYYY-MM')`.as("period_str"),
-          "marketplace_id"
-        ]).where("shop_id", "=", shopId).where("sku_id", "in", validItems.map((i) => i.sku_id)).execute()).map((r) => `${r.sku_id}-${r.period_str}-${r.marketplace_id}`));
+          "skuId",
+          (0, _kysely.sql)`to_char(period, 'YYYY-MM')`.as("periodStr"),
+          "marketplaceId"
+        ]).where("shopId", "=", shopId).where("skuId", "in", validItems.map((i) => i.skuId)).execute()).map((r) => `${r.skuId}-${r.periodStr}-${r.marketplaceId}`));
         await this.db.insertInto("sales_history").values(validItems.map((item) => ({
-          shop_id: shopId,
-          tenant_id: tenantId,
-          sku_id: item.sku_id,
+          shopId,
+          tenantId,
+          skuId: item.skuId,
           period: item.periodDate,
           quantity: item.quantity,
-          marketplace_id: item.marketplace_id,
-          updated_at: /* @__PURE__ */ new Date()
+          marketplaceId: item.marketplaceId,
+          updatedAt: /* @__PURE__ */ new Date()
         }))).onConflict((oc) => oc.columns([
-          "shop_id",
-          "sku_id",
+          "shopId",
+          "skuId",
           "period",
-          "marketplace_id"
+          "marketplaceId"
         ]).doUpdateSet({
           quantity: (eb) => eb.ref("excluded.quantity"),
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         })).execute();
-        const created = validItems.filter((i) => !existingKeys.has(`${i.sku_id}-${i.period}-${i.marketplace_id}`)).length;
-        const updated = validItems.filter((i) => existingKeys.has(`${i.sku_id}-${i.period}-${i.marketplace_id}`)).length;
+        const created = validItems.filter((i) => !existingKeys.has(`${i.skuId}-${i.period}-${i.marketplaceId}`)).length;
+        const updated = validItems.filter((i) => existingKeys.has(`${i.skuId}-${i.period}-${i.marketplaceId}`)).length;
         return {
           created,
           updated,
-          skus_created: skusCreated,
-          marketplaces_created: marketplacesCreated,
+          skusCreated,
+          marketplacesCreated,
           errors
         };
       }
       async exportForShop(shopId, periodFrom, periodTo) {
-        let query = this.db.selectFrom("sales_history").innerJoin("skus", "skus.id", "sales_history.sku_id").innerJoin("marketplaces", "marketplaces.id", "sales_history.marketplace_id").select([
-          "skus.code as sku_code",
+        let query = this.db.selectFrom("sales_history").innerJoin("skus", "skus.id", "sales_history.skuId").innerJoin("marketplaces", "marketplaces.id", "sales_history.marketplaceId").select([
+          "skus.code as skuCode",
           (0, _kysely.sql)`to_char(sales_history.period, 'YYYY-MM')`.as("period"),
           "sales_history.quantity",
-          "marketplaces.code as marketplace_code"
-        ]).where("sales_history.shop_id", "=", shopId);
+          "marketplaces.code as marketplaceCode"
+        ]).where("sales_history.shopId", "=", shopId);
         if (periodFrom) {
           query = query.where("sales_history.period", ">=", (0, _index2.periodToDate)(periodFrom));
         }
@@ -126558,9 +126536,9 @@ var require_sales_history_service = __commonJS({
         }
         const rows = await query.orderBy("skus.code", "asc").orderBy("sales_history.period", "asc").execute();
         return rows.map((r) => ({
-          marketplace: r.marketplace_code,
+          marketplace: r.marketplaceCode,
           period: r.period,
-          sku: r.sku_code,
+          sku: r.skuCode,
           quantity: r.quantity
         }));
       }
@@ -126622,16 +126600,16 @@ var require_sales_history_controller = __commonJS({
       }
       async exportJson(_req, ctx, res, periodFrom, periodTo) {
         _saleshistoryschema.PeriodQuerySchema.parse({
-          period_from: periodFrom,
-          period_to: periodTo
+          periodFrom,
+          periodTo
         });
         const items = await this.salesHistoryService.exportForShop(ctx.shopId, periodFrom, periodTo);
         (0, _index.sendJsonExport)(res, items, "sales-history.json");
       }
       async exportCsv(_req, ctx, res, periodFrom, periodTo) {
         _saleshistoryschema.PeriodQuerySchema.parse({
-          period_from: periodFrom,
-          period_to: periodTo
+          periodFrom,
+          periodTo
         });
         const items = await this.salesHistoryService.exportForShop(ctx.shopId, periodFrom, periodTo);
         (0, _index.sendCsvExport)(res, items, "sales-history.csv", [
@@ -126649,8 +126627,8 @@ var require_sales_history_controller = __commonJS({
       async create(_req, ctx, dto) {
         return this.salesHistoryService.create({
           ...dto,
-          shop_id: ctx.shopId,
-          tenant_id: ctx.tenantId
+          shopId: ctx.shopId,
+          tenantId: ctx.tenantId
         });
       }
       async update(_req, ctx, id, dto) {
@@ -126708,8 +126686,8 @@ var require_sales_history_controller = __commonJS({
       _ts_param(0, (0, _common.Req)()),
       _ts_param(1, (0, _decorators.ShopContext)()),
       _ts_param(2, (0, _common.Res)()),
-      _ts_param(3, (0, _common.Query)("period_from")),
-      _ts_param(4, (0, _common.Query)("period_to")),
+      _ts_param(3, (0, _common.Query)("periodFrom")),
+      _ts_param(4, (0, _common.Query)("periodTo")),
       _ts_metadata("design:type", Function),
       _ts_metadata("design:paramtypes", [
         typeof _authguard.AuthenticatedRequest === "undefined" ? Object : _authguard.AuthenticatedRequest,
@@ -126726,8 +126704,8 @@ var require_sales_history_controller = __commonJS({
       _ts_param(0, (0, _common.Req)()),
       _ts_param(1, (0, _decorators.ShopContext)()),
       _ts_param(2, (0, _common.Res)()),
-      _ts_param(3, (0, _common.Query)("period_from")),
-      _ts_param(4, (0, _common.Query)("period_to")),
+      _ts_param(3, (0, _common.Query)("periodFrom")),
+      _ts_param(4, (0, _common.Query)("periodTo")),
       _ts_metadata("design:type", Function),
       _ts_metadata("design:paramtypes", [
         typeof _authguard.AuthenticatedRequest === "undefined" ? Object : _authguard.AuthenticatedRequest,
@@ -126758,8 +126736,8 @@ var require_sales_history_controller = __commonJS({
       _ts_param(0, (0, _common.Req)()),
       _ts_param(1, (0, _decorators.ShopContext)()),
       _ts_param(2, (0, _common.Body)(new _index.ZodValidationPipe(_saleshistoryschema.CreateSalesHistorySchema.omit({
-        shop_id: true,
-        tenant_id: true
+        shopId: true,
+        tenantId: true
       })))),
       _ts_metadata("design:type", Function),
       _ts_metadata("design:paramtypes", [
@@ -127029,7 +127007,7 @@ var require_shops_schema = __commonJS({
     var { title, id } = _index.zodSchemas;
     var CreateShopSchema = _zod.z.object({
       title: title(),
-      tenant_id: id()
+      tenantId: id()
     });
     var UpdateShopSchema = _zod.z.object({
       title: title().optional()
@@ -127081,7 +127059,7 @@ var require_shops_service = __commonJS({
         return Number(result.count);
       }
       async countByTenantId(tenantId) {
-        const result = await this.db.selectFrom("shops").select(this.db.fn.countAll().as("count")).where("tenant_id", "=", tenantId).executeTakeFirstOrThrow();
+        const result = await this.db.selectFrom("shops").select(this.db.fn.countAll().as("count")).where("tenantId", "=", tenantId).executeTakeFirstOrThrow();
         return Number(result.count);
       }
       async findAll(query) {
@@ -127103,7 +127081,7 @@ var require_shops_service = __commonJS({
         };
       }
       async findByTenantId(tenantId, query) {
-        let q = this.db.selectFrom("shops").selectAll().where("tenant_id", "=", tenantId).orderBy("id", "asc");
+        let q = this.db.selectFrom("shops").selectAll().where("tenantId", "=", tenantId).orderBy("id", "asc");
         if (query?.limit !== void 0) q = q.limit(query.limit);
         if (query?.offset !== void 0) q = q.offset(query.offset);
         return q.execute();
@@ -127129,7 +127107,7 @@ var require_shops_service = __commonJS({
       async update(id, dto) {
         return this.db.updateTable("shops").set({
           ...dto,
-          updated_at: /* @__PURE__ */ new Date()
+          updatedAt: /* @__PURE__ */ new Date()
         }).where("id", "=", id).returningAll().executeTakeFirst();
       }
       async delete(id) {
@@ -127303,13 +127281,13 @@ var require_shops_controller = __commonJS({
         if (req.user.isSystemAdmin) {
           return shop;
         }
-        if (!(0, _accesscontrol.hasReadAccess)(req.user, shop.id, shop.tenant_id)) {
+        if (!(0, _accesscontrol.hasReadAccess)(req.user, shop.id, shop.tenantId)) {
           throw new _common.ForbiddenException("Access to this shop is not allowed");
         }
         return shop;
       }
       async create(req, dto) {
-        (0, _accesscontrol.validateTenantAdminAccess)(req.user, dto.tenant_id);
+        (0, _accesscontrol.validateTenantAdminAccess)(req.user, dto.tenantId);
         return this.shopsService.create(dto);
       }
       async update(req, id, dto) {
@@ -127317,7 +127295,7 @@ var require_shops_controller = __commonJS({
         if (!shop) {
           throw new _common.NotFoundException(`Shop with id ${id} not found`);
         }
-        (0, _accesscontrol.validateTenantAdminAccess)(req.user, shop.tenant_id);
+        (0, _accesscontrol.validateTenantAdminAccess)(req.user, shop.tenantId);
         const updated = await this.shopsService.update(id, dto);
         if (!updated) {
           throw new _common.NotFoundException(`Shop with id ${id} not found`);
@@ -127329,7 +127307,7 @@ var require_shops_controller = __commonJS({
         if (!shop) {
           throw new _common.NotFoundException(`Shop with id ${id} not found`);
         }
-        (0, _accesscontrol.validateTenantAdminAccess)(req.user, shop.tenant_id);
+        (0, _accesscontrol.validateTenantAdminAccess)(req.user, shop.tenantId);
         await this.shopsService.delete(id);
       }
       async deleteData(req, id) {
@@ -127337,7 +127315,7 @@ var require_shops_controller = __commonJS({
         if (!shop) {
           throw new _common.NotFoundException(`Shop with id ${id} not found`);
         }
-        (0, _accesscontrol.validateWriteAccess)(req.user, id, shop.tenant_id);
+        (0, _accesscontrol.validateWriteAccess)(req.user, id, shop.tenantId);
         return this.shopsService.deleteData(id);
       }
       constructor(shopsService) {
@@ -127647,13 +127625,13 @@ var require_user_shops_service = __commonJS({
         return this.db.selectFrom("user_shops").selectAll().execute();
       }
       async findByUserId(userId) {
-        return this.db.selectFrom("user_shops").selectAll().where("user_id", "=", userId).execute();
+        return this.db.selectFrom("user_shops").selectAll().where("userId", "=", userId).execute();
       }
       async findByShopId(shopId) {
-        return this.db.selectFrom("user_shops").selectAll().where("shop_id", "=", shopId).execute();
+        return this.db.selectFrom("user_shops").selectAll().where("shopId", "=", shopId).execute();
       }
       async findByTenantId(tenantId) {
-        return this.db.selectFrom("user_shops").selectAll("user_shops").innerJoin("shops", "shops.id", "user_shops.shop_id").where("shops.tenant_id", "=", tenantId).execute();
+        return this.db.selectFrom("user_shops").selectAll("user_shops").innerJoin("shops", "shops.id", "user_shops.shopId").where("shops.tenantId", "=", tenantId).execute();
       }
       async findById(id) {
         return this.db.selectFrom("user_shops").selectAll().where("id", "=", id).executeTakeFirst();
@@ -127663,7 +127641,7 @@ var require_user_shops_service = __commonJS({
           return this.db.insertInto("user_shops").values(dto).returningAll().executeTakeFirstOrThrow();
         } catch (error) {
           if ((0, _index.isUniqueViolation)(error)) {
-            throw new _index.DuplicateResourceException("User Shop", `User ${dto.user_id} - Shop ${dto.shop_id}`);
+            throw new _index.DuplicateResourceException("User Shop", `User ${dto.userId} - Shop ${dto.shopId}`);
           }
           throw error;
         }
@@ -127672,7 +127650,7 @@ var require_user_shops_service = __commonJS({
         await this.db.deleteFrom("user_shops").where("id", "=", id).execute();
       }
       async deleteByUserAndShop(userId, shopId) {
-        await this.db.deleteFrom("user_shops").where("user_id", "=", userId).where("shop_id", "=", shopId).execute();
+        await this.db.deleteFrom("user_shops").where("userId", "=", userId).where("shopId", "=", shopId).execute();
       }
       constructor(db) {
         this.db = db;
@@ -127733,7 +127711,7 @@ var require_user_shops_controller = __commonJS({
         }
         if (shopId) {
           const shop = await this.shopsService.findById(Number(shopId));
-          if (!shop || !(0, _accesscontrol.hasTenantAccess)(req.user, shop.tenant_id)) {
+          if (!shop || !(0, _accesscontrol.hasTenantAccess)(req.user, shop.tenantId)) {
             throw new _common.ForbiddenException("Access to this shop is not allowed");
           }
           return this.userShopsService.findByShopId(Number(shopId));
@@ -127753,8 +127731,8 @@ var require_user_shops_controller = __commonJS({
           throw new _common.NotFoundException(`UserShop with id ${id} not found`);
         }
         if (!req.user.isSystemAdmin) {
-          const shop = await this.shopsService.findById(userShop.shop_id);
-          if (!shop || !(0, _accesscontrol.hasTenantAccess)(req.user, shop.tenant_id)) {
+          const shop = await this.shopsService.findById(userShop.shopId);
+          if (!shop || !(0, _accesscontrol.hasTenantAccess)(req.user, shop.tenantId)) {
             throw new _common.ForbiddenException("Access to this user-shop is not allowed");
           }
         }
@@ -127762,11 +127740,11 @@ var require_user_shops_controller = __commonJS({
       }
       async create(req, dto) {
         if (!req.user.isSystemAdmin) {
-          const shop = await this.shopsService.findById(dto.shop_id);
+          const shop = await this.shopsService.findById(dto.shopId);
           if (!shop) {
-            throw new _common.NotFoundException(`Shop with id ${dto.shop_id} not found`);
+            throw new _common.NotFoundException(`Shop with id ${dto.shopId} not found`);
           }
-          (0, _accesscontrol.validateTenantAdminAccess)(req.user, shop.tenant_id);
+          (0, _accesscontrol.validateTenantAdminAccess)(req.user, shop.tenantId);
         }
         return this.userShopsService.create(dto);
       }
@@ -127776,8 +127754,8 @@ var require_user_shops_controller = __commonJS({
           throw new _common.NotFoundException(`UserShop with id ${id} not found`);
         }
         if (!req.user.isSystemAdmin) {
-          const shop = await this.shopsService.findById(userShop.shop_id);
-          if (!shop || !(0, _accesscontrol.hasTenantAccess)(req.user, shop.tenant_id)) {
+          const shop = await this.shopsService.findById(userShop.shopId);
+          if (!shop || !(0, _accesscontrol.hasTenantAccess)(req.user, shop.tenantId)) {
             throw new _common.ForbiddenException("Cannot delete user-shop from another tenant");
           }
         }
@@ -127901,7 +127879,7 @@ var require_user_shops_module = __commonJS({
 });
 
 // dist/entities/user-shops/index.js
-var require_user_shops = __commonJS({
+var require_user_shops3 = __commonJS({
   "dist/entities/user-shops/index.js"(exports) {
     "use strict";
     Object.defineProperty(exports, "__esModule", {
@@ -127989,13 +127967,13 @@ var require_app_module = __commonJS({
     var _index16 = require_statuses4();
     var _index17 = require_suppliers3();
     var _index18 = require_warehouses3();
-    var _index19 = require_roles3();
+    var _index19 = require_roles2();
     var _index20 = require_sales_history3();
     var _index21 = require_shops3();
     var _index22 = require_skus3();
     var _index23 = require_tenants4();
     var _index24 = require_user_roles3();
-    var _index25 = require_user_shops();
+    var _index25 = require_user_shops3();
     var _index26 = require_users4();
     function _ts_decorate(decorators, target, key, desc) {
       var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;

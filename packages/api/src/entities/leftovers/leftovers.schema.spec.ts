@@ -10,8 +10,8 @@ describe('Leftovers Schemas', () => {
   describe('LeftoverQuerySchema', () => {
     it('should validate valid period queries', () => {
       const data = {
-        period_from: '2024-01',
-        period_to: '2024-12',
+        periodFrom: '2024-01',
+        periodTo: '2024-12',
       };
 
       const result = LeftoverQuerySchema.parse(data);
@@ -19,16 +19,16 @@ describe('Leftovers Schemas', () => {
       expect(result).toEqual(data);
     });
 
-    it('should allow optional period_from', () => {
-      const data = { period_to: '2024-12' };
+    it('should allow optional periodFrom', () => {
+      const data = { periodTo: '2024-12' };
 
       const result = LeftoverQuerySchema.parse(data);
 
       expect(result).toEqual(data);
     });
 
-    it('should allow optional period_to', () => {
-      const data = { period_from: '2024-01' };
+    it('should allow optional periodTo', () => {
+      const data = { periodFrom: '2024-01' };
 
       const result = LeftoverQuerySchema.parse(data);
 
@@ -44,19 +44,19 @@ describe('Leftovers Schemas', () => {
     });
 
     it('should reject invalid period format - missing zero padding', () => {
-      const data = { period_from: '2024-1' };
+      const data = { periodFrom: '2024-1' };
 
       expect(() => LeftoverQuerySchema.parse(data)).toThrow();
     });
 
     it('should reject invalid period format - invalid month', () => {
-      const data = { period_from: '2024-13' };
+      const data = { periodFrom: '2024-13' };
 
       expect(() => LeftoverQuerySchema.parse(data)).toThrow();
     });
 
     it('should reject invalid period format - zero month', () => {
-      const data = { period_from: '2024-00' };
+      const data = { periodFrom: '2024-00' };
 
       expect(() => LeftoverQuerySchema.parse(data)).toThrow();
     });
@@ -65,10 +65,10 @@ describe('Leftovers Schemas', () => {
   describe('CreateLeftoverSchema', () => {
     it('should validate valid leftover data', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        warehouse_id: 10,
-        sku_id: 100,
+        shopId: 1,
+        tenantId: 1,
+        warehouseId: 10,
+        skuId: 100,
         period: '2024-01',
         quantity: 50,
       };
@@ -80,10 +80,10 @@ describe('Leftovers Schemas', () => {
 
     it('should accept zero quantity', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        warehouse_id: 10,
-        sku_id: 100,
+        shopId: 1,
+        tenantId: 1,
+        warehouseId: 10,
+        skuId: 100,
         period: '2024-01',
         quantity: 0,
       };
@@ -95,10 +95,10 @@ describe('Leftovers Schemas', () => {
 
     it('should reject negative quantity', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        warehouse_id: 10,
-        sku_id: 100,
+        shopId: 1,
+        tenantId: 1,
+        warehouseId: 10,
+        skuId: 100,
         period: '2024-01',
         quantity: -1,
       };
@@ -108,10 +108,10 @@ describe('Leftovers Schemas', () => {
 
     it('should reject invalid period format', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        warehouse_id: 10,
-        sku_id: 100,
+        shopId: 1,
+        tenantId: 1,
+        warehouseId: 10,
+        skuId: 100,
         period: '2024/01',
         quantity: 50,
       };
@@ -121,9 +121,9 @@ describe('Leftovers Schemas', () => {
 
     it('should require all mandatory fields', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        sku_id: 100,
+        shopId: 1,
+        tenantId: 1,
+        skuId: 100,
         period: '2024-01',
       };
 

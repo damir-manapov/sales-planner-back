@@ -130,7 +130,7 @@ export async function cleanupUser(app: INestApplication, userId: number): Promis
   const tenants = await db
     .selectFrom('tenants')
     .select('id')
-    .where((eb) => eb.or([eb('owner_id', '=', userId), eb('created_by', '=', userId)]))
+    .where((eb) => eb.or([eb('ownerId', '=', userId), eb('createdBy', '=', userId)]))
     .execute();
 
   // Delete all tenants and their data
@@ -139,20 +139,20 @@ export async function cleanupUser(app: INestApplication, userId: number): Promis
     const shops = await db
       .selectFrom('shops')
       .select('id')
-      .where('tenant_id', '=', tenant.id)
+      .where('tenantId', '=', tenant.id)
       .execute();
 
     // Delete all shop-scoped data
     for (const shop of shops) {
-      await db.deleteFrom('sales_history').where('shop_id', '=', shop.id).execute();
-      await db.deleteFrom('skus').where('shop_id', '=', shop.id).execute();
-      await db.deleteFrom('marketplaces').where('shop_id', '=', shop.id).execute();
-      await db.deleteFrom('brands').where('shop_id', '=', shop.id).execute();
-      await db.deleteFrom('categories').where('shop_id', '=', shop.id).execute();
-      await db.deleteFrom('groups').where('shop_id', '=', shop.id).execute();
-      await db.deleteFrom('statuses').where('shop_id', '=', shop.id).execute();
-      await db.deleteFrom('suppliers').where('shop_id', '=', shop.id).execute();
-      await db.deleteFrom('user_shops').where('shop_id', '=', shop.id).execute();
+      await db.deleteFrom('sales_history').where('shopId', '=', shop.id).execute();
+      await db.deleteFrom('skus').where('shopId', '=', shop.id).execute();
+      await db.deleteFrom('marketplaces').where('shopId', '=', shop.id).execute();
+      await db.deleteFrom('brands').where('shopId', '=', shop.id).execute();
+      await db.deleteFrom('categories').where('shopId', '=', shop.id).execute();
+      await db.deleteFrom('groups').where('shopId', '=', shop.id).execute();
+      await db.deleteFrom('statuses').where('shopId', '=', shop.id).execute();
+      await db.deleteFrom('suppliers').where('shopId', '=', shop.id).execute();
+      await db.deleteFrom('user_shops').where('shopId', '=', shop.id).execute();
     }
 
     // Delete shops after their dependent data
@@ -161,13 +161,13 @@ export async function cleanupUser(app: INestApplication, userId: number): Promis
     }
 
     // Delete tenant-scoped data
-    await db.deleteFrom('user_roles').where('tenant_id', '=', tenant.id).execute();
+    await db.deleteFrom('user_roles').where('tenantId', '=', tenant.id).execute();
     await db.deleteFrom('tenants').where('id', '=', tenant.id).execute();
   }
 
   // Delete user's remaining data and the user
-  await db.deleteFrom('api_keys').where('user_id', '=', userId).execute();
-  await db.deleteFrom('user_roles').where('user_id', '=', userId).execute();
-  await db.deleteFrom('user_shops').where('user_id', '=', userId).execute();
+  await db.deleteFrom('api_keys').where('userId', '=', userId).execute();
+  await db.deleteFrom('user_roles').where('userId', '=', userId).execute();
+  await db.deleteFrom('user_shops').where('userId', '=', userId).execute();
   await db.deleteFrom('users').where('id', '=', userId).execute();
 }

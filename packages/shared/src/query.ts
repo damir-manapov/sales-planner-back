@@ -3,8 +3,8 @@
  */
 
 export interface ShopContextParams {
-  shop_id: number;
-  tenant_id: number;
+  shopId: number;
+  tenantId: number;
   [key: string]: string | number | undefined;
 }
 
@@ -15,8 +15,8 @@ export interface PaginationQuery {
 }
 
 export interface PeriodQuery {
-  period_from?: string; // YYYY-MM format
-  period_to?: string; // YYYY-MM format
+  periodFrom?: string; // YYYY-MM format
+  periodTo?: string; // YYYY-MM format
 }
 
 export interface SalesHistoryQuery extends PeriodQuery, PaginationQuery {}
@@ -24,6 +24,12 @@ export interface SalesHistoryQuery extends PeriodQuery, PaginationQuery {}
 export interface GetUserRolesQuery {
   userId?: number;
   roleId?: number;
+  tenantId?: number;
+}
+
+export interface GetUserShopsQuery {
+  userId?: number;
+  shopId?: number;
   tenantId?: number;
 }
 

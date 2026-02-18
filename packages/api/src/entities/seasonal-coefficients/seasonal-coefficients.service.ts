@@ -19,7 +19,7 @@ import { ImportSeasonalCoefficientItemSchema } from './seasonal-coefficients.sch
 export type { SeasonalCoefficient };
 
 interface PreparedSeasonalCoefficientItem extends ImportSeasonalCoefficientItem {
-  group_id: number;
+  groupId: number;
 }
 
 @Injectable()
@@ -45,7 +45,7 @@ export class SeasonalCoefficientsService {
     return this.db
       .selectFrom('seasonal_coefficients')
       .selectAll()
-      .where('shop_id', '=', shopId)
+      .where('shopId', '=', shopId)
       .execute();
   }
 
@@ -55,7 +55,7 @@ export class SeasonalCoefficientsService {
   ): Promise<PaginatedResponse<SeasonalCoefficient>> {
     const { ids, limit = 100, offset = 0 } = query ?? {};
 
-    let baseQuery = this.db.selectFrom('seasonal_coefficients').where('shop_id', '=', shopId);
+    let baseQuery = this.db.selectFrom('seasonal_coefficients').where('shopId', '=', shopId);
 
     if (ids && ids.length > 0) {
       baseQuery = baseQuery.where('id', 'in', ids);
@@ -67,7 +67,7 @@ export class SeasonalCoefficientsService {
 
     const items = await baseQuery
       .selectAll()
-      .orderBy('group_id', 'asc')
+      .orderBy('groupId', 'asc')
       .orderBy('month', 'asc')
       .limit(limit)
       .offset(offset)
@@ -81,12 +81,12 @@ export class SeasonalCoefficientsService {
       return await this.db
         .insertInto('seasonal_coefficients')
         .values({
-          shop_id: dto.shop_id,
-          tenant_id: dto.tenant_id,
-          group_id: dto.group_id,
+          shopId: dto.shopId,
+          tenantId: dto.tenantId,
+          groupId: dto.groupId,
           month: dto.month,
           coefficient: dto.coefficient,
-          updated_at: new Date(),
+          updatedAt: new Date(),
         })
         .returningAll()
         .executeTakeFirstOrThrow();
@@ -94,7 +94,7 @@ export class SeasonalCoefficientsService {
       if (isUniqueViolation(error)) {
         throw new DuplicateResourceException(
           'Seasonal Coefficient',
-          `group ${dto.group_id} month ${dto.month}`,
+          `group ${dto.groupId} month ${dto.month}`,
           'this shop',
         );
       }
@@ -103,7 +103,7 @@ export class SeasonalCoefficientsService {
   }
 
   async update(id: number, dto: UpdateSeasonalCoefficientDto): Promise<SeasonalCoefficient> {
-    const updateData: Record<string, unknown> = { updated_at: new Date() };
+    const updateData: Record<string, unknown> = { updatedAt: new Date() };
     if (dto.coefficient !== undefined) {
       updateData.coefficient = dto.coefficient;
     }
@@ -128,7 +128,7 @@ export class SeasonalCoefficientsService {
   async deleteByShopId(shopId: number): Promise<number> {
     const result = await this.db
       .deleteFrom('seasonal_coefficients')
-      .where('shop_id', '=', shopId)
+      .where('shopId', '=', shopId)
       .executeTakeFirst();
     return Number(result.numDeletedRows);
   }
@@ -137,17 +137,17 @@ export class SeasonalCoefficientsService {
     return this.db
       .insertInto('seasonal_coefficients')
       .values({
-        shop_id: dto.shop_id,
-        tenant_id: dto.tenant_id,
-        group_id: dto.group_id,
+        shopId: dto.shopId,
+        tenantId: dto.tenantId,
+        groupId: dto.groupId,
         month: dto.month,
         coefficient: dto.coefficient,
-        updated_at: new Date(),
+        updatedAt: new Date(),
       })
       .onConflict((oc) =>
-        oc.columns(['shop_id', 'group_id', 'month']).doUpdateSet({
+        oc.columns(['shopId', 'groupId', 'month']).doUpdateSet({
           coefficient: dto.coefficient,
-          updated_at: new Date(),
+          updatedAt: new Date(),
         }),
       )
       .returningAll()
@@ -201,7 +201,7 @@ export class SeasonalCoefficientsService {
 
       validItems.push({
         ...item,
-        group_id: groupId,
+        groupId: groupId,
       });
     });
 
@@ -211,21 +211,21 @@ export class SeasonalCoefficientsService {
 
     // Bulk upsert
     const values = validItems.map((item) => ({
-      shop_id: shopId,
-      tenant_id: tenantId,
-      group_id: item.group_id,
+      shopId: shopId,
+      tenantId: tenantId,
+      groupId: item.groupId,
       month: item.month,
       coefficient: item.coefficient,
-      updated_at: new Date(),
+      updatedAt: new Date(),
     }));
 
     await this.db
       .insertInto('seasonal_coefficients')
       .values(values)
       .onConflict((oc) =>
-        oc.columns(['shop_id', 'group_id', 'month']).doUpdateSet((eb) => ({
+        oc.columns(['shopId', 'groupId', 'month']).doUpdateSet((eb) => ({
           coefficient: eb.ref('excluded.coefficient'),
-          updated_at: new Date(),
+          updatedAt: new Date(),
         })),
       )
       .execute();
@@ -236,13 +236,13 @@ export class SeasonalCoefficientsService {
   async exportCsv(shopId: number): Promise<SeasonalCoefficientExportItem[]> {
     const rows = await this.db
       .selectFrom('seasonal_coefficients')
-      .innerJoin('groups', 'groups.id', 'seasonal_coefficients.group_id')
+      .innerJoin('groups', 'groups.id', 'seasonal_coefficients.groupId')
       .select([
         'groups.code as group',
         'seasonal_coefficients.month',
         'seasonal_coefficients.coefficient',
       ])
-      .where('seasonal_coefficients.shop_id', '=', shopId)
+      .where('seasonal_coefficients.shopId', '=', shopId)
       .orderBy('groups.code', 'asc')
       .orderBy('seasonal_coefficients.month', 'asc')
       .execute();

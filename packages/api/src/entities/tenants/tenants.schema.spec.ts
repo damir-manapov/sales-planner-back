@@ -10,7 +10,7 @@ describe('Tenant Schemas', () => {
     it('should validate valid tenant creation data', () => {
       const data = {
         title: 'Test Tenant',
-        created_by: 1,
+        createdBy: 1,
       };
 
       const result = CreateTenantSchema.parse(data);
@@ -18,11 +18,11 @@ describe('Tenant Schemas', () => {
       expect(result).toEqual(data);
     });
 
-    it('should validate with optional owner_id', () => {
+    it('should validate with optional ownerId', () => {
       const data = {
         title: 'Test Tenant',
-        owner_id: 5,
-        created_by: 1,
+        ownerId: 5,
+        createdBy: 1,
       };
 
       const result = CreateTenantSchema.parse(data);
@@ -33,7 +33,7 @@ describe('Tenant Schemas', () => {
     it('should reject empty title', () => {
       const data = {
         title: '',
-        created_by: 1,
+        createdBy: 1,
       };
 
       expect(() => CreateTenantSchema.parse(data)).toThrow();
@@ -42,32 +42,32 @@ describe('Tenant Schemas', () => {
     it('should reject title longer than 255 characters', () => {
       const data = {
         title: 'A'.repeat(256),
-        created_by: 1,
+        createdBy: 1,
       };
 
       expect(() => CreateTenantSchema.parse(data)).toThrow();
     });
 
-    it('should reject negative owner_id', () => {
+    it('should reject negative ownerId', () => {
       const data = {
         title: 'Test Tenant',
-        owner_id: -1,
-        created_by: 1,
+        ownerId: -1,
+        createdBy: 1,
       };
 
       expect(() => CreateTenantSchema.parse(data)).toThrow();
     });
 
-    it('should reject zero created_by', () => {
+    it('should reject zero createdBy', () => {
       const data = {
         title: 'Test Tenant',
-        created_by: 0,
+        createdBy: 0,
       };
 
       expect(() => CreateTenantSchema.parse(data)).toThrow();
     });
 
-    it('should allow missing created_by (set by controller)', () => {
+    it('should allow missing createdBy (set by controller)', () => {
       const data = {
         title: 'Test Tenant',
       };
@@ -94,8 +94,8 @@ describe('Tenant Schemas', () => {
       expect(result).toEqual(data);
     });
 
-    it('should allow null owner_id', () => {
-      const data = { owner_id: null };
+    it('should allow null ownerId', () => {
+      const data = { ownerId: null };
 
       const result = UpdateTenantSchema.parse(data);
 

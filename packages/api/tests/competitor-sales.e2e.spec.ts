@@ -44,8 +44,8 @@ describe('Competitor Sales (e2e)', () => {
 
     // Create test competitor product
     const competitorProduct = await ctx.client.competitorProducts.create(ctx.shopContext, {
-      marketplace_id: marketplace.id,
-      marketplace_product_id: '123456789',
+      marketplaceId: marketplace.id,
+      marketplaceProductId: '123456789',
       title: 'Test Competitor Product',
       brand: 'Test Brand',
     });
@@ -74,17 +74,17 @@ describe('Competitor Sales (e2e)', () => {
 
     it('should create competitor sale', async () => {
       const record = await ctx.client.competitorSales.create(ctx.shopContext, {
-        competitor_product_id: competitorProductId,
+        competitorProductId: competitorProductId,
         period: testPeriod,
         quantity: 100,
       });
 
       expect(record).toHaveProperty('id');
-      expect(record.competitor_product_id).toBe(competitorProductId);
+      expect(record.competitorProductId).toBe(competitorProductId);
       expect(record.period).toBe(testPeriod);
       expect(record.quantity).toBe(100);
-      expect(record.shop_id).toBe(ctx.shop.id);
-      expect(record.tenant_id).toBe(ctx.tenant.id);
+      expect(record.shopId).toBe(ctx.shop.id);
+      expect(record.tenantId).toBe(ctx.tenant.id);
 
       saleId = record.id;
     });
@@ -102,17 +102,17 @@ describe('Competitor Sales (e2e)', () => {
         title: 'IDs Filter MP',
       });
       const testProduct = await ctx.client.competitorProducts.create(ctx.shopContext, {
-        marketplace_id: testMarketplace.id,
-        marketplace_product_id: String(Date.now()),
+        marketplaceId: testMarketplace.id,
+        marketplaceProductId: String(Date.now()),
       });
 
       const record1 = await ctx.client.competitorSales.create(ctx.shopContext, {
-        competitor_product_id: testProduct.id,
+        competitorProductId: testProduct.id,
         period: '2024-05',
         quantity: 10,
       });
       const record2 = await ctx.client.competitorSales.create(ctx.shopContext, {
-        competitor_product_id: testProduct.id,
+        competitorProductId: testProduct.id,
         period: '2024-06',
         quantity: 20,
       });
@@ -141,27 +141,27 @@ describe('Competitor Sales (e2e)', () => {
       expect(record.quantity).toBe(200);
     });
 
-    it('should return 409 on duplicate (competitor_product_id, period)', async () => {
+    it('should return 409 on duplicate (competitorProductId, period)', async () => {
       // Create another competitor product for duplicate test
       const marketplace = await ctx.client.marketplaces.create(ctx.shopContext, {
         code: generateTestCode('MP-DUP'),
         title: 'Dup Test MP',
       });
       const dupCompetitorProduct = await ctx.client.competitorProducts.create(ctx.shopContext, {
-        marketplace_id: marketplace.id,
-        marketplace_product_id: '999888777',
+        marketplaceId: marketplace.id,
+        marketplaceProductId: '999888777',
         title: 'Dup Test Product',
       });
 
       await ctx.client.competitorSales.create(ctx.shopContext, {
-        competitor_product_id: dupCompetitorProduct.id,
+        competitorProductId: dupCompetitorProduct.id,
         period: '2024-02',
         quantity: 50,
       });
 
       await expectConflict(() =>
         ctx.client.competitorSales.create(ctx.shopContext, {
-          competitor_product_id: dupCompetitorProduct.id,
+          competitorProductId: dupCompetitorProduct.id,
           period: '2024-02',
           quantity: 75,
         }),
@@ -174,13 +174,13 @@ describe('Competitor Sales (e2e)', () => {
         title: 'Del Test MP',
       });
       const delCompetitorProduct = await ctx.client.competitorProducts.create(ctx.shopContext, {
-        marketplace_id: marketplace.id,
-        marketplace_product_id: '111222333',
+        marketplaceId: marketplace.id,
+        marketplaceProductId: '111222333',
         title: 'Del Test Product',
       });
 
       const record = await ctx.client.competitorSales.create(ctx.shopContext, {
-        competitor_product_id: delCompetitorProduct.id,
+        competitorProductId: delCompetitorProduct.id,
         period: '2024-03',
         quantity: 30,
       });
@@ -198,9 +198,9 @@ describe('Competitor Sales (e2e)', () => {
   });
 
   describe('Period filtering', () => {
-    it('should filter by period_from', async () => {
+    it('should filter by periodFrom', async () => {
       const records = await ctx.client.competitorSales.getAll(ctx.shopContext, {
-        period_from: '2024-01',
+        periodFrom: '2024-01',
       });
 
       expect(Array.isArray(records.items)).toBe(true);
@@ -209,9 +209,9 @@ describe('Competitor Sales (e2e)', () => {
       }
     });
 
-    it('should filter by period_to', async () => {
+    it('should filter by periodTo', async () => {
       const records = await ctx.client.competitorSales.getAll(ctx.shopContext, {
-        period_to: '2024-12',
+        periodTo: '2024-12',
       });
 
       expect(Array.isArray(records.items)).toBe(true);
@@ -222,8 +222,8 @@ describe('Competitor Sales (e2e)', () => {
 
     it('should filter by period range', async () => {
       const records = await ctx.client.competitorSales.getAll(ctx.shopContext, {
-        period_from: '2024-01',
-        period_to: '2024-06',
+        periodFrom: '2024-01',
+        periodTo: '2024-06',
       });
 
       expect(Array.isArray(records.items)).toBe(true);
@@ -259,7 +259,7 @@ describe('Competitor Sales (e2e)', () => {
       expect(Array.isArray(items)).toBe(true);
       if (items.length > 0) {
         expect(items[0]).toHaveProperty('marketplace');
-        expect(items[0]).toHaveProperty('marketplace_product_id');
+        expect(items[0]).toHaveProperty('marketplaceProductId');
         expect(items[0]).toHaveProperty('period');
         expect(items[0]).toHaveProperty('quantity');
       }
@@ -284,7 +284,7 @@ ${csvMarketplace.code};777888999;2024-05;250`;
 
       expect(typeof csv).toBe('string');
       expect(csv).toContain('marketplace');
-      expect(csv).toContain('marketplace_product_id');
+      expect(csv).toContain('marketplaceProductId');
       expect(csv).toContain('period');
       expect(csv).toContain('quantity');
     });
@@ -345,7 +345,7 @@ ${csvMarketplace.code};777888999;2024-05;250`;
         (p) => !competitorProductsBefore.items.some((b) => b.id === p.id),
       );
       expect(newProduct).toBeDefined();
-      expect(newProduct?.marketplace_product_id).toBe(marketplaceProductId);
+      expect(newProduct?.marketplaceProductId).toBe(marketplaceProductId);
       // Title defaults to marketplace_product_id
       expect(newProduct?.title).toBe(marketplaceProductId);
     });

@@ -1,16 +1,16 @@
 export interface CreateSalesHistoryRequest {
-  sku_id: number;
+  skuId: number;
   period: string; // YYYY-MM format
   quantity: number;
-  marketplace_id: number;
+  marketplaceId: number;
 }
 export interface CreateSalesHistoryDto {
-  sku_id: number;
-  shop_id: number;
-  tenant_id: number;
+  skuId: number;
+  shopId: number;
+  tenantId: number;
   period: string; // YYYY-MM format
   quantity: number;
-  marketplace_id: number;
+  marketplaceId: number;
 }
 
 export interface UpdateSalesHistoryDto {

@@ -64,17 +64,17 @@ describe('Seasonal Coefficients (e2e)', () => {
   describe('CRUD operations', () => {
     it('should create seasonal coefficient', async () => {
       const record = await ctx.client.seasonalCoefficients.create(ctx.shopContext, {
-        group_id: groupId,
+        groupId: groupId,
         month: 1,
         coefficient: 1.25,
       });
 
       expect(record).toHaveProperty('id');
-      expect(record.group_id).toBe(groupId);
+      expect(record.groupId).toBe(groupId);
       expect(record.month).toBe(1);
       expect(record.coefficient).toBe(1.25);
-      expect(record.shop_id).toBe(ctx.shop.id);
-      expect(record.tenant_id).toBe(ctx.tenant.id);
+      expect(record.shopId).toBe(ctx.shop.id);
+      expect(record.tenantId).toBe(ctx.tenant.id);
 
       coefficientId = record.id;
     });
@@ -93,12 +93,12 @@ describe('Seasonal Coefficients (e2e)', () => {
       });
 
       const record1 = await ctx.client.seasonalCoefficients.create(ctx.shopContext, {
-        group_id: testGroup.id,
+        groupId: testGroup.id,
         month: 2,
         coefficient: 1.1,
       });
       const record2 = await ctx.client.seasonalCoefficients.create(ctx.shopContext, {
-        group_id: testGroup.id,
+        groupId: testGroup.id,
         month: 3,
         coefficient: 1.2,
       });
@@ -134,14 +134,14 @@ describe('Seasonal Coefficients (e2e)', () => {
       });
 
       await ctx.client.seasonalCoefficients.create(ctx.shopContext, {
-        group_id: uniqueGroup.id,
+        groupId: uniqueGroup.id,
         month: 6,
         coefficient: 1.0,
       });
 
       await expectConflict(() =>
         ctx.client.seasonalCoefficients.create(ctx.shopContext, {
-          group_id: uniqueGroup.id,
+          groupId: uniqueGroup.id,
           month: 6,
           coefficient: 1.1,
         }),
@@ -155,7 +155,7 @@ describe('Seasonal Coefficients (e2e)', () => {
       });
 
       const record = await ctx.client.seasonalCoefficients.create(ctx.shopContext, {
-        group_id: deleteGroup.id,
+        groupId: deleteGroup.id,
         month: 12,
         coefficient: 0.8,
       });

@@ -68,7 +68,7 @@ export class CategoriesController {
     @Param('code') code: string,
   ): Promise<Category> {
     const category = await this.categoriesService.findByCodeAndShop(code, ctx.shopId);
-    if (!category || category.tenant_id !== ctx.tenantId) {
+    if (!category || category.tenantId !== ctx.tenantId) {
       throw new NotFoundException(`Category with code ${code} not found`);
     }
 
@@ -118,8 +118,8 @@ export class CategoriesController {
   ): Promise<Category> {
     return this.categoriesService.create({
       ...body,
-      shop_id: ctx.shopId,
-      tenant_id: ctx.tenantId,
+      shopId: ctx.shopId,
+      tenantId: ctx.tenantId,
     });
   }
 

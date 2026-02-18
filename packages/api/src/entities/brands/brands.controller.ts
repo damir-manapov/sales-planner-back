@@ -68,7 +68,7 @@ export class BrandsController {
     @Param('code') code: string,
   ): Promise<Brand> {
     const brand = await this.brandsService.findByCodeAndShop(code, ctx.shopId);
-    if (!brand || brand.tenant_id !== ctx.tenantId) {
+    if (!brand || brand.tenantId !== ctx.tenantId) {
       throw new NotFoundException(`Brand with code ${code} not found`);
     }
 
@@ -118,8 +118,8 @@ export class BrandsController {
   ): Promise<Brand> {
     return this.brandsService.create({
       ...body,
-      shop_id: ctx.shopId,
-      tenant_id: ctx.tenantId,
+      shopId: ctx.shopId,
+      tenantId: ctx.tenantId,
     });
   }
 

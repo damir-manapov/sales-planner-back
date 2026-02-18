@@ -1,16 +1,16 @@
 // Leftovers (inventory)
 export interface CreateLeftoverRequest {
-  warehouse_id: number;
-  sku_id: number;
+  warehouseId: number;
+  skuId: number;
   period: string; // YYYY-MM format
   quantity: number;
 }
 
 export interface CreateLeftoverDto {
-  tenant_id: number;
-  shop_id: number;
-  warehouse_id: number;
-  sku_id: number;
+  tenantId: number;
+  shopId: number;
+  warehouseId: number;
+  skuId: number;
   period: string;
   quantity: number;
 }
@@ -30,8 +30,8 @@ export interface ImportLeftoverItem {
 
 export interface LeftoverQuery {
   ids?: number[];
-  period_from?: string;
-  period_to?: string;
+  periodFrom?: string;
+  periodTo?: string;
   limit?: number;
   offset?: number;
 }

@@ -65,8 +65,8 @@ export class LeftoversController {
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @Res() res: ExpressResponse,
-    @Query('period_from') periodFrom?: string,
-    @Query('period_to') periodTo?: string,
+    @Query('periodFrom') periodFrom?: string,
+    @Query('periodTo') periodTo?: string,
   ): Promise<void> {
     const items = await this.leftoversService.exportForShop(ctx.shopId, periodFrom, periodTo);
     sendJsonExport(res, items, 'leftovers.json');
@@ -78,8 +78,8 @@ export class LeftoversController {
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @Res() res: ExpressResponse,
-    @Query('period_from') periodFrom?: string,
-    @Query('period_to') periodTo?: string,
+    @Query('periodFrom') periodFrom?: string,
+    @Query('periodTo') periodTo?: string,
   ): Promise<void> {
     const items = await this.leftoversService.exportForShop(ctx.shopId, periodFrom, periodTo);
     sendCsvExport(res, items, 'leftovers.csv', ['warehouse', 'sku', 'period', 'quantity']);
@@ -102,13 +102,13 @@ export class LeftoversController {
   async create(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-    @Body(new ZodValidationPipe(CreateLeftoverSchema.omit({ shop_id: true, tenant_id: true })))
+    @Body(new ZodValidationPipe(CreateLeftoverSchema.omit({ shopId: true, tenantId: true })))
     dto: CreateLeftoverRequest,
   ): Promise<Leftover> {
     return this.leftoversService.create({
       ...dto,
-      shop_id: ctx.shopId,
-      tenant_id: ctx.tenantId,
+      shopId: ctx.shopId,
+      tenantId: ctx.tenantId,
     });
   }
 

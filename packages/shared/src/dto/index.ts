@@ -2,7 +2,7 @@
  * Data Transfer Objects for create/update operations
  *
  * Pattern:
- * - CreateXDto: Full DTO with context fields (shop_id, tenant_id, etc.)
+ * - CreateXDto: Full DTO with context fields (shopId, tenantId, etc.)
  * - CreateXRequest: HTTP request type (may omit context fields if injected)
  * - UpdateXDto: Update fields
  * - UpdateXRequest: HTTP update request (typically same as DTO)
@@ -27,5 +27,5 @@ export * from './sku-competitor-mappings';
 export * from './competitor-sales';
 export * from './marketplaces';
 export * from './api-keys';
-export * from './roles';
+export * from './user-shops';
 export * from './user-roles';

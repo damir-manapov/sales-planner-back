@@ -1,16 +1,10 @@
 import type { ShopContextParams } from '@sales-planner/shared';
 
 /**
- * Common shop context required by most hooks
+ * Shop context required by most hooks.
+ * Identical to ShopContextParams after the snake_case → camelCase migration.
  */
-export interface ShopContext {
-  shopId: number;
-  tenantId: number;
-}
-
-export function toShopContextParams(ctx: ShopContext): ShopContextParams {
-  return { shop_id: ctx.shopId, tenant_id: ctx.tenantId };
-}
+export type ShopContext = ShopContextParams;
 
 /**
  * Standard query key factory for cache management
@@ -19,6 +13,31 @@ export const queryKeys = {
   me: () => ['sales-planner', 'me'] as const,
   metadata: () => ['sales-planner', 'metadata'] as const,
 
+  // ── Admin resources (no shop context) ──
+  tenants: (query?: Record<string, unknown>) => ['sales-planner', 'tenants', query ?? {}] as const,
+  tenantDetail: (id: number) => ['sales-planner', 'tenants', id] as const,
+
+  users: (query?: Record<string, unknown>) => ['sales-planner', 'users', query ?? {}] as const,
+  userDetail: (id: number) => ['sales-planner', 'users', id] as const,
+
+  shops: (query?: Record<string, unknown>) => ['sales-planner', 'shops', query ?? {}] as const,
+  shopDetail: (id: number) => ['sales-planner', 'shops', id] as const,
+
+  roles: (query?: Record<string, unknown>) => ['sales-planner', 'roles', query ?? {}] as const,
+  roleDetail: (id: number) => ['sales-planner', 'roles', id] as const,
+
+  userRoles: (query?: Record<string, unknown>) =>
+    ['sales-planner', 'user-roles', query ?? {}] as const,
+  userRoleDetail: (id: number) => ['sales-planner', 'user-roles', id] as const,
+
+  userShops: (query?: Record<string, unknown>) =>
+    ['sales-planner', 'user-shops', query ?? {}] as const,
+  userShopDetail: (id: number) => ['sales-planner', 'user-shops', id] as const,
+
+  apiKeys: (query?: Record<string, unknown>) => ['sales-planner', 'api-keys', query ?? {}] as const,
+  apiKeyDetail: (id: number) => ['sales-planner', 'api-keys', id] as const,
+
+  // ── Data entities (shop-scoped) ──
   entity: (entity: string, ctx: ShopContext) =>
     ['sales-planner', entity, ctx.shopId, ctx.tenantId] as const,
 

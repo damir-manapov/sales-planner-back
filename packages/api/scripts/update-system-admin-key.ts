@@ -30,12 +30,12 @@ async function updateSystemAdminKey() {
   // Find system admin user
   const systemAdmin = await db
     .selectFrom('users')
-    .innerJoin('user_roles', 'users.id', 'user_roles.user_id')
-    .innerJoin('roles', 'user_roles.role_id', 'roles.id')
+    .innerJoin('user_roles', 'users.id', 'user_roles.userId')
+    .innerJoin('roles', 'user_roles.roleId', 'roles.id')
     .select(['users.id', 'users.email'])
     .where('roles.name', '=', 'systemAdmin')
-    .where('user_roles.tenant_id', 'is', null)
-    .where('user_roles.shop_id', 'is', null)
+    .where('user_roles.tenantId', 'is', null)
+    .where('user_roles.shopId', 'is', null)
     .executeTakeFirst();
 
   if (!systemAdmin) {
@@ -49,14 +49,14 @@ async function updateSystemAdminKey() {
   const existingKey = await db
     .selectFrom('api_keys')
     .select('key')
-    .where('user_id', '=', systemAdmin.id)
+    .where('userId', '=', systemAdmin.id)
     .executeTakeFirst();
 
   if (existingKey) {
     await db
       .updateTable('api_keys')
       .set({ key: newApiKey })
-      .where('user_id', '=', systemAdmin.id)
+      .where('userId', '=', systemAdmin.id)
       .execute();
     console.log('   ✅ Updated existing API key');
   } else {
@@ -64,8 +64,8 @@ async function updateSystemAdminKey() {
       .insertInto('api_keys')
       .values({
         key: newApiKey,
-        user_id: systemAdmin.id,
-        expires_at: null,
+        userId: systemAdmin.id,
+        expiresAt: null,
       })
       .execute();
     console.log('   ✅ Created new API key');

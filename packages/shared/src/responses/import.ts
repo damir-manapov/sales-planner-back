@@ -5,15 +5,15 @@ export interface ImportResult {
 }
 
 export interface SkuImportResult extends ImportResult {
-  categories_created: number;
-  groups_created: number;
-  statuses_created: number;
-  suppliers_created: number;
+  categoriesCreated: number;
+  groupsCreated: number;
+  statusesCreated: number;
+  suppliersCreated: number;
 }
 
 export interface SalesHistoryImportResult extends ImportResult {
-  skus_created: number;
-  marketplaces_created: number;
+  skusCreated: number;
+  marketplacesCreated: number;
 }
 
 export interface DeleteDataResult {

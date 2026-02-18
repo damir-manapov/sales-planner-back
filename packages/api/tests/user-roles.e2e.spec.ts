@@ -89,17 +89,17 @@ describe('User Roles (e2e)', () => {
 
     it('tenant owner should assign editor role to user in their tenant', async () => {
       const userRole = await ctx.client.userRoles.create({
-        user_id: targetUserId,
-        role_id: editorRoleId,
-        tenant_id: ctx.tenant.id,
-        shop_id: ctx.shop.id,
+        userId: targetUserId,
+        roleId: editorRoleId,
+        tenantId: ctx.tenant.id,
+        shopId: ctx.shop.id,
       });
 
       expect(userRole).toHaveProperty('id');
-      expect(userRole.user_id).toBe(targetUserId);
-      expect(userRole.role_id).toBe(editorRoleId);
-      expect(userRole.tenant_id).toBe(ctx.tenant.id);
-      expect(userRole.shop_id).toBe(ctx.shop.id);
+      expect(userRole.userId).toBe(targetUserId);
+      expect(userRole.roleId).toBe(editorRoleId);
+      expect(userRole.tenantId).toBe(ctx.tenant.id);
+      expect(userRole.shopId).toBe(ctx.shop.id);
 
       createdUserRoleId = userRole.id;
     });
@@ -108,18 +108,18 @@ describe('User Roles (e2e)', () => {
       const userRole = await ctx.client.userRoles.getById(createdUserRoleId);
 
       expect(userRole.id).toBe(createdUserRoleId);
-      expect(userRole.user_id).toBe(targetUserId);
+      expect(userRole.userId).toBe(targetUserId);
     });
 
     it('tenant owner should assign viewer role to same user', async () => {
       const userRole = await ctx.client.userRoles.create({
-        user_id: targetUserId,
-        role_id: viewerRoleId,
-        tenant_id: ctx.tenant.id,
-        shop_id: ctx.shop.id,
+        userId: targetUserId,
+        roleId: viewerRoleId,
+        tenantId: ctx.tenant.id,
+        shopId: ctx.shop.id,
       });
 
-      expect(userRole.role_id).toBe(viewerRoleId);
+      expect(userRole.roleId).toBe(viewerRoleId);
     });
 
     it('tenant owner should delete user role', async () => {
@@ -143,7 +143,7 @@ describe('User Roles (e2e)', () => {
       tenantAdminUserId = adminUser.id;
 
       const adminApiKey = await ctx.getSystemClient().apiKeys.create({
-        user_id: tenantAdminUserId,
+        userId: tenantAdminUserId,
         name: 'Admin Key',
       });
       tenantAdminClient = new SalesPlannerClient({ baseUrl, apiKey: adminApiKey.key });
@@ -153,9 +153,9 @@ describe('User Roles (e2e)', () => {
       const tenantAdminRole = roles.items.find((r) => r.name === ROLE_NAMES.TENANT_ADMIN);
       if (!tenantAdminRole) throw new Error('Tenant Admin role not found');
       await ctx.getSystemClient().userRoles.create({
-        user_id: tenantAdminUserId,
-        role_id: tenantAdminRole.id,
-        tenant_id: ctx.tenant.id,
+        userId: tenantAdminUserId,
+        roleId: tenantAdminRole.id,
+        tenantId: ctx.tenant.id,
       });
 
       // Create target user
@@ -179,14 +179,14 @@ describe('User Roles (e2e)', () => {
 
     it('tenant admin should assign role to user in their tenant', async () => {
       const userRole = await tenantAdminClient.userRoles.create({
-        user_id: targetUserId,
-        role_id: editorRoleId,
-        tenant_id: ctx.tenant.id,
-        shop_id: ctx.shop.id,
+        userId: targetUserId,
+        roleId: editorRoleId,
+        tenantId: ctx.tenant.id,
+        shopId: ctx.shop.id,
       });
 
       expect(userRole).toHaveProperty('id');
-      expect(userRole.user_id).toBe(targetUserId);
+      expect(userRole.userId).toBe(targetUserId);
 
       adminCreatedRoleId = userRole.id;
     });
@@ -221,10 +221,10 @@ describe('User Roles (e2e)', () => {
       });
 
       const userRole = await otherCtx.client.userRoles.create({
-        user_id: targetUser.id,
-        role_id: viewerRoleId,
-        tenant_id: otherCtx.tenant.id,
-        shop_id: otherCtx.shop.id,
+        userId: targetUser.id,
+        roleId: viewerRoleId,
+        tenantId: otherCtx.tenant.id,
+        shopId: otherCtx.shop.id,
       });
       otherUserRoleId = userRole.id;
     });
@@ -249,10 +249,10 @@ describe('User Roles (e2e)', () => {
 
       await expectForbidden(() =>
         ctx.client.userRoles.create({
-          user_id: targetUser.id,
-          role_id: editorRoleId,
-          tenant_id: otherCtx.tenant.id,
-          shop_id: otherCtx.shop.id,
+          userId: targetUser.id,
+          roleId: editorRoleId,
+          tenantId: otherCtx.tenant.id,
+          shopId: otherCtx.shop.id,
         }),
       );
     });
@@ -277,16 +277,16 @@ describe('User Roles (e2e)', () => {
       editorUserId = editorUser.id;
 
       const editorApiKey = await ctx.getSystemClient().apiKeys.create({
-        user_id: editorUserId,
+        userId: editorUserId,
         name: 'Editor Key',
       });
       editorClient = new SalesPlannerClient({ baseUrl, apiKey: editorApiKey.key });
 
       await ctx.getSystemClient().userRoles.create({
-        user_id: editorUserId,
-        role_id: editorRoleId,
-        tenant_id: ctx.tenant.id,
-        shop_id: ctx.shop.id,
+        userId: editorUserId,
+        roleId: editorRoleId,
+        tenantId: ctx.tenant.id,
+        shopId: ctx.shop.id,
       });
 
       // Create viewer user
@@ -297,16 +297,16 @@ describe('User Roles (e2e)', () => {
       viewerUserId = viewerUser.id;
 
       const viewerApiKey = await ctx.getSystemClient().apiKeys.create({
-        user_id: viewerUserId,
+        userId: viewerUserId,
         name: 'Viewer Key',
       });
       viewerClient = new SalesPlannerClient({ baseUrl, apiKey: viewerApiKey.key });
 
       await ctx.getSystemClient().userRoles.create({
-        user_id: viewerUserId,
-        role_id: viewerRoleId,
-        tenant_id: ctx.tenant.id,
-        shop_id: ctx.shop.id,
+        userId: viewerUserId,
+        roleId: viewerRoleId,
+        tenantId: ctx.tenant.id,
+        shopId: ctx.shop.id,
       });
     });
 
@@ -327,10 +327,10 @@ describe('User Roles (e2e)', () => {
 
       await expectForbidden(() =>
         editorClient.userRoles.create({
-          user_id: targetUser.id,
-          role_id: viewerRoleId,
-          tenant_id: ctx.tenant.id,
-          shop_id: ctx.shop.id,
+          userId: targetUser.id,
+          roleId: viewerRoleId,
+          tenantId: ctx.tenant.id,
+          shopId: ctx.shop.id,
         }),
       );
     });
@@ -347,10 +347,10 @@ describe('User Roles (e2e)', () => {
 
       await expectForbidden(() =>
         viewerClient.userRoles.create({
-          user_id: targetUser.id,
-          role_id: viewerRoleId,
-          tenant_id: ctx.tenant.id,
-          shop_id: ctx.shop.id,
+          userId: targetUser.id,
+          roleId: viewerRoleId,
+          tenantId: ctx.tenant.id,
+          shopId: ctx.shop.id,
         }),
       );
     });
@@ -383,16 +383,16 @@ describe('User Roles (e2e)', () => {
 
       expect(Array.isArray(userRoles.items)).toBe(true);
       userRoles.items.forEach((ur) => {
-        expect(ur.tenant_id).toBe(ctx.tenant.id);
+        expect(ur.tenantId).toBe(ctx.tenant.id);
       });
     });
 
     it('system admin should create user role', async () => {
       const userRole = await ctx.getSystemClient().userRoles.create({
-        user_id: targetUserId,
-        role_id: editorRoleId,
-        tenant_id: ctx.tenant.id,
-        shop_id: ctx.shop.id,
+        userId: targetUserId,
+        roleId: editorRoleId,
+        tenantId: ctx.tenant.id,
+        shopId: ctx.shop.id,
       });
 
       expect(userRole).toHaveProperty('id');

@@ -62,31 +62,28 @@ export class AuthGuard implements CanActivate {
     }
 
     const userRolesWithNames = await this.userRolesService.findByUserIdWithRoleNames(
-      validApiKey.user_id,
+      validApiKey.userId,
     );
 
-    // Check if user is systemAdmin (no tenant_id and no shop_id means global role)
+    // Check if user is systemAdmin (no tenantId and no shopId means global role)
     const isSystemAdmin = userRolesWithNames.some(
-      (ur) =>
-        ur.tenant_id === null && ur.shop_id === null && ur.role_name === ROLE_NAMES.SYSTEM_ADMIN,
+      (ur) => ur.tenantId === null && ur.shopId === null && ur.roleName === ROLE_NAMES.SYSTEM_ADMIN,
     );
 
     // Get tenant IDs from user roles (tenant-level roles have tenant_id but no shop_id)
     const tenantIds = [
       ...new Set(
-        userRolesWithNames
-          .filter((ur) => ur.tenant_id !== null)
-          .map((ur) => ur.tenant_id as number),
+        userRolesWithNames.filter((ur) => ur.tenantId !== null).map((ur) => ur.tenantId as number),
       ),
     ];
 
     // Build tenantRoles: group tenant-level roles by tenant (roles with tenant_id but no shop_id)
     const tenantRolesMap = new Map<number, string[]>();
     for (const ur of userRolesWithNames) {
-      if (ur.tenant_id !== null && ur.shop_id === null) {
-        const roles = tenantRolesMap.get(ur.tenant_id) || [];
-        roles.push(ur.role_name);
-        tenantRolesMap.set(ur.tenant_id, roles);
+      if (ur.tenantId !== null && ur.shopId === null) {
+        const roles = tenantRolesMap.get(ur.tenantId) || [];
+        roles.push(ur.roleName);
+        tenantRolesMap.set(ur.tenantId, roles);
       }
     }
     const tenantRoles: TenantRole[] = Array.from(tenantRolesMap.entries()).map(
@@ -99,10 +96,10 @@ export class AuthGuard implements CanActivate {
     // Build shopRoles: group shop-level roles by shop (roles with shop_id)
     const shopRolesMap = new Map<number, string[]>();
     for (const ur of userRolesWithNames) {
-      if (ur.shop_id !== null) {
-        const roles = shopRolesMap.get(ur.shop_id) || [];
-        roles.push(ur.role_name);
-        shopRolesMap.set(ur.shop_id, roles);
+      if (ur.shopId !== null) {
+        const roles = shopRolesMap.get(ur.shopId) || [];
+        roles.push(ur.roleName);
+        shopRolesMap.set(ur.shopId, roles);
       }
     }
     const shopRoles: ShopRole[] = Array.from(shopRolesMap.entries()).map(([shopId, roles]) => ({
@@ -111,14 +108,14 @@ export class AuthGuard implements CanActivate {
     }));
 
     // Get tenant IDs where user is the owner (derived tenantOwner role)
-    const ownedTenants = await this.tenantsService.findByOwnerId(validApiKey.user_id);
+    const ownedTenants = await this.tenantsService.findByOwnerId(validApiKey.userId);
     const ownedTenantIds = ownedTenants.map((t) => t.id);
 
     // Include owned tenants in tenantIds for access check
     const allTenantIds = [...new Set([...tenantIds, ...ownedTenantIds])];
 
     request.user = {
-      id: validApiKey.user_id,
+      id: validApiKey.userId,
       tenantIds: allTenantIds,
       ownedTenantIds,
       tenantRoles,
@@ -130,11 +127,11 @@ export class AuthGuard implements CanActivate {
     const accessLevel = this.reflector.get<AccessLevel>(ACCESS_LEVEL_KEY, context.getHandler());
     if (accessLevel && accessLevel !== AccessLevel.NONE) {
       const query = request.query as Record<string, string | undefined>;
-      const shopId = Number.parseInt(query.shop_id ?? '', 10);
-      const tenantId = Number.parseInt(query.tenant_id ?? '', 10);
+      const shopId = Number.parseInt(query.shopId ?? '', 10);
+      const tenantId = Number.parseInt(query.tenantId ?? '', 10);
 
       if (Number.isNaN(shopId) || Number.isNaN(tenantId)) {
-        throw new BadRequestException('shop_id and tenant_id are required');
+        throw new BadRequestException('shopId and tenantId are required');
       }
 
       if (!request.user.tenantIds.includes(tenantId)) {

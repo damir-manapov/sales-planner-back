@@ -6,10 +6,10 @@ const { id } = zodSchemas;
 
 // Zod schemas
 export const CreateUserRoleSchema = z.object({
-  user_id: id(),
-  role_id: id(),
-  tenant_id: id().optional(),
-  shop_id: id().optional(),
+  userId: id(),
+  roleId: id(),
+  tenantId: id().optional(),
+  shopId: id().optional(),
 });
 
 // Infer TypeScript types from schemas with compatibility checks

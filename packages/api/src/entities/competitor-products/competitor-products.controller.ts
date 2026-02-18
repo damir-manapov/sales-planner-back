@@ -83,7 +83,7 @@ export class CompetitorProductsController {
     const items = await this.competitorProductsService.exportCsv(ctx.shopId);
     sendCsvExport(res, items, 'competitor-products.csv', [
       'marketplace',
-      'marketplace_product_id',
+      'marketplaceProductId',
       'title',
       'brand',
     ]);
@@ -107,14 +107,14 @@ export class CompetitorProductsController {
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @Body(
-      new ZodValidationPipe(CreateCompetitorProductSchema.omit({ shop_id: true, tenant_id: true })),
+      new ZodValidationPipe(CreateCompetitorProductSchema.omit({ shopId: true, tenantId: true })),
     )
     dto: CreateCompetitorProductRequest,
   ): Promise<CompetitorProduct> {
     return this.competitorProductsService.create({
       ...dto,
-      shop_id: ctx.shopId,
-      tenant_id: ctx.tenantId,
+      shopId: ctx.shopId,
+      tenantId: ctx.tenantId,
     });
   }
 

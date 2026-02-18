@@ -66,11 +66,11 @@ export class SalesHistoryController {
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @Res() res: ExpressResponse,
-    @Query('period_from') periodFrom?: string,
-    @Query('period_to') periodTo?: string,
+    @Query('periodFrom') periodFrom?: string,
+    @Query('periodTo') periodTo?: string,
   ): Promise<void> {
     // Validate query params
-    PeriodQuerySchema.parse({ period_from: periodFrom, period_to: periodTo });
+    PeriodQuerySchema.parse({ periodFrom, periodTo });
     const items = await this.salesHistoryService.exportForShop(ctx.shopId, periodFrom, periodTo);
     sendJsonExport(res, items, 'sales-history.json');
   }
@@ -81,11 +81,11 @@ export class SalesHistoryController {
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @Res() res: ExpressResponse,
-    @Query('period_from') periodFrom?: string,
-    @Query('period_to') periodTo?: string,
+    @Query('periodFrom') periodFrom?: string,
+    @Query('periodTo') periodTo?: string,
   ): Promise<void> {
     // Validate query params
-    PeriodQuerySchema.parse({ period_from: periodFrom, period_to: periodTo });
+    PeriodQuerySchema.parse({ periodFrom, periodTo });
     const items = await this.salesHistoryService.exportForShop(ctx.shopId, periodFrom, periodTo);
     sendCsvExport(res, items, 'sales-history.csv', ['marketplace', 'period', 'sku', 'quantity']);
   }
@@ -107,13 +107,13 @@ export class SalesHistoryController {
   async create(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-    @Body(new ZodValidationPipe(CreateSalesHistorySchema.omit({ shop_id: true, tenant_id: true })))
+    @Body(new ZodValidationPipe(CreateSalesHistorySchema.omit({ shopId: true, tenantId: true })))
     dto: CreateSalesHistoryRequest,
   ): Promise<SalesHistory> {
     return this.salesHistoryService.create({
       ...dto,
-      shop_id: ctx.shopId,
-      tenant_id: ctx.tenantId,
+      shopId: ctx.shopId,
+      tenantId: ctx.tenantId,
     });
   }
 

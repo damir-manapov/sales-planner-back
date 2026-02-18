@@ -13,13 +13,13 @@ const { email, name, id } = zodSchemas;
 export const CreateUserSchema = z.object({
   email: email(),
   name: name(),
-  default_shop_id: id().optional(),
+  defaultShopId: id().optional(),
 });
 
 export const UpdateUserSchema = z.object({
   email: email().optional(),
   name: name().optional(),
-  default_shop_id: id().nullable().optional(),
+  defaultShopId: id().nullable().optional(),
 });
 
 // Infer TypeScript types from schemas with compatibility checks

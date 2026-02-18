@@ -81,7 +81,7 @@ export class BootstrapService implements OnModuleInit {
     // Check if user with this API key already exists
     const existingApiKey = await this.apiKeysService.findByKey(systemAdminKey);
     let adminUser = existingApiKey
-      ? await this.usersService.findById(existingApiKey.user_id)
+      ? await this.usersService.findById(existingApiKey.userId)
       : undefined;
 
     if (!adminUser) {
@@ -94,7 +94,7 @@ export class BootstrapService implements OnModuleInit {
 
         // Create API key for admin
         await this.apiKeysService.createWithKey({
-          user_id: adminUser.id,
+          userId: adminUser.id,
           key: systemAdminKey,
           name: 'System Admin Key',
         });
@@ -115,8 +115,8 @@ export class BootstrapService implements OnModuleInit {
     if (!hasRole) {
       this.logger.log('Assigning systemAdmin role to user...');
       await this.userRolesService.create({
-        user_id: adminUser.id,
-        role_id: systemAdminRole.id,
+        userId: adminUser.id,
+        roleId: systemAdminRole.id,
       });
     }
 

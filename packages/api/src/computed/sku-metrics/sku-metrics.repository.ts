@@ -16,9 +16,9 @@ export class SkuMetricsRepository extends ReadOnlyShopScopedRepository<SkuMetric
     return this.db
       .selectFrom('mv_sku_metrics')
       .selectAll()
-      .where('shop_id', '=', shopId)
-      .where('abc_class', '=', abcClass)
-      .orderBy('sales_rank', 'asc')
+      .where('shopId', '=', shopId)
+      .where('abcClass', '=', abcClass)
+      .orderBy('salesRank', 'asc')
       .execute() as Promise<SkuMetrics[]>;
   }
 }

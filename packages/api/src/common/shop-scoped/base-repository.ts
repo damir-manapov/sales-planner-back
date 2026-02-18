@@ -39,7 +39,7 @@ export abstract class ShopScopedBaseRepository<
   /** Unique key columns for upsert conflict resolution. Override in subclass. */
   protected readonly uniqueKeys: readonly string[] = ['id'];
 
-  /** Business primary key for counting existing records in bulkUpsert. If not set, uses first uniqueKey that isn't shop_id. */
+  /** Business primary key for counting existing records in bulkUpsert. If not set, uses first uniqueKey that isn't shopId. */
   protected readonly businessPrimaryKey?: string;
 
   constructor(
@@ -55,7 +55,7 @@ export abstract class ShopScopedBaseRepository<
     let q = this.db
       .selectFrom(this.tableName as any)
       .select(this.db.fn.countAll<number>().as('count'))
-      .where('shop_id', '=', shopId);
+      .where('shopId', '=', shopId);
 
     if (query?.ids && query.ids.length > 0) {
       q = q.where('id', 'in', query.ids);
@@ -85,7 +85,7 @@ export abstract class ShopScopedBaseRepository<
     let q = this.db
       .selectFrom(this.tableName as any)
       .selectAll()
-      .where('shop_id', '=', shopId);
+      .where('shopId', '=', shopId);
 
     if (query?.ids && query.ids.length > 0) {
       q = q.where('id', 'in', query.ids);
@@ -107,7 +107,7 @@ export abstract class ShopScopedBaseRepository<
     return this.db
       .selectFrom(this.tableName as any)
       .selectAll()
-      .where('tenant_id', '=', tenantId)
+      .where('tenantId', '=', tenantId)
       .orderBy('id', 'asc')
       .execute() as Promise<TEntity[]>;
   }
@@ -129,10 +129,10 @@ export abstract class ShopScopedBaseRepository<
   /** Immutable fields that should never be updated */
   protected static readonly IMMUTABLE_FIELDS = new Set<string>([
     'id',
-    'shop_id',
-    'tenant_id',
-    'created_at',
-    'updated_at',
+    'shopId',
+    'tenantId',
+    'createdAt',
+    'updatedAt',
   ]);
 
   async create(data: TCreateDto): Promise<TEntity> {
@@ -140,7 +140,7 @@ export abstract class ShopScopedBaseRepository<
       .insertInto(this.tableName as any)
       .values({
         ...(data as object),
-        updated_at: new Date(),
+        updatedAt: new Date(),
       })
       .returningAll()
       .executeTakeFirstOrThrow();
@@ -149,7 +149,7 @@ export abstract class ShopScopedBaseRepository<
   }
 
   async update(id: number, data: TUpdateDto): Promise<TEntity | undefined> {
-    const updateData: Record<string, unknown> = { updated_at: new Date() };
+    const updateData: Record<string, unknown> = { updatedAt: new Date() };
 
     for (const [key, value] of Object.entries(data as object)) {
       if (value !== undefined && !ShopScopedBaseRepository.IMMUTABLE_FIELDS.has(key)) {
@@ -177,7 +177,7 @@ export abstract class ShopScopedBaseRepository<
   async deleteByShopId(shopId: number): Promise<number> {
     const result = await this.db
       .deleteFrom(this.tableName as any)
-      .where('shop_id', '=', shopId)
+      .where('shopId', '=', shopId)
       .executeTakeFirst();
     return Number(result.numDeletedRows);
   }
@@ -186,7 +186,7 @@ export abstract class ShopScopedBaseRepository<
     return this.db
       .selectFrom(this.tableName as any)
       .select(this.exportFields.slice() as any)
-      .where('shop_id', '=', shopId)
+      .where('shopId', '=', shopId)
       .orderBy('id', 'asc')
       .execute() as Promise<TExport[]>;
   }
@@ -206,14 +206,14 @@ export abstract class ShopScopedBaseRepository<
 
     // Get business primary key for counting existing records
     const primaryKey =
-      this.businessPrimaryKey ?? this.uniqueKeys.find((k) => k !== 'shop_id') ?? 'id';
+      this.businessPrimaryKey ?? this.uniqueKeys.find((k) => k !== 'shopId') ?? 'id';
     const keyValues = items.map((item) => (item as Record<string, unknown>)[primaryKey]);
 
     // Count existing records by unique key
     const existingResult = await this.db
       .selectFrom(this.tableName as any)
       .select(this.db.fn.countAll<number>().as('count'))
-      .where('shop_id', '=', shopId)
+      .where('shopId', '=', shopId)
       .where(primaryKey as any, 'in', keyValues)
       .executeTakeFirstOrThrow();
 
@@ -222,7 +222,7 @@ export abstract class ShopScopedBaseRepository<
 
     // Build update set for all non-immutable fields from first item
     const sampleItem = items[0] as Record<string, unknown>;
-    const updateSet: Record<string, unknown> = { updated_at: new Date() };
+    const updateSet: Record<string, unknown> = { updatedAt: new Date() };
     for (const key of Object.keys(sampleItem)) {
       if (!ShopScopedBaseRepository.IMMUTABLE_FIELDS.has(key)) {
         updateSet[key] = (eb: any) => eb.ref(`excluded.${key}`);
@@ -234,9 +234,9 @@ export abstract class ShopScopedBaseRepository<
       .values(
         items.map((item) => ({
           ...(item as object),
-          shop_id: shopId,
-          tenant_id: tenantId,
-          updated_at: new Date(),
+          shopId: shopId,
+          tenantId: tenantId,
+          updatedAt: new Date(),
         })),
       )
       .onConflict((oc) => oc.columns(this.uniqueKeys.slice() as any).doUpdateSet(updateSet as any))

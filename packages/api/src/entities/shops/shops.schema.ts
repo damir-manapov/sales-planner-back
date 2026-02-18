@@ -12,7 +12,7 @@ const { title, id } = zodSchemas;
 // Zod schemas
 export const CreateShopSchema = z.object({
   title: title(),
-  tenant_id: id(),
+  tenantId: id(),
 });
 
 export const UpdateShopSchema = z.object({

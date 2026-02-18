@@ -26,9 +26,9 @@ export type { SalesHistory };
 type SalesHistoryRow = Selectable<SalesHistoryTable>;
 
 interface PreparedSalesHistoryItem extends ImportSalesHistoryItem {
-  sku_id: number;
+  skuId: number;
   periodDate: Date;
-  marketplace_id: number;
+  marketplaceId: number;
 }
 
 @Injectable()
@@ -64,7 +64,7 @@ export class SalesHistoryService {
     const rows = await this.db
       .selectFrom('sales_history')
       .selectAll()
-      .where('shop_id', '=', shopId)
+      .where('shopId', '=', shopId)
       .execute();
     return rows.map((r) => this.mapRow(r));
   }
@@ -73,15 +73,9 @@ export class SalesHistoryService {
     shopId: number,
     query?: SalesHistoryQuery,
   ): Promise<PaginatedResponse<SalesHistory>> {
-    const {
-      period_from: periodFrom,
-      period_to: periodTo,
-      ids,
-      limit = 100,
-      offset = 0,
-    } = query ?? {};
+    const { periodFrom, periodTo, ids, limit = 100, offset = 0 } = query ?? {};
 
-    let baseQuery = this.db.selectFrom('sales_history').where('shop_id', '=', shopId);
+    let baseQuery = this.db.selectFrom('sales_history').where('shopId', '=', shopId);
 
     if (ids && ids.length > 0) {
       baseQuery = baseQuery.where('id', 'in', ids);
@@ -118,7 +112,7 @@ export class SalesHistoryService {
     const rows = await this.db
       .selectFrom('sales_history')
       .selectAll()
-      .where('sku_id', '=', skuId)
+      .where('skuId', '=', skuId)
       .orderBy('period', 'desc')
       .execute();
     return rows.map((r) => this.mapRow(r));
@@ -129,13 +123,13 @@ export class SalesHistoryService {
       const result = await this.db
         .insertInto('sales_history')
         .values({
-          shop_id: dto.shop_id,
-          tenant_id: dto.tenant_id,
-          sku_id: dto.sku_id,
+          shopId: dto.shopId,
+          tenantId: dto.tenantId,
+          skuId: dto.skuId,
           period: periodToDate(dto.period),
           quantity: dto.quantity,
-          marketplace_id: dto.marketplace_id,
-          updated_at: new Date(),
+          marketplaceId: dto.marketplaceId,
+          updatedAt: new Date(),
         })
         .returningAll()
         .executeTakeFirstOrThrow();
@@ -145,7 +139,7 @@ export class SalesHistoryService {
       if (isUniqueViolation(error)) {
         throw new DuplicateResourceException(
           'Sales History',
-          `SKU ${dto.sku_id} for period ${dto.period}`,
+          `SKU ${dto.skuId} for period ${dto.period}`,
           'this shop',
         );
       }
@@ -156,7 +150,7 @@ export class SalesHistoryService {
   async update(id: number, dto: UpdateSalesHistoryDto): Promise<SalesHistory> {
     const result = await this.db
       .updateTable('sales_history')
-      .set({ ...dto, updated_at: new Date() })
+      .set({ ...dto, updatedAt: new Date() })
       .where('id', '=', id)
       .returningAll()
       .executeTakeFirst();
@@ -173,7 +167,7 @@ export class SalesHistoryService {
   async deleteByShopId(shopId: number): Promise<number> {
     const result = await this.db
       .deleteFrom('sales_history')
-      .where('shop_id', '=', shopId)
+      .where('shopId', '=', shopId)
       .executeTakeFirst();
     return Number(result.numDeletedRows);
   }
@@ -183,18 +177,18 @@ export class SalesHistoryService {
     const result = await this.db
       .insertInto('sales_history')
       .values({
-        shop_id: dto.shop_id,
-        tenant_id: dto.tenant_id,
-        sku_id: dto.sku_id,
+        shopId: dto.shopId,
+        tenantId: dto.tenantId,
+        skuId: dto.skuId,
         period: periodDate,
         quantity: dto.quantity,
-        marketplace_id: dto.marketplace_id,
-        updated_at: new Date(),
+        marketplaceId: dto.marketplaceId,
+        updatedAt: new Date(),
       })
       .onConflict((oc) =>
-        oc.columns(['shop_id', 'sku_id', 'period', 'marketplace_id']).doUpdateSet({
+        oc.columns(['shopId', 'skuId', 'period', 'marketplaceId']).doUpdateSet({
           quantity: dto.quantity,
-          updated_at: new Date(),
+          updatedAt: new Date(),
         }),
       )
       .returningAll()
@@ -209,7 +203,7 @@ export class SalesHistoryService {
     items: ImportSalesHistoryItem[],
   ): Promise<SalesHistoryImportResult> {
     if (items.length === 0) {
-      return { created: 0, updated: 0, skus_created: 0, marketplaces_created: 0, errors: [] };
+      return { created: 0, updated: 0, skusCreated: 0, marketplacesCreated: 0, errors: [] };
     }
 
     const errors: string[] = [];
@@ -228,7 +222,7 @@ export class SalesHistoryService {
     });
 
     if (validatedItems.length === 0) {
-      return { created: 0, updated: 0, skus_created: 0, marketplaces_created: 0, errors };
+      return { created: 0, updated: 0, skusCreated: 0, marketplacesCreated: 0, errors };
     }
 
     // Find or create SKUs by code
@@ -274,9 +268,9 @@ export class SalesHistoryService {
       if (skuId && marketplaceId) {
         validItems.push({
           ...item,
-          sku_id: skuId,
+          skuId: skuId,
           periodDate: periodToDate(item.period),
-          marketplace_id: marketplaceId,
+          marketplaceId: marketplaceId,
         });
       }
     });
@@ -285,8 +279,8 @@ export class SalesHistoryService {
       return {
         created: 0,
         updated: 0,
-        skus_created: skusCreated,
-        marketplaces_created: marketplacesCreated,
+        skusCreated: skusCreated,
+        marketplacesCreated: marketplacesCreated,
         errors,
       };
     }
@@ -294,7 +288,7 @@ export class SalesHistoryService {
     // Check for duplicate records in input (same sku + period + marketplace)
     const keyCounts = new Map<string, number>();
     for (const item of validItems) {
-      const key = `${item.sku_id}-${item.period}-${item.marketplace_id}`;
+      const key = `${item.skuId}-${item.period}-${item.marketplaceId}`;
       keyCounts.set(key, (keyCounts.get(key) || 0) + 1);
     }
     const duplicateKeys = [...keyCounts.entries()]
@@ -313,18 +307,18 @@ export class SalesHistoryService {
         await this.db
           .selectFrom('sales_history')
           .select([
-            'sku_id',
-            sql<string>`to_char(period, 'YYYY-MM')`.as('period_str'),
-            'marketplace_id',
+            'skuId',
+            sql<string>`to_char(period, 'YYYY-MM')`.as('periodStr'),
+            'marketplaceId',
           ])
-          .where('shop_id', '=', shopId)
+          .where('shopId', '=', shopId)
           .where(
-            'sku_id',
+            'skuId',
             'in',
-            validItems.map((i) => i.sku_id),
+            validItems.map((i) => i.skuId),
           )
           .execute()
-      ).map((r) => `${r.sku_id}-${r.period_str}-${r.marketplace_id}`),
+      ).map((r) => `${r.skuId}-${r.periodStr}-${r.marketplaceId}`),
     );
 
     // Use ON CONFLICT for efficient upsert (all items have marketplace since it's required)
@@ -332,35 +326,35 @@ export class SalesHistoryService {
       .insertInto('sales_history')
       .values(
         validItems.map((item) => ({
-          shop_id: shopId,
-          tenant_id: tenantId,
-          sku_id: item.sku_id,
+          shopId: shopId,
+          tenantId: tenantId,
+          skuId: item.skuId,
           period: item.periodDate,
           quantity: item.quantity,
-          marketplace_id: item.marketplace_id,
-          updated_at: new Date(),
+          marketplaceId: item.marketplaceId,
+          updatedAt: new Date(),
         })),
       )
       .onConflict((oc) =>
-        oc.columns(['shop_id', 'sku_id', 'period', 'marketplace_id']).doUpdateSet({
+        oc.columns(['shopId', 'skuId', 'period', 'marketplaceId']).doUpdateSet({
           quantity: (eb) => eb.ref('excluded.quantity'),
-          updated_at: new Date(),
+          updatedAt: new Date(),
         }),
       )
       .execute();
 
     const created = validItems.filter(
-      (i) => !existingKeys.has(`${i.sku_id}-${i.period}-${i.marketplace_id}`),
+      (i) => !existingKeys.has(`${i.skuId}-${i.period}-${i.marketplaceId}`),
     ).length;
     const updated = validItems.filter((i) =>
-      existingKeys.has(`${i.sku_id}-${i.period}-${i.marketplace_id}`),
+      existingKeys.has(`${i.skuId}-${i.period}-${i.marketplaceId}`),
     ).length;
 
     return {
       created,
       updated,
-      skus_created: skusCreated,
-      marketplaces_created: marketplacesCreated,
+      skusCreated: skusCreated,
+      marketplacesCreated: marketplacesCreated,
       errors,
     };
   }
@@ -372,15 +366,15 @@ export class SalesHistoryService {
   ): Promise<SalesHistoryExportItem[]> {
     let query = this.db
       .selectFrom('sales_history')
-      .innerJoin('skus', 'skus.id', 'sales_history.sku_id')
-      .innerJoin('marketplaces', 'marketplaces.id', 'sales_history.marketplace_id')
+      .innerJoin('skus', 'skus.id', 'sales_history.skuId')
+      .innerJoin('marketplaces', 'marketplaces.id', 'sales_history.marketplaceId')
       .select([
-        'skus.code as sku_code',
+        'skus.code as skuCode',
         sql<string>`to_char(sales_history.period, 'YYYY-MM')`.as('period'),
         'sales_history.quantity',
-        'marketplaces.code as marketplace_code',
+        'marketplaces.code as marketplaceCode',
       ])
-      .where('sales_history.shop_id', '=', shopId);
+      .where('sales_history.shopId', '=', shopId);
 
     if (periodFrom) {
       query = query.where('sales_history.period', '>=', periodToDate(periodFrom));
@@ -395,9 +389,9 @@ export class SalesHistoryService {
       .execute();
 
     return rows.map((r) => ({
-      marketplace: r.marketplace_code,
+      marketplace: r.marketplaceCode,
       period: r.period,
-      sku: r.sku_code,
+      sku: r.skuCode,
       quantity: r.quantity,
     }));
   }

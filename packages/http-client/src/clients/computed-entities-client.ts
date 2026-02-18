@@ -1,3 +1,4 @@
+import type { ShopContextParams } from '@sales-planner/shared';
 import { BaseClient } from './base-client.js';
 
 /**
@@ -35,36 +36,27 @@ export class ComputedEntitiesClient extends BaseClient {
   /**
    * Get list of all available materialized views
    */
-  async getViews(shopId: number, tenantId: number): Promise<ViewInfo[]> {
+  async getViews(ctx: ShopContextParams): Promise<ViewInfo[]> {
     return this.request('GET', '/computed/views', {
-      params: {
-        shop_id: shopId,
-        tenant_id: tenantId,
-      },
+      params: ctx,
     });
   }
 
   /**
    * Refresh all materialized views in dependency order
    */
-  async refreshAll(shopId: number, tenantId: number): Promise<RefreshAllResult> {
+  async refreshAll(ctx: ShopContextParams): Promise<RefreshAllResult> {
     return this.request('POST', '/computed/refresh', {
-      params: {
-        shop_id: shopId,
-        tenant_id: tenantId,
-      },
+      params: ctx,
     });
   }
 
   /**
    * Refresh a single materialized view by name
    */
-  async refreshView(viewName: string, shopId: number, tenantId: number): Promise<RefreshResult> {
+  async refreshView(ctx: ShopContextParams, viewName: string): Promise<RefreshResult> {
     return this.request('POST', `/computed/refresh/${viewName}`, {
-      params: {
-        shop_id: shopId,
-        tenant_id: tenantId,
-      },
+      params: ctx,
     });
   }
 }

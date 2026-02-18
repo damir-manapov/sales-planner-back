@@ -6,8 +6,8 @@
 export interface CodedTitledShopScopedCreateDto {
   code: string;
   title: string;
-  shop_id: number;
-  tenant_id: number;
+  shopId: number;
+  tenantId: number;
 }
 
 /** Base update DTO with optional code and title */

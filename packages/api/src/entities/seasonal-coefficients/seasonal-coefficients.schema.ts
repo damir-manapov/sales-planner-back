@@ -13,7 +13,7 @@ const { id, code, month, flexibleMonth, coefficient, flexibleFloat } = zodSchema
 
 // Schema for requests (omitting shop_id and tenant_id)
 const CreateSeasonalCoefficientRequestSchema = z.object({
-  group_id: id(),
+  groupId: id(),
   month: month(),
   coefficient: coefficient(),
 });
@@ -22,9 +22,9 @@ const CreateSeasonalCoefficientRequestSchema = z.object({
 export const SeasonalCoefficientQuerySchema = PaginationQuerySchema;
 
 export const CreateSeasonalCoefficientSchema = z.object({
-  shop_id: id(),
-  tenant_id: id(),
-  group_id: id(),
+  shopId: id(),
+  tenantId: id(),
+  groupId: id(),
   month: month(),
   coefficient: coefficient(),
 });

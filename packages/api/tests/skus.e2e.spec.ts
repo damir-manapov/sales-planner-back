@@ -65,8 +65,8 @@ describe('SKUs (e2e)', () => {
       expect(sku).toHaveProperty('id');
       expect(sku.code).toBe(newSku.code);
       expect(sku.title).toBe(newSku.title);
-      expect(sku.shop_id).toBe(ctx.shop.id);
-      expect(sku.tenant_id).toBe(ctx.tenant.id);
+      expect(sku.shopId).toBe(ctx.shop.id);
+      expect(sku.tenantId).toBe(ctx.tenant.id);
     });
 
     it('should list SKUs', async () => {
@@ -281,8 +281,8 @@ describe('SKUs (e2e)', () => {
     it('should return 403 when accessing other tenant', async () => {
       await expectForbidden(() =>
         ctx.client.skus.getAll({
-          shop_id: otherCtx.shop.id,
-          tenant_id: otherCtx.tenant.id,
+          shopId: otherCtx.shop.id,
+          tenantId: otherCtx.tenant.id,
         }),
       );
     });
@@ -290,7 +290,7 @@ describe('SKUs (e2e)', () => {
     it('should return 403 when creating for other tenant', async () => {
       await expectForbidden(() =>
         ctx.client.skus.create(
-          { shop_id: ctx.shop.id, tenant_id: otherCtx.tenant.id },
+          { shopId: ctx.shop.id, tenantId: otherCtx.tenant.id },
           { code: 'FORBIDDEN-SKU', title: 'Should Fail' },
         ),
       );
@@ -306,8 +306,8 @@ describe('SKUs (e2e)', () => {
       await expectForbidden(() =>
         ctx.client.skus.getByCode(
           {
-            shop_id: ctx.shop.id,
-            tenant_id: otherCtx.tenant.id,
+            shopId: ctx.shop.id,
+            tenantId: otherCtx.tenant.id,
           },
           otherSku.code,
         ),
@@ -328,7 +328,7 @@ describe('SKUs (e2e)', () => {
 
       expect(sku1.code).toBe(sharedCode);
       expect(sku2.code).toBe(sharedCode);
-      expect(sku1.tenant_id).not.toBe(sku2.tenant_id);
+      expect(sku1.tenantId).not.toBe(sku2.tenantId);
     });
   });
 
@@ -389,19 +389,19 @@ describe('SKUs (e2e)', () => {
 
       expect(result.created).toBe(1);
       expect(result.updated).toBe(0);
-      expect(result.categories_created).toBe(1);
-      expect(result.groups_created).toBe(0);
-      expect(result.statuses_created).toBe(0);
-      expect(result.suppliers_created).toBe(0);
+      expect(result.categoriesCreated).toBe(1);
+      expect(result.groupsCreated).toBe(0);
+      expect(result.statusesCreated).toBe(0);
+      expect(result.suppliersCreated).toBe(0);
 
       const sku = (await ctx.client.skus.getAll(ctx.shopContext)).items.find(
         (s) => s.code === normalizeSkuCode(code),
       );
       expect(sku).toBeDefined();
-      expect(sku?.category_id).toBeDefined();
-      expect(sku?.group_id ?? null).toBeNull();
-      expect(sku?.status_id ?? null).toBeNull();
-      expect(sku?.supplier_id ?? null).toBeNull();
+      expect(sku?.categoryId).toBeDefined();
+      expect(sku?.groupId ?? null).toBeNull();
+      expect(sku?.statusId ?? null).toBeNull();
+      expect(sku?.supplierId ?? null).toBeNull();
 
       const json = await ctx.client.skus.exportJson(ctx.shopContext);
       const exported = json.find((s) => s.code === normalizeSkuCode(code));
@@ -458,18 +458,18 @@ describe('SKUs (e2e)', () => {
 
       expect(result.created).toBe(1);
       expect(result.updated).toBe(0);
-      expect(result.categories_created).toBe(0);
-      expect(result.groups_created).toBe(0);
-      expect(result.statuses_created).toBe(0);
-      expect(result.suppliers_created).toBe(0);
+      expect(result.categoriesCreated).toBe(0);
+      expect(result.groupsCreated).toBe(0);
+      expect(result.statusesCreated).toBe(0);
+      expect(result.suppliersCreated).toBe(0);
 
       const { items: skus } = await ctx.client.skus.getAll(ctx.shopContext);
       const createdSku = skus.find((s) => s.code === normalizeSkuCode(code));
       expect(createdSku).toBeDefined();
-      expect(createdSku?.category_id ?? null).toBeNull();
-      expect(createdSku?.group_id ?? null).toBeNull();
-      expect(createdSku?.status_id ?? null).toBeNull();
-      expect(createdSku?.supplier_id ?? null).toBeNull();
+      expect(createdSku?.categoryId ?? null).toBeNull();
+      expect(createdSku?.groupId ?? null).toBeNull();
+      expect(createdSku?.statusId ?? null).toBeNull();
+      expect(createdSku?.supplierId ?? null).toBeNull();
     });
 
     it('should auto-create and link related entities on CSV import', async () => {
@@ -484,18 +484,18 @@ describe('SKUs (e2e)', () => {
 
       expect(result.created).toBe(1);
       expect(result.updated).toBe(0);
-      expect(result.categories_created).toBe(1);
-      expect(result.groups_created).toBe(1);
-      expect(result.statuses_created).toBe(1);
-      expect(result.suppliers_created).toBe(1);
+      expect(result.categoriesCreated).toBe(1);
+      expect(result.groupsCreated).toBe(1);
+      expect(result.statusesCreated).toBe(1);
+      expect(result.suppliersCreated).toBe(1);
 
       const { items: skus } = await ctx.client.skus.getAll(ctx.shopContext);
       const createdSku = skus.find((s) => s.code === normalizeSkuCode(code));
       expect(createdSku).toBeDefined();
-      expect(createdSku?.category_id).toBeDefined();
-      expect(createdSku?.group_id).toBeDefined();
-      expect(createdSku?.status_id).toBeDefined();
-      expect(createdSku?.supplier_id).toBeDefined();
+      expect(createdSku?.categoryId).toBeDefined();
+      expect(createdSku?.groupId).toBeDefined();
+      expect(createdSku?.statusId).toBeDefined();
+      expect(createdSku?.supplierId).toBeDefined();
 
       const categoryEntity = await ctx.client.categories.getByCode(
         ctx.shopContext,
@@ -537,18 +537,18 @@ describe('SKUs (e2e)', () => {
 
       expect(result.created).toBe(1);
       expect(result.updated).toBe(0);
-      expect(result.categories_created).toBe(0);
-      expect(result.groups_created).toBe(0);
-      expect(result.statuses_created).toBe(0);
-      expect(result.suppliers_created).toBe(0);
+      expect(result.categoriesCreated).toBe(0);
+      expect(result.groupsCreated).toBe(0);
+      expect(result.statusesCreated).toBe(0);
+      expect(result.suppliersCreated).toBe(0);
 
       const { items: skus } = await ctx.client.skus.getAll(ctx.shopContext);
       const createdSku = skus.find((s) => s.code === normalizeSkuCode(code));
       expect(createdSku).toBeDefined();
-      expect(createdSku?.category_id).toBe(seedSku.category_id);
-      expect(createdSku?.group_id).toBe(seedSku.group_id);
-      expect(createdSku?.status_id).toBe(seedSku.status_id);
-      expect(createdSku?.supplier_id).toBe(seedSku.supplier_id);
+      expect(createdSku?.categoryId).toBe(seedSku.categoryId);
+      expect(createdSku?.groupId).toBe(seedSku.groupId);
+      expect(createdSku?.statusId).toBe(seedSku.statusId);
+      expect(createdSku?.supplierId).toBe(seedSku.supplierId);
     });
 
     it('should update relationships via import', async () => {
@@ -570,10 +570,10 @@ describe('SKUs (e2e)', () => {
 
       expect(result.created).toBe(0);
       expect(result.updated).toBe(1);
-      expect(result.categories_created).toBe(1);
-      expect(result.groups_created).toBe(1);
-      expect(result.statuses_created).toBe(1);
-      expect(result.suppliers_created).toBe(1);
+      expect(result.categoriesCreated).toBe(1);
+      expect(result.groupsCreated).toBe(1);
+      expect(result.statusesCreated).toBe(1);
+      expect(result.suppliersCreated).toBe(1);
 
       const sku = (await ctx.client.skus.getAll(ctx.shopContext)).items.find(
         (s) => s.code === normalizeSkuCode(code),
@@ -585,10 +585,10 @@ describe('SKUs (e2e)', () => {
       const stsB = await ctx.client.statuses.getByCode(ctx.shopContext, normalizeCode(statusB));
       const supB = await ctx.client.suppliers.getByCode(ctx.shopContext, normalizeCode(supplierB));
 
-      expect(sku.category_id).toBe(catB.id);
-      expect(sku.group_id).toBe(grpB.id);
-      expect(sku.status_id).toBe(stsB.id);
-      expect(sku.supplier_id).toBe(supB.id);
+      expect(sku.categoryId).toBe(catB.id);
+      expect(sku.groupId).toBe(grpB.id);
+      expect(sku.statusId).toBe(stsB.id);
+      expect(sku.supplierId).toBe(supB.id);
     });
 
     it('should export SKUs to JSON', async () => {
@@ -688,7 +688,7 @@ describe('SKUs (e2e)', () => {
       let ownerTenantId: number;
       let ownerShopId: number;
 
-      const ownerCtx = () => ({ shop_id: ownerShopId, tenant_id: ownerTenantId });
+      const ownerCtx = () => ({ shopId: ownerShopId, tenantId: ownerTenantId });
 
       beforeAll(async () => {
         const ownerSetup = await ctx.getSystemClient().tenants.createWithShopAndUser({
@@ -763,7 +763,7 @@ describe('SKUs (e2e)', () => {
         editorUserId = editorUser.id;
 
         const editorApiKey = await ctx.getSystemClient().apiKeys.create({
-          user_id: editorUserId,
+          userId: editorUserId,
           name: 'Editor Key',
         });
         editorClient = new SalesPlannerClient({ baseUrl, apiKey: editorApiKey.key });
@@ -772,10 +772,10 @@ describe('SKUs (e2e)', () => {
         const editorRole = roles.items.find((r) => r.name === ROLE_NAMES.EDITOR);
         if (!editorRole) throw new Error('Editor role not found');
         await ctx.getSystemClient().userRoles.create({
-          user_id: editorUserId,
-          role_id: editorRole.id,
-          tenant_id: ctx.tenant.id,
-          shop_id: ctx.shop.id,
+          userId: editorUserId,
+          roleId: editorRole.id,
+          tenantId: ctx.tenant.id,
+          shopId: ctx.shop.id,
         });
       });
 
@@ -850,7 +850,7 @@ describe('SKUs (e2e)', () => {
         viewerUserId = viewerUser.id;
 
         const viewerApiKey = await ctx.getSystemClient().apiKeys.create({
-          user_id: viewerUserId,
+          userId: viewerUserId,
           name: 'Viewer Key',
         });
         viewerClient = new SalesPlannerClient({ baseUrl, apiKey: viewerApiKey.key });
@@ -859,10 +859,10 @@ describe('SKUs (e2e)', () => {
         const viewerRole = roles.items.find((r) => r.name === ROLE_NAMES.VIEWER);
         if (!viewerRole) throw new Error('Viewer role not found');
         await ctx.getSystemClient().userRoles.create({
-          user_id: viewerUserId,
-          role_id: viewerRole.id,
-          tenant_id: ctx.tenant.id,
-          shop_id: ctx.shop.id,
+          userId: viewerUserId,
+          roleId: viewerRole.id,
+          tenantId: ctx.tenant.id,
+          shopId: ctx.shop.id,
         });
       });
 

@@ -1,14 +1,14 @@
 // Competitor sales
 export interface CreateCompetitorSaleRequest {
-  competitor_product_id: number;
+  competitorProductId: number;
   period: string; // YYYY-MM format
   quantity: number;
 }
 
 export interface CreateCompetitorSaleDto {
-  tenant_id: number;
-  shop_id: number;
-  competitor_product_id: number;
+  tenantId: number;
+  shopId: number;
+  competitorProductId: number;
   period: string;
   quantity: number;
 }
@@ -28,8 +28,8 @@ export interface ImportCompetitorSaleItem {
 
 export interface CompetitorSaleQuery {
   ids?: number[];
-  period_from?: string;
-  period_to?: string;
+  periodFrom?: string;
+  periodTo?: string;
   limit?: number;
   offset?: number;
 }

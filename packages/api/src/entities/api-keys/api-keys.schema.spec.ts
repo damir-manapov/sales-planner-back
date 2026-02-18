@@ -3,9 +3,9 @@ import { CreateApiKeySchema, UpdateApiKeySchema } from './api-keys.schema.js';
 
 describe('ApiKey Schemas', () => {
   describe('CreateApiKeySchema', () => {
-    it('should validate valid API key creation with user_id only', () => {
+    it('should validate valid API key creation with userId only', () => {
       const data = {
-        user_id: 1,
+        userId: 1,
       };
 
       const result = CreateApiKeySchema.parse(data);
@@ -15,9 +15,9 @@ describe('ApiKey Schemas', () => {
 
     it('should validate with all optional fields', () => {
       const data = {
-        user_id: 1,
+        userId: 1,
         name: 'Production Key',
-        expires_at: '2025-12-31T23:59:59Z',
+        expiresAt: '2025-12-31T23:59:59Z',
       };
 
       const result = CreateApiKeySchema.parse(data);
@@ -25,35 +25,35 @@ describe('ApiKey Schemas', () => {
       expect(result).toEqual(data);
     });
 
-    it('should reject negative user_id', () => {
+    it('should reject negative userId', () => {
       const data = {
-        user_id: -1,
+        userId: -1,
       };
 
       expect(() => CreateApiKeySchema.parse(data)).toThrow();
     });
 
-    it('should reject zero user_id', () => {
+    it('should reject zero userId', () => {
       const data = {
-        user_id: 0,
+        userId: 0,
       };
 
       expect(() => CreateApiKeySchema.parse(data)).toThrow();
     });
 
-    it('should reject invalid expires_at format', () => {
+    it('should reject invalid expiresAt format', () => {
       const data = {
-        user_id: 1,
-        expires_at: '2025-12-31', // Not ISO datetime
+        userId: 1,
+        expiresAt: '2025-12-31', // Not ISO datetime
       };
 
       expect(() => CreateApiKeySchema.parse(data)).toThrow();
     });
 
-    it('should accept valid ISO datetime for expires_at', () => {
+    it('should accept valid ISO datetime for expiresAt', () => {
       const data = {
-        user_id: 1,
-        expires_at: '2025-12-31T00:00:00.000Z',
+        userId: 1,
+        expiresAt: '2025-12-31T00:00:00.000Z',
       };
 
       const result = CreateApiKeySchema.parse(data);
@@ -71,8 +71,8 @@ describe('ApiKey Schemas', () => {
       expect(result).toEqual(data);
     });
 
-    it('should validate partial update with expires_at only', () => {
-      const data = { expires_at: '2026-12-31T23:59:59Z' };
+    it('should validate partial update with expiresAt only', () => {
+      const data = { expiresAt: '2026-12-31T23:59:59Z' };
 
       const result = UpdateApiKeySchema.parse(data);
 
@@ -95,16 +95,16 @@ describe('ApiKey Schemas', () => {
       expect(result).toEqual(data);
     });
 
-    it('should allow null expires_at', () => {
-      const data = { expires_at: null };
+    it('should allow null expiresAt', () => {
+      const data = { expiresAt: null };
 
       const result = UpdateApiKeySchema.parse(data);
 
       expect(result).toEqual(data);
     });
 
-    it('should reject invalid expires_at format on update', () => {
-      const data = { expires_at: 'not-a-datetime' };
+    it('should reject invalid expiresAt format on update', () => {
+      const data = { expiresAt: 'not-a-datetime' };
 
       expect(() => UpdateApiKeySchema.parse(data)).toThrow();
     });

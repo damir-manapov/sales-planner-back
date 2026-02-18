@@ -65,10 +65,10 @@ export class UserRolesController {
 
     // Filter by additional params if provided
     if (userId) {
-      roles = roles.filter((r) => r.user_id === Number(userId));
+      roles = roles.filter((r) => r.userId === Number(userId));
     }
     if (roleId) {
-      roles = roles.filter((r) => r.role_id === Number(roleId));
+      roles = roles.filter((r) => r.roleId === Number(roleId));
     }
 
     return {
@@ -91,7 +91,7 @@ export class UserRolesController {
 
     // Validate access
     if (!req.user.isSystemAdmin) {
-      if (!userRole.tenant_id || !hasTenantAccess(req.user, userRole.tenant_id)) {
+      if (!userRole.tenantId || !hasTenantAccess(req.user, userRole.tenantId)) {
         throw new ForbiddenException('Access to this user role is not allowed');
       }
     }
@@ -106,10 +106,10 @@ export class UserRolesController {
   ): Promise<UserRole> {
     // Validate user can assign roles in this tenant
     if (!req.user.isSystemAdmin) {
-      if (!dto.tenant_id) {
-        throw new ForbiddenException('tenant_id is required');
+      if (!dto.tenantId) {
+        throw new ForbiddenException('tenantId is required');
       }
-      validateTenantAdminAccess(req.user, dto.tenant_id);
+      validateTenantAdminAccess(req.user, dto.tenantId);
     }
 
     return this.userRolesService.create(dto);
@@ -127,7 +127,7 @@ export class UserRolesController {
 
     // Validate access
     if (!req.user.isSystemAdmin) {
-      if (!userRole.tenant_id || !hasTenantAccess(req.user, userRole.tenant_id)) {
+      if (!userRole.tenantId || !hasTenantAccess(req.user, userRole.tenantId)) {
         throw new ForbiddenException('Cannot delete user role from another tenant');
       }
     }

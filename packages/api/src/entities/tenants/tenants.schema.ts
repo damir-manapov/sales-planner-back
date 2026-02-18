@@ -13,19 +13,19 @@ const { title, email, name, id } = zodSchemas;
 // Request schemas (for HTTP layer)
 export const CreateTenantRequestSchema = z.object({
   title: title(),
-  owner_id: id().optional(),
+  ownerId: id().optional(),
 });
 
 // Zod schemas
 export const CreateTenantSchema = z.object({
   title: title(),
-  owner_id: id().optional(),
-  created_by: id().optional(),
+  ownerId: id().optional(),
+  createdBy: id().optional(),
 });
 
 export const UpdateTenantSchema = z.object({
   title: title().optional(),
-  owner_id: id().nullable().optional(),
+  ownerId: id().nullable().optional(),
 });
 
 export const CreateTenantWithShopSchema = z.object({

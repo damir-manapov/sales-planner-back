@@ -1,6 +1,6 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { Kysely, PostgresDialect } from 'kysely';
+import { CamelCasePlugin, Kysely, PostgresDialect } from 'kysely';
 import pg from 'pg';
 import { DB } from './database.types.js';
 
@@ -38,6 +38,7 @@ export class DatabaseService extends Kysely<DB> implements OnModuleDestroy {
       dialect: new PostgresDialect({
         pool: new pg.Pool(poolConfig),
       }),
+      plugins: [new CamelCasePlugin()],
     });
   }
 

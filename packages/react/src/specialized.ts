@@ -61,7 +61,7 @@ export function useSkuMetrics(
   const client = useSalesPlannerClient();
   return useQuery({
     queryKey: queryKeys.skuMetricsList(ctx, query as Record<string, unknown> | undefined),
-    queryFn: () => client.skuMetrics.list(ctx.shopId, ctx.tenantId, query),
+    queryFn: () => client.skuMetrics.list(ctx, query),
     ...options,
   });
 }
@@ -74,7 +74,7 @@ export function useSkuMetricsById(
   const client = useSalesPlannerClient();
   return useQuery({
     queryKey: queryKeys.skuMetricsDetail(ctx, id),
-    queryFn: () => client.skuMetrics.get(id, ctx.shopId, ctx.tenantId),
+    queryFn: () => client.skuMetrics.get(ctx, id),
     ...options,
   });
 }
@@ -87,7 +87,7 @@ export function useSkuMetricsByAbcClass(
   const client = useSalesPlannerClient();
   return useQuery({
     queryKey: queryKeys.skuMetricsAbc(ctx, abcClass),
-    queryFn: () => client.skuMetrics.getByAbcClass(abcClass, ctx.shopId, ctx.tenantId),
+    queryFn: () => client.skuMetrics.getByAbcClass(ctx, abcClass),
     ...options,
   });
 }
@@ -99,7 +99,7 @@ export function useSkuMetricsExportCsv(
   const client = useSalesPlannerClient();
   return useQuery({
     queryKey: [...queryKeys.skuMetrics(ctx), 'export', 'csv'] as const,
-    queryFn: () => client.skuMetrics.exportCsv(ctx.shopId, ctx.tenantId),
+    queryFn: () => client.skuMetrics.exportCsv(ctx),
     enabled: false,
     ...options,
   });
@@ -114,7 +114,7 @@ export function useComputedViews(
   const client = useSalesPlannerClient();
   return useQuery({
     queryKey: [...queryKeys.computed(ctx), 'views'] as const,
-    queryFn: () => client.computed.getViews(ctx.shopId, ctx.tenantId),
+    queryFn: () => client.computed.getViews(ctx),
     ...options,
   });
 }
@@ -126,7 +126,7 @@ export function useRefreshAllViews(
   const client = useSalesPlannerClient();
   const queryClient = useQueryClient();
   return useMutation<RefreshAllResult, Error, void>({
-    mutationFn: () => client.computed.refreshAll(ctx.shopId, ctx.tenantId),
+    mutationFn: () => client.computed.refreshAll(ctx),
     onSuccess: () => {
       // Refresh sku-metrics cache since views were refreshed
       queryClient.invalidateQueries({ queryKey: queryKeys.skuMetrics(ctx) });

@@ -46,7 +46,7 @@ export class UserShopsController {
     // Tenant admins need to filter by shop within their tenant
     if (shopId) {
       const shop = await this.shopsService.findById(Number(shopId));
-      if (!shop || !hasTenantAccess(req.user, shop.tenant_id)) {
+      if (!shop || !hasTenantAccess(req.user, shop.tenantId)) {
         throw new ForbiddenException('Access to this shop is not allowed');
       }
       return this.userShopsService.findByShopId(Number(shopId));
@@ -75,8 +75,8 @@ export class UserShopsController {
 
     // Validate access via shop's tenant
     if (!req.user.isSystemAdmin) {
-      const shop = await this.shopsService.findById(userShop.shop_id);
-      if (!shop || !hasTenantAccess(req.user, shop.tenant_id)) {
+      const shop = await this.shopsService.findById(userShop.shopId);
+      if (!shop || !hasTenantAccess(req.user, shop.tenantId)) {
         throw new ForbiddenException('Access to this user-shop is not allowed');
       }
     }
@@ -91,11 +91,11 @@ export class UserShopsController {
   ): Promise<UserShop> {
     // Validate user can manage this shop
     if (!req.user.isSystemAdmin) {
-      const shop = await this.shopsService.findById(dto.shop_id);
+      const shop = await this.shopsService.findById(dto.shopId);
       if (!shop) {
-        throw new NotFoundException(`Shop with id ${dto.shop_id} not found`);
+        throw new NotFoundException(`Shop with id ${dto.shopId} not found`);
       }
-      validateTenantAdminAccess(req.user, shop.tenant_id);
+      validateTenantAdminAccess(req.user, shop.tenantId);
     }
 
     return this.userShopsService.create(dto);
@@ -113,8 +113,8 @@ export class UserShopsController {
 
     // Validate access via shop's tenant
     if (!req.user.isSystemAdmin) {
-      const shop = await this.shopsService.findById(userShop.shop_id);
-      if (!shop || !hasTenantAccess(req.user, shop.tenant_id)) {
+      const shop = await this.shopsService.findById(userShop.shopId);
+      if (!shop || !hasTenantAccess(req.user, shop.tenantId)) {
         throw new ForbiddenException('Cannot delete user-shop from another tenant');
       }
     }

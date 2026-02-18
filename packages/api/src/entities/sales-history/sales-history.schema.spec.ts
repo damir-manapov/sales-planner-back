@@ -10,8 +10,8 @@ describe('Sales History Schemas', () => {
   describe('PeriodQuerySchema', () => {
     it('should validate valid period queries', () => {
       const data = {
-        period_from: '2024-01',
-        period_to: '2024-12',
+        periodFrom: '2024-01',
+        periodTo: '2024-12',
       };
 
       const result = PeriodQuerySchema.parse(data);
@@ -19,16 +19,16 @@ describe('Sales History Schemas', () => {
       expect(result).toEqual(data);
     });
 
-    it('should allow optional period_from', () => {
-      const data = { period_to: '2024-12' };
+    it('should allow optional periodFrom', () => {
+      const data = { periodTo: '2024-12' };
 
       const result = PeriodQuerySchema.parse(data);
 
       expect(result).toEqual(data);
     });
 
-    it('should allow optional period_to', () => {
-      const data = { period_from: '2024-01' };
+    it('should allow optional periodTo', () => {
+      const data = { periodFrom: '2024-01' };
 
       const result = PeriodQuerySchema.parse(data);
 
@@ -44,25 +44,25 @@ describe('Sales History Schemas', () => {
     });
 
     it('should reject invalid period format - missing zero padding', () => {
-      const data = { period_from: '2024-1' };
+      const data = { periodFrom: '2024-1' };
 
       expect(() => PeriodQuerySchema.parse(data)).toThrow();
     });
 
     it('should reject invalid period format - invalid month', () => {
-      const data = { period_from: '2024-13' };
+      const data = { periodFrom: '2024-13' };
 
       expect(() => PeriodQuerySchema.parse(data)).toThrow();
     });
 
     it('should reject invalid period format - zero month', () => {
-      const data = { period_from: '2024-00' };
+      const data = { periodFrom: '2024-00' };
 
       expect(() => PeriodQuerySchema.parse(data)).toThrow();
     });
 
     it('should reject invalid period format - wrong separator', () => {
-      const data = { period_from: '2024/01' };
+      const data = { periodFrom: '2024/01' };
 
       expect(() => PeriodQuerySchema.parse(data)).toThrow();
     });
@@ -71,12 +71,12 @@ describe('Sales History Schemas', () => {
   describe('CreateSalesHistorySchema', () => {
     it('should validate valid sales history data', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        sku_id: 100,
+        shopId: 1,
+        tenantId: 1,
+        skuId: 100,
         period: '2024-01',
         quantity: 50,
-        marketplace_id: 1,
+        marketplaceId: 1,
       };
 
       const result = CreateSalesHistorySchema.parse(data);
@@ -86,12 +86,12 @@ describe('Sales History Schemas', () => {
 
     it('should accept zero quantity', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        sku_id: 100,
+        shopId: 1,
+        tenantId: 1,
+        skuId: 100,
         period: '2024-01',
         quantity: 0,
-        marketplace_id: 1,
+        marketplaceId: 1,
       };
 
       const result = CreateSalesHistorySchema.parse(data);
@@ -101,12 +101,12 @@ describe('Sales History Schemas', () => {
 
     it('should reject negative quantity', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        sku_id: 100,
+        shopId: 1,
+        tenantId: 1,
+        skuId: 100,
         period: '2024-01',
         quantity: -5,
-        marketplace_id: 1,
+        marketplaceId: 1,
       };
 
       expect(() => CreateSalesHistorySchema.parse(data)).toThrow();
@@ -114,12 +114,12 @@ describe('Sales History Schemas', () => {
 
     it('should reject non-integer quantity', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        sku_id: 100,
+        shopId: 1,
+        tenantId: 1,
+        skuId: 100,
         period: '2024-01',
         quantity: 5.5,
-        marketplace_id: 1,
+        marketplaceId: 1,
       };
 
       expect(() => CreateSalesHistorySchema.parse(data)).toThrow();
@@ -127,35 +127,35 @@ describe('Sales History Schemas', () => {
 
     it('should reject invalid period format', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        sku_id: 100,
+        shopId: 1,
+        tenantId: 1,
+        skuId: 100,
         period: '2024-1',
         quantity: 50,
-        marketplace_id: 1,
+        marketplaceId: 1,
       };
 
       expect(() => CreateSalesHistorySchema.parse(data)).toThrow();
     });
 
-    it('should reject negative shop_id', () => {
+    it('should reject negative shopId', () => {
       const data = {
-        shop_id: -1,
-        tenant_id: 1,
-        sku_id: 100,
+        shopId: -1,
+        tenantId: 1,
+        skuId: 100,
         period: '2024-01',
         quantity: 50,
-        marketplace_id: 1,
+        marketplaceId: 1,
       };
 
       expect(() => CreateSalesHistorySchema.parse(data)).toThrow();
     });
 
-    it('should reject missing marketplace_id', () => {
+    it('should reject missing marketplaceId', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        sku_id: 100,
+        shopId: 1,
+        tenantId: 1,
+        skuId: 100,
         period: '2024-01',
         quantity: 50,
       };
@@ -168,12 +168,12 @@ describe('Sales History Schemas', () => {
 
       months.forEach((month) => {
         const data = {
-          shop_id: 1,
-          tenant_id: 1,
-          sku_id: 100,
+          shopId: 1,
+          tenantId: 1,
+          skuId: 100,
           period: `2024-${month}`,
           quantity: 50,
-          marketplace_id: 1,
+          marketplaceId: 1,
         };
 
         expect(() => CreateSalesHistorySchema.parse(data)).not.toThrow();

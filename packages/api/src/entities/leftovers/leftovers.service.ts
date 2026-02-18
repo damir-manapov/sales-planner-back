@@ -25,8 +25,8 @@ export type { Leftover };
 type LeftoverRow = Selectable<LeftoversTable>;
 
 interface PreparedLeftoverItem extends ImportLeftoverItem {
-  sku_id: number;
-  warehouse_id: number;
+  skuId: number;
+  warehouseId: number;
   periodDate: Date;
 }
 
@@ -63,7 +63,7 @@ export class LeftoversService {
     const rows = await this.db
       .selectFrom('leftovers')
       .selectAll()
-      .where('shop_id', '=', shopId)
+      .where('shopId', '=', shopId)
       .execute();
     return rows.map((r) => this.mapRow(r));
   }
@@ -72,15 +72,9 @@ export class LeftoversService {
     shopId: number,
     query?: LeftoverQuery,
   ): Promise<PaginatedResponse<Leftover>> {
-    const {
-      period_from: periodFrom,
-      period_to: periodTo,
-      ids,
-      limit = 100,
-      offset = 0,
-    } = query ?? {};
+    const { periodFrom, periodTo, ids, limit = 100, offset = 0 } = query ?? {};
 
-    let baseQuery = this.db.selectFrom('leftovers').where('shop_id', '=', shopId);
+    let baseQuery = this.db.selectFrom('leftovers').where('shopId', '=', shopId);
 
     if (ids && ids.length > 0) {
       baseQuery = baseQuery.where('id', 'in', ids);
@@ -116,13 +110,13 @@ export class LeftoversService {
       const result = await this.db
         .insertInto('leftovers')
         .values({
-          shop_id: dto.shop_id,
-          tenant_id: dto.tenant_id,
-          warehouse_id: dto.warehouse_id,
-          sku_id: dto.sku_id,
+          shopId: dto.shopId,
+          tenantId: dto.tenantId,
+          warehouseId: dto.warehouseId,
+          skuId: dto.skuId,
           period: periodToDate(dto.period),
           quantity: dto.quantity,
-          updated_at: new Date(),
+          updatedAt: new Date(),
         })
         .returningAll()
         .executeTakeFirstOrThrow();
@@ -132,7 +126,7 @@ export class LeftoversService {
       if (isUniqueViolation(error)) {
         throw new DuplicateResourceException(
           'Leftover',
-          `SKU ${dto.sku_id} warehouse ${dto.warehouse_id} period ${dto.period}`,
+          `SKU ${dto.skuId} warehouse ${dto.warehouseId} period ${dto.period}`,
           'this shop',
         );
       }
@@ -143,7 +137,7 @@ export class LeftoversService {
   async update(id: number, dto: UpdateLeftoverDto): Promise<Leftover> {
     const result = await this.db
       .updateTable('leftovers')
-      .set({ ...dto, updated_at: new Date() })
+      .set({ ...dto, updatedAt: new Date() })
       .where('id', '=', id)
       .returningAll()
       .executeTakeFirst();
@@ -160,7 +154,7 @@ export class LeftoversService {
   async deleteByShopId(shopId: number): Promise<number> {
     const result = await this.db
       .deleteFrom('leftovers')
-      .where('shop_id', '=', shopId)
+      .where('shopId', '=', shopId)
       .executeTakeFirst();
     return Number(result.numDeletedRows);
   }
@@ -170,18 +164,18 @@ export class LeftoversService {
     const result = await this.db
       .insertInto('leftovers')
       .values({
-        shop_id: dto.shop_id,
-        tenant_id: dto.tenant_id,
-        warehouse_id: dto.warehouse_id,
-        sku_id: dto.sku_id,
+        shopId: dto.shopId,
+        tenantId: dto.tenantId,
+        warehouseId: dto.warehouseId,
+        skuId: dto.skuId,
         period: periodDate,
         quantity: dto.quantity,
-        updated_at: new Date(),
+        updatedAt: new Date(),
       })
       .onConflict((oc) =>
-        oc.columns(['shop_id', 'warehouse_id', 'sku_id', 'period']).doUpdateSet({
+        oc.columns(['shopId', 'warehouseId', 'skuId', 'period']).doUpdateSet({
           quantity: dto.quantity,
-          updated_at: new Date(),
+          updatedAt: new Date(),
         }),
       )
       .returningAll()
@@ -253,8 +247,8 @@ export class LeftoversService {
 
       validItems.push({
         ...item,
-        sku_id: skuId,
-        warehouse_id: warehouseId,
+        skuId: skuId,
+        warehouseId: warehouseId,
         periodDate: periodToDate(item.period),
       });
     });
@@ -265,22 +259,22 @@ export class LeftoversService {
 
     // Bulk upsert
     const values = validItems.map((item) => ({
-      shop_id: shopId,
-      tenant_id: tenantId,
-      sku_id: item.sku_id,
-      warehouse_id: item.warehouse_id,
+      shopId: shopId,
+      tenantId: tenantId,
+      skuId: item.skuId,
+      warehouseId: item.warehouseId,
       period: item.periodDate,
       quantity: item.quantity,
-      updated_at: new Date(),
+      updatedAt: new Date(),
     }));
 
     await this.db
       .insertInto('leftovers')
       .values(values)
       .onConflict((oc) =>
-        oc.columns(['shop_id', 'warehouse_id', 'sku_id', 'period']).doUpdateSet((eb) => ({
+        oc.columns(['shopId', 'warehouseId', 'skuId', 'period']).doUpdateSet((eb) => ({
           quantity: eb.ref('excluded.quantity'),
-          updated_at: new Date(),
+          updatedAt: new Date(),
         })),
       )
       .execute();
@@ -299,15 +293,15 @@ export class LeftoversService {
   ): Promise<LeftoverExportItem[]> {
     let query = this.db
       .selectFrom('leftovers')
-      .innerJoin('skus', 'skus.id', 'leftovers.sku_id')
-      .innerJoin('warehouses', 'warehouses.id', 'leftovers.warehouse_id')
+      .innerJoin('skus', 'skus.id', 'leftovers.skuId')
+      .innerJoin('warehouses', 'warehouses.id', 'leftovers.warehouseId')
       .select([
         'warehouses.code as warehouse',
         'skus.code as sku',
         'leftovers.period',
         'leftovers.quantity',
       ])
-      .where('leftovers.shop_id', '=', shopId);
+      .where('leftovers.shopId', '=', shopId);
 
     if (periodFrom) {
       query = query.where('leftovers.period', '>=', periodToDate(periodFrom));

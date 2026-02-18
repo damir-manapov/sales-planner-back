@@ -7,186 +7,202 @@ Shared types, DTOs, and entities for the Sales Planner API. This package provide
 ## Installation
 
 ```bash
-npm install @sales-planner/shared
-# or
 pnpm add @sales-planner/shared
 ```
 
-## Usage
+## Overview
 
 This package provides TypeScript types only (no runtime code). Types are the single source of truth and are validated at compile-time against the API's Zod schemas.
 
-## Type System
+### Request vs DTO pattern
 
 The package provides two type variants for each operation:
 
-**Request Types** - Used at HTTP boundary (may omit context fields):
+**Request Types** — used at the HTTP boundary (may omit context fields injected by the API):
+
 ```typescript
 export interface CreateSkuRequest {
   code: string;
   title: string;
-  title2?: string;  // optional extended title
-  // shop_id, tenant_id omitted - injected by API
+  title2?: string;
+  // shopId, tenantId omitted — injected by the API
 }
 ```
 
-**DTO Types** - Used in service layer (full data model):
+**DTO Types** — used in the service layer (full data model):
+
 ```typescript
-export interface CreateSkuDto {
-  code: string;
-  title: string;
-  title2?: string;
-  shop_id: number;
-  tenant_id: number;
+export interface CreateSkuDto extends CreateSkuRequest {
+  shopId: number;
+  tenantId: number;
 }
 ```
 
 For entities where Request and DTO are identical, Request is a type alias:
+
 ```typescript
-export interface CreateUserDto {
-  email: string;
-  name: string;
-}
+export interface CreateUserDto { email: string; name: string; }
 export type CreateUserRequest = CreateUserDto;
 ```
-
-## Usage
-
-```typescript
-import type { 
-  // Entities
-  User, Tenant, Shop, Sku, Brand, Category, Group, Status, Supplier, Warehouse,
-  SalesHistory, Leftover, SeasonalCoefficient, SkuCompetitorMapping, CompetitorSale,
-  Role, UserRole, ApiKey, Marketplace,
-
-  // Request types (HTTP layer)
-  CreateUserRequest, UpdateUserRequest,
-  CreateSkuRequest, UpdateSkuRequest,
-  CreateBrandRequest, UpdateBrandRequest,
-  CreateCategoryRequest, UpdateCategoryRequest,
-  CreateGroupRequest, UpdateGroupRequest,
-  CreateStatusRequest, UpdateStatusRequest,
-  CreateSupplierRequest, UpdateSupplierRequest,
-  CreateWarehouseRequest, UpdateWarehouseRequest,
-  CreateSalesHistoryRequest, UpdateSalesHistoryRequest,
-  CreateLeftoverRequest, UpdateLeftoverRequest,
-  CreateSeasonalCoefficientRequest, UpdateSeasonalCoefficientRequest,
-  CreateSkuCompetitorMappingRequest, UpdateSkuCompetitorMappingRequest,
-  CreateCompetitorSaleRequest, UpdateCompetitorSaleRequest,
-
-  // DTO types (Service layer)
-  CreateUserDto, UpdateUserDto,
-  CreateSkuDto, UpdateSkuDto,
-  CreateBrandDto, UpdateBrandDto,
-  CreateCategoryDto, UpdateCategoryDto,
-  CreateGroupDto, UpdateGroupDto,
-  CreateStatusDto, UpdateStatusDto,
-  CreateSupplierDto, UpdateSupplierDto,
-  CreateWarehouseDto, UpdateWarehouseDto,
-  CreateSalesHistoryDto, UpdateSalesHistoryDto,
-  CreateLeftoverDto, UpdateLeftoverDto,
-  CreateSeasonalCoefficientDto, UpdateSeasonalCoefficientDto,
-  CreateSkuCompetitorMappingDto, UpdateSkuCompetitorMappingDto,
-  CreateCompetitorSaleDto, UpdateCompetitorSaleDto,
-
-  // Import types
-  ImportSkuItem, ImportBrandItem, ImportCategoryItem, ImportGroupItem, ImportStatusItem,
-  ImportSupplierItem, ImportWarehouseItem, ImportSalesHistoryItem, ImportMarketplaceItem,
-  ImportLeftoverItem, ImportSeasonalCoefficientItem, ImportSkuCompetitorMappingItem, ImportCompetitorSaleItem,
-
-  // Query types
-  ShopContextParams, PaginationQuery, PeriodQuery, SalesHistoryQuery,
-  LeftoverQuery, CompetitorSaleQuery,
-
-  // Response types
-  PaginatedResponse,
-  UserWithRolesAndTenants, TenantWithShopAndApiKey,
-  ImportResult, DeleteDataResult,
-  SkuExportItem, BrandExportItem, CategoryExportItem, GroupExportItem, StatusExportItem,
-  SupplierExportItem, WarehouseExportItem, MarketplaceExportItem, SalesHistoryExportItem,
-  LeftoverExportItem, SeasonalCoefficientExportItem, SkuCompetitorMappingExportItem, CompetitorSaleExportItem
-} from '@sales-planner/shared';
-```
-
-## Marketplace IDs vs Codes
-
-The API uses **numeric IDs** internally for referential integrity:
-- `CreateSalesHistoryRequest.marketplace_id: number` - API uses numeric foreign keys
-- Import/Export use **marketplace codes** (strings) for user convenience
-- This pattern matches SKUs: IDs internally, codes for import/export
 
 ## Types Reference
 
 ### Entities
 
 | Type | Description |
-|------|-------------|
-| `User` | User account |
-| `Tenant` | Organization/company |
-| `Shop` | Store within a tenant |
-| `Sku` | Stock keeping unit (product variant) |
-| `Brand` | Product brand (shop-scoped) |
-| `Category` | Product category for classification (shop-scoped) |
-| `Group` | Product group for classification (shop-scoped) |
-| `Status` | Product status for classification (shop-scoped) |
-| `Supplier` | Product supplier (shop-scoped) |
-| `Warehouse` | Storage location (shop-scoped) |
-| `SalesHistory` | Sales record for a period (uses numeric marketplace_id) |
-| `Leftover` | Inventory leftover for a warehouse/sku/period |
-| `SeasonalCoefficient` | Seasonal sales coefficient for a group/month |
-| `SkuCompetitorMapping` | Mapping between our SKU and competitor's SKU code |
-| `CompetitorSale` | Competitor sales data (marketplace + marketplace_product_id + period) |
-| `Role` | Access role |
-| `UserRole` | User-role assignment |
-| `ApiKey` | API authentication key |
-| `Marketplace` | E-commerce platform (numeric ID, shop-scoped) |
-| `SkuMetrics` | Computed SKU metrics (read-only, from materialized view) |
+| --- | --- |
+| `ShopScopedBaseEntity` | Base — `id`, `shopId`, `tenantId`, `createdAt`, `updatedAt` |
+| `CodedShopScopedEntity` | Extends base + `code`, `title` |
+| `User` | `id`, `email`, `name`, `defaultShopId`, `createdAt`, `updatedAt` |
+| `Tenant` | `id`, `title`, `ownerId`, `createdBy`, `createdAt`, `updatedAt` |
+| `Shop` | `id`, `title`, `tenantId`, `createdAt`, `updatedAt` |
+| `Sku` | Extends `CodedShopScopedEntity` + `title2`, `categoryId`, `groupId`, `statusId`, `supplierId` |
+| `Brand` | `CodedShopScopedEntity` |
+| `Category` | `CodedShopScopedEntity` |
+| `Group` | `CodedShopScopedEntity` |
+| `Status` | `CodedShopScopedEntity` |
+| `Supplier` | `CodedShopScopedEntity` |
+| `Warehouse` | `CodedShopScopedEntity` |
+| `Marketplace` | `CodedShopScopedEntity` |
+| `SalesHistory` | `id`, `skuId`, `marketplaceId`, `period`, `quantity`, `shopId`, `tenantId` |
+| `Leftover` | `id`, `skuId`, `warehouseId`, `period`, `quantity`, `shopId`, `tenantId` |
+| `SeasonalCoefficient` | `id`, `groupId`, `month`, `coefficient`, `shopId`, `tenantId` |
+| `CompetitorProduct` | `id`, `marketplaceId`, `marketplaceProductId`, `title`, `brand`, `shopId`, `tenantId` |
+| `SkuCompetitorMapping` | `id`, `skuId`, `competitorProductId`, `shopId`, `tenantId` |
+| `CompetitorSale` | `id`, `competitorProductId`, `period`, `quantity`, `shopId`, `tenantId` |
+| `Role` | Predefined, read-only — `id`, `name`, `description` |
+| `ApiKey` | `id`, `userId`, `key`, `name`, `expiresAt`, `lastUsedAt` |
+| `UserShop` | `id`, `userId`, `shopId`, `createdAt`, `updatedAt` |
 
 ### Computed Entities (Read-Only)
 
 | Type | Description |
-|------|-------------|
-| `SkuMetrics` | Aggregated SKU metrics from materialized view |
-| `SkuMetrics.abc_class` | ABC classification: 'A' (top 20%), 'B' (next 30%), 'C' (bottom 50%) |
-| `SkuMetrics.sales_rank` | Sales rank within shop (1 = highest) |
-| `SkuMetrics.days_of_stock` | Estimated days of stock based on sales velocity |
-| `SkuMetrics.last_period_sales` | Total sales quantity for the last period |
+| --- | --- |
+| `SkuMetrics` | Materialized view — `skuId`, `skuCode`, `skuTitle`, `abcClass` (`A`/`B`/`C`), `salesRank`, `daysOfStock`, `lastPeriodSales`, `currentStock`, `computedAt`, etc. |
+| `SkuMetricsExportItem` | Export-friendly — `code`, `title`, `group`, `category`, `abcClass`, `salesRank`, `daysOfStock`, etc. |
+
+### DTOs — System
+
+| Type | Description |
+| --- | --- |
+| `CreateUserDto` / `CreateUserRequest` | `email`, `name`, `defaultShopId?` |
+| `UpdateUserDto` / `UpdateUserRequest` | `email?`, `name?`, `defaultShopId?` |
+| `CreateTenantDto` | `title`, `ownerId?`, `createdBy` |
+| `CreateTenantRequest` | `title`, `ownerId?` |
+| `UpdateTenantDto` / `UpdateTenantRequest` | `title?` |
+| `CreateTenantWithShopDto` / `CreateTenantWithShopRequest` | `title`, `shopTitle`, `userEmail`, `userName` |
+| `CreateShopDto` / `CreateShopRequest` | `title`, `tenantId` |
+| `UpdateShopDto` / `UpdateShopRequest` | `title?` |
+| `CreateApiKeyDto` / `CreateApiKeyRequest` | `userId`, `name?`, `expiresAt?` |
+| `UpdateApiKeyDto` / `UpdateApiKeyRequest` | `name?`, `expiresAt?` |
+| `CreateUserRoleDto` / `CreateUserRoleRequest` | `userId`, `roleId`, `tenantId`, `shopId?` |
+| `CreateUserShopDto` / `CreateUserShopRequest` | `userId`, `shopId` |
+
+### DTOs — Shop-Scoped
+
+Base DTO types for coded entities:
+
+| Type | Description |
+| --- | --- |
+| `CodedTitledCreateDto` | `code`, `title` |
+| `CodedTitledUpdateDto` | `code?`, `title?` |
+| `CodedTitledImportItem` | `code`, `title` + index signature |
+
+Each of `Brand`, `Category`, `Group`, `Status`, `Supplier`, `Warehouse`, `Marketplace` exports `Create*Dto`, `Create*Request`, `Update*Dto`, `Update*Request`, `Import*Item` as aliases of the base types.
+
+| Type | Description |
+| --- | --- |
+| `CreateSkuDto` / `CreateSkuRequest` | `code`, `title`, `title2?`, `categoryId?`, `groupId?`, `statusId?`, `supplierId?` |
+| `UpdateSkuDto` / `UpdateSkuRequest` | Same fields, all optional |
+| `ImportSkuItem` | Uses string codes — `category?`, `group?`, `status?`, `supplier?` |
+| `CreateSalesHistoryDto` / `CreateSalesHistoryRequest` | `skuId`, `marketplaceId`, `period`, `quantity` |
+| `UpdateSalesHistoryDto` | `quantity?` |
+| `ImportSalesHistoryItem` | `sku` (code), `marketplace` (code), `period`, `quantity` |
+| `CreateLeftoverDto` / `CreateLeftoverRequest` | `skuId`, `warehouseId`, `period`, `quantity` |
+| `UpdateLeftoverDto` | `quantity?` |
+| `ImportLeftoverItem` | `sku` (code), `warehouse` (code), `period`, `quantity` |
+| `CreateSeasonalCoefficientDto` / `CreateSeasonalCoefficientRequest` | `groupId`, `month`, `coefficient` |
+| `UpdateSeasonalCoefficientDto` | `coefficient?` |
+| `ImportSeasonalCoefficientItem` | `group` (code), `month`, `coefficient` |
+| `CreateCompetitorProductDto` / `CreateCompetitorProductRequest` | `marketplaceId`, `marketplaceProductId`, `title?`, `brand?` |
+| `UpdateCompetitorProductDto` | `title?`, `brand?` |
+| `ImportCompetitorProductItem` | `marketplace` (code), `marketplaceProductId`, `title?`, `brand?` |
+| `CreateSkuCompetitorMappingDto` / `CreateSkuCompetitorMappingRequest` | `skuId`, `competitorProductId` |
+| `UpdateSkuCompetitorMappingDto` | `competitorProductId?` |
+| `ImportSkuCompetitorMappingItem` | `sku` (code), `marketplace` (code), `marketplaceProductId` |
+| `CreateCompetitorSaleDto` / `CreateCompetitorSaleRequest` | `competitorProductId`, `period`, `quantity` |
+| `UpdateCompetitorSaleDto` | `quantity?` |
+| `ImportCompetitorSaleItem` | `marketplace` (code), `marketplaceProductId`, `period`, `quantity` |
 
 ### Query Types
 
 | Type | Description |
-|------|-------------|
-| `ShopContextParams` | `{ shop_id: number; tenant_id: number }` |
-| `PaginationQuery` | `{ limit?: number; offset?: number }` |
-| `PeriodQuery` | `{ period_from?: string; period_to?: string }` |
+| --- | --- |
+| `ShopContextParams` | `{ shopId: number; tenantId: number }` |
+| `PaginationQuery` | `{ limit?: number; offset?: number; ids?: number[] }` |
+| `PeriodQuery` | `{ periodFrom?: string; periodTo?: string }` — YYYY-MM |
 | `SalesHistoryQuery` | `PaginationQuery & PeriodQuery` |
 | `LeftoverQuery` | `PaginationQuery & PeriodQuery` |
 | `CompetitorSaleQuery` | `PaginationQuery & PeriodQuery` |
+| `PaginatedResponse<T>` | `{ items: T[]; total: number; limit: number; offset: number }` |
+| `GetUserRolesQuery` | `{ userId?: number; roleId?: number; tenantId?: number }` |
+| `GetUserShopsQuery` | `{ userId?: number; shopId?: number; tenantId?: number }` |
 
 ### Response Types
 
 | Type | Description |
-|------|-------------|| `PaginatedResponse<T>` | `{ items: T[]; total: number; limit: number; offset: number }` || `UserWithRolesAndTenants` | User with their roles and tenants |
-| `TenantWithShopAndApiKey` | Created tenant with shop and API key |
+| --- | --- |
+| `UserWithRolesAndTenants` | User + `roles: UserRole[]`, `tenants: TenantInfo[]` |
+| `UserRole` | `id`, `roleName`, `tenantId`, `tenant_title`, `shopId`, `shop_title` |
+| `TenantInfo` | `id`, `title`, `isOwner`, `shops: ShopInfo[]` |
+| `ShopInfo` | `id`, `title` |
+| `TenantWithShopAndApiKey` | `tenant: Tenant`, `shop: { id, title, tenantId }`, `user: { id, email, name }`, `apiKey: string` |
+| `UserRoleResponse` | `id`, `userId`, `roleId`, `tenantId`, `shopId` |
 | `ImportResult` | `{ created: number; updated: number; errors: string[] }` |
-| `DeleteDataResult` | `{ skusDeleted, salesHistoryDeleted, leftoversDeleted, seasonalCoefficientsDeleted, skuCompetitorMappingsDeleted, competitorSalesDeleted, marketplacesDeleted, brandsDeleted, categoriesDeleted, groupsDeleted, statusesDeleted, suppliersDeleted, warehousesDeleted: number }` |
-| `SkuExportItem` | SKU data for export |
-| `BrandExportItem` | Brand data for export |
-| `CategoryExportItem` | Category data for export |
-| `GroupExportItem` | Group data for export |
-| `StatusExportItem` | Status data for export |
-| `SupplierExportItem` | Supplier data for export |
-| `WarehouseExportItem` | Warehouse data for export |
-| `MarketplaceExportItem` | Marketplace data for export |
-| `SalesHistoryExportItem` | Sales history data for export |
-| `LeftoverExportItem` | Leftover data for export |
-| `SeasonalCoefficientExportItem` | Seasonal coefficient data for export |
-| `SkuCompetitorMappingExportItem` | SKU competitor mapping data for export |
-| `CompetitorSaleExportItem` | Competitor sale data for export |
+| `SkuImportResult` | Extends `ImportResult` + `categoriesCreated`, `groupsCreated`, `statusesCreated`, `suppliersCreated` |
+| `SalesHistoryImportResult` | Extends `ImportResult` + `marketplacesCreated`, `skusCreated` |
+| `DeleteDataResult` | Counts for all entity types deleted (14 number fields) |
+
+### Export Types
+
+| Type | Description |
+| --- | --- |
+| `SkuExportItem` | `code`, `title`, `title2?`, `category?`, `group?`, `status?`, `supplier?` |
+| `BrandExportItem` | `= CodedTitledItem` |
+| `CategoryExportItem` | `= CodedTitledItem` |
+| `GroupExportItem` | `= CodedTitledItem` |
+| `StatusExportItem` | `= CodedTitledItem` |
+| `SupplierExportItem` | `= CodedTitledItem` |
+| `WarehouseExportItem` | `= CodedTitledItem` |
+| `MarketplaceExportItem` | `= CodedTitledItem` |
+| `SalesHistoryExportItem` | `sku`, `marketplace`, `period`, `quantity` |
+| `LeftoverExportItem` | `sku`, `warehouse`, `period`, `quantity` |
+| `SeasonalCoefficientExportItem` | `group`, `month`, `coefficient` |
+| `CompetitorProductExportItem` | `marketplace`, `marketplaceProductId`, `title?`, `brand?` |
+| `SkuCompetitorMappingExportItem` | `sku`, `marketplace`, `marketplaceProductId`, `title?` |
+| `CompetitorSaleExportItem` | `marketplace`, `marketplaceProductId`, `period`, `quantity` |
+
+### Metadata Types
+
+| Type | Description |
+| --- | --- |
+| `FieldType` | `'string' \| 'number' \| 'date' \| 'period'` |
+| `EntityFieldMetadata` | `name`, `type`, `description`, `required`, `example?` |
+| `EntityMetadata` | `name`, `description`, `fields: EntityFieldMetadata[]` |
+| `EntitiesMetadata` | Record with keys for all 14 shop-scoped entities → `EntityMetadata` |
+| `ENTITIES_METADATA` | **const** — the populated metadata object (only runtime export) |
+
+## Marketplace IDs vs Codes
+
+The API uses **numeric IDs** internally for referential integrity:
+- `CreateSalesHistoryRequest.marketplaceId: number` — API uses numeric foreign keys
+- Import/Export use **marketplace codes** (strings) for user convenience
+- This pattern matches SKUs: IDs internally, codes for import/export
 
 ## Related Packages
 
-- `@sales-planner/http-client` - HTTP client for the API (includes this package)
+- `@sales-planner/http-client` — HTTP client for the API (includes this package)
+- `@sales-planner/react` — React hooks powered by TanStack Query
 
 ## License
 

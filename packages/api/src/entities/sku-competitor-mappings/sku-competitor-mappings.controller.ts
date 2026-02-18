@@ -84,7 +84,7 @@ export class SkuCompetitorMappingsController {
     sendCsvExport(res, items, 'sku-competitor-mappings.csv', [
       'sku',
       'marketplace',
-      'marketplace_product_id',
+      'marketplaceProductId',
     ]);
   }
 
@@ -107,15 +107,15 @@ export class SkuCompetitorMappingsController {
     @ShopContext() ctx: ShopContextType,
     @Body(
       new ZodValidationPipe(
-        CreateSkuCompetitorMappingSchema.omit({ shop_id: true, tenant_id: true }),
+        CreateSkuCompetitorMappingSchema.omit({ shopId: true, tenantId: true }),
       ),
     )
     dto: CreateSkuCompetitorMappingRequest,
   ): Promise<SkuCompetitorMapping> {
     return this.skuCompetitorMappingsService.create({
       ...dto,
-      shop_id: ctx.shopId,
-      tenant_id: ctx.tenantId,
+      shopId: ctx.shopId,
+      tenantId: ctx.tenantId,
     });
   }
 

@@ -46,15 +46,15 @@ export class SkusRepository extends CodedShopScopedRepository<
         items.map((item) => ({
           code: item.code,
           title: item.title,
-          shop_id: shopId,
-          tenant_id: tenantId,
-          updated_at: new Date(),
+          shopId: shopId,
+          tenantId: tenantId,
+          updatedAt: new Date(),
         })),
       )
       .onConflict((oc) =>
-        oc.columns(['code', 'shop_id']).doUpdateSet((eb) => ({
+        oc.columns(['code', 'shopId']).doUpdateSet((eb) => ({
           title: eb.ref('excluded.title'),
-          updated_at: new Date(),
+          updatedAt: new Date(),
         })),
       )
       .execute();
@@ -75,24 +75,24 @@ export class SkusRepository extends CodedShopScopedRepository<
           code: item.code,
           title: item.title,
           title2: item.title2,
-          shop_id: shopId,
-          tenant_id: tenantId,
-          category_id: item.category_id,
-          group_id: item.group_id,
-          status_id: item.status_id,
-          supplier_id: item.supplier_id,
-          updated_at: new Date(),
+          shopId: shopId,
+          tenantId: tenantId,
+          categoryId: item.categoryId,
+          groupId: item.groupId,
+          statusId: item.statusId,
+          supplierId: item.supplierId,
+          updatedAt: new Date(),
         })),
       )
       .onConflict((oc) =>
-        oc.columns(['code', 'shop_id']).doUpdateSet((eb) => ({
+        oc.columns(['code', 'shopId']).doUpdateSet((eb) => ({
           title: eb.ref('excluded.title'),
           title2: eb.ref('excluded.title2'),
-          category_id: eb.ref('excluded.category_id'),
-          group_id: eb.ref('excluded.group_id'),
-          status_id: eb.ref('excluded.status_id'),
-          supplier_id: eb.ref('excluded.supplier_id'),
-          updated_at: new Date(),
+          categoryId: eb.ref('excluded.categoryId'),
+          groupId: eb.ref('excluded.groupId'),
+          statusId: eb.ref('excluded.statusId'),
+          supplierId: eb.ref('excluded.supplierId'),
+          updatedAt: new Date(),
         })),
       )
       .execute();
@@ -101,10 +101,10 @@ export class SkusRepository extends CodedShopScopedRepository<
   override async exportForShop(shopId: number): Promise<SkuExportItem[]> {
     const rows = await this.db
       .selectFrom('skus')
-      .leftJoin('categories', 'skus.category_id', 'categories.id')
-      .leftJoin('groups', 'skus.group_id', 'groups.id')
-      .leftJoin('statuses', 'skus.status_id', 'statuses.id')
-      .leftJoin('suppliers', 'skus.supplier_id', 'suppliers.id')
+      .leftJoin('categories', 'skus.categoryId', 'categories.id')
+      .leftJoin('groups', 'skus.groupId', 'groups.id')
+      .leftJoin('statuses', 'skus.statusId', 'statuses.id')
+      .leftJoin('suppliers', 'skus.supplierId', 'suppliers.id')
       .select([
         'skus.code',
         'skus.title',
@@ -114,7 +114,7 @@ export class SkusRepository extends CodedShopScopedRepository<
         'statuses.code as status',
         'suppliers.code as supplier',
       ])
-      .where('skus.shop_id', '=', shopId)
+      .where('skus.shopId', '=', shopId)
       .orderBy('skus.code', 'asc')
       .execute();
 

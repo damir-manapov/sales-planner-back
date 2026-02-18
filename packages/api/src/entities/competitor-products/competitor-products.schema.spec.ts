@@ -9,10 +9,10 @@ describe('Competitor Products Schemas', () => {
   describe('CreateCompetitorProductSchema', () => {
     it('should validate valid competitor product data', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        marketplace_id: 10,
-        marketplace_product_id: '123456789012345',
+        shopId: 1,
+        tenantId: 1,
+        marketplaceId: 10,
+        marketplaceProductId: '123456789012345',
         title: 'Competitor Product',
         brand: 'CompetitorBrand',
       };
@@ -24,10 +24,10 @@ describe('Competitor Products Schemas', () => {
 
     it('should allow optional title and brand', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        marketplace_id: 10,
-        marketplace_product_id: '123456789012345',
+        shopId: 1,
+        tenantId: 1,
+        marketplaceId: 10,
+        marketplaceProductId: '123456789012345',
       };
 
       const result = CreateCompetitorProductSchema.parse(data);
@@ -37,10 +37,10 @@ describe('Competitor Products Schemas', () => {
 
     it('should allow empty string for title and brand', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        marketplace_id: 10,
-        marketplace_product_id: '123456789012345',
+        shopId: 1,
+        tenantId: 1,
+        marketplaceId: 10,
+        marketplaceProductId: '123456789012345',
         title: '',
         brand: '',
       };
@@ -50,42 +50,42 @@ describe('Competitor Products Schemas', () => {
       expect(result).toEqual(data);
     });
 
-    it('should reject missing shop_id', () => {
+    it('should reject missing shopId', () => {
       const data = {
-        tenant_id: 1,
-        marketplace_id: 10,
-        marketplace_product_id: '123456789012345',
+        tenantId: 1,
+        marketplaceId: 10,
+        marketplaceProductId: '123456789012345',
       };
 
       expect(() => CreateCompetitorProductSchema.parse(data)).toThrow();
     });
 
-    it('should reject missing marketplace_id', () => {
+    it('should reject missing marketplaceId', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        marketplace_product_id: '123456789012345',
+        shopId: 1,
+        tenantId: 1,
+        marketplaceProductId: '123456789012345',
       };
 
       expect(() => CreateCompetitorProductSchema.parse(data)).toThrow();
     });
 
-    it('should reject missing marketplace_product_id', () => {
+    it('should reject missing marketplaceProductId', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        marketplace_id: 10,
+        shopId: 1,
+        tenantId: 1,
+        marketplaceId: 10,
       };
 
       expect(() => CreateCompetitorProductSchema.parse(data)).toThrow();
     });
 
-    it('should reject negative shop_id', () => {
+    it('should reject negative shopId', () => {
       const data = {
-        shop_id: -1,
-        tenant_id: 1,
-        marketplace_id: 10,
-        marketplace_product_id: '123456789012345',
+        shopId: -1,
+        tenantId: 1,
+        marketplaceId: 10,
+        marketplaceProductId: '123456789012345',
       };
 
       expect(() => CreateCompetitorProductSchema.parse(data)).toThrow();

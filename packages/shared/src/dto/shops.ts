@@ -1,6 +1,6 @@
 export interface CreateShopDto {
   title: string;
-  tenant_id: number;
+  tenantId: number;
 }
 export type CreateShopRequest = CreateShopDto;
 

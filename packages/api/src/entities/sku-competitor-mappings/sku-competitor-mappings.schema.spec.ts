@@ -31,10 +31,10 @@ describe('SKU Competitor Mappings Schemas', () => {
   describe('CreateSkuCompetitorMappingSchema', () => {
     it('should validate valid mapping data', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        sku_id: 100,
-        competitor_product_id: 50,
+        shopId: 1,
+        tenantId: 1,
+        skuId: 100,
+        competitorProductId: 50,
       };
 
       const result = CreateSkuCompetitorMappingSchema.parse(data);
@@ -42,22 +42,22 @@ describe('SKU Competitor Mappings Schemas', () => {
       expect(result).toEqual(data);
     });
 
-    it('should reject missing competitor_product_id', () => {
+    it('should reject missing competitorProductId', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        sku_id: 100,
+        shopId: 1,
+        tenantId: 1,
+        skuId: 100,
       };
 
       expect(() => CreateSkuCompetitorMappingSchema.parse(data)).toThrow();
     });
 
-    it('should reject negative competitor_product_id', () => {
+    it('should reject negative competitorProductId', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        sku_id: 100,
-        competitor_product_id: -1,
+        shopId: 1,
+        tenantId: 1,
+        skuId: 100,
+        competitorProductId: -1,
       };
 
       expect(() => CreateSkuCompetitorMappingSchema.parse(data)).toThrow();
@@ -65,9 +65,9 @@ describe('SKU Competitor Mappings Schemas', () => {
 
     it('should require all mandatory fields', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        competitor_product_id: 50,
+        shopId: 1,
+        tenantId: 1,
+        competitorProductId: 50,
       };
 
       expect(() => CreateSkuCompetitorMappingSchema.parse(data)).toThrow();
@@ -76,7 +76,7 @@ describe('SKU Competitor Mappings Schemas', () => {
 
   describe('UpdateSkuCompetitorMappingSchema', () => {
     it('should validate valid update data', () => {
-      const data = { competitor_product_id: 100 };
+      const data = { competitorProductId: 100 };
 
       const result = UpdateSkuCompetitorMappingSchema.parse(data);
 
@@ -91,8 +91,8 @@ describe('SKU Competitor Mappings Schemas', () => {
       expect(result).toEqual(data);
     });
 
-    it('should reject negative competitor_product_id when provided', () => {
-      const data = { competitor_product_id: -1 };
+    it('should reject negative competitorProductId when provided', () => {
+      const data = { competitorProductId: -1 };
 
       expect(() => UpdateSkuCompetitorMappingSchema.parse(data)).toThrow();
     });

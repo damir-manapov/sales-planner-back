@@ -1,12 +1,12 @@
 export interface CreateApiKeyDto {
-  user_id: number;
+  userId: number;
   name?: string;
-  expires_at?: string;
+  expiresAt?: string;
 }
 export type CreateApiKeyRequest = CreateApiKeyDto;
 
 export interface UpdateApiKeyDto {
   name?: string | null;
-  expires_at?: string | null;
+  expiresAt?: string | null;
 }
 export type UpdateApiKeyRequest = UpdateApiKeyDto;

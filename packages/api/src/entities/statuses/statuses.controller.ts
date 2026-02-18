@@ -68,7 +68,7 @@ export class StatusesController {
     @Param('code') code: string,
   ): Promise<Status> {
     const status = await this.statusesService.findByCodeAndShop(code, ctx.shopId);
-    if (!status || status.tenant_id !== ctx.tenantId) {
+    if (!status || status.tenantId !== ctx.tenantId) {
       throw new NotFoundException(`Status with code ${code} not found`);
     }
 
@@ -118,8 +118,8 @@ export class StatusesController {
   ): Promise<Status> {
     return this.statusesService.create({
       ...body,
-      shop_id: ctx.shopId,
-      tenant_id: ctx.tenantId,
+      shopId: ctx.shopId,
+      tenantId: ctx.tenantId,
     });
   }
 

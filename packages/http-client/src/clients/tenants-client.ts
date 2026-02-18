@@ -10,7 +10,7 @@ import type {
 import { BaseClient } from './base-client.js';
 
 export interface GetTenantsQuery extends PaginationQuery {
-  owner_id?: number;
+  ownerId?: number;
 }
 
 export class TenantsClient extends BaseClient {

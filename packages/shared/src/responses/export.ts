@@ -46,7 +46,7 @@ export interface SeasonalCoefficientExportItem {
 
 export interface CompetitorProductExportItem {
   marketplace: string;
-  marketplace_product_id: string; // BIGINT as string
+  marketplaceProductId: string; // BIGINT as string
   title?: string;
   brand?: string;
 }
@@ -54,12 +54,12 @@ export interface CompetitorProductExportItem {
 export interface SkuCompetitorMappingExportItem {
   sku: string;
   marketplace: string;
-  marketplace_product_id: string; // BIGINT as string
+  marketplaceProductId: string; // BIGINT as string
 }
 
 export interface CompetitorSaleExportItem {
   marketplace: string;
-  marketplace_product_id: string; // BIGINT as string
+  marketplaceProductId: string; // BIGINT as string
   period: string;
   quantity: number;
 }

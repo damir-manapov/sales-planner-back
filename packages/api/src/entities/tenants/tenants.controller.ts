@@ -38,7 +38,7 @@ export class TenantsController {
   @Get()
   async findAll(
     @Req() _req: AuthenticatedRequest,
-    @Query('owner_id') ownerId?: string,
+    @Query('ownerId') ownerId?: string,
     @Query(new ZodValidationPipe(PaginationQuerySchema)) query?: PaginationQuery,
   ): Promise<PaginatedResponse<Tenant>> {
     if (ownerId) {
@@ -67,7 +67,7 @@ export class TenantsController {
   ): Promise<Tenant> {
     return this.tenantsService.create({
       ...dto,
-      created_by: req.user.id,
+      createdBy: req.user.id,
     });
   }
 

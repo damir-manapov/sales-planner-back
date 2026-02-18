@@ -122,7 +122,7 @@ export class ShopsController {
     }
 
     // Check tenant-level access (owner/admin) or shop-level access (editor/viewer)
-    if (!hasReadAccess(req.user, shop.id, shop.tenant_id)) {
+    if (!hasReadAccess(req.user, shop.id, shop.tenantId)) {
       throw new ForbiddenException('Access to this shop is not allowed');
     }
 
@@ -135,7 +135,7 @@ export class ShopsController {
     @Body(new ZodValidationPipe(CreateShopSchema)) dto: CreateShopRequest,
   ): Promise<Shop> {
     // Validate user can create shops in this tenant
-    validateTenantAdminAccess(req.user, dto.tenant_id);
+    validateTenantAdminAccess(req.user, dto.tenantId);
     return this.shopsService.create(dto);
   }
 
@@ -151,7 +151,7 @@ export class ShopsController {
     }
 
     // Validate user can update shops in this tenant
-    validateTenantAdminAccess(req.user, shop.tenant_id);
+    validateTenantAdminAccess(req.user, shop.tenantId);
 
     const updated = await this.shopsService.update(id, dto);
     if (!updated) {
@@ -171,7 +171,7 @@ export class ShopsController {
     }
 
     // Validate user can delete shops in this tenant
-    validateTenantAdminAccess(req.user, shop.tenant_id);
+    validateTenantAdminAccess(req.user, shop.tenantId);
 
     await this.shopsService.delete(id);
   }
@@ -187,7 +187,7 @@ export class ShopsController {
     }
 
     // Validate user has write access to this shop
-    validateWriteAccess(req.user, id, shop.tenant_id);
+    validateWriteAccess(req.user, id, shop.tenantId);
 
     return this.shopsService.deleteData(id);
   }

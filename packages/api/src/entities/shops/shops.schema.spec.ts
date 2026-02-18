@@ -6,7 +6,7 @@ describe('Shop Schemas', () => {
     it('should validate valid shop creation data', () => {
       const data = {
         title: 'Test Shop',
-        tenant_id: 1,
+        tenantId: 1,
       };
 
       const result = CreateShopSchema.parse(data);
@@ -17,7 +17,7 @@ describe('Shop Schemas', () => {
     it('should reject empty title', () => {
       const data = {
         title: '',
-        tenant_id: 1,
+        tenantId: 1,
       };
 
       expect(() => CreateShopSchema.parse(data)).toThrow();
@@ -26,31 +26,31 @@ describe('Shop Schemas', () => {
     it('should reject title longer than 255 characters', () => {
       const data = {
         title: 'A'.repeat(256),
-        tenant_id: 1,
+        tenantId: 1,
       };
 
       expect(() => CreateShopSchema.parse(data)).toThrow();
     });
 
-    it('should reject negative tenant_id', () => {
+    it('should reject negative tenantId', () => {
       const data = {
         title: 'Test Shop',
-        tenant_id: -1,
+        tenantId: -1,
       };
 
       expect(() => CreateShopSchema.parse(data)).toThrow();
     });
 
-    it('should reject zero tenant_id', () => {
+    it('should reject zero tenantId', () => {
       const data = {
         title: 'Test Shop',
-        tenant_id: 0,
+        tenantId: 0,
       };
 
       expect(() => CreateShopSchema.parse(data)).toThrow();
     });
 
-    it('should reject missing tenant_id', () => {
+    it('should reject missing tenantId', () => {
       const data = {
         title: 'Test Shop',
       };

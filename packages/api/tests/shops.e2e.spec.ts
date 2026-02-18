@@ -64,11 +64,11 @@ describe('Shops E2E', () => {
     it('POST /shops - tenant owner should create shop', async () => {
       const shop = await ctx.client.shops.create({
         title: 'Test Shop',
-        tenant_id: ctx.tenant.id,
+        tenantId: ctx.tenant.id,
       });
 
       expect(shop.title).toBe('Test Shop');
-      expect(shop.tenant_id).toBe(ctx.tenant.id);
+      expect(shop.tenantId).toBe(ctx.tenant.id);
       testShopId = shop.id;
     });
 
@@ -82,7 +82,7 @@ describe('Shops E2E', () => {
     it('GET /shops?tenantId=X - should filter by tenant', async () => {
       const shops = await ctx.client.shops.getAll({ tenantId: ctx.tenant.id });
 
-      expect(shops.items.every((s) => s.tenant_id === ctx.tenant.id)).toBe(true);
+      expect(shops.items.every((s) => s.tenantId === ctx.tenant.id)).toBe(true);
     });
 
     it('GET /shops/:id - should return shop by id', async () => {
@@ -116,7 +116,7 @@ describe('Shops E2E', () => {
       });
       tenantAdminUserId = adminUser.id;
       const adminApiKey = await ctx.getSystemClient().apiKeys.create({
-        user_id: tenantAdminUserId,
+        userId: tenantAdminUserId,
         name: 'Admin Key',
       });
 
@@ -125,9 +125,9 @@ describe('Shops E2E', () => {
       const tenantAdminRole = roles.items.find((r) => r.name === ROLE_NAMES.TENANT_ADMIN);
       if (!tenantAdminRole) throw new Error('Tenant Admin role not found');
       await ctx.getSystemClient().userRoles.create({
-        user_id: tenantAdminUserId,
-        role_id: tenantAdminRole.id,
-        tenant_id: ctx.tenant.id,
+        userId: tenantAdminUserId,
+        roleId: tenantAdminRole.id,
+        tenantId: ctx.tenant.id,
       });
 
       tenantAdminClient = new SalesPlannerClient({ baseUrl, apiKey: adminApiKey.key });
@@ -148,7 +148,7 @@ describe('Shops E2E', () => {
     it('POST /shops - tenant admin should create shop', async () => {
       const shop = await tenantAdminClient.shops.create({
         title: 'Admin Created Shop',
-        tenant_id: ctx.tenant.id,
+        tenantId: ctx.tenant.id,
       });
 
       expect(shop.title).toBe('Admin Created Shop');
@@ -200,7 +200,7 @@ describe('Shops E2E', () => {
 
     it('POST /shops - should return 403 when creating shop in other tenant', async () => {
       await expectForbidden(() =>
-        otherClient.shops.create({ title: 'Unauthorized Shop', tenant_id: ctx.tenant.id }),
+        otherClient.shops.create({ title: 'Unauthorized Shop', tenantId: ctx.tenant.id }),
       );
     });
 
@@ -215,13 +215,13 @@ describe('Shops E2E', () => {
 
   describe('Delete shop data', () => {
     let dataShopId: number;
-    const dataShopContext = () => ({ shop_id: dataShopId, tenant_id: ctx.tenant.id });
+    const dataShopContext = () => ({ shopId: dataShopId, tenantId: ctx.tenant.id });
 
     beforeAll(async () => {
       // Create a shop with data
       const shop = await ctx.client.shops.create({
         title: `Data Shop ${generateUniqueId()}`,
-        tenant_id: ctx.tenant.id,
+        tenantId: ctx.tenant.id,
       });
       dataShopId = shop.id;
 
@@ -292,7 +292,7 @@ describe('Shops E2E', () => {
         editorUserId = editorUser.id;
 
         const editorApiKey = await ctx.getSystemClient().apiKeys.create({
-          user_id: editorUserId,
+          userId: editorUserId,
           name: 'Editor Key',
         });
         editorClient = new SalesPlannerClient({ baseUrl, apiKey: editorApiKey.key });
@@ -301,10 +301,10 @@ describe('Shops E2E', () => {
         const editorRole = roles.items.find((r) => r.name === ROLE_NAMES.EDITOR);
         if (!editorRole) throw new Error('Editor role not found');
         await ctx.getSystemClient().userRoles.create({
-          user_id: editorUserId,
-          role_id: editorRole.id,
-          tenant_id: ctx.tenant.id,
-          shop_id: testShopId,
+          userId: editorUserId,
+          roleId: editorRole.id,
+          tenantId: ctx.tenant.id,
+          shopId: testShopId,
         });
       });
 
@@ -325,7 +325,7 @@ describe('Shops E2E', () => {
 
       it('editor should NOT create shop', async () => {
         await expectForbidden(() =>
-          editorClient.shops.create({ title: 'Editor Shop', tenant_id: ctx.tenant.id }),
+          editorClient.shops.create({ title: 'Editor Shop', tenantId: ctx.tenant.id }),
         );
       });
 
@@ -352,7 +352,7 @@ describe('Shops E2E', () => {
         viewerUserId = viewerUser.id;
 
         const viewerApiKey = await ctx.getSystemClient().apiKeys.create({
-          user_id: viewerUserId,
+          userId: viewerUserId,
           name: 'Viewer Key',
         });
         viewerClient = new SalesPlannerClient({ baseUrl, apiKey: viewerApiKey.key });
@@ -361,10 +361,10 @@ describe('Shops E2E', () => {
         const viewerRole = roles.items.find((r) => r.name === ROLE_NAMES.VIEWER);
         if (!viewerRole) throw new Error('Viewer role not found');
         await ctx.getSystemClient().userRoles.create({
-          user_id: viewerUserId,
-          role_id: viewerRole.id,
-          tenant_id: ctx.tenant.id,
-          shop_id: testShopId,
+          userId: viewerUserId,
+          roleId: viewerRole.id,
+          tenantId: ctx.tenant.id,
+          shopId: testShopId,
         });
       });
 
@@ -385,7 +385,7 @@ describe('Shops E2E', () => {
 
       it('viewer should NOT create shop', async () => {
         await expectForbidden(() =>
-          viewerClient.shops.create({ title: 'Viewer Shop', tenant_id: ctx.tenant.id }),
+          viewerClient.shops.create({ title: 'Viewer Shop', tenantId: ctx.tenant.id }),
         );
       });
 

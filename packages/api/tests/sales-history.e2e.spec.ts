@@ -83,19 +83,19 @@ describe('Sales History (e2e)', () => {
     it('should create sales history record', async () => {
       const testPeriod = generateTestPeriod();
       const record = await ctx.client.salesHistory.create(ctx.shopContext, {
-        sku_id: skuId,
+        skuId: skuId,
         period: testPeriod,
         quantity: 100,
-        marketplace_id: marketplaceId,
+        marketplaceId: marketplaceId,
       });
 
       expect(record).toHaveProperty('id');
-      expect(record.sku_id).toBe(skuId);
+      expect(record.skuId).toBe(skuId);
       expect(record.period).toBe(testPeriod);
       expect(record.quantity).toBe(100);
-      expect(record.shop_id).toBe(ctx.shop.id);
-      expect(record.tenant_id).toBe(ctx.tenant.id);
-      expect(record.marketplace_id).toBe(marketplaceId);
+      expect(record.shopId).toBe(ctx.shop.id);
+      expect(record.tenantId).toBe(ctx.tenant.id);
+      expect(record.marketplaceId).toBe(marketplaceId);
 
       salesHistoryId = record.id;
     });
@@ -118,16 +118,16 @@ describe('Sales History (e2e)', () => {
       });
 
       const record1 = await ctx.client.salesHistory.create(ctx.shopContext, {
-        sku_id: testSku.id,
+        skuId: testSku.id,
         period: '2024-03',
         quantity: 10,
-        marketplace_id: testMarketplace.id,
+        marketplaceId: testMarketplace.id,
       });
       const record2 = await ctx.client.salesHistory.create(ctx.shopContext, {
-        sku_id: testSku.id,
+        skuId: testSku.id,
         period: '2024-04',
         quantity: 20,
-        marketplace_id: testMarketplace.id,
+        marketplaceId: testMarketplace.id,
       });
 
       const filtered = await ctx.client.salesHistory.getAll(ctx.shopContext, {
@@ -149,21 +149,21 @@ describe('Sales History (e2e)', () => {
       });
 
       await ctx.client.salesHistory.create(ctx.shopContext, {
-        sku_id: skuId,
+        skuId: skuId,
         period: periodFrom,
         quantity: 50,
-        marketplace_id: rangeTestMarketplace.id,
+        marketplaceId: rangeTestMarketplace.id,
       });
       await ctx.client.salesHistory.create(ctx.shopContext, {
-        sku_id: skuId,
+        skuId: skuId,
         period: periodTo,
         quantity: 60,
-        marketplace_id: rangeTestMarketplace.id,
+        marketplaceId: rangeTestMarketplace.id,
       });
 
       const records = await ctx.client.salesHistory.getAll(ctx.shopContext, {
-        period_from: periodFrom,
-        period_to: periodTo,
+        periodFrom: periodFrom,
+        periodTo: periodTo,
       });
 
       expect(Array.isArray(records.items)).toBe(true);
@@ -190,10 +190,10 @@ describe('Sales History (e2e)', () => {
       await expectApiError(
         () =>
           ctx.client.salesHistory.create(ctx.shopContext, {
-            sku_id: skuId,
+            skuId: skuId,
             period: '2026-13',
             quantity: 50,
-            marketplace_id: marketplaceId,
+            marketplaceId: marketplaceId,
           }),
         400,
       );
@@ -203,10 +203,10 @@ describe('Sales History (e2e)', () => {
       await expectApiError(
         () =>
           ctx.client.salesHistory.create(ctx.shopContext, {
-            sku_id: skuId,
+            skuId: skuId,
             period: '2026-1',
             quantity: 50,
-            marketplace_id: marketplaceId,
+            marketplaceId: marketplaceId,
           }),
         400,
       );
@@ -215,10 +215,10 @@ describe('Sales History (e2e)', () => {
     it('should return 409 on duplicate period entry', async () => {
       const testPeriod = generateTestPeriod();
       const duplicateEntry = {
-        sku_id: skuId,
+        skuId: skuId,
         period: testPeriod,
         quantity: 100,
-        marketplace_id: marketplaceId,
+        marketplaceId: marketplaceId,
       };
 
       await ctx.client.salesHistory.create(ctx.shopContext, duplicateEntry);
@@ -257,10 +257,10 @@ describe('Sales History (e2e)', () => {
         const period = `${year}-${month.toString().padStart(2, '0')}`;
 
         const record = await ctx.client.salesHistory.create(ctx.shopContext, {
-          sku_id: paginationSku.id,
+          skuId: paginationSku.id,
           period,
           quantity: 100 + i,
-          marketplace_id: paginationMarketplace.id,
+          marketplaceId: paginationMarketplace.id,
         });
         paginationRecords.push(record.id);
       }
@@ -301,8 +301,8 @@ describe('Sales History (e2e)', () => {
 
     it('should combine period filter with pagination', async () => {
       const response = await ctx.client.salesHistory.getAll(ctx.shopContext, {
-        period_from: '2020-01',
-        period_to: '2020-12',
+        periodFrom: '2020-01',
+        periodTo: '2020-12',
         limit: 5,
         offset: 0,
       });
@@ -319,13 +319,13 @@ describe('Sales History (e2e)', () => {
 
     it('should return correct total when filtering by period', async () => {
       const fullResponse = await ctx.client.salesHistory.getAll(ctx.shopContext, {
-        period_from: '2020-01',
-        period_to: '2020-12',
+        periodFrom: '2020-01',
+        periodTo: '2020-12',
       });
 
       const paginatedResponse = await ctx.client.salesHistory.getAll(ctx.shopContext, {
-        period_from: '2020-01',
-        period_to: '2020-12',
+        periodFrom: '2020-01',
+        periodTo: '2020-12',
         limit: 3,
       });
 
@@ -342,8 +342,8 @@ describe('Sales History (e2e)', () => {
       // Fetch all pages with period filter
       do {
         const response = await ctx.client.salesHistory.getAll(ctx.shopContext, {
-          period_from: '2020-01',
-          period_to: '2021-06',
+          periodFrom: '2020-01',
+          periodTo: '2021-06',
           limit: pageSize,
           offset,
         });
@@ -397,8 +397,8 @@ describe('Sales History (e2e)', () => {
     it('should return 403 when accessing other tenant', async () => {
       await expectForbidden(() =>
         ctx.client.salesHistory.getAll({
-          shop_id: otherCtx.shop.id,
-          tenant_id: otherCtx.tenant.id,
+          shopId: otherCtx.shop.id,
+          tenantId: otherCtx.tenant.id,
         }),
       );
     });
@@ -406,12 +406,12 @@ describe('Sales History (e2e)', () => {
     it('should return 403 when creating for other tenant', async () => {
       await expectForbidden(() =>
         ctx.client.salesHistory.create(
-          { shop_id: ctx.shop.id, tenant_id: otherCtx.tenant.id },
+          { shopId: ctx.shop.id, tenantId: otherCtx.tenant.id },
           {
-            sku_id: skuId,
+            skuId: skuId,
             period: generateTestPeriod(),
             quantity: 50,
-            marketplace_id: marketplaceId,
+            marketplaceId: marketplaceId,
           },
         ),
       );
@@ -419,10 +419,10 @@ describe('Sales History (e2e)', () => {
 
     it('should return 404 when getting resource from other tenant', async () => {
       const otherRecord = await otherCtx.client.salesHistory.create(otherCtx.shopContext, {
-        sku_id: otherSkuId,
+        skuId: otherSkuId,
         period: generateTestPeriod(),
         quantity: 50,
-        marketplace_id: otherMarketplaceId,
+        marketplaceId: otherMarketplaceId,
       });
 
       await expectNotFound(() => ctx.client.salesHistory.getById(ctx.shopContext, otherRecord.id));
@@ -471,7 +471,7 @@ describe('Sales History (e2e)', () => {
       ]);
 
       expect(result.created).toBe(1);
-      expect(result.skus_created).toBe(1);
+      expect(result.skusCreated).toBe(1);
       expect(result.errors).toEqual([]);
 
       const { items: skus } = await ctx.client.skus.getAll(ctx.shopContext);
@@ -496,7 +496,7 @@ describe('Sales History (e2e)', () => {
       ]);
 
       expect(result.created).toBe(1);
-      expect(result.marketplaces_created).toBe(1);
+      expect(result.marketplacesCreated).toBe(1);
       expect(result.errors).toEqual([]);
 
       const marketplaces = await ctx.client.marketplaces.getAll(ctx.shopContext);
@@ -517,12 +517,12 @@ describe('Sales History (e2e)', () => {
 
       expect(result).toHaveProperty('created');
       expect(result.created).toBeGreaterThanOrEqual(1);
-      expect(result).toHaveProperty('skus_created');
-      expect(result.skus_created).toBeGreaterThanOrEqual(1);
+      expect(result).toHaveProperty('skusCreated');
+      expect(result.skusCreated).toBeGreaterThanOrEqual(1);
 
       const exported = await ctx.client.salesHistory.exportJson(ctx.shopContext, {
-        period_from: testPeriod,
-        period_to: testPeriod,
+        periodFrom: testPeriod,
+        periodTo: testPeriod,
       });
 
       const imported = exported.find((r) => r.sku === normalizedSkuCode && r.period === testPeriod);
@@ -572,8 +572,8 @@ describe('Sales History (e2e)', () => {
       ]);
 
       const exported = await ctx.client.salesHistory.exportJson(ctx.shopContext, {
-        period_from: testPeriod,
-        period_to: testPeriod,
+        periodFrom: testPeriod,
+        periodTo: testPeriod,
       });
 
       expect(Array.isArray(exported)).toBe(true);
@@ -606,8 +606,8 @@ describe('Sales History (e2e)', () => {
       expect(result.created).toBeGreaterThanOrEqual(1);
 
       const exported = await ctx.client.salesHistory.exportJson(ctx.shopContext, {
-        period_from: testPeriod,
-        period_to: testPeriod,
+        periodFrom: testPeriod,
+        periodTo: testPeriod,
       });
 
       const imported = exported.find((r) => r.sku === normalizedSkuCode && r.period === testPeriod);
@@ -683,7 +683,7 @@ describe('Sales History (e2e)', () => {
         editorUserId = editorUser.id;
 
         const editorApiKey = await ctx.getSystemClient().apiKeys.create({
-          user_id: editorUserId,
+          userId: editorUserId,
           name: 'Editor Key',
         });
         editorClient = new SalesPlannerClient({ baseUrl, apiKey: editorApiKey.key });
@@ -692,10 +692,10 @@ describe('Sales History (e2e)', () => {
         const editorRole = roles.items.find((r) => r.name === ROLE_NAMES.EDITOR);
         if (!editorRole) throw new Error('Editor role not found');
         await ctx.getSystemClient().userRoles.create({
-          user_id: editorUserId,
-          role_id: editorRole.id,
-          tenant_id: ctx.tenant.id,
-          shop_id: ctx.shop.id,
+          userId: editorUserId,
+          roleId: editorRole.id,
+          tenantId: ctx.tenant.id,
+          shopId: ctx.shop.id,
         });
       });
 
@@ -728,10 +728,10 @@ describe('Sales History (e2e)', () => {
         });
 
         const record = await editorClient.salesHistory.create(ctx.shopContext, {
-          sku_id: editorSku.id,
+          skuId: editorSku.id,
           period: generateTestPeriod(),
           quantity: 50,
-          marketplace_id: editorMp.id,
+          marketplaceId: editorMp.id,
         });
         expect(record).toHaveProperty('id');
       });
@@ -758,10 +758,10 @@ describe('Sales History (e2e)', () => {
           title: 'Delete Test SKU',
         });
         const record = await editorClient.salesHistory.create(ctx.shopContext, {
-          sku_id: editorSku.id,
+          skuId: editorSku.id,
           period: generateTestPeriod(),
           quantity: 10,
-          marketplace_id: editorMp.id,
+          marketplaceId: editorMp.id,
         });
         await editorClient.salesHistory.delete(ctx.shopContext, record.id);
         await expectNotFound(() => editorClient.salesHistory.getById(ctx.shopContext, record.id));
@@ -798,7 +798,7 @@ describe('Sales History (e2e)', () => {
         viewerUserId = viewerUser.id;
 
         const viewerApiKey = await ctx.getSystemClient().apiKeys.create({
-          user_id: viewerUserId,
+          userId: viewerUserId,
           name: 'Viewer Key',
         });
         viewerClient = new SalesPlannerClient({ baseUrl, apiKey: viewerApiKey.key });
@@ -807,10 +807,10 @@ describe('Sales History (e2e)', () => {
         const viewerRole = roles.items.find((r) => r.name === ROLE_NAMES.VIEWER);
         if (!viewerRole) throw new Error('Viewer role not found');
         await ctx.getSystemClient().userRoles.create({
-          user_id: viewerUserId,
-          role_id: viewerRole.id,
-          tenant_id: ctx.tenant.id,
-          shop_id: ctx.shop.id,
+          userId: viewerUserId,
+          roleId: viewerRole.id,
+          tenantId: ctx.tenant.id,
+          shopId: ctx.shop.id,
         });
 
         // Create a test record for viewer tests
@@ -823,10 +823,10 @@ describe('Sales History (e2e)', () => {
           title: 'Viewer Test SKU',
         });
         const record = await ctx.client.salesHistory.create(ctx.shopContext, {
-          sku_id: viewerSku.id,
+          skuId: viewerSku.id,
           period: generateTestPeriod(),
           quantity: 25,
-          marketplace_id: viewerMp.id,
+          marketplaceId: viewerMp.id,
         });
         testRecordId = record.id;
       });
@@ -848,10 +848,10 @@ describe('Sales History (e2e)', () => {
       it('viewer should NOT create sales history', async () => {
         await expectForbidden(() =>
           viewerClient.salesHistory.create(ctx.shopContext, {
-            sku_id: skuId,
+            skuId: skuId,
             period: generateTestPeriod(),
             quantity: 50,
-            marketplace_id: marketplaceId,
+            marketplaceId: marketplaceId,
           }),
         );
       });

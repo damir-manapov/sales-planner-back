@@ -68,7 +68,7 @@ export class SkusController {
     @Param('code') code: string,
   ): Promise<Sku> {
     const sku = await this.skusService.findByCodeAndShop(code, ctx.shopId);
-    if (!sku || sku.tenant_id !== ctx.tenantId) {
+    if (!sku || sku.tenantId !== ctx.tenantId) {
       throw new NotFoundException(`SKU with code ${code} not found`);
     }
 
@@ -126,8 +126,8 @@ export class SkusController {
   ): Promise<Sku> {
     return this.skusService.create({
       ...dto,
-      shop_id: ctx.shopId,
-      tenant_id: ctx.tenantId,
+      shopId: ctx.shopId,
+      tenantId: ctx.tenantId,
     });
   }
 

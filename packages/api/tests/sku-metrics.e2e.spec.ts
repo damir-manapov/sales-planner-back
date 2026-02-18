@@ -109,7 +109,7 @@ describe('SkuMetricsController (e2e)', () => {
 
   describe('GET /sku-metrics', () => {
     it('should return empty list when no SKUs exist', async () => {
-      const data = await ctx.client.skuMetrics.list(ctx.shop.id, ctx.tenant.id);
+      const data = await ctx.client.skuMetrics.list(ctx.shopContext);
 
       expect(data).toHaveProperty('items');
       expect(data).toHaveProperty('total');
@@ -119,7 +119,7 @@ describe('SkuMetricsController (e2e)', () => {
     it('should return 401 without auth', async () => {
       const unauthClient = new SalesPlannerClient({ baseUrl, apiKey: '' });
       try {
-        await unauthClient.skuMetrics.list(ctx.shop.id, ctx.tenant.id);
+        await unauthClient.skuMetrics.list(ctx.shopContext);
         expect.fail('Expected error');
       } catch (error) {
         expect(error).toBeInstanceOf(ApiError);
@@ -130,7 +130,7 @@ describe('SkuMetricsController (e2e)', () => {
 
   describe('GET /computed/views', () => {
     it('should list available materialized views', async () => {
-      const data = await ctx.client.computed.getViews(ctx.shop.id, ctx.tenant.id);
+      const data = await ctx.client.computed.getViews(ctx.shopContext);
 
       expect(data).toBeInstanceOf(Array);
       expect(data.length).toBeGreaterThan(0);
@@ -143,7 +143,7 @@ describe('SkuMetricsController (e2e)', () => {
 
   describe('POST /computed/refresh', () => {
     it('should refresh all materialized views', async () => {
-      const data = await ctx.client.computed.refreshAll(ctx.shop.id, ctx.tenant.id);
+      const data = await ctx.client.computed.refreshAll(ctx.shopContext);
 
       expect(data).toHaveProperty('results');
       expect(data).toHaveProperty('totalDuration');
@@ -154,11 +154,7 @@ describe('SkuMetricsController (e2e)', () => {
 
   describe('POST /computed/refresh/:viewName', () => {
     it('should refresh a specific view', async () => {
-      const data = await ctx.client.computed.refreshView(
-        'mv_sku_metrics',
-        ctx.shop.id,
-        ctx.tenant.id,
-      );
+      const data = await ctx.client.computed.refreshView(ctx.shopContext, 'mv_sku_metrics');
 
       expect(data).toHaveProperty('view');
       expect(data).toHaveProperty('duration');
@@ -168,11 +164,7 @@ describe('SkuMetricsController (e2e)', () => {
     });
 
     it('should return error for unknown view', async () => {
-      const data = await ctx.client.computed.refreshView(
-        'unknown_view',
-        ctx.shop.id,
-        ctx.tenant.id,
-      );
+      const data = await ctx.client.computed.refreshView(ctx.shopContext, 'unknown_view');
 
       expect(data.success).toBe(false);
       expect(data.error).toContain('Unknown view');
@@ -181,7 +173,7 @@ describe('SkuMetricsController (e2e)', () => {
 
   describe('GET /sku-metrics/export/csv', () => {
     it('should export CSV with header', async () => {
-      const csv = await ctx.client.skuMetrics.exportCsv(ctx.shop.id, ctx.tenant.id);
+      const csv = await ctx.client.skuMetrics.exportCsv(ctx.shopContext);
 
       expect(typeof csv).toBe('string');
       const lines = csv.split('\n');
@@ -198,10 +190,10 @@ describe('SkuMetricsController (e2e)', () => {
       await ctx.client.skus.importJson(ctx.shopContext, [{ code: skuCode, title: 'Test SKU' }]);
 
       // Refresh the materialized view
-      await ctx.client.computed.refreshView('mv_sku_metrics', ctx.shop.id, ctx.tenant.id);
+      await ctx.client.computed.refreshView(ctx.shopContext, 'mv_sku_metrics');
 
       // Export and verify
-      const csv = await ctx.client.skuMetrics.exportCsv(ctx.shop.id, ctx.tenant.id);
+      const csv = await ctx.client.skuMetrics.exportCsv(ctx.shopContext);
       const lines = csv.split('\n');
 
       expect(lines.length).toBeGreaterThan(1); // Header + at least 1 data row
@@ -218,18 +210,18 @@ describe('SkuMetricsController (e2e)', () => {
       ]);
 
       // Refresh the materialized view
-      await ctx.client.computed.refreshView('mv_sku_metrics', ctx.shop.id, ctx.tenant.id);
+      await ctx.client.computed.refreshView(ctx.shopContext, 'mv_sku_metrics');
 
       // Export and verify
-      const data = await ctx.client.skuMetrics.exportJson(ctx.shop.id, ctx.tenant.id);
+      const data = await ctx.client.skuMetrics.exportJson(ctx.shopContext);
 
       expect(data).toBeInstanceOf(Array);
       expect(data.length).toBeGreaterThan(0);
 
-      const sku = data.find((item) => item.sku_code === skuCode);
+      const sku = data.find((item) => item.skuCode === skuCode);
       expect(sku).toBeDefined();
-      expect(sku?.sku_title).toBe('JSON Test SKU');
-      expect(sku?.abc_class).toBe('C'); // No sales, so should be class C
+      expect(sku?.skuTitle).toBe('JSON Test SKU');
+      expect(sku?.abcClass).toBe('C'); // No sales, so should be class C
     });
   });
 
@@ -238,51 +230,51 @@ describe('SkuMetricsController (e2e)', () => {
       // Create a fresh shop for this test to get clean ABC classification
       const metricsShop = await ctx.client.shops.create({
         title: `Metrics Test Shop ${generateUniqueId()}`,
-        tenant_id: ctx.tenant.id,
+        tenantId: ctx.tenant.id,
       });
-      const metricsShopContext = { shop_id: metricsShop.id, tenant_id: ctx.tenant.id };
+      const metricsShopContext = { shopId: metricsShop.id, tenantId: ctx.tenant.id };
 
       // Setup test data using helper
       const testData = await setupMetricsTestData(ctx.client, metricsShopContext);
 
       // Refresh the materialized view
-      await ctx.client.computed.refreshView('mv_sku_metrics', metricsShop.id, ctx.tenant.id);
+      await ctx.client.computed.refreshView(metricsShopContext, 'mv_sku_metrics');
 
       // Export and verify computed metrics
-      const data = await ctx.client.skuMetrics.exportJson(metricsShop.id, ctx.tenant.id);
+      const data = await ctx.client.skuMetrics.exportJson(metricsShopContext);
 
       // Verify SKU1 (rank 1 of 5 = 20%, class A)
-      const result1 = data.find((item) => item.sku_code === testData.skuCodes[0]);
+      const result1 = data.find((item) => item.skuCode === testData.skuCodes[0]);
       expect(result1).toBeDefined();
-      expect(Number(result1?.last_period_sales)).toBe(1000);
-      expect(Number(result1?.current_stock)).toBe(500);
-      expect(Number(result1?.days_of_stock)).toBe(15); // (500/1000)*30 = 15 days
-      expect(result1?.abc_class).toBe('A'); // Top 20%
-      expect(Number(result1?.sales_rank)).toBe(1);
+      expect(Number(result1?.lastPeriodSales)).toBe(1000);
+      expect(Number(result1?.currentStock)).toBe(500);
+      expect(Number(result1?.daysOfStock)).toBe(15); // (500/1000)*30 = 15 days
+      expect(result1?.abcClass).toBe('A'); // Top 20%
+      expect(Number(result1?.salesRank)).toBe(1);
 
       // Verify SKU2 (rank 2 of 5 = 40%, class B)
-      const result2 = data.find((item) => item.sku_code === testData.skuCodes[1]);
+      const result2 = data.find((item) => item.skuCode === testData.skuCodes[1]);
       expect(result2).toBeDefined();
-      expect(Number(result2?.last_period_sales)).toBe(500);
-      expect(Number(result2?.current_stock)).toBe(450);
-      expect(Number(result2?.days_of_stock)).toBe(27); // (450/500)*30 = 27 days
-      expect(result2?.abc_class).toBe('B'); // 20-50%
-      expect(Number(result2?.sales_rank)).toBe(2);
+      expect(Number(result2?.lastPeriodSales)).toBe(500);
+      expect(Number(result2?.currentStock)).toBe(450);
+      expect(Number(result2?.daysOfStock)).toBe(27); // (450/500)*30 = 27 days
+      expect(result2?.abcClass).toBe('B'); // 20-50%
+      expect(Number(result2?.salesRank)).toBe(2);
 
       // Verify SKU5 (rank 5 of 5 = 100%, class C)
-      const result5 = data.find((item) => item.sku_code === testData.skuCodes[4]);
+      const result5 = data.find((item) => item.skuCode === testData.skuCodes[4]);
       expect(result5).toBeDefined();
-      expect(Number(result5?.last_period_sales)).toBe(10);
-      expect(result5?.abc_class).toBe('C'); // Bottom 50%
-      expect(Number(result5?.sales_rank)).toBe(5);
+      expect(Number(result5?.lastPeriodSales)).toBe(10);
+      expect(result5?.abcClass).toBe('C'); // Bottom 50%
+      expect(Number(result5?.salesRank)).toBe(5);
 
       // Verify no sales SKU
-      const noSales = data.find((item) => item.sku_code === testData.noSalesSkuCode);
+      const noSales = data.find((item) => item.skuCode === testData.noSalesSkuCode);
       expect(noSales).toBeDefined();
-      expect(Number(noSales?.last_period_sales)).toBe(0);
-      expect(Number(noSales?.current_stock)).toBe(100);
-      expect(noSales?.days_of_stock).toBeNull(); // Cannot compute without sales
-      expect(noSales?.abc_class).toBe('C'); // No sales = class C
+      expect(Number(noSales?.lastPeriodSales)).toBe(0);
+      expect(Number(noSales?.currentStock)).toBe(100);
+      expect(noSales?.daysOfStock).toBeNull(); // Cannot compute without sales
+      expect(noSales?.abcClass).toBe('C'); // No sales = class C
 
       // Cleanup
       await ctx.client.shops.delete(metricsShop.id);

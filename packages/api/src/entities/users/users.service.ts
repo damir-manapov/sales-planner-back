@@ -11,11 +11,11 @@ export type { CreateUserDto, UpdateUserDto };
 
 export interface UserRole {
   id: number;
-  role_name: string;
-  tenant_id: number | null;
-  tenant_title: string | null;
-  shop_id: number | null;
-  shop_title: string | null;
+  roleName: string;
+  tenantId: number | null;
+  tenantTitle: string | null;
+  shopId: number | null;
+  shopTitle: string | null;
 }
 
 export interface ShopInfo {
@@ -26,7 +26,7 @@ export interface ShopInfo {
 export interface TenantInfo {
   id: number;
   title: string;
-  is_owner: boolean;
+  isOwner: boolean;
   shops: ShopInfo[];
 }
 
@@ -50,9 +50,9 @@ export class UsersService {
   async countByTenantId(tenantId: number): Promise<number> {
     const result = await this.db
       .selectFrom('users')
-      .innerJoin('user_roles', 'user_roles.user_id', 'users.id')
+      .innerJoin('user_roles', 'user_roles.userId', 'users.id')
       .select(this.db.fn.count<number>('users.id').distinct().as('count'))
-      .where('user_roles.tenant_id', '=', tenantId)
+      .where('user_roles.tenantId', '=', tenantId)
       .executeTakeFirstOrThrow();
     return Number(result.count);
   }
@@ -84,7 +84,7 @@ export class UsersService {
         .values({
           email: dto.email,
           name: dto.name,
-          updated_at: new Date(),
+          updatedAt: new Date(),
         })
         .returningAll()
         .executeTakeFirstOrThrow();
@@ -101,7 +101,7 @@ export class UsersService {
   async update(id: number, dto: Partial<CreateUserDto>): Promise<User | undefined> {
     return this.db
       .updateTable('users')
-      .set({ ...dto, updated_at: new Date() })
+      .set({ ...dto, updatedAt: new Date() })
       .where('id', '=', id)
       .returningAll()
       .executeTakeFirst();
@@ -116,8 +116,8 @@ export class UsersService {
     let q = this.db
       .selectFrom('users')
       .selectAll('users')
-      .innerJoin('user_roles', 'user_roles.user_id', 'users.id')
-      .where('user_roles.tenant_id', '=', tenantId)
+      .innerJoin('user_roles', 'user_roles.userId', 'users.id')
+      .where('user_roles.tenantId', '=', tenantId)
       .groupBy('users.id')
       .orderBy('users.id', 'asc');
     if (query?.limit !== undefined) q = q.limit(query.limit);
@@ -146,25 +146,25 @@ export class UsersService {
     // Get user roles with tenant/shop titles
     const rolesResult = await this.db
       .selectFrom('user_roles')
-      .innerJoin('roles', 'roles.id', 'user_roles.role_id')
-      .leftJoin('tenants', 'tenants.id', 'user_roles.tenant_id')
-      .leftJoin('shops', 'shops.id', 'user_roles.shop_id')
+      .innerJoin('roles', 'roles.id', 'user_roles.roleId')
+      .leftJoin('tenants', 'tenants.id', 'user_roles.tenantId')
+      .leftJoin('shops', 'shops.id', 'user_roles.shopId')
       .select('user_roles.id')
-      .select(sql<string>`roles.name`.as('role_name'))
-      .select('user_roles.tenant_id')
-      .select(sql<string | null>`tenants.title`.as('tenant_title'))
-      .select('user_roles.shop_id')
-      .select(sql<string | null>`shops.title`.as('shop_title'))
-      .where('user_roles.user_id', '=', userId)
+      .select(sql<string>`roles.name`.as('roleName'))
+      .select('user_roles.tenantId')
+      .select(sql<string | null>`tenants.title`.as('tenantTitle'))
+      .select('user_roles.shopId')
+      .select(sql<string | null>`shops.title`.as('shopTitle'))
+      .where('user_roles.userId', '=', userId)
       .execute();
 
     const roles: UserRole[] = rolesResult.map((r) => ({
       id: r.id,
-      role_name: r.role_name,
-      tenant_id: r.tenant_id,
-      tenant_title: r.tenant_title,
-      shop_id: r.shop_id,
-      shop_title: r.shop_title,
+      roleName: r.roleName,
+      tenantId: r.tenantId,
+      tenantTitle: r.tenantTitle,
+      shopId: r.shopId,
+      shopTitle: r.shopTitle,
     }));
 
     // Get tenants owned by this user to add derived tenantOwner roles
@@ -172,25 +172,25 @@ export class UsersService {
       .selectFrom('tenants')
       .select('id')
       .select('title')
-      .where('owner_id', '=', userId)
+      .where('ownerId', '=', userId)
       .execute();
 
     // Add derived tenantOwner roles for owned tenants
     for (const ownedTenant of ownedTenantsResult) {
       roles.push({
         id: 0, // Synthetic role, no actual user_roles record
-        role_name: 'tenantOwner',
-        tenant_id: ownedTenant.id,
-        tenant_title: ownedTenant.title,
-        shop_id: null,
-        shop_title: null,
+        roleName: 'tenantOwner',
+        tenantId: ownedTenant.id,
+        tenantTitle: ownedTenant.title,
+        shopId: null,
+        shopTitle: null,
       });
     }
 
     // Get all tenants user has access to (through roles or ownership)
     const tenantIds = [
       ...new Set([
-        ...roles.filter((r) => r.tenant_id !== null).map((r) => r.tenant_id as number),
+        ...roles.filter((r) => r.tenantId !== null).map((r) => r.tenantId as number),
         ...ownedTenantsResult.map((t) => t.id),
       ]),
     ];
@@ -200,7 +200,7 @@ export class UsersService {
       .selectFrom('tenants')
       .select('id')
       .select('title')
-      .select('owner_id')
+      .select('ownerId')
       .where('id', 'in', tenantIds.length > 0 ? tenantIds : [-1])
       .execute();
 
@@ -208,16 +208,14 @@ export class UsersService {
     const fullAccessTenantIds = new Set<number>();
     for (const tenant of tenantsResult) {
       // User is owner
-      if (tenant.owner_id === userId) {
+      if (tenant.ownerId === userId) {
         fullAccessTenantIds.add(tenant.id);
         continue;
       }
       // User has tenantAdmin role for this tenant
       const hasTenantAdmin = roles.some(
         (r) =>
-          r.tenant_id === tenant.id &&
-          r.role_name === ROLE_NAMES.TENANT_ADMIN &&
-          r.shop_id === null,
+          r.tenantId === tenant.id && r.roleName === ROLE_NAMES.TENANT_ADMIN && r.shopId === null,
       );
       if (hasTenantAdmin) {
         fullAccessTenantIds.add(tenant.id);
@@ -226,7 +224,7 @@ export class UsersService {
 
     // Get shop IDs from shop-level roles
     const shopLevelRoleShopIds = new Set(
-      roles.filter((r) => r.shop_id !== null).map((r) => r.shop_id as number),
+      roles.filter((r) => r.shopId !== null).map((r) => r.shopId as number),
     );
 
     // Get shops for all tenants
@@ -234,24 +232,24 @@ export class UsersService {
       .selectFrom('shops')
       .select('id')
       .select('title')
-      .select('tenant_id')
-      .where('tenant_id', 'in', tenantIds.length > 0 ? tenantIds : [-1])
+      .select('tenantId')
+      .where('tenantId', 'in', tenantIds.length > 0 ? tenantIds : [-1])
       .execute();
 
-    // Group shops by tenant_id, filtering based on user's access level
+    // Group shops by tenantId, filtering based on user's access level
     const shopsByTenant = shopsResult.reduce(
       (acc, shop) => {
         // Include shop if:
         // 1. User has full tenant access (owner or tenantAdmin), OR
         // 2. User has a shop-level role for this specific shop
-        const hasFullTenantAccess = fullAccessTenantIds.has(shop.tenant_id);
+        const hasFullTenantAccess = fullAccessTenantIds.has(shop.tenantId);
         const hasShopLevelRole = shopLevelRoleShopIds.has(shop.id);
 
         if (hasFullTenantAccess || hasShopLevelRole) {
-          if (!acc[shop.tenant_id]) {
-            acc[shop.tenant_id] = [];
+          if (!acc[shop.tenantId]) {
+            acc[shop.tenantId] = [];
           }
-          acc[shop.tenant_id]?.push({
+          acc[shop.tenantId]?.push({
             id: shop.id,
             title: shop.title,
           });
@@ -264,7 +262,7 @@ export class UsersService {
     const tenants: TenantInfo[] = tenantsResult.map((t) => ({
       id: t.id,
       title: t.title,
-      is_owner: t.owner_id === userId,
+      isOwner: t.ownerId === userId,
       shops: shopsByTenant[t.id] || [],
     }));
 

@@ -69,7 +69,7 @@ export class MarketplacesController {
     @Param('code') code: string,
   ): Promise<Marketplace> {
     const marketplace = await this.marketplacesService.findByCodeAndShop(code, ctx.shopId);
-    if (!marketplace || marketplace.tenant_id !== ctx.tenantId) {
+    if (!marketplace || marketplace.tenantId !== ctx.tenantId) {
       throw new NotFoundException(`Marketplace with code ${code} not found`);
     }
 
@@ -119,8 +119,8 @@ export class MarketplacesController {
   ): Promise<Marketplace> {
     return this.marketplacesService.create({
       ...dto,
-      shop_id: ctx.shopId,
-      tenant_id: ctx.tenantId,
+      shopId: ctx.shopId,
+      tenantId: ctx.tenantId,
     });
   }
 

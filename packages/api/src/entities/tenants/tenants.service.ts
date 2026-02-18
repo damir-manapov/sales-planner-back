@@ -11,15 +11,15 @@ import type {
 export type { Tenant };
 export type { CreateTenantDto, CreateTenantWithShopDto, UpdateTenantDto };
 
-// Internal type with required created_by (for DB operations)
-type CreateTenantInput = CreateTenantDto & { created_by: number };
+// Internal type with required createdBy (for DB operations)
+type CreateTenantInput = CreateTenantDto & { createdBy: number };
 
 export interface TenantWithShopAndApiKey {
   tenant: Tenant;
   shop: {
     id: number;
     title: string;
-    tenant_id: number;
+    tenantId: number;
   };
   user: {
     id: number;
@@ -45,7 +45,7 @@ export class TenantsService {
     const result = await this.db
       .selectFrom('tenants')
       .select(this.db.fn.countAll<number>().as('count'))
-      .where('owner_id', '=', ownerId)
+      .where('ownerId', '=', ownerId)
       .executeTakeFirstOrThrow();
     return Number(result.count);
   }
@@ -70,7 +70,7 @@ export class TenantsService {
     let q = this.db
       .selectFrom('tenants')
       .selectAll()
-      .where('owner_id', '=', ownerId)
+      .where('ownerId', '=', ownerId)
       .orderBy('id', 'asc');
     if (query?.limit !== undefined) q = q.limit(query.limit);
     if (query?.offset !== undefined) q = q.offset(query.offset);
@@ -95,7 +95,7 @@ export class TenantsService {
   async update(id: number, dto: UpdateTenantDto): Promise<Tenant | undefined> {
     return this.db
       .updateTable('tenants')
-      .set({ ...dto, updated_at: new Date() })
+      .set({ ...dto, updatedAt: new Date() })
       .where('id', '=', id)
       .returningAll()
       .executeTakeFirst();
@@ -115,7 +115,7 @@ export class TenantsService {
         .values({
           email: dto.userEmail,
           name: dto.userName,
-          updated_at: new Date(),
+          updatedAt: new Date(),
         })
         .returningAll()
         .executeTakeFirstOrThrow();
@@ -125,7 +125,7 @@ export class TenantsService {
       await trx
         .insertInto('api_keys')
         .values({
-          user_id: user.id,
+          userId: user.id,
           key: apiKeyValue,
           name: 'Default API Key',
         })
@@ -136,8 +136,8 @@ export class TenantsService {
         .insertInto('tenants')
         .values({
           title: dto.tenantTitle,
-          owner_id: user.id,
-          created_by: user.id,
+          ownerId: user.id,
+          createdBy: user.id,
         })
         .returningAll()
         .executeTakeFirstOrThrow();
@@ -147,7 +147,7 @@ export class TenantsService {
         .insertInto('shops')
         .values({
           title: dto.shopTitle || dto.tenantTitle,
-          tenant_id: tenant.id,
+          tenantId: tenant.id,
         })
         .returningAll()
         .executeTakeFirstOrThrow();
@@ -163,9 +163,9 @@ export class TenantsService {
         await trx
           .insertInto('user_roles')
           .values({
-            user_id: user.id,
-            role_id: tenantAdminRole.id,
-            tenant_id: tenant.id,
+            userId: user.id,
+            roleId: tenantAdminRole.id,
+            tenantId: tenant.id,
           })
           .execute();
       }
@@ -175,7 +175,7 @@ export class TenantsService {
         shop: {
           id: shop.id,
           title: shop.title,
-          tenant_id: shop.tenant_id,
+          tenantId: shop.tenantId,
         },
         user: {
           id: user.id,

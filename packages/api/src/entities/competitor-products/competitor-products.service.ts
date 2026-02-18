@@ -47,7 +47,7 @@ export class CompetitorProductsService {
     return this.db
       .selectFrom('competitor_products')
       .selectAll()
-      .where('shop_id', '=', shopId)
+      .where('shopId', '=', shopId)
       .execute();
   }
 
@@ -57,7 +57,7 @@ export class CompetitorProductsService {
   ): Promise<PaginatedResponse<CompetitorProduct>> {
     const { ids, limit = 100, offset = 0 } = query ?? {};
 
-    let baseQuery = this.db.selectFrom('competitor_products').where('shop_id', '=', shopId);
+    let baseQuery = this.db.selectFrom('competitor_products').where('shopId', '=', shopId);
 
     if (ids && ids.length > 0) {
       baseQuery = baseQuery.where('id', 'in', ids);
@@ -77,13 +77,13 @@ export class CompetitorProductsService {
       return await this.db
         .insertInto('competitor_products')
         .values({
-          shop_id: dto.shop_id,
-          tenant_id: dto.tenant_id,
-          marketplace_id: dto.marketplace_id,
-          marketplace_product_id: dto.marketplace_product_id,
+          shopId: dto.shopId,
+          tenantId: dto.tenantId,
+          marketplaceId: dto.marketplaceId,
+          marketplaceProductId: dto.marketplaceProductId,
           title: dto.title ?? null,
           brand: dto.brand ?? null,
-          updated_at: new Date(),
+          updatedAt: new Date(),
         })
         .returningAll()
         .executeTakeFirstOrThrow();
@@ -91,7 +91,7 @@ export class CompetitorProductsService {
       if (isUniqueViolation(error)) {
         throw new DuplicateResourceException(
           'Competitor Product',
-          `marketplace ${dto.marketplace_id} product ${dto.marketplace_product_id}`,
+          `marketplace ${dto.marketplaceId} product ${dto.marketplaceProductId}`,
           'this shop',
         );
       }
@@ -102,7 +102,7 @@ export class CompetitorProductsService {
   async update(id: number, dto: UpdateCompetitorProductDto): Promise<CompetitorProduct> {
     const result = await this.db
       .updateTable('competitor_products')
-      .set({ ...dto, updated_at: new Date() })
+      .set({ ...dto, updatedAt: new Date() })
       .where('id', '=', id)
       .returningAll()
       .executeTakeFirst();
@@ -120,7 +120,7 @@ export class CompetitorProductsService {
   async deleteByShopId(shopId: number): Promise<number> {
     const result = await this.db
       .deleteFrom('competitor_products')
-      .where('shop_id', '=', shopId)
+      .where('shopId', '=', shopId)
       .executeTakeFirst();
     return Number(result.numDeletedRows);
   }
@@ -139,9 +139,9 @@ export class CompetitorProductsService {
     const existing = await this.db
       .selectFrom('competitor_products')
       .selectAll()
-      .where('shop_id', '=', shopId)
-      .where('marketplace_id', '=', marketplaceId)
-      .where('marketplace_product_id', '=', marketplaceProductId)
+      .where('shopId', '=', shopId)
+      .where('marketplaceId', '=', marketplaceId)
+      .where('marketplaceProductId', '=', marketplaceProductId)
       .executeTakeFirst();
 
     if (existing) {
@@ -152,16 +152,16 @@ export class CompetitorProductsService {
     return this.db
       .insertInto('competitor_products')
       .values({
-        shop_id: shopId,
-        tenant_id: tenantId,
-        marketplace_id: marketplaceId,
-        marketplace_product_id: marketplaceProductId,
+        shopId: shopId,
+        tenantId: tenantId,
+        marketplaceId: marketplaceId,
+        marketplaceProductId: marketplaceProductId,
         title: null,
         brand: null,
-        updated_at: new Date(),
+        updatedAt: new Date(),
       })
       .onConflict((oc) =>
-        oc.columns(['shop_id', 'marketplace_id', 'marketplace_product_id']).doNothing(),
+        oc.columns(['shopId', 'marketplaceId', 'marketplaceProductId']).doNothing(),
       )
       .returningAll()
       .executeTakeFirstOrThrow();
@@ -183,20 +183,20 @@ export class CompetitorProductsService {
     // Insert all, ignoring conflicts
     // Title defaults to marketplace_product_id when auto-creating
     const values = items.map((item) => ({
-      shop_id: shopId,
-      tenant_id: tenantId,
-      marketplace_id: item.marketplaceId,
-      marketplace_product_id: item.marketplaceProductId,
+      shopId: shopId,
+      tenantId: tenantId,
+      marketplaceId: item.marketplaceId,
+      marketplaceProductId: item.marketplaceProductId,
       title: item.marketplaceProductId,
       brand: null,
-      updated_at: new Date(),
+      updatedAt: new Date(),
     }));
 
     await this.db
       .insertInto('competitor_products')
       .values(values)
       .onConflict((oc) =>
-        oc.columns(['shop_id', 'marketplace_id', 'marketplace_product_id']).doNothing(),
+        oc.columns(['shopId', 'marketplaceId', 'marketplaceProductId']).doNothing(),
       )
       .execute();
 
@@ -208,15 +208,15 @@ export class CompetitorProductsService {
 
     const records = await this.db
       .selectFrom('competitor_products')
-      .select(['id', 'marketplace_id', 'marketplace_product_id'])
-      .where('shop_id', '=', shopId)
-      .where('marketplace_id', 'in', marketplaceIds)
+      .select(['id', 'marketplaceId', 'marketplaceProductId'])
+      .where('shopId', '=', shopId)
+      .where('marketplaceId', 'in', marketplaceIds)
       .execute();
 
     // Build lookup map
     const result = new Map<string, number>();
     for (const record of records) {
-      const key = `${record.marketplace_id}:${record.marketplace_product_id}`;
+      const key = `${record.marketplaceId}:${record.marketplaceProductId}`;
       if (uniqueItems.includes(key)) {
         result.set(key, record.id);
       }
@@ -229,19 +229,19 @@ export class CompetitorProductsService {
     return this.db
       .insertInto('competitor_products')
       .values({
-        shop_id: dto.shop_id,
-        tenant_id: dto.tenant_id,
-        marketplace_id: dto.marketplace_id,
-        marketplace_product_id: dto.marketplace_product_id,
+        shopId: dto.shopId,
+        tenantId: dto.tenantId,
+        marketplaceId: dto.marketplaceId,
+        marketplaceProductId: dto.marketplaceProductId,
         title: dto.title ?? null,
         brand: dto.brand ?? null,
-        updated_at: new Date(),
+        updatedAt: new Date(),
       })
       .onConflict((oc) =>
-        oc.columns(['shop_id', 'marketplace_id', 'marketplace_product_id']).doUpdateSet({
+        oc.columns(['shopId', 'marketplaceId', 'marketplaceProductId']).doUpdateSet({
           title: dto.title ?? null,
           brand: dto.brand ?? null,
-          updated_at: new Date(),
+          updatedAt: new Date(),
         }),
       )
       .returningAll()
@@ -286,7 +286,7 @@ export class CompetitorProductsService {
 
     // Prepare items with resolved marketplace IDs
     interface PreparedItem extends ImportCompetitorProductItem {
-      marketplace_id: number;
+      marketplaceId: number;
     }
     const validItems: PreparedItem[] = [];
 
@@ -301,7 +301,7 @@ export class CompetitorProductsService {
 
       validItems.push({
         ...item,
-        marketplace_id: marketplaceId,
+        marketplaceId: marketplaceId,
       });
     });
 
@@ -311,23 +311,23 @@ export class CompetitorProductsService {
 
     // Bulk upsert
     const values = validItems.map((item) => ({
-      shop_id: shopId,
-      tenant_id: tenantId,
-      marketplace_id: item.marketplace_id,
-      marketplace_product_id: item.marketplaceProductId,
+      shopId: shopId,
+      tenantId: tenantId,
+      marketplaceId: item.marketplaceId,
+      marketplaceProductId: item.marketplaceProductId,
       title: item.title ?? null,
       brand: item.brand ?? null,
-      updated_at: new Date(),
+      updatedAt: new Date(),
     }));
 
     await this.db
       .insertInto('competitor_products')
       .values(values)
       .onConflict((oc) =>
-        oc.columns(['shop_id', 'marketplace_id', 'marketplace_product_id']).doUpdateSet((eb) => ({
+        oc.columns(['shopId', 'marketplaceId', 'marketplaceProductId']).doUpdateSet((eb) => ({
           title: eb.ref('excluded.title'),
           brand: eb.ref('excluded.brand'),
-          updated_at: new Date(),
+          updatedAt: new Date(),
         })),
       )
       .execute();
@@ -338,19 +338,19 @@ export class CompetitorProductsService {
   async exportCsv(shopId: number): Promise<CompetitorProductExportItem[]> {
     const rows = await this.db
       .selectFrom('competitor_products')
-      .innerJoin('marketplaces', 'marketplaces.id', 'competitor_products.marketplace_id')
+      .innerJoin('marketplaces', 'marketplaces.id', 'competitor_products.marketplaceId')
       .select([
         'marketplaces.code as marketplace',
-        'competitor_products.marketplace_product_id',
+        'competitor_products.marketplaceProductId',
         'competitor_products.title',
         'competitor_products.brand',
       ])
-      .where('competitor_products.shop_id', '=', shopId)
+      .where('competitor_products.shopId', '=', shopId)
       .execute();
 
     return rows.map((row) => ({
       marketplace: row.marketplace,
-      marketplace_product_id: row.marketplace_product_id,
+      marketplaceProductId: row.marketplaceProductId,
       title: row.title ?? undefined,
       brand: row.brand ?? undefined,
     }));

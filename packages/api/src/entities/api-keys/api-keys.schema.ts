@@ -11,14 +11,14 @@ const { id, name } = zodSchemas;
 
 // Zod schemas
 export const CreateApiKeySchema = z.object({
-  user_id: id(),
+  userId: id(),
   name: name().optional(),
-  expires_at: z.string().datetime().optional(),
+  expiresAt: z.string().datetime().optional(),
 });
 
 export const UpdateApiKeySchema = z.object({
   name: name().nullable().optional(),
-  expires_at: z.string().datetime().nullable().optional(),
+  expiresAt: z.string().datetime().nullable().optional(),
 });
 
 // Infer TypeScript types from schemas with compatibility checks

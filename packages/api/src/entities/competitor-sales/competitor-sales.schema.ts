@@ -13,7 +13,7 @@ const { id, quantity, period, code, flexiblePeriod, flexibleQuantity } = zodSche
 
 // Schema for requests (omitting shop_id and tenant_id)
 const CreateCompetitorSaleRequestSchema = z.object({
-  competitor_product_id: id(),
+  competitorProductId: id(),
   period: period(),
   quantity: quantity(),
 });
@@ -21,15 +21,15 @@ const CreateCompetitorSaleRequestSchema = z.object({
 // Query schema with period filters and pagination
 export const CompetitorSaleQuerySchema = z
   .object({
-    period_from: period().optional(),
-    period_to: period().optional(),
+    periodFrom: period().optional(),
+    periodTo: period().optional(),
   })
   .merge(PaginationQuerySchema);
 
 export const CreateCompetitorSaleSchema = z.object({
-  shop_id: id(),
-  tenant_id: id(),
-  competitor_product_id: id(),
+  shopId: id(),
+  tenantId: id(),
+  competitorProductId: id(),
   period: period(),
   quantity: quantity(),
 });
@@ -48,8 +48,8 @@ export const ImportCompetitorSaleItemSchema = z.object({
 
 // Period query for exports
 export const PeriodQuerySchema = z.object({
-  period_from: period().optional(),
-  period_to: period().optional(),
+  periodFrom: period().optional(),
+  periodTo: period().optional(),
 });
 
 // TypeScript types

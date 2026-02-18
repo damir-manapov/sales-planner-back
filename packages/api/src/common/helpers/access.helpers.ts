@@ -21,7 +21,7 @@ export function assertShopAccess<T extends ShopScopedBaseEntity>(
   if (!entity) {
     throw new NotFoundException(`${entityName} with id ${id} not found`);
   }
-  if (entity.shop_id !== ctx.shopId || entity.tenant_id !== ctx.tenantId) {
+  if (entity.shopId !== ctx.shopId || entity.tenantId !== ctx.tenantId) {
     throw new NotFoundException(`${entityName} with id ${id} not found in this shop/tenant`);
   }
 }

@@ -98,7 +98,7 @@ export async function getOrCreateTenant(
     console.log(`   ℹ️  User ${config.userEmail} already exists (ID: ${existingUser.id})`);
 
     // Get user's API key
-    const apiKeysResponse = await adminClient.apiKeys.getAll({ user_id: existingUser.id });
+    const apiKeysResponse = await adminClient.apiKeys.getAll({ userId: existingUser.id });
     // Handle both paginated (new) and array (old) responses for compatibility
     const apiKeys = Array.isArray(apiKeysResponse) ? apiKeysResponse : apiKeysResponse.items;
     const firstApiKey = apiKeys[0];

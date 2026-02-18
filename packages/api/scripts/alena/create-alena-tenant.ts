@@ -68,7 +68,7 @@ async function createAlenaTenant(args: AlenaTenantArgs) {
 
   // Create client with user's API key for data operations
   const userClient = new SalesPlannerClient({ baseUrl: apiUrl, apiKey: setup.apiKey });
-  const ctx = { shop_id: setup.shop.id, tenant_id: setup.tenant.id };
+  const ctx = { shopId: setup.shop.id, tenantId: setup.tenant.id };
 
   // Step 2: Clear existing shop data
   await runStep(
@@ -197,7 +197,7 @@ async function createAlenaTenant(args: AlenaTenantArgs) {
     16,
     '🔄',
     'Refreshing materialized views',
-    () => userClient.computed.refreshAll(ctx.shop_id, ctx.tenant_id),
+    () => userClient.computed.refreshAll(ctx),
     (r) => `Refreshed ${r.results.length} views in ${r.totalDuration}ms`,
   );
 

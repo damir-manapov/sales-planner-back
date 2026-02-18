@@ -93,12 +93,12 @@ export class TestContext {
     const user = await systemClient.users.create({
       email,
       name,
-      default_shop_id: this.shop.id,
+      defaultShopId: this.shop.id,
     });
 
     // Create API key
     const apiKeyData = await systemClient.apiKeys.create({
-      user_id: user.id,
+      userId: user.id,
       name: `Test key for ${name}`,
     });
 
@@ -110,10 +110,10 @@ export class TestContext {
     if (!editorRole) throw new Error('Editor role not found');
 
     await systemClient.userRoles.create({
-      user_id: user.id,
-      role_id: editorRole.id,
-      tenant_id: this.tenant.id,
-      shop_id: this.shop.id,
+      userId: user.id,
+      roleId: editorRole.id,
+      tenantId: this.tenant.id,
+      shopId: this.shop.id,
     });
 
     const client = new SalesPlannerClient({
@@ -129,8 +129,8 @@ export class TestContext {
    */
   get shopContext() {
     return {
-      shop_id: this.shop.id,
-      tenant_id: this.tenant.id,
+      shopId: this.shop.id,
+      tenantId: this.tenant.id,
     };
   }
 

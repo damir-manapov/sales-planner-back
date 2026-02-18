@@ -64,19 +64,19 @@ describe('Competitor Products (e2e)', () => {
   describe('CRUD operations', () => {
     it('should create competitor product', async () => {
       const record = await ctx.client.competitorProducts.create(ctx.shopContext, {
-        marketplace_id: marketplaceId,
-        marketplace_product_id: '123456789',
+        marketplaceId: marketplaceId,
+        marketplaceProductId: '123456789',
         title: 'Test Product',
         brand: 'Test Brand',
       });
 
       expect(record).toHaveProperty('id');
-      expect(record.marketplace_id).toBe(marketplaceId);
-      expect(record.marketplace_product_id).toBe('123456789');
+      expect(record.marketplaceId).toBe(marketplaceId);
+      expect(record.marketplaceProductId).toBe('123456789');
       expect(record.title).toBe('Test Product');
       expect(record.brand).toBe('Test Brand');
-      expect(record.shop_id).toBe(ctx.shop.id);
-      expect(record.tenant_id).toBe(ctx.tenant.id);
+      expect(record.shopId).toBe(ctx.shop.id);
+      expect(record.tenantId).toBe(ctx.tenant.id);
 
       productId = record.id;
     });
@@ -96,12 +96,12 @@ describe('Competitor Products (e2e)', () => {
       });
 
       const product1 = await ctx.client.competitorProducts.create(ctx.shopContext, {
-        marketplace_id: mp.id,
-        marketplace_product_id: String(Date.now()),
+        marketplaceId: mp.id,
+        marketplaceProductId: String(Date.now()),
       });
       const product2 = await ctx.client.competitorProducts.create(ctx.shopContext, {
-        marketplace_id: mp.id,
-        marketplace_product_id: String(Date.now() + 1),
+        marketplaceId: mp.id,
+        marketplaceProductId: String(Date.now() + 1),
       });
 
       // Filter by specific ids
@@ -131,11 +131,11 @@ describe('Competitor Products (e2e)', () => {
       expect(record.brand).toBe('Updated Brand');
     });
 
-    it('should return 409 on duplicate (marketplace_id, marketplace_product_id)', async () => {
+    it('should return 409 on duplicate (marketplaceId, marketplaceProductId)', async () => {
       await expectConflict(() =>
         ctx.client.competitorProducts.create(ctx.shopContext, {
-          marketplace_id: marketplaceId,
-          marketplace_product_id: '123456789',
+          marketplaceId: marketplaceId,
+          marketplaceProductId: '123456789',
           title: 'Duplicate',
         }),
       );
@@ -148,8 +148,8 @@ describe('Competitor Products (e2e)', () => {
       });
 
       const record = await ctx.client.competitorProducts.create(ctx.shopContext, {
-        marketplace_id: marketplace.id,
-        marketplace_product_id: '999888777',
+        marketplaceId: marketplace.id,
+        marketplaceProductId: '999888777',
       });
 
       await ctx.client.competitorProducts.delete(ctx.shopContext, record.id);
@@ -189,7 +189,7 @@ describe('Competitor Products (e2e)', () => {
       expect(Array.isArray(items)).toBe(true);
       if (items.length > 0) {
         expect(items[0]).toHaveProperty('marketplace');
-        expect(items[0]).toHaveProperty('marketplace_product_id');
+        expect(items[0]).toHaveProperty('marketplaceProductId');
       }
     });
 
@@ -212,7 +212,7 @@ ${csvMarketplace.code};777888999;CSV Product;CSV Brand`;
 
       expect(typeof csv).toBe('string');
       expect(csv).toContain('marketplace');
-      expect(csv).toContain('marketplace_product_id');
+      expect(csv).toContain('marketplaceProductId');
     });
 
     it('should auto-create missing marketplaces on import', async () => {
@@ -254,8 +254,8 @@ ${csvMarketplace.code};777888999;CSV Product;CSV Brand`;
       });
 
       const record = await ctx.client.competitorProducts.create(ctx.shopContext, {
-        marketplace_id: marketplace.id,
-        marketplace_product_id: '111222333',
+        marketplaceId: marketplace.id,
+        marketplaceProductId: '111222333',
       });
 
       expect(record.title).toBeNull();

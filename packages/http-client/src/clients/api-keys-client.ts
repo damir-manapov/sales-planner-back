@@ -7,7 +7,7 @@ import type {
 import { BaseClient } from './base-client.js';
 
 export interface GetApiKeysQuery extends PaginationQuery {
-  user_id?: number;
+  userId?: number;
 }
 
 export class ApiKeysClient extends BaseClient {
@@ -15,6 +15,10 @@ export class ApiKeysClient extends BaseClient {
     return this.request('GET', '/api-keys', {
       params: query as Record<string, string | number | undefined>,
     });
+  }
+
+  async getById(id: number): Promise<ApiKey> {
+    return this.request('GET', `/api-keys/${id}`);
   }
 
   async create(request: CreateApiKeyRequest): Promise<ApiKey> {

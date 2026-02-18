@@ -20,7 +20,7 @@ export class MeController {
       throw new UnauthorizedException('Invalid or expired API key');
     }
 
-    const user = await this.usersService.getUserWithRolesAndTenants(validApiKey.user_id);
+    const user = await this.usersService.getUserWithRolesAndTenants(validApiKey.userId);
     if (!user) {
       throw new NotFoundException('User not found');
     }

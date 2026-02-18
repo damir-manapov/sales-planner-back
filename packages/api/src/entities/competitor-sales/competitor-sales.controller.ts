@@ -66,10 +66,10 @@ export class CompetitorSalesController {
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @Res() res: ExpressResponse,
-    @Query('period_from') periodFrom?: string,
-    @Query('period_to') periodTo?: string,
+    @Query('periodFrom') periodFrom?: string,
+    @Query('periodTo') periodTo?: string,
   ): Promise<void> {
-    PeriodQuerySchema.parse({ period_from: periodFrom, period_to: periodTo });
+    PeriodQuerySchema.parse({ periodFrom, periodTo });
     const items = await this.competitorSalesService.exportForShop(ctx.shopId, periodFrom, periodTo);
     sendJsonExport(res, items, 'competitor-sales.json');
   }
@@ -80,14 +80,14 @@ export class CompetitorSalesController {
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
     @Res() res: ExpressResponse,
-    @Query('period_from') periodFrom?: string,
-    @Query('period_to') periodTo?: string,
+    @Query('periodFrom') periodFrom?: string,
+    @Query('periodTo') periodTo?: string,
   ): Promise<void> {
-    PeriodQuerySchema.parse({ period_from: periodFrom, period_to: periodTo });
+    PeriodQuerySchema.parse({ periodFrom, periodTo });
     const items = await this.competitorSalesService.exportForShop(ctx.shopId, periodFrom, periodTo);
     sendCsvExport(res, items, 'competitor-sales.csv', [
       'marketplace',
-      'marketplace_product_id',
+      'marketplaceProductId',
       'period',
       'quantity',
     ]);
@@ -110,15 +110,13 @@ export class CompetitorSalesController {
   async create(
     @Req() _req: AuthenticatedRequest,
     @ShopContext() ctx: ShopContextType,
-    @Body(
-      new ZodValidationPipe(CreateCompetitorSaleSchema.omit({ shop_id: true, tenant_id: true })),
-    )
+    @Body(new ZodValidationPipe(CreateCompetitorSaleSchema.omit({ shopId: true, tenantId: true })))
     dto: CreateCompetitorSaleRequest,
   ): Promise<CompetitorSale> {
     return this.competitorSalesService.create({
       ...dto,
-      shop_id: ctx.shopId,
-      tenant_id: ctx.tenantId,
+      shopId: ctx.shopId,
+      tenantId: ctx.tenantId,
     });
   }
 

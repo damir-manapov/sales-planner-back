@@ -31,9 +31,9 @@ describe('Seasonal Coefficients Schemas', () => {
   describe('CreateSeasonalCoefficientSchema', () => {
     it('should validate valid seasonal coefficient data', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        group_id: 10,
+        shopId: 1,
+        tenantId: 1,
+        groupId: 10,
         month: 6,
         coefficient: 1.25,
       };
@@ -45,9 +45,9 @@ describe('Seasonal Coefficients Schemas', () => {
 
     it('should accept month 1 (January)', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        group_id: 10,
+        shopId: 1,
+        tenantId: 1,
+        groupId: 10,
         month: 1,
         coefficient: 1.0,
       };
@@ -59,9 +59,9 @@ describe('Seasonal Coefficients Schemas', () => {
 
     it('should accept month 12 (December)', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        group_id: 10,
+        shopId: 1,
+        tenantId: 1,
+        groupId: 10,
         month: 12,
         coefficient: 1.5,
       };
@@ -73,9 +73,9 @@ describe('Seasonal Coefficients Schemas', () => {
 
     it('should reject month 0', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        group_id: 10,
+        shopId: 1,
+        tenantId: 1,
+        groupId: 10,
         month: 0,
         coefficient: 1.0,
       };
@@ -85,9 +85,9 @@ describe('Seasonal Coefficients Schemas', () => {
 
     it('should reject month 13', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        group_id: 10,
+        shopId: 1,
+        tenantId: 1,
+        groupId: 10,
         month: 13,
         coefficient: 1.0,
       };
@@ -97,9 +97,9 @@ describe('Seasonal Coefficients Schemas', () => {
 
     it('should reject zero coefficient', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        group_id: 10,
+        shopId: 1,
+        tenantId: 1,
+        groupId: 10,
         month: 6,
         coefficient: 0,
       };
@@ -109,9 +109,9 @@ describe('Seasonal Coefficients Schemas', () => {
 
     it('should reject negative coefficient', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
-        group_id: 10,
+        shopId: 1,
+        tenantId: 1,
+        groupId: 10,
         month: 6,
         coefficient: -0.5,
       };
@@ -121,8 +121,8 @@ describe('Seasonal Coefficients Schemas', () => {
 
     it('should require all mandatory fields', () => {
       const data = {
-        shop_id: 1,
-        tenant_id: 1,
+        shopId: 1,
+        tenantId: 1,
         month: 6,
       };
 

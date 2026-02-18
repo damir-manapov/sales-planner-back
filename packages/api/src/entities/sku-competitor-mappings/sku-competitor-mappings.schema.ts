@@ -13,22 +13,22 @@ const { id, code } = zodSchemas;
 
 // Schema for requests (omitting shop_id and tenant_id)
 const CreateSkuCompetitorMappingRequestSchema = z.object({
-  sku_id: id(),
-  competitor_product_id: id(),
+  skuId: id(),
+  competitorProductId: id(),
 });
 
 // Query schema with pagination
 export const SkuCompetitorMappingQuerySchema = PaginationQuerySchema;
 
 export const CreateSkuCompetitorMappingSchema = z.object({
-  shop_id: id(),
-  tenant_id: id(),
-  sku_id: id(),
-  competitor_product_id: id(),
+  shopId: id(),
+  tenantId: id(),
+  skuId: id(),
+  competitorProductId: id(),
 });
 
 export const UpdateSkuCompetitorMappingSchema = z.object({
-  competitor_product_id: id().optional(),
+  competitorProductId: id().optional(),
 });
 
 export const ImportSkuCompetitorMappingItemSchema = z.object({

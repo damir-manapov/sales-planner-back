@@ -1,7 +1,7 @@
 export interface CreateUserRoleDto {
-  user_id: number;
-  role_id: number;
-  tenant_id?: number;
-  shop_id?: number;
+  userId: number;
+  roleId: number;
+  tenantId?: number;
+  shopId?: number;
 }
 export type CreateUserRoleRequest = CreateUserRoleDto;

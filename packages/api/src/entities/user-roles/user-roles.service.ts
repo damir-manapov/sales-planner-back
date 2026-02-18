@@ -10,9 +10,9 @@ export type UserRole = Selectable<UserRoles>;
 export type { CreateUserRoleDto };
 
 interface UserRoleWithName {
-  tenant_id: number | null;
-  shop_id: number | null;
-  role_name: string;
+  tenantId: number | null;
+  shopId: number | null;
+  roleName: string;
 }
 
 @Injectable()
@@ -31,7 +31,7 @@ export class UserRolesService {
     const result = await this.db
       .selectFrom('user_roles')
       .select(this.db.fn.countAll<number>().as('count'))
-      .where('tenant_id', '=', tenantId)
+      .where('tenantId', '=', tenantId)
       .executeTakeFirstOrThrow();
     return Number(result.count);
   }
@@ -40,7 +40,7 @@ export class UserRolesService {
     const result = await this.db
       .selectFrom('user_roles')
       .select(this.db.fn.countAll<number>().as('count'))
-      .where('user_id', '=', userId)
+      .where('userId', '=', userId)
       .executeTakeFirstOrThrow();
     return Number(result.count);
   }
@@ -49,7 +49,7 @@ export class UserRolesService {
     const result = await this.db
       .selectFrom('user_roles')
       .select(this.db.fn.countAll<number>().as('count'))
-      .where('role_id', '=', roleId)
+      .where('roleId', '=', roleId)
       .executeTakeFirstOrThrow();
     return Number(result.count);
   }
@@ -70,7 +70,7 @@ export class UserRolesService {
     let q = this.db
       .selectFrom('user_roles')
       .selectAll()
-      .where('user_id', '=', userId)
+      .where('userId', '=', userId)
       .orderBy('id', 'asc');
     if (query?.limit !== undefined) q = q.limit(query.limit);
     if (query?.offset !== undefined) q = q.offset(query.offset);
@@ -92,7 +92,7 @@ export class UserRolesService {
     let q = this.db
       .selectFrom('user_roles')
       .selectAll()
-      .where('role_id', '=', roleId)
+      .where('roleId', '=', roleId)
       .orderBy('id', 'asc');
     if (query?.limit !== undefined) q = q.limit(query.limit);
     if (query?.offset !== undefined) q = q.offset(query.offset);
@@ -114,7 +114,7 @@ export class UserRolesService {
     let q = this.db
       .selectFrom('user_roles')
       .selectAll()
-      .where('tenant_id', '=', tenantId)
+      .where('tenantId', '=', tenantId)
       .orderBy('id', 'asc');
     if (query?.limit !== undefined) q = q.limit(query.limit);
     if (query?.offset !== undefined) q = q.offset(query.offset);
@@ -139,13 +139,13 @@ export class UserRolesService {
   async hasRole(userId: number, roleName: string, tenantId?: number): Promise<boolean> {
     let query = this.db
       .selectFrom('user_roles')
-      .innerJoin('roles', 'roles.id', 'user_roles.role_id')
+      .innerJoin('roles', 'roles.id', 'user_roles.roleId')
       .select('user_roles.id')
-      .where('user_roles.user_id', '=', userId)
+      .where('user_roles.userId', '=', userId)
       .where('roles.name', '=', roleName);
 
     if (tenantId !== undefined) {
-      query = query.where('user_roles.tenant_id', '=', tenantId);
+      query = query.where('user_roles.tenantId', '=', tenantId);
     }
 
     const result = await query.executeTakeFirst();
@@ -159,7 +159,7 @@ export class UserRolesService {
       if (isUniqueViolation(error)) {
         throw new DuplicateResourceException(
           'User Role',
-          `User ${dto.user_id} - Role ${dto.role_id}`,
+          `User ${dto.userId} - Role ${dto.roleId}`,
         );
       }
       throw error;
@@ -173,17 +173,17 @@ export class UserRolesService {
   async deleteByUserAndRole(userId: number, roleId: number): Promise<void> {
     await this.db
       .deleteFrom('user_roles')
-      .where('user_id', '=', userId)
-      .where('role_id', '=', roleId)
+      .where('userId', '=', userId)
+      .where('roleId', '=', roleId)
       .execute();
   }
 
   async findByUserIdWithRoleNames(userId: number): Promise<UserRoleWithName[]> {
     return this.db
       .selectFrom('user_roles')
-      .innerJoin('roles', 'roles.id', 'user_roles.role_id')
-      .select(['user_roles.tenant_id', 'user_roles.shop_id', 'roles.name as role_name'])
-      .where('user_roles.user_id', '=', userId)
+      .innerJoin('roles', 'roles.id', 'user_roles.roleId')
+      .select(['user_roles.tenantId', 'user_roles.shopId', 'roles.name as roleName'])
+      .where('user_roles.userId', '=', userId)
       .execute();
   }
 }

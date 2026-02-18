@@ -132,13 +132,76 @@ function ImportSuppliers() {
 | `useComputedViews(ctx, options?)` | query | List materialized views |
 | `useRefreshAllViews(ctx, options?)` | mutation | Refresh all views (auto-invalidates `skuMetrics`) |
 
+### Admin hooks
+
+#### Tenants
+
+| Hook | Kind | Description |
+| --- | --- | --- |
+| `useTenants(query?)` | query | Paginated list (filterable by `ownerId`) |
+| `useTenantById(id)` | query | Single tenant |
+| `useCreateTenant()` | mutation | Create tenant (SysAdmin) |
+| `useCreateTenantWithShopAndUser()` | mutation | Create tenant + shop + user + API key (SysAdmin) |
+| `useUpdateTenant()` | mutation | Update tenant (`{ id, data }`) |
+| `useDeleteTenant()` | mutation | Delete tenant (SysAdmin) |
+
+#### Users
+
+| Hook | Kind | Description |
+| --- | --- | --- |
+| `useUsers(query?)` | query | Paginated list (filterable by `tenantId`) |
+| `useUserById(id)` | query | Single user |
+| `useCreateUser()` | mutation | Create user |
+| `useDeleteUser()` | mutation | Delete user |
+
+#### Shops
+
+| Hook | Kind | Description |
+| --- | --- | --- |
+| `useShops(query?)` | query | Paginated list (filterable by `tenantId`) |
+| `useShopById(id)` | query | Single shop |
+| `useCreateShop()` | mutation | Create shop |
+| `useUpdateShop()` | mutation | Update shop (`{ id, data }`) |
+
+#### Roles (predefined, read-only)
+
+| Hook | Kind | Description |
+| --- | --- | --- |
+| `useRoles(query?)` | query | Paginated list |
+| `useRoleById(id)` | query | Single role |
+
+#### User Roles
+
+| Hook | Kind | Description |
+| --- | --- | --- |
+| `useUserRoles(query?)` | query | Paginated list (filterable by `userId`, `roleId`, `tenantId`) |
+| `useUserRoleById(id)` | query | Single user-role assignment |
+| `useCreateUserRole()` | mutation | Assign role to user |
+| `useDeleteUserRole()` | mutation | Remove role from user |
+
+#### User Shops
+
+| Hook | Kind | Description |
+| --- | --- | --- |
+| `useUserShops(query?)` | query | List (filterable by `userId`, `shopId`, `tenantId`) |
+| `useUserShopById(id)` | query | Single user-shop assignment |
+| `useCreateUserShop()` | mutation | Assign user to shop |
+| `useDeleteUserShop()` | mutation | Remove user from shop |
+
+#### API Keys
+
+| Hook | Kind | Description |
+| --- | --- | --- |
+| `useApiKeys(query?)` | query | Paginated list (filterable by `userId`) |
+| `useCreateApiKey()` | mutation | Create API key |
+| `useRevokeApiKey()` | mutation | Revoke (delete) API key |
+
 ### Utilities
 
 | Export | Description |
 | --- | --- |
 | `queryKeys` | Query key factory for custom cache management |
 | `ShopContext` | Type — `{ shopId: number; tenantId: number }` |
-| `toShopContextParams(ctx)` | Converts `ShopContext` to `ShopContextParams` |
 | `createCodedEntityHooks(name, accessor)` | Factory — build your own coded entity hook set |
 | `createShopScopedHooks(name, accessor)` | Factory — build your own shop-scoped hook set |
 
@@ -162,7 +225,21 @@ Available keys:
 | --- | --- | --- |
 | `queryKeys.me()` | — | Current user |
 | `queryKeys.metadata()` | — | Entity metadata |
-| `queryKeys.entity(name, ctx)` | entity name, shop context | Root key for an entity |
+| `queryKeys.tenants(query?)` | pagination + ownerId | Tenants list |
+| `queryKeys.tenantDetail(id)` | id | Single tenant |
+| `queryKeys.users(query?)` | pagination + tenantId | Users list |
+| `queryKeys.userDetail(id)` | id | Single user |
+| `queryKeys.shops(query?)` | pagination + tenantId | Shops list |
+| `queryKeys.shopDetail(id)` | id | Single shop |
+| `queryKeys.roles(query?)` | pagination | Roles list |
+| `queryKeys.roleDetail(id)` | id | Single role |
+| `queryKeys.userRoles(query?)` | userId, roleId, tenantId | User-role assignments |
+| `queryKeys.userRoleDetail(id)` | id | Single user-role |
+| `queryKeys.userShops(query?)` | userId, shopId, tenantId | User-shop assignments |
+| `queryKeys.userShopDetail(id)` | id | Single user-shop |
+| `queryKeys.apiKeys(query?)` | pagination + userId | API keys list |
+| `queryKeys.apiKeyDetail(id)` | id | Single API key |
+| `queryKeys.entity(name, ctx)` | entity name, shop context | Root key for a data entity |
 | `queryKeys.entityList(name, ctx, query?)` | entity, ctx, pagination | Paginated list |
 | `queryKeys.entityDetail(name, ctx, id)` | entity, ctx, id | Single entity |
 | `queryKeys.entityByCode(name, ctx, code)` | entity, ctx, code | Code lookup |
@@ -177,3 +254,12 @@ Available keys:
 ## Cache Invalidation
 
 All mutations automatically invalidate their related query caches. `useRefreshAllViews` additionally invalidates `skuMetrics`.
+
+## Related Packages
+
+- `@sales-planner/shared` — TypeScript types
+- `@sales-planner/http-client` — HTTP client (included as dependency)
+
+## License
+
+MIT

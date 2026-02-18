@@ -5,8 +5,8 @@ describe('UserRole Schemas', () => {
   describe('CreateUserRoleSchema', () => {
     it('should validate valid user role assignment', () => {
       const data = {
-        user_id: 1,
-        role_id: 2,
+        userId: 1,
+        roleId: 2,
       };
 
       const result = CreateUserRoleSchema.parse(data);
@@ -14,11 +14,11 @@ describe('UserRole Schemas', () => {
       expect(result).toEqual(data);
     });
 
-    it('should validate with optional tenant_id', () => {
+    it('should validate with optional tenantId', () => {
       const data = {
-        user_id: 1,
-        role_id: 2,
-        tenant_id: 3,
+        userId: 1,
+        roleId: 2,
+        tenantId: 3,
       };
 
       const result = CreateUserRoleSchema.parse(data);
@@ -26,11 +26,11 @@ describe('UserRole Schemas', () => {
       expect(result).toEqual(data);
     });
 
-    it('should validate with optional shop_id', () => {
+    it('should validate with optional shopId', () => {
       const data = {
-        user_id: 1,
-        role_id: 2,
-        shop_id: 4,
+        userId: 1,
+        roleId: 2,
+        shopId: 4,
       };
 
       const result = CreateUserRoleSchema.parse(data);
@@ -40,10 +40,10 @@ describe('UserRole Schemas', () => {
 
     it('should validate with all optional fields', () => {
       const data = {
-        user_id: 1,
-        role_id: 2,
-        tenant_id: 3,
-        shop_id: 4,
+        userId: 1,
+        roleId: 2,
+        tenantId: 3,
+        shopId: 4,
       };
 
       const result = CreateUserRoleSchema.parse(data);
@@ -51,55 +51,55 @@ describe('UserRole Schemas', () => {
       expect(result).toEqual(data);
     });
 
-    it('should reject negative user_id', () => {
+    it('should reject negative userId', () => {
       const data = {
-        user_id: -1,
-        role_id: 2,
+        userId: -1,
+        roleId: 2,
       };
 
       expect(() => CreateUserRoleSchema.parse(data)).toThrow();
     });
 
-    it('should reject zero role_id', () => {
+    it('should reject zero roleId', () => {
       const data = {
-        user_id: 1,
-        role_id: 0,
+        userId: 1,
+        roleId: 0,
       };
 
       expect(() => CreateUserRoleSchema.parse(data)).toThrow();
     });
 
-    it('should reject negative tenant_id', () => {
+    it('should reject negative tenantId', () => {
       const data = {
-        user_id: 1,
-        role_id: 2,
-        tenant_id: -1,
+        userId: 1,
+        roleId: 2,
+        tenantId: -1,
       };
 
       expect(() => CreateUserRoleSchema.parse(data)).toThrow();
     });
 
-    it('should reject zero shop_id', () => {
+    it('should reject zero shopId', () => {
       const data = {
-        user_id: 1,
-        role_id: 2,
-        shop_id: 0,
+        userId: 1,
+        roleId: 2,
+        shopId: 0,
       };
 
       expect(() => CreateUserRoleSchema.parse(data)).toThrow();
     });
 
-    it('should reject missing user_id', () => {
+    it('should reject missing userId', () => {
       const data = {
-        role_id: 2,
+        roleId: 2,
       };
 
       expect(() => CreateUserRoleSchema.parse(data)).toThrow();
     });
 
-    it('should reject missing role_id', () => {
+    it('should reject missing roleId', () => {
       const data = {
-        user_id: 1,
+        userId: 1,
       };
 
       expect(() => CreateUserRoleSchema.parse(data)).toThrow();

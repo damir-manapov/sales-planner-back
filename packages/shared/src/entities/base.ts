@@ -4,10 +4,10 @@
  */
 export interface ShopScopedBaseEntity {
   id: number;
-  shop_id: number;
-  tenant_id: number;
-  created_at: Date;
-  updated_at: Date;
+  shopId: number;
+  tenantId: number;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
 /**

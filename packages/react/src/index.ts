@@ -3,7 +3,7 @@ export { SalesPlannerProvider, useSalesPlannerClient } from './provider.js';
 export type { SalesPlannerProviderProps, ClientConfig } from './provider.js';
 
 // Query keys for custom cache management
-export { queryKeys, toShopContextParams } from './keys.js';
+export { queryKeys } from './keys.js';
 export type { ShopContext } from './keys.js';
 
 // Hook factories (for advanced use)
@@ -39,3 +39,41 @@ export {
   useComputedViews,
   useRefreshAllViews,
 } from './specialized.js';
+
+// ── Admin hooks ──
+export {
+  // Tenants
+  useTenants,
+  useTenantById,
+  useCreateTenant,
+  useCreateTenantWithShopAndUser,
+  useUpdateTenant,
+  useDeleteTenant,
+  // Users
+  useUsers,
+  useUserById,
+  useCreateUser,
+  useDeleteUser,
+  // Shops
+  useShops,
+  useShopById,
+  useCreateShop,
+  useUpdateShop,
+  // Roles
+  useRoles,
+  useRoleById,
+  // User Roles
+  useUserRoles,
+  useUserRoleById,
+  useCreateUserRole,
+  useDeleteUserRole,
+  // User Shops
+  useUserShops,
+  useUserShopById,
+  useCreateUserShop,
+  useDeleteUserShop,
+  // API Keys
+  useApiKeys,
+  useCreateApiKey,
+  useRevokeApiKey,
+} from './admin.js';

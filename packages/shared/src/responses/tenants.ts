@@ -5,7 +5,7 @@ export interface TenantWithShopAndApiKey {
   shop: {
     id: number;
     title: string;
-    tenant_id: number;
+    tenantId: number;
   };
   user: {
     id: number;

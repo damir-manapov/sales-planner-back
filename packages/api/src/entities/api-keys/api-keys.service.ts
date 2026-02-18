@@ -19,7 +19,7 @@ export class ApiKeysService {
     const result = await this.db
       .selectFrom('api_keys')
       .select(this.db.fn.countAll<number>().as('count'))
-      .where('user_id', '=', userId)
+      .where('userId', '=', userId)
       .executeTakeFirstOrThrow();
     return Number(result.count);
   }
@@ -48,7 +48,7 @@ export class ApiKeysService {
     let q = this.db
       .selectFrom('api_keys')
       .selectAll()
-      .where('user_id', '=', userId)
+      .where('userId', '=', userId)
       .orderBy('id', 'asc');
     if (query?.limit !== undefined) q = q.limit(query.limit);
     if (query?.offset !== undefined) q = q.offset(query.offset);
@@ -71,30 +71,30 @@ export class ApiKeysService {
     if (!apiKey) return null;
 
     // Check expiration
-    if (apiKey.expires_at && new Date(apiKey.expires_at) < new Date()) {
+    if (apiKey.expiresAt && new Date(apiKey.expiresAt) < new Date()) {
       return null;
     }
 
-    // Update last_used_at
+    // Update lastUsedAt
     await this.db
       .updateTable('api_keys')
-      .set({ last_used_at: new Date(), updated_at: new Date() })
+      .set({ lastUsedAt: new Date(), updatedAt: new Date() })
       .where('id', '=', apiKey.id)
       .execute();
 
     return apiKey;
   }
 
-  async create(data: { user_id: number; name?: string; expires_at?: Date | string }) {
+  async create(data: { userId: number; name?: string; expiresAt?: Date | string }) {
     const key = crypto.randomUUID();
     try {
       return this.db
         .insertInto('api_keys')
         .values({
-          user_id: data.user_id,
+          userId: data.userId,
           key: key,
           name: data.name,
-          expires_at: data.expires_at ? new Date(data.expires_at) : null,
+          expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
         })
         .returningAll()
         .executeTakeFirstOrThrow();
@@ -108,19 +108,19 @@ export class ApiKeysService {
 
   // Internal method for bootstrap - allows setting a specific key
   async createWithKey(data: {
-    user_id: number;
+    userId: number;
     key: string;
     name?: string;
-    expires_at?: Date | string;
+    expiresAt?: Date | string;
   }) {
     try {
       return this.db
         .insertInto('api_keys')
         .values({
-          user_id: data.user_id,
+          userId: data.userId,
           key: data.key,
           name: data.name,
-          expires_at: data.expires_at ? new Date(data.expires_at) : null,
+          expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
         })
         .returningAll()
         .executeTakeFirstOrThrow();
@@ -132,13 +132,13 @@ export class ApiKeysService {
     }
   }
 
-  async update(id: number, data: { name?: string | null; expires_at?: string | Date | null }) {
+  async update(id: number, data: { name?: string | null; expiresAt?: string | Date | null }) {
     return this.db
       .updateTable('api_keys')
       .set({
         ...data,
-        expires_at: data.expires_at ? new Date(data.expires_at) : null,
-        updated_at: new Date(),
+        expiresAt: data.expiresAt ? new Date(data.expiresAt) : null,
+        updatedAt: new Date(),
       })
       .where('id', '=', id)
       .returningAll()
@@ -150,6 +150,6 @@ export class ApiKeysService {
   }
 
   async deleteByUserId(userId: number) {
-    return this.db.deleteFrom('api_keys').where('user_id', '=', userId).execute();
+    return this.db.deleteFrom('api_keys').where('userId', '=', userId).execute();
   }
 }

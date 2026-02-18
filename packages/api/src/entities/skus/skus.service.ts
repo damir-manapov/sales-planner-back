@@ -21,10 +21,10 @@ import { SkusRepository } from './skus.repository.js';
 export type { Sku };
 
 interface PreparedSkuItem extends ImportSkuItem {
-  category_id?: number;
-  group_id?: number;
-  status_id?: number;
-  supplier_id?: number;
+  categoryId?: number;
+  groupId?: number;
+  statusId?: number;
+  supplierId?: number;
 }
 
 @Injectable()
@@ -156,10 +156,10 @@ export class SkusService {
         created: 0,
         updated: 0,
         errors,
-        categories_created: 0,
-        groups_created: 0,
-        statuses_created: 0,
-        suppliers_created: 0,
+        categoriesCreated: 0,
+        groupsCreated: 0,
+        statusesCreated: 0,
+        suppliersCreated: 0,
       };
     }
 
@@ -195,12 +195,12 @@ export class SkusService {
     // Prepare items with resolved IDs
     const preparedItems: PreparedSkuItem[] = validItems.map((item) => ({
       ...item,
-      category_id: item.category
+      categoryId: item.category
         ? categoryResult.codeToId.get(normalizeCode(item.category))
         : undefined,
-      group_id: item.group ? groupResult.codeToId.get(normalizeCode(item.group)) : undefined,
-      status_id: item.status ? statusResult.codeToId.get(normalizeCode(item.status)) : undefined,
-      supplier_id: item.supplier
+      groupId: item.group ? groupResult.codeToId.get(normalizeCode(item.group)) : undefined,
+      statusId: item.status ? statusResult.codeToId.get(normalizeCode(item.status)) : undefined,
+      supplierId: item.supplier
         ? supplierResult.codeToId.get(normalizeCode(item.supplier))
         : undefined,
     }));
@@ -217,10 +217,10 @@ export class SkusService {
         code: normalizeSkuCode(item.code),
         title: item.title,
         title2: item.title2,
-        category_id: item.category_id,
-        group_id: item.group_id,
-        status_id: item.status_id,
-        supplier_id: item.supplier_id,
+        categoryId: item.categoryId,
+        groupId: item.groupId,
+        statusId: item.statusId,
+        supplierId: item.supplierId,
       })),
     );
 
@@ -233,10 +233,10 @@ export class SkusService {
       created,
       updated,
       errors,
-      categories_created: categoryResult.created,
-      groups_created: groupResult.created,
-      statuses_created: statusResult.created,
-      suppliers_created: supplierResult.created,
+      categoriesCreated: categoryResult.created,
+      groupsCreated: groupResult.created,
+      statusesCreated: statusResult.created,
+      suppliersCreated: supplierResult.created,
     };
   }
 
