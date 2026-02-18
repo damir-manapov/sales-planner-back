@@ -398,7 +398,7 @@ describe('Suppliers (e2e)', () => {
       const csv = await ctx.client.suppliers.exportCsv(ctx.shopContext);
 
       expect(typeof csv).toBe('string');
-      expect(csv).toContain('code,title');
+      expect(csv).toContain('code;title');
       expect(csv).toContain(normalizeCode(code1));
       expect(csv).toContain(normalizeCode(code2));
     });
@@ -414,6 +414,18 @@ describe('Suppliers (e2e)', () => {
         expect(error).toBeInstanceOf(ApiError);
         expect((error as ApiError).status).toBe(400);
         expect((error as ApiError).message).toContain('Duplicate code found');
+      }
+    });
+
+    it('should reject CSV without headers', async () => {
+      const csvContent = 'SUP-001,Supplier One\nSUP-002,Supplier Two';
+
+      try {
+        await ctx.client.suppliers.importCsv(ctx.shopContext, csvContent);
+        expect.fail('Expected ApiError to be thrown');
+      } catch (error) {
+        expect(error).toBeInstanceOf(ApiError);
+        expect((error as ApiError).status).toBe(400);
       }
     });
   });
@@ -432,7 +444,7 @@ describe('Suppliers (e2e)', () => {
       const csv = await ctx.client.suppliers.getExampleCsv();
 
       expect(typeof csv).toBe('string');
-      expect(csv).toContain('code,title');
+      expect(csv).toContain('code;title');
     });
   });
 

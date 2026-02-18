@@ -426,7 +426,7 @@ describe('Groups (e2e)', () => {
 
       expect(typeof csv).toBe('string');
       const lines = csv.split('\n');
-      expect(lines[0]).toBe('code,title');
+      expect(lines[0]).toBe('code;title');
       expect(lines.some((line) => line.includes(normalizeCode(code1)))).toBe(true);
       expect(lines.some((line) => line.includes(normalizeCode(code2)))).toBe(true);
     });
@@ -460,7 +460,7 @@ describe('Groups (e2e)', () => {
       const csv = await ctx.client.groups.getExampleCsv();
 
       expect(typeof csv).toBe('string');
-      expect(csv).toContain('code,title');
+      expect(csv).toContain('code;title');
     });
   });
 

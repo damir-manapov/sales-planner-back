@@ -419,7 +419,7 @@ describe('SKUs (e2e)', () => {
       expect(line).toBeDefined();
       if (!line) throw new Error('CSV line not found');
       expect(line).toContain(normalizeCode(category));
-      expect(line).toContain(',,');
+      expect(line).toContain(';;');
     });
 
     it('should upsert existing SKUs on import', async () => {
@@ -626,7 +626,7 @@ describe('SKUs (e2e)', () => {
 
       expect(typeof csv).toBe('string');
       const lines = csv.split('\n');
-      expect(lines[0]).toBe('code,title,category,title2,group,supplier,status');
+      expect(lines[0]).toBe('code;title;category;title2;group;supplier;status');
       expect(lines.some((line) => line.includes(normalizeSkuCode(code1)))).toBe(true);
       expect(lines.some((line) => line.includes(normalizeSkuCode(code2)))).toBe(true);
     });
@@ -676,7 +676,7 @@ describe('SKUs (e2e)', () => {
       const csv = await ctx.client.skus.getExampleCsv();
 
       expect(typeof csv).toBe('string');
-      expect(csv).toContain('code,title');
+      expect(csv).toContain('code;title');
       expect(csv).toContain('SKU-001');
     });
   });

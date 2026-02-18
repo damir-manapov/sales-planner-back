@@ -4,25 +4,25 @@ import { fromCsv, toCsv } from './csv.js';
 
 describe('CSV utilities', () => {
   describe('toCsv', () => {
-    it('should convert array to comma-separated CSV', () => {
+    it('should convert array to semicolon-separated CSV', () => {
       const data = [
         { code: 'ABC', title: 'Product A' },
         { code: 'DEF', title: 'Product B' },
       ];
       const result = toCsv(data, ['code', 'title']);
-      expect(result).toBe('code,title\nABC,Product A\nDEF,Product B');
+      expect(result).toBe('code;title\nABC;Product A\nDEF;Product B');
     });
 
-    it('should handle values with commas by quoting', () => {
-      const data = [{ code: 'ABC', title: 'Product, with comma' }];
+    it('should handle values with semicolons by quoting', () => {
+      const data = [{ code: 'ABC', title: 'Product; with semicolon' }];
       const result = toCsv(data, ['code', 'title']);
-      expect(result).toBe('code,title\nABC,"Product, with comma"');
+      expect(result).toBe('code;title\nABC;"Product; with semicolon"');
     });
 
     it('should escape double quotes', () => {
       const data = [{ code: 'ABC', title: 'Product "Special"' }];
       const result = toCsv(data, ['code', 'title']);
-      expect(result).toBe('code,title\nABC,"Product ""Special"""');
+      expect(result).toBe('code;title\nABC;"Product ""Special"""');
     });
 
     it('should handle empty values', () => {
@@ -31,7 +31,13 @@ describe('CSV utilities', () => {
         { code: '', title: 'Product B' },
       ];
       const result = toCsv(data, ['code', 'title']);
-      expect(result).toBe('code,title\nABC,\n,Product B');
+      expect(result).toBe('code;title\nABC;\n;Product B');
+    });
+
+    it('should not quote values with commas', () => {
+      const data = [{ code: 'ABC', title: 'Product, with comma' }];
+      const result = toCsv(data, ['code', 'title']);
+      expect(result).toBe('code;title\nABC;Product, with comma');
     });
   });
 
@@ -148,6 +154,23 @@ describe('CSV utilities', () => {
 
       it('should throw error when column missing in header', () => {
         const csv = 'code\nABC\nDEF';
+        expect(() => fromCsv(csv, ['code', 'title'])).toThrow(BadRequestException);
+      });
+
+      it('should throw error for CSV without headers (data only)', () => {
+        // First row becomes column names, so "ABC" and "Product A" become headers
+        // Required columns "code" and "title" won't be found
+        const csv = 'ABC,Product A\nDEF,Product B';
+        expect(() => fromCsv(csv, ['code', 'title'])).toThrow(BadRequestException);
+      });
+
+      it('should throw error for single-column headerless CSV', () => {
+        const csv = 'ABC\nDEF\nGHI';
+        expect(() => fromCsv(csv, ['code'])).toThrow(BadRequestException);
+      });
+
+      it('should throw error for headerless CSV with semicolons', () => {
+        const csv = 'ABC;Product A\nDEF;Product B';
         expect(() => fromCsv(csv, ['code', 'title'])).toThrow(BadRequestException);
       });
 

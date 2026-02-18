@@ -589,7 +589,7 @@ describe('Sales History (e2e)', () => {
       expect(typeof csv).toBe('string');
 
       const lines = csv.split('\n');
-      expect(lines[0]).toBe('marketplace,period,sku,quantity');
+      expect(lines[0]).toBe('marketplace;period;sku;quantity');
       expect(lines.length).toBeGreaterThan(1);
     });
 
@@ -665,7 +665,7 @@ describe('Sales History (e2e)', () => {
     it('should return CSV example', async () => {
       const csv = await ctx.client.salesHistory.getExampleCsv();
 
-      expect(csv).toContain('marketplace,period,sku,quantity');
+      expect(csv).toContain('marketplace;period;sku;quantity');
       expect(csv).toContain('SKU-001');
     });
   });

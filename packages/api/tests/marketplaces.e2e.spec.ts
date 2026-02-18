@@ -417,7 +417,7 @@ describe('Marketplaces (e2e)', () => {
 
       expect(typeof csv).toBe('string');
       const lines = csv.split('\n');
-      expect(lines[0]).toBe('code,title');
+      expect(lines[0]).toBe('code;title');
       expect(lines.some((line) => line.includes(normalizeCode(code1)))).toBe(true);
       expect(lines.some((line) => line.includes(normalizeCode(code2)))).toBe(true);
     });
@@ -438,7 +438,7 @@ describe('Marketplaces (e2e)', () => {
 
       expect(typeof csv).toBe('string');
       const lines = csv.split('\n');
-      expect(lines[0]).toBe('code,title');
+      expect(lines[0]).toBe('code;title');
       expect(lines.length).toBeGreaterThan(1);
     });
   });

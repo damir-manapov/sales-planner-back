@@ -1,9 +1,10 @@
 import 'dotenv/config';
-import pg from 'pg';
-import fs from 'node:fs';
-import path from 'node:path';
-import { fileURLToPath } from 'node:url';
 import { config } from 'dotenv';
+import path from 'node:path';
+import { promises as fs } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import pg from 'pg';
+import { FileMigrationProvider, Kysely, Migrator, PostgresDialect } from 'kysely';
 
 // Load .env.local first, then .env
 config({ path: '.env.local' });
@@ -11,7 +12,8 @@ config({ path: '.env' });
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
-async function migrate() {
+// biome-ignore lint/suspicious/noExplicitAny: migration script operates without typed schema
+function createDb(): Kysely<any> {
   const url = process.env.DATABASE_URL;
 
   if (!url) {
@@ -23,46 +25,95 @@ async function migrate() {
 
   console.log(`Connecting to database: ${parsed.hostname}:${parsed.port}${parsed.pathname}`);
 
-  const pool = new pg.Pool({
-    connectionString: url,
-    ssl: ssl ? { rejectUnauthorized: false } : undefined,
+  return new Kysely({
+    dialect: new PostgresDialect({
+      pool: new pg.Pool({
+        connectionString: url,
+        ssl: ssl ? { rejectUnauthorized: false } : undefined,
+      }),
+    }),
   });
-
-  // Ensure migrations table exists
-  await pool.query(`
-    CREATE TABLE IF NOT EXISTS migrations (
-      name VARCHAR(255) PRIMARY KEY,
-      applied_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-    )
-  `);
-
-  // Get already applied migrations
-  const { rows: applied } = await pool.query('SELECT name FROM migrations');
-  const appliedSet = new Set(applied.map((r: { name: string }) => r.name));
-
-  const migrationsDir = path.join(__dirname, '..', 'migrations');
-  const files = fs
-    .readdirSync(migrationsDir)
-    .filter((f) => f.endsWith('.sql'))
-    .sort();
-
-  for (const file of files) {
-    if (appliedSet.has(file)) {
-      console.log(`⏭️  Skipping ${file} (already applied)`);
-      continue;
-    }
-    const sql = fs.readFileSync(path.join(migrationsDir, file), 'utf-8');
-    console.log(`Running migration: ${file}`);
-    await pool.query(sql);
-    await pool.query('INSERT INTO migrations (name) VALUES ($1)', [file]);
-    console.log(`✅ ${file} completed`);
-  }
-
-  await pool.end();
-  console.log('All migrations completed!');
 }
 
-migrate().catch((err) => {
+const command = process.argv[2] ?? 'latest';
+
+async function runMigrator() {
+  const db = createDb();
+
+  const migrator = new Migrator({
+    db,
+    provider: new FileMigrationProvider({
+      fs,
+      path,
+      migrationFolder: path.join(__dirname, '..', 'migrations'),
+    }),
+  });
+
+  let results: Awaited<ReturnType<typeof migrator.migrateToLatest>>['results'];
+  let error: unknown;
+
+  switch (command) {
+    case 'latest': {
+      const r = await migrator.migrateToLatest();
+      results = r.results;
+      error = r.error;
+      break;
+    }
+    case 'down': {
+      const r = await migrator.migrateDown();
+      results = r.results;
+      error = r.error;
+      break;
+    }
+    case 'up': {
+      const r = await migrator.migrateUp();
+      results = r.results;
+      error = r.error;
+      break;
+    }
+    case 'status': {
+      const migrations = await migrator.getMigrations();
+      console.log('\nMigration status:');
+      for (const m of migrations) {
+        const status = m.executedAt ? `✅ ${m.executedAt.toISOString()}` : '⏳ pending';
+        console.log(`  ${m.name}: ${status}`);
+      }
+      await db.destroy();
+      return;
+    }
+    default: {
+      console.error(`Unknown command: ${command}`);
+      console.log('Usage: tsx scripts/migrate.ts [latest|up|down|status]');
+      await db.destroy();
+      process.exit(1);
+    }
+  }
+
+  for (const r of results ?? []) {
+    if (r.status === 'Success') {
+      console.log(`✅ ${r.migrationName} (${r.direction})`);
+    } else if (r.status === 'Error') {
+      console.error(`❌ ${r.migrationName} (${r.direction})`);
+    } else {
+      console.log(`⏭️  ${r.migrationName} (not executed)`);
+    }
+  }
+
+  if (error) {
+    console.error('Migration failed:', error);
+    await db.destroy();
+    process.exit(1);
+  }
+
+  if (!results?.length) {
+    console.log('No migrations to run — already up to date.');
+  }
+
+  console.log('All migrations completed!');
+  await db.destroy();
+}
+
+runMigrator().catch((err) => {
   console.error('Migration failed:', err);
   process.exit(1);
 });

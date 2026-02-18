@@ -27,14 +27,29 @@ async function resetDb() {
   // Drop all tables in reverse dependency order
   const tables = [
     'sales_history',
+    'leftovers',
+    'seasonal_coefficients',
+    'sku_competitor_mappings',
+    'competitor_sales',
+    'competitor_products',
     'brands',
     'skus',
     'marketplaces',
+    'warehouses',
+    'categories',
+    'groups',
+    'statuses',
+    'suppliers',
     'user_roles',
+    'user_shops',
     'api_keys',
     'shops',
     'tenants',
     'users',
+    'roles',
+    'kysely_migration_lock',
+    'kysely_migration',
+    'migrations', // old hand-rolled tracking table
   ];
 
   for (const table of tables) {

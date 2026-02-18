@@ -2,10 +2,10 @@ import { BadRequestException } from '@nestjs/common';
 import { parse } from 'csv-parse/sync';
 
 /**
- * Converts an array of objects to CSV string format
+ * Converts an array of objects to semicolon-delimited CSV string format
  */
 export function toCsv<T extends object>(items: T[], columns: ReadonlyArray<keyof T>): string {
-  const header = columns.map(String).join(',');
+  const header = columns.map(String).join(';');
   const rows = items.map((item) => {
     return columns
       .map((col) => {
@@ -14,13 +14,13 @@ export function toCsv<T extends object>(items: T[], columns: ReadonlyArray<keyof
           return '';
         }
         const stringValue = String(value);
-        // Escape double quotes and wrap in quotes if contains comma, quote, or newline
-        if (stringValue.includes(',') || stringValue.includes('"') || stringValue.includes('\n')) {
+        // Escape double quotes and wrap in quotes if contains semicolon, quote, or newline
+        if (stringValue.includes(';') || stringValue.includes('"') || stringValue.includes('\n')) {
           return `"${stringValue.replace(/"/g, '""')}"`;
         }
         return stringValue;
       })
-      .join(',');
+      .join(';');
   });
   return [header, ...rows].join('\n');
 }
