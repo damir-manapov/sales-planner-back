@@ -1,0 +1,48 @@
+{
+  "name": "@sales-planner/react",
+  "version": "0.1.0",
+  "description": "React hooks for Sales Planner API powered by TanStack Query",
+  "author": "Damir Manapov",
+  "license": "MIT",
+  "keywords": [
+    "sales-planner",
+    "react",
+    "hooks",
+    "tanstack-query",
+    "react-query"
+  ],
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit",
+    "lint": "biome lint --error-on-warnings src",
+    "format": "biome format --write src",
+    "format:check": "biome format src"
+  },
+  "dependencies": {
+    "@sales-planner/http-client": "workspace:*",
+    "@sales-planner/shared": "workspace:*"
+  },
+  "peerDependencies": {
+    "@tanstack/react-query": ">=5.0.0",
+    "react": ">=18.0.0"
+  },
+  "devDependencies": {
+    "@tanstack/react-query": "^5.80.7",
+    "@types/react": "^19.1.8",
+    "react": "^19.1.0",
+    "typescript": "^5.7.3"
+  }
+}
