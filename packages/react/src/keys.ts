@@ -34,6 +34,9 @@ export const queryKeys = {
   entityExport: (entity: string, ctx: ShopContext, format: 'json' | 'csv') =>
     [...queryKeys.entity(entity, ctx), 'export', format] as const,
 
+  entityExample: (entity: string, format: 'json' | 'csv') =>
+    ['sales-planner', entity, 'example', format] as const,
+
   skuMetrics: (ctx: ShopContext) =>
     ['sales-planner', 'sku-metrics', ctx.shopId, ctx.tenantId] as const,
   skuMetricsList: (ctx: ShopContext, query?: Record<string, unknown>) =>

@@ -84,46 +84,96 @@ function ImportSuppliers() {
 }
 ```
 
-## Available Hooks
+## API Reference
 
-### Coded entities
+### Provider
+
+| Export | Description |
+| --- | --- |
+| `SalesPlannerProvider` | React context provider — accepts `config` and `children` |
+| `useSalesPlannerClient()` | Returns the underlying `SalesPlannerClient` for direct API access |
+| `ClientConfig` | Type — `{ baseUrl: string; apiKey?: string }` |
+
+### Coded entity hooks
 
 `brands`, `categories`, `groups`, `statuses`, `suppliers`, `warehouses`, `marketplaces`, `skus` — each provides:
 
-- `.useList(ctx, query?)` — paginated list
-- `.useById(ctx, id)` — single entity
-- `.useByCode(ctx, code)` — lookup by code
-- `.useCreate(ctx)` — create mutation
-- `.useUpdate(ctx)` — update mutation (`{ id, data }`)
-- `.useDelete(ctx)` — delete mutation
-- `.useImportJson(ctx)` — JSON import mutation
-- `.useImportCsv(ctx)` — CSV import mutation
-- `.useExportJson(ctx)` — JSON export (manual trigger)
-- `.useExportCsv(ctx)` — CSV export (manual trigger)
+| Hook | Kind | Description |
+| --- | --- | --- |
+| `.useList(ctx, query?)` | query | Paginated list |
+| `.useById(ctx, id)` | query | Single entity by ID |
+| `.useByCode(ctx, code)` | query | Lookup by code |
+| `.useExportJson(ctx)` | query | JSON export (`enabled: false`, manual trigger) |
+| `.useExportCsv(ctx)` | query | CSV export (`enabled: false`, manual trigger) |
+| `.useExampleJson()` | query | Example JSON (public, `staleTime: Infinity`) |
+| `.useExampleCsv()` | query | Example CSV (public, `staleTime: Infinity`) |
+| `.useCreate(ctx)` | mutation | Create entity |
+| `.useUpdate(ctx)` | mutation | Update entity (`{ id, data }`) |
+| `.useDelete(ctx)` | mutation | Delete entity by ID |
+| `.useImportJson(ctx)` | mutation | Bulk import from JSON |
+| `.useImportCsv(ctx)` | mutation | Bulk import from CSV |
 
-### Shop-scoped entities
+`ctx` is `ShopContext` — `{ shopId: number; tenantId: number }`.
 
-`salesHistory`, `leftovers`, `seasonalCoefficients`, `skuCompetitorMappings`, `competitorProducts`, `competitorSales` — same as above minus `useByCode`.
+### Shop-scoped entity hooks
 
-### Specialized
+`salesHistory`, `leftovers`, `seasonalCoefficients`, `skuCompetitorMappings`, `competitorProducts`, `competitorSales` — same as coded entities **without** `.useByCode`.
 
-- `useMe()` — current user
-- `useEntitiesMetadata()` — entity field metadata
-- `useSkuMetrics(ctx, query?)` — paginated SKU metrics
-- `useSkuMetricsById(ctx, id)` — single SKU metric
-- `useSkuMetricsByAbcClass(ctx, 'A' | 'B' | 'C')` — filter by ABC class
-- `useSkuMetricsExportCsv(ctx)` — CSV export
-- `useComputedViews(ctx)` — list materialized views
-- `useRefreshAllViews(ctx)` — refresh all views mutation
+### Specialized hooks
 
-## Cache Invalidation
+| Hook | Kind | Description |
+| --- | --- | --- |
+| `useMe(options?)` | query | Current user with roles and tenants |
+| `useEntitiesMetadata(options?)` | query | Entity field metadata (`staleTime: Infinity`) |
+| `useSkuMetrics(ctx, query?, options?)` | query | Paginated SKU metrics |
+| `useSkuMetricsById(ctx, id, options?)` | query | Single SKU metric |
+| `useSkuMetricsByAbcClass(ctx, 'A'\|'B'\|'C', options?)` | query | SKU metrics filtered by ABC class |
+| `useSkuMetricsExportCsv(ctx, options?)` | query | CSV export (`enabled: false`, manual trigger) |
+| `useComputedViews(ctx, options?)` | query | List materialized views |
+| `useRefreshAllViews(ctx, options?)` | mutation | Refresh all views (auto-invalidates `skuMetrics`) |
 
-All mutations automatically invalidate related query caches. The `queryKeys` object is exported for custom cache management:
+### Utilities
+
+| Export | Description |
+| --- | --- |
+| `queryKeys` | Query key factory for custom cache management |
+| `ShopContext` | Type — `{ shopId: number; tenantId: number }` |
+| `toShopContextParams(ctx)` | Converts `ShopContext` to `ShopContextParams` |
+| `createCodedEntityHooks(name, accessor)` | Factory — build your own coded entity hook set |
+| `createShopScopedHooks(name, accessor)` | Factory — build your own shop-scoped hook set |
+
+### Query keys
+
+All keys start with `'sales-planner'`. Use `queryKeys` for custom invalidation:
 
 ```tsx
 import { queryKeys } from '@sales-planner/react';
 import { useQueryClient } from '@tanstack/react-query';
 
-const queryClient = useQueryClient();
-queryClient.invalidateQueries({ queryKey: queryKeys.entity('skus', ctx) });
+const qc = useQueryClient();
+
+// Invalidate all SKU queries
+qc.invalidateQueries({ queryKey: queryKeys.entity('skus', ctx) });
 ```
+
+Available keys:
+
+| Key | Arguments | Purpose |
+| --- | --- | --- |
+| `queryKeys.me()` | — | Current user |
+| `queryKeys.metadata()` | — | Entity metadata |
+| `queryKeys.entity(name, ctx)` | entity name, shop context | Root key for an entity |
+| `queryKeys.entityList(name, ctx, query?)` | entity, ctx, pagination | Paginated list |
+| `queryKeys.entityDetail(name, ctx, id)` | entity, ctx, id | Single entity |
+| `queryKeys.entityByCode(name, ctx, code)` | entity, ctx, code | Code lookup |
+| `queryKeys.entityExport(name, ctx, format)` | entity, ctx, `'json'\|'csv'` | Export |
+| `queryKeys.entityExample(name, format)` | entity, `'json'\|'csv'` | Example (no ctx — public) |
+| `queryKeys.skuMetrics(ctx)` | ctx | SKU metrics root |
+| `queryKeys.skuMetricsList(ctx, query?)` | ctx, pagination | SKU metrics list |
+| `queryKeys.skuMetricsDetail(ctx, id)` | ctx, id | Single SKU metric |
+| `queryKeys.skuMetricsAbc(ctx, class)` | ctx, `'A'\|'B'\|'C'` | ABC class filter |
+| `queryKeys.computed(ctx)` | ctx | Computed views root |
+
+## Cache Invalidation
+
+All mutations automatically invalidate their related query caches. `useRefreshAllViews` additionally invalidates `skuMetrics`.

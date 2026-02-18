@@ -15,6 +15,8 @@ type ShopScopedClientLike<TEntity, TCreate, TUpdate, TImport, TExport, TImportRe
   importCsv(ctx: ShopContextParams, csvContent: string): Promise<TImportResult>;
   exportJson(ctx: ShopContextParams, query?: TQuery): Promise<TExport[]>;
   exportCsv(ctx: ShopContextParams, query?: TQuery): Promise<string>;
+  getExampleJson(): Promise<TImport[]>;
+  getExampleCsv(): Promise<string>;
 };
 
 /**
@@ -167,11 +169,33 @@ export function createShopScopedHooks<
     });
   }
 
+  function useExampleJson(options?: Omit<UseQueryOptions<TImport[]>, 'queryKey' | 'queryFn'>) {
+    const client = useSalesPlannerClient();
+    return useQuery({
+      queryKey: queryKeys.entityExample(entityName, 'json'),
+      queryFn: () => getClient(client).getExampleJson(),
+      staleTime: Number.POSITIVE_INFINITY,
+      ...options,
+    });
+  }
+
+  function useExampleCsv(options?: Omit<UseQueryOptions<string>, 'queryKey' | 'queryFn'>) {
+    const client = useSalesPlannerClient();
+    return useQuery({
+      queryKey: queryKeys.entityExample(entityName, 'csv'),
+      queryFn: () => getClient(client).getExampleCsv(),
+      staleTime: Number.POSITIVE_INFINITY,
+      ...options,
+    });
+  }
+
   return {
     useList,
     useById,
     useExportJson,
     useExportCsv,
+    useExampleJson,
+    useExampleCsv,
     useCreate,
     useUpdate,
     useDelete,

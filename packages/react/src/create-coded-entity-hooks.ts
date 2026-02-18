@@ -21,6 +21,8 @@ type CodedEntityClientLike<TEntity, TCreate, TUpdate, TImport, TExport> = {
   importCsv(ctx: ShopContextParams, csvContent: string): Promise<ImportResult>;
   exportJson(ctx: ShopContextParams): Promise<TExport[]>;
   exportCsv(ctx: ShopContextParams): Promise<string>;
+  getExampleJson(): Promise<TImport[]>;
+  getExampleCsv(): Promise<string>;
 };
 
 /**
@@ -175,12 +177,34 @@ export function createCodedEntityHooks<TEntity, TCreate, TUpdate, TImport, TExpo
     });
   }
 
+  function useExampleJson(options?: Omit<UseQueryOptions<TImport[]>, 'queryKey' | 'queryFn'>) {
+    const client = useSalesPlannerClient();
+    return useQuery({
+      queryKey: queryKeys.entityExample(entityName, 'json'),
+      queryFn: () => getClient(client).getExampleJson(),
+      staleTime: Number.POSITIVE_INFINITY,
+      ...options,
+    });
+  }
+
+  function useExampleCsv(options?: Omit<UseQueryOptions<string>, 'queryKey' | 'queryFn'>) {
+    const client = useSalesPlannerClient();
+    return useQuery({
+      queryKey: queryKeys.entityExample(entityName, 'csv'),
+      queryFn: () => getClient(client).getExampleCsv(),
+      staleTime: Number.POSITIVE_INFINITY,
+      ...options,
+    });
+  }
+
   return {
     useList,
     useById,
     useByCode,
     useExportJson,
     useExportCsv,
+    useExampleJson,
+    useExampleCsv,
     useCreate,
     useUpdate,
     useDelete,
