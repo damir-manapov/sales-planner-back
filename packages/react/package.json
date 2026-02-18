@@ -1,6 +1,6 @@
 {
   "name": "@sales-planner/react",
-  "version": "0.2.0",
+  "version": "0.2.1",
   "description": "React hooks for Sales Planner API powered by TanStack Query",
   "author": "Damir Manapov",
   "license": "MIT",
