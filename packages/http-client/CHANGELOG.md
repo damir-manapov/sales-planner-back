@@ -1,5 +1,13 @@
 # @sales-planner/http-client
 
+## 0.22.4
+
+### Patch Changes
+
+- Add /me shop visibility e2e tests: owner sees all shops, tenantAdmin sees all shops, editor sees only assigned shop, no-role user sees no tenants.
+- Updated dependencies
+  - @sales-planner/shared@0.20.4
+
 ## 0.22.3
 
 ### Patch Changes

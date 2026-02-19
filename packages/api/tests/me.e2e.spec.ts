@@ -5,7 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { ROLE_NAMES } from '../src/common/constants.js';
 import { TestContext } from './test-context.js';
-import { generateUniqueId } from './test-helpers.js';
+import { cleanupUser, generateUniqueId, SYSTEM_ADMIN_KEY } from './test-helpers.js';
 
 describe('Me (e2e)', () => {
   let app: INestApplication;
@@ -106,5 +106,121 @@ describe('Me (e2e)', () => {
     expect(Array.isArray(tenant?.shops)).toBe(true);
     expect(tenant?.shops?.length).toBe(1); // One shop created by with-shop-and-user
     expect(tenant?.shops?.[0]?.id).toBe(ctx.shop.id);
+  });
+
+  describe('Shop visibility', () => {
+    it('tenant owner should see all shops including newly added ones', async () => {
+      // Owner already has 1 shop from quick setup. Add a second shop.
+      const shop2 = await ctx.client.shops.create({
+        title: `Extra Shop ${generateUniqueId()}`,
+        tenantId: ctx.tenant.id,
+      });
+
+      const me = await ctx.client.me.getMe();
+      const tenant = me.tenants.find((t) => t.id === ctx.tenant.id);
+
+      expect(tenant).toBeDefined();
+      expect(tenant?.isOwner).toBe(true);
+      expect(tenant?.shops?.length).toBe(2);
+      expect(tenant?.shops?.map((s) => s.id)).toContain(ctx.shop.id);
+      expect(tenant?.shops?.map((s) => s.id)).toContain(shop2.id);
+
+      // Cleanup
+      await ctx.client.shops.delete(shop2.id);
+    });
+
+    it('tenantAdmin (non-owner) should see all shops', async () => {
+      const systemClient = new SalesPlannerClient({ baseUrl, apiKey: SYSTEM_ADMIN_KEY });
+
+      // Create a new user
+      const adminUser = await systemClient.users.create({
+        email: `tenant-admin-${generateUniqueId()}@test.com`,
+        name: 'Tenant Admin',
+      });
+      const adminApiKey = await systemClient.apiKeys.create({
+        userId: adminUser.id,
+        name: 'Admin Key',
+      });
+
+      // Assign tenantAdmin role (not owner)
+      const roles = await systemClient.roles.getAll();
+      const tenantAdminRole = roles.items.find((r) => r.name === ROLE_NAMES.TENANT_ADMIN);
+      if (!tenantAdminRole) throw new Error('tenantAdmin role not found');
+      await systemClient.userRoles.create({
+        userId: adminUser.id,
+        roleId: tenantAdminRole.id,
+        tenantId: ctx.tenant.id,
+      });
+
+      // Add a second shop
+      const shop2 = await ctx.client.shops.create({
+        title: `Admin Shop ${generateUniqueId()}`,
+        tenantId: ctx.tenant.id,
+      });
+
+      const adminClient = new SalesPlannerClient({ baseUrl, apiKey: adminApiKey.key });
+      const me = await adminClient.me.getMe();
+      const tenant = me.tenants.find((t) => t.id === ctx.tenant.id);
+
+      expect(tenant).toBeDefined();
+      expect(tenant?.isOwner).toBe(false);
+      expect(tenant?.shops?.length).toBe(2);
+      expect(tenant?.shops?.map((s) => s.id)).toContain(ctx.shop.id);
+      expect(tenant?.shops?.map((s) => s.id)).toContain(shop2.id);
+
+      // Cleanup
+      await ctx.client.shops.delete(shop2.id);
+      await cleanupUser(app, adminUser.id);
+    });
+
+    it('shop-level role user should only see assigned shop', async () => {
+      // Add a second shop that the editor should NOT see
+      const shop2 = await ctx.client.shops.create({
+        title: `Hidden Shop ${generateUniqueId()}`,
+        tenantId: ctx.tenant.id,
+      });
+
+      // createUser assigns editor role to ctx.shop only
+      const { user: editor, client: editorClient } = await ctx.createUser(
+        `editor-${generateUniqueId()}@test.com`,
+        'Editor User',
+      );
+
+      const me = await editorClient.me.getMe();
+      const tenant = me.tenants.find((t) => t.id === ctx.tenant.id);
+
+      expect(tenant).toBeDefined();
+      expect(tenant?.isOwner).toBe(false);
+      expect(tenant?.shops?.length).toBe(1);
+      expect(tenant?.shops?.[0]?.id).toBe(ctx.shop.id);
+      // Should NOT see shop2
+      expect(tenant?.shops?.map((s) => s.id)).not.toContain(shop2.id);
+
+      // Cleanup
+      await ctx.client.shops.delete(shop2.id);
+      await cleanupUser(app, editor.id);
+    });
+
+    it('user with no roles should see no tenants', async () => {
+      const systemClient = new SalesPlannerClient({ baseUrl, apiKey: SYSTEM_ADMIN_KEY });
+
+      const noRoleUser = await systemClient.users.create({
+        email: `norole-${generateUniqueId()}@test.com`,
+        name: 'No Role User',
+      });
+      const noRoleApiKey = await systemClient.apiKeys.create({
+        userId: noRoleUser.id,
+        name: 'No Role Key',
+      });
+
+      const noRoleClient = new SalesPlannerClient({ baseUrl, apiKey: noRoleApiKey.key });
+      const me = await noRoleClient.me.getMe();
+
+      expect(me.tenants).toHaveLength(0);
+      expect(me.roles).toHaveLength(0);
+
+      // Cleanup
+      await cleanupUser(app, noRoleUser.id);
+    });
   });
 });
