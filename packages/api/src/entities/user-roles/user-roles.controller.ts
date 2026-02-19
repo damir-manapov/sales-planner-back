@@ -110,6 +110,11 @@ export class UserRolesController {
         throw new ForbiddenException('tenantId is required');
       }
       validateTenantAdminAccess(req.user, dto.tenantId);
+
+      // Protected roles (e.g. tenantAdmin) are auto-assigned, not manually assignable
+      if (await this.userRolesService.isProtectedRole(dto.roleId)) {
+        throw new ForbiddenException('This role cannot be manually assigned');
+      }
     }
 
     return this.userRolesService.create(dto);

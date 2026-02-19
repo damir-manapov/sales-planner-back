@@ -67695,10 +67695,10 @@ var require_core2 = __commonJS({
   "../../node_modules/.pnpm/@nestjs+core@11.1.13_@nestjs+common@11.1.13_reflect-metadata@0.2.2_rxjs@7.8.2__@nestjs+_8eee95f8ec8b2b098d54e5dbace7e3f0/node_modules/@nestjs/core/index.js"(exports) {
     "use strict";
     try {
-      (init_empty(), __toCommonJS(empty_exports)).default({ tool: "nest.js", checkSum: "207fd308b75320341e0d3bBldKAx4JVA0DCwQHUA1XVQFdBFJU", mode: "runtime", condition: true });
+      (init_empty(), __toCommonJS(empty_exports)).default({ tool: "nest.js", checkSum: "202aa85c038d5129b121dbA1BPCBtSBgkIAlQAVFxRCAMGAVcA", mode: "runtime", condition: true });
     } catch (cjsError) {
       try {
-        Promise.resolve().then(() => (init_empty(), empty_exports)).then((m) => m.default.default({ tool: "nest.js", checkSum: "207fd308b75320341e0d3bBldKAx4JVA0DCwQHUA1XVQFdBFJU", mode: "runtime", condition: true })).catch((esmError) => {
+        Promise.resolve().then(() => (init_empty(), empty_exports)).then((m) => m.default.default({ tool: "nest.js", checkSum: "202aa85c038d5129b121dbA1BPCBtSBgkIAlQAVFxRCAMGAVcA", mode: "runtime", condition: true })).catch((esmError) => {
         });
       } catch (esmError) {
       }
@@ -115837,7 +115837,7 @@ var require_app_controller = __commonJS({
     function _ts_metadata(k, v) {
       if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
     }
-    var APP_VERSION = true ? "0.10.11" : "0.0.0";
+    var APP_VERSION = true ? "0.10.12" : "0.0.0";
     var AppController = class AppController {
       getHello() {
         return this.appService.getHello();

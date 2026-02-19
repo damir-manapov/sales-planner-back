@@ -1,5 +1,13 @@
 # @sales-planner/api
 
+## 0.10.13
+
+### Patch Changes
+
+- Make ownerId required when creating tenants. Restrict manual tenantAdmin role assignment (auto-assigned via Quick Setup only). Add corner case e2e tests for /me shop visibility: owner-only, multi-shop roles, mixed tenant access.
+- Updated dependencies
+  - @sales-planner/shared@0.20.5
+
 ## 0.10.12
 
 ### Patch Changes

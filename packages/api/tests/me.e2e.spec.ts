@@ -5,7 +5,12 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { AppModule } from '../src/app.module.js';
 import { ROLE_NAMES } from '../src/common/constants.js';
 import { TestContext } from './test-context.js';
-import { cleanupUser, generateUniqueId, SYSTEM_ADMIN_KEY } from './test-helpers.js';
+import {
+  cleanupUser,
+  expectForbidden,
+  generateUniqueId,
+  SYSTEM_ADMIN_KEY,
+} from './test-helpers.js';
 
 describe('Me (e2e)', () => {
   let app: INestApplication;
@@ -221,6 +226,255 @@ describe('Me (e2e)', () => {
 
       // Cleanup
       await cleanupUser(app, noRoleUser.id);
+    });
+
+    it('owner-only (no tenantAdmin role) should see all shops', async () => {
+      const systemClient = new SalesPlannerClient({ baseUrl, apiKey: SYSTEM_ADMIN_KEY });
+
+      // Create user manually (not via quick setup)
+      const ownerUser = await systemClient.users.create({
+        email: `owner-only-${generateUniqueId()}@test.com`,
+        name: 'Owner Only',
+      });
+      const ownerApiKey = await systemClient.apiKeys.create({
+        userId: ownerUser.id,
+        name: 'Owner Key',
+      });
+
+      // Create tenant with this user as owner
+      const tenant = await systemClient.tenants.create({
+        title: `Owner Tenant ${generateUniqueId()}`,
+        ownerId: ownerUser.id,
+      });
+
+      // Create 3 shops - owner should see all of them without any explicit roles
+      const shop1 = await systemClient.shops.create({
+        title: `Shop A ${generateUniqueId()}`,
+        tenantId: tenant.id,
+      });
+      const shop2 = await systemClient.shops.create({
+        title: `Shop B ${generateUniqueId()}`,
+        tenantId: tenant.id,
+      });
+      const shop3 = await systemClient.shops.create({
+        title: `Shop C ${generateUniqueId()}`,
+        tenantId: tenant.id,
+      });
+
+      const ownerClient = new SalesPlannerClient({ baseUrl, apiKey: ownerApiKey.key });
+      const me = await ownerClient.me.getMe();
+
+      // Should have derived tenantOwner role only (no tenantAdmin)
+      expect(me.roles).toHaveLength(1);
+      expect(me.roles[0]?.roleName).toBe(ROLE_NAMES.TENANT_OWNER);
+
+      const t = me.tenants.find((t) => t.id === tenant.id);
+      expect(t).toBeDefined();
+      expect(t?.isOwner).toBe(true);
+      expect(t?.shops).toHaveLength(3);
+      const shopIds = t?.shops?.map((s) => s.id) ?? [];
+      expect(shopIds).toContain(shop1.id);
+      expect(shopIds).toContain(shop2.id);
+      expect(shopIds).toContain(shop3.id);
+
+      // Cleanup
+      await cleanupUser(app, ownerUser.id);
+    });
+
+    it('user with shop-level roles in 2 of 3 shops sees exactly those 2', async () => {
+      const systemClient = new SalesPlannerClient({ baseUrl, apiKey: SYSTEM_ADMIN_KEY });
+
+      // Create user
+      const user = await systemClient.users.create({
+        email: `multi-shop-${generateUniqueId()}@test.com`,
+        name: 'Multi Shop User',
+      });
+      const apiKey = await systemClient.apiKeys.create({
+        userId: user.id,
+        name: 'Multi Shop Key',
+      });
+
+      // Create tenant (not owned by this user)
+      const tenantOwner = await systemClient.users.create({
+        email: `tenant-owner-${generateUniqueId()}@test.com`,
+        name: 'Tenant Owner',
+      });
+      const tenant = await systemClient.tenants.create({
+        title: `Multi Shop Tenant ${generateUniqueId()}`,
+        ownerId: tenantOwner.id,
+      });
+
+      // Create 3 shops
+      const shop1 = await systemClient.shops.create({
+        title: `Visible A ${generateUniqueId()}`,
+        tenantId: tenant.id,
+      });
+      const shop2 = await systemClient.shops.create({
+        title: `Visible B ${generateUniqueId()}`,
+        tenantId: tenant.id,
+      });
+      const shop3 = await systemClient.shops.create({
+        title: `Hidden ${generateUniqueId()}`,
+        tenantId: tenant.id,
+      });
+
+      // Assign editor role for shop1 and viewer role for shop2 only
+      const roles = await systemClient.roles.getAll();
+      const editorRole = roles.items.find((r) => r.name === ROLE_NAMES.EDITOR);
+      const viewerRole = roles.items.find((r) => r.name === ROLE_NAMES.VIEWER);
+      if (!editorRole || !viewerRole) throw new Error('Roles not found');
+
+      await systemClient.userRoles.create({
+        userId: user.id,
+        roleId: editorRole.id,
+        tenantId: tenant.id,
+        shopId: shop1.id,
+      });
+      await systemClient.userRoles.create({
+        userId: user.id,
+        roleId: viewerRole.id,
+        tenantId: tenant.id,
+        shopId: shop2.id,
+      });
+
+      const userClient = new SalesPlannerClient({ baseUrl, apiKey: apiKey.key });
+      const me = await userClient.me.getMe();
+
+      const t = me.tenants.find((t) => t.id === tenant.id);
+      expect(t).toBeDefined();
+      expect(t?.isOwner).toBe(false);
+      expect(t?.shops).toHaveLength(2);
+      const shopIds = t?.shops?.map((s) => s.id) ?? [];
+      expect(shopIds).toContain(shop1.id);
+      expect(shopIds).toContain(shop2.id);
+      expect(shopIds).not.toContain(shop3.id);
+
+      // Cleanup: user first (user_roles, api_keys, user), then orphan tenant resources
+      await cleanupUser(app, user.id);
+      for (const shop of [shop1, shop2, shop3]) {
+        await systemClient.shops.delete(shop.id);
+      }
+      await systemClient.tenants.delete(tenant.id);
+      await cleanupUser(app, tenantOwner.id);
+    });
+
+    it('mixed access: owner of tenant A, editor in one shop of tenant B', async () => {
+      const systemClient = new SalesPlannerClient({ baseUrl, apiKey: SYSTEM_ADMIN_KEY });
+
+      // Create user
+      const user = await systemClient.users.create({
+        email: `mixed-${generateUniqueId()}@test.com`,
+        name: 'Mixed Access User',
+      });
+      const apiKey = await systemClient.apiKeys.create({
+        userId: user.id,
+        name: 'Mixed Key',
+      });
+
+      // Tenant A: user is owner, has 2 shops
+      const tenantA = await systemClient.tenants.create({
+        title: `Owned Tenant ${generateUniqueId()}`,
+        ownerId: user.id,
+      });
+      const shopA1 = await systemClient.shops.create({
+        title: `Owned Shop 1 ${generateUniqueId()}`,
+        tenantId: tenantA.id,
+      });
+      const shopA2 = await systemClient.shops.create({
+        title: `Owned Shop 2 ${generateUniqueId()}`,
+        tenantId: tenantA.id,
+      });
+
+      // Tenant B: user is NOT owner, has 3 shops, editor in 1 only
+      const tenantBOwner = await systemClient.users.create({
+        email: `tenantb-owner-${generateUniqueId()}@test.com`,
+        name: 'Tenant B Owner',
+      });
+      const tenantB = await systemClient.tenants.create({
+        title: `Other Tenant ${generateUniqueId()}`,
+        ownerId: tenantBOwner.id,
+      });
+      const shopB1 = await systemClient.shops.create({
+        title: `Assigned Shop ${generateUniqueId()}`,
+        tenantId: tenantB.id,
+      });
+      const shopB2 = await systemClient.shops.create({
+        title: `Hidden Shop B2 ${generateUniqueId()}`,
+        tenantId: tenantB.id,
+      });
+      const shopB3 = await systemClient.shops.create({
+        title: `Hidden Shop B3 ${generateUniqueId()}`,
+        tenantId: tenantB.id,
+      });
+
+      // Assign editor role for shopB1 only
+      const roles = await systemClient.roles.getAll();
+      const editorRole = roles.items.find((r) => r.name === ROLE_NAMES.EDITOR);
+      if (!editorRole) throw new Error('Editor role not found');
+
+      await systemClient.userRoles.create({
+        userId: user.id,
+        roleId: editorRole.id,
+        tenantId: tenantB.id,
+        shopId: shopB1.id,
+      });
+
+      const userClient = new SalesPlannerClient({ baseUrl, apiKey: apiKey.key });
+      const me = await userClient.me.getMe();
+
+      // Tenant A: owner sees all 2 shops
+      const tA = me.tenants.find((t) => t.id === tenantA.id);
+      expect(tA).toBeDefined();
+      expect(tA?.isOwner).toBe(true);
+      expect(tA?.shops).toHaveLength(2);
+      expect(tA?.shops?.map((s) => s.id)).toContain(shopA1.id);
+      expect(tA?.shops?.map((s) => s.id)).toContain(shopA2.id);
+
+      // Tenant B: editor sees only shopB1
+      const tB = me.tenants.find((t) => t.id === tenantB.id);
+      expect(tB).toBeDefined();
+      expect(tB?.isOwner).toBe(false);
+      expect(tB?.shops).toHaveLength(1);
+      expect(tB?.shops?.[0]?.id).toBe(shopB1.id);
+
+      // Should have exactly 2 tenants
+      expect(me.tenants).toHaveLength(2);
+
+      // Cleanup: cleanupUser handles tenant A (owned), user_roles, api_keys, user
+      // Then clean up orphan tenant B resources
+      await cleanupUser(app, user.id);
+      for (const shop of [shopB1, shopB2, shopB3]) {
+        await systemClient.shops.delete(shop.id);
+      }
+      await systemClient.tenants.delete(tenantB.id);
+      await cleanupUser(app, tenantBOwner.id);
+    });
+
+    it('tenantAdmin cannot manually assign tenantAdmin role', async () => {
+      const systemClient = new SalesPlannerClient({ baseUrl, apiKey: SYSTEM_ADMIN_KEY });
+
+      // Create a second user to be the target of the role assignment
+      const targetUser = await systemClient.users.create({
+        email: `target-${generateUniqueId()}@test.com`,
+        name: 'Target User',
+      });
+
+      // Get tenantAdmin role ID
+      const roles = await systemClient.roles.getAll();
+      const tenantAdminRole = roles.items.find((r) => r.name === ROLE_NAMES.TENANT_ADMIN);
+      if (!tenantAdminRole) throw new Error('tenantAdmin role not found');
+
+      // ctx.client is a tenantAdmin (from quick setup) — try to assign tenantAdmin to target
+      await expectForbidden(() =>
+        ctx.client.userRoles.create({
+          userId: targetUser.id,
+          roleId: tenantAdminRole.id,
+          tenantId: ctx.tenant.id,
+        }),
+      );
+
+      // Cleanup
+      await cleanupUser(app, targetUser.id);
     });
   });
 });

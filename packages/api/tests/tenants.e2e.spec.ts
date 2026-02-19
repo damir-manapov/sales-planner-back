@@ -85,13 +85,17 @@ describe('Tenants (e2e)', () => {
     it('POST /tenants - should return 401 without API key', async () => {
       const noAuthClient = new SalesPlannerClient({ baseUrl, apiKey: '' });
 
-      await expectUnauthorized(() => noAuthClient.tenants.create({ title: 'Test Tenant' }));
+      await expectUnauthorized(() =>
+        noAuthClient.tenants.create({ title: 'Test Tenant', ownerId: 1 }),
+      );
     });
 
     it('POST /tenants - should return 401 with invalid API key', async () => {
       const invalidClient = new SalesPlannerClient({ baseUrl, apiKey: 'invalid-key' });
 
-      await expectUnauthorized(() => invalidClient.tenants.create({ title: 'Test Tenant' }));
+      await expectUnauthorized(() =>
+        invalidClient.tenants.create({ title: 'Test Tenant', ownerId: 1 }),
+      );
     });
 
     it('GET /tenants - should return 401 without API key', async () => {
@@ -123,6 +127,15 @@ describe('Tenants (e2e)', () => {
         userClient.tenants.create({
           title: `Test Tenant ${generateUniqueId()}`,
           ownerId: ctx.user.id,
+        }),
+      );
+    });
+
+    it('POST /tenants - should return 400 without ownerId', async () => {
+      await expectBadRequest(() =>
+        // biome-ignore lint/suspicious/noExplicitAny: intentionally testing invalid payload
+        (adminClient.tenants.create as any)({
+          title: `Test Tenant ${generateUniqueId()}`,
         }),
       );
     });

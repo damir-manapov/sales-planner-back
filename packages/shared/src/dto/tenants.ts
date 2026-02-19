@@ -5,7 +5,7 @@ export interface CreateTenantDto {
 }
 export interface CreateTenantRequest {
   title: string;
-  ownerId?: number;
+  ownerId: number;
 }
 
 export interface UpdateTenantDto {

@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { PaginatedResponse, PaginationQuery } from '@sales-planner/shared';
 import { type Selectable } from 'kysely';
+import { ROLE_NAMES } from '../../common/constants.js';
 import { DuplicateResourceException, isUniqueViolation } from '../../common/index.js';
 import { DatabaseService } from '../../database/database.service.js';
 import { type UserRoles } from '../../database/database.types.js';
@@ -150,6 +151,19 @@ export class UserRolesService {
 
     const result = await query.executeTakeFirst();
     return !!result;
+  }
+
+  /**
+   * Check if a role is protected (auto-assigned only, not manually assignable).
+   * Currently only tenantAdmin is protected — it is auto-assigned via Quick Setup.
+   */
+  async isProtectedRole(roleId: number): Promise<boolean> {
+    const role = await this.db
+      .selectFrom('roles')
+      .select('name')
+      .where('id', '=', roleId)
+      .executeTakeFirst();
+    return role?.name === ROLE_NAMES.TENANT_ADMIN;
   }
 
   async create(dto: CreateUserRoleDto): Promise<UserRole> {
