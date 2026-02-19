@@ -1,5 +1,11 @@
 # @sales-planner/shared
 
+## 0.20.0
+
+### Minor Changes
+
+- Make userName optional in quick setup (CreateTenantWithShopDto). Falls back to userEmail when omitted.
+
 ## 0.19.0
 
 ### Minor Changes

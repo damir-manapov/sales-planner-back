@@ -18,6 +18,6 @@ export interface CreateTenantWithShopDto {
   tenantTitle: string;
   shopTitle?: string;
   userEmail: string;
-  userName: string;
+  userName?: string;
 }
 export type CreateTenantWithShopRequest = CreateTenantWithShopDto;

@@ -67695,10 +67695,10 @@ var require_core2 = __commonJS({
   "../../node_modules/.pnpm/@nestjs+core@11.1.13_@nestjs+common@11.1.13_reflect-metadata@0.2.2_rxjs@7.8.2__@nestjs+_8eee95f8ec8b2b098d54e5dbace7e3f0/node_modules/@nestjs/core/index.js"(exports) {
     "use strict";
     try {
-      (init_empty(), __toCommonJS(empty_exports)).default({ tool: "nest.js", checkSum: "20c0fe2e16606e0cc37870UgFIVRxUBwwDCQNWAVcAVwINAQRT", mode: "runtime", condition: true });
+      (init_empty(), __toCommonJS(empty_exports)).default({ tool: "nest.js", checkSum: "207fd308b75320341e0d3bBldKAx4JVA0DCwQHUA1XVQFdBFJU", mode: "runtime", condition: true });
     } catch (cjsError) {
       try {
-        Promise.resolve().then(() => (init_empty(), empty_exports)).then((m) => m.default.default({ tool: "nest.js", checkSum: "20c0fe2e16606e0cc37870UgFIVRxUBwwDCQNWAVcAVwINAQRT", mode: "runtime", condition: true })).catch((esmError) => {
+        Promise.resolve().then(() => (init_empty(), empty_exports)).then((m) => m.default.default({ tool: "nest.js", checkSum: "207fd308b75320341e0d3bBldKAx4JVA0DCwQHUA1XVQFdBFJU", mode: "runtime", condition: true })).catch((esmError) => {
         });
       } catch (esmError) {
       }
@@ -97252,7 +97252,6 @@ var require_table_names = __commonJS({
       "suppliers",
       "tenants",
       "user_roles",
-      "user_shops",
       "users",
       "warehouses"
     ];
@@ -115830,7 +115829,7 @@ var require_app_controller = __commonJS({
     function _ts_metadata(k, v) {
       if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
     }
-    var APP_VERSION = true ? "0.10.6" : "0.0.0";
+    var APP_VERSION = true ? "0.10.7" : "0.0.0";
     var AppController = class AppController {
       getHello() {
         return this.appService.getHello();
@@ -124038,14 +124037,6 @@ var require_api_keys2 = __commonJS({
   }
 });
 
-// ../shared/dist/entities/user-shops.js
-var require_user_shops = __commonJS({
-  "../shared/dist/entities/user-shops.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-  }
-});
-
 // ../shared/dist/entities/sku-metrics.js
 var require_sku_metrics2 = __commonJS({
   "../shared/dist/entities/sku-metrics.js"(exports) {
@@ -124095,7 +124086,6 @@ var require_entities = __commonJS({
     __exportStar2(require_competitor_sales2(), exports);
     __exportStar2(require_roles(), exports);
     __exportStar2(require_api_keys2(), exports);
-    __exportStar2(require_user_shops(), exports);
     __exportStar2(require_sku_metrics2(), exports);
   }
 });
@@ -124252,14 +124242,6 @@ var require_api_keys3 = __commonJS({
   }
 });
 
-// ../shared/dist/dto/user-shops.js
-var require_user_shops2 = __commonJS({
-  "../shared/dist/dto/user-shops.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", { value: true });
-  }
-});
-
 // ../shared/dist/dto/user-roles.js
 var require_user_roles = __commonJS({
   "../shared/dist/dto/user-roles.js"(exports) {
@@ -124308,7 +124290,6 @@ var require_dto = __commonJS({
     __exportStar2(require_competitor_sales3(), exports);
     __exportStar2(require_marketplaces3(), exports);
     __exportStar2(require_api_keys3(), exports);
-    __exportStar2(require_user_shops2(), exports);
     __exportStar2(require_user_roles(), exports);
   }
 });
@@ -127595,315 +127576,6 @@ var require_user_roles3 = __commonJS({
   }
 });
 
-// dist/entities/user-shops/user-shops.service.js
-var require_user_shops_service = __commonJS({
-  "dist/entities/user-shops/user-shops.service.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", {
-      value: true
-    });
-    Object.defineProperty(exports, "UserShopsService", {
-      enumerable: true,
-      get: function() {
-        return UserShopsService;
-      }
-    });
-    var _common = require_common();
-    var _index = require_common3();
-    var _databaseservice = require_database_service();
-    function _ts_decorate(decorators, target, key, desc) {
-      var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-      if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-      else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-      return c > 3 && r && Object.defineProperty(target, key, r), r;
-    }
-    function _ts_metadata(k, v) {
-      if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-    }
-    var UserShopsService = class UserShopsService {
-      async findAll() {
-        return this.db.selectFrom("user_shops").selectAll().execute();
-      }
-      async findByUserId(userId) {
-        return this.db.selectFrom("user_shops").selectAll().where("userId", "=", userId).execute();
-      }
-      async findByShopId(shopId) {
-        return this.db.selectFrom("user_shops").selectAll().where("shopId", "=", shopId).execute();
-      }
-      async findByTenantId(tenantId) {
-        return this.db.selectFrom("user_shops").selectAll("user_shops").innerJoin("shops", "shops.id", "user_shops.shopId").where("shops.tenantId", "=", tenantId).execute();
-      }
-      async findById(id) {
-        return this.db.selectFrom("user_shops").selectAll().where("id", "=", id).executeTakeFirst();
-      }
-      async create(dto) {
-        try {
-          return this.db.insertInto("user_shops").values(dto).returningAll().executeTakeFirstOrThrow();
-        } catch (error) {
-          if ((0, _index.isUniqueViolation)(error)) {
-            throw new _index.DuplicateResourceException("User Shop", `User ${dto.userId} - Shop ${dto.shopId}`);
-          }
-          throw error;
-        }
-      }
-      async delete(id) {
-        await this.db.deleteFrom("user_shops").where("id", "=", id).execute();
-      }
-      async deleteByUserAndShop(userId, shopId) {
-        await this.db.deleteFrom("user_shops").where("userId", "=", userId).where("shopId", "=", shopId).execute();
-      }
-      constructor(db) {
-        this.db = db;
-      }
-    };
-    UserShopsService = _ts_decorate([
-      (0, _common.Injectable)(),
-      _ts_metadata("design:type", Function),
-      _ts_metadata("design:paramtypes", [
-        typeof _databaseservice.DatabaseService === "undefined" ? Object : _databaseservice.DatabaseService
-      ])
-    ], UserShopsService);
-  }
-});
-
-// dist/entities/user-shops/user-shops.controller.js
-var require_user_shops_controller = __commonJS({
-  "dist/entities/user-shops/user-shops.controller.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", {
-      value: true
-    });
-    Object.defineProperty(exports, "UserShopsController", {
-      enumerable: true,
-      get: function() {
-        return UserShopsController;
-      }
-    });
-    var _common = require_common();
-    var _accesscontrol = require_access_control();
-    var _authguard = require_auth_guard();
-    var _shopsservice = require_shops_service();
-    var _usershopsservice = require_user_shops_service();
-    function _ts_decorate(decorators, target, key, desc) {
-      var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-      if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-      else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-      return c > 3 && r && Object.defineProperty(target, key, r), r;
-    }
-    function _ts_metadata(k, v) {
-      if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
-    }
-    function _ts_param(paramIndex, decorator) {
-      return function(target, key) {
-        decorator(target, key, paramIndex);
-      };
-    }
-    var UserShopsController = class UserShopsController {
-      async findAll(req, userId, shopId, tenantId) {
-        if (req.user.isSystemAdmin) {
-          if (userId) {
-            return this.userShopsService.findByUserId(Number(userId));
-          }
-          if (shopId) {
-            return this.userShopsService.findByShopId(Number(shopId));
-          }
-          return this.userShopsService.findAll();
-        }
-        if (shopId) {
-          const shop = await this.shopsService.findById(Number(shopId));
-          if (!shop || !(0, _accesscontrol.hasTenantAccess)(req.user, shop.tenantId)) {
-            throw new _common.ForbiddenException("Access to this shop is not allowed");
-          }
-          return this.userShopsService.findByShopId(Number(shopId));
-        }
-        if (tenantId) {
-          const tid = Number(tenantId);
-          if (!(0, _accesscontrol.hasTenantAccess)(req.user, tid)) {
-            throw new _common.ForbiddenException("Access to this tenant is not allowed");
-          }
-          return this.userShopsService.findByTenantId(tid);
-        }
-        throw new _common.ForbiddenException("shopId or tenantId query parameter is required");
-      }
-      async findById(req, id) {
-        const userShop = await this.userShopsService.findById(id);
-        if (!userShop) {
-          throw new _common.NotFoundException(`UserShop with id ${id} not found`);
-        }
-        if (!req.user.isSystemAdmin) {
-          const shop = await this.shopsService.findById(userShop.shopId);
-          if (!shop || !(0, _accesscontrol.hasTenantAccess)(req.user, shop.tenantId)) {
-            throw new _common.ForbiddenException("Access to this user-shop is not allowed");
-          }
-        }
-        return userShop;
-      }
-      async create(req, dto) {
-        if (!req.user.isSystemAdmin) {
-          const shop = await this.shopsService.findById(dto.shopId);
-          if (!shop) {
-            throw new _common.NotFoundException(`Shop with id ${dto.shopId} not found`);
-          }
-          (0, _accesscontrol.validateTenantAdminAccess)(req.user, shop.tenantId);
-        }
-        return this.userShopsService.create(dto);
-      }
-      async delete(req, id) {
-        const userShop = await this.userShopsService.findById(id);
-        if (!userShop) {
-          throw new _common.NotFoundException(`UserShop with id ${id} not found`);
-        }
-        if (!req.user.isSystemAdmin) {
-          const shop = await this.shopsService.findById(userShop.shopId);
-          if (!shop || !(0, _accesscontrol.hasTenantAccess)(req.user, shop.tenantId)) {
-            throw new _common.ForbiddenException("Cannot delete user-shop from another tenant");
-          }
-        }
-        await this.userShopsService.delete(id);
-      }
-      constructor(userShopsService, shopsService) {
-        this.userShopsService = userShopsService;
-        this.shopsService = shopsService;
-      }
-    };
-    _ts_decorate([
-      (0, _common.Get)(),
-      _ts_param(0, (0, _common.Req)()),
-      _ts_param(1, (0, _common.Query)("userId")),
-      _ts_param(2, (0, _common.Query)("shopId")),
-      _ts_param(3, (0, _common.Query)("tenantId")),
-      _ts_metadata("design:type", Function),
-      _ts_metadata("design:paramtypes", [
-        typeof _authguard.AuthenticatedRequest === "undefined" ? Object : _authguard.AuthenticatedRequest,
-        String,
-        String,
-        String
-      ]),
-      _ts_metadata("design:returntype", Promise)
-    ], UserShopsController.prototype, "findAll", null);
-    _ts_decorate([
-      (0, _common.Get)(":id"),
-      _ts_param(0, (0, _common.Req)()),
-      _ts_param(1, (0, _common.Param)("id", _common.ParseIntPipe)),
-      _ts_metadata("design:type", Function),
-      _ts_metadata("design:paramtypes", [
-        typeof _authguard.AuthenticatedRequest === "undefined" ? Object : _authguard.AuthenticatedRequest,
-        Number
-      ]),
-      _ts_metadata("design:returntype", Promise)
-    ], UserShopsController.prototype, "findById", null);
-    _ts_decorate([
-      (0, _common.Post)(),
-      _ts_param(0, (0, _common.Req)()),
-      _ts_param(1, (0, _common.Body)()),
-      _ts_metadata("design:type", Function),
-      _ts_metadata("design:paramtypes", [
-        typeof _authguard.AuthenticatedRequest === "undefined" ? Object : _authguard.AuthenticatedRequest,
-        typeof _usershopsservice.CreateUserShopDto === "undefined" ? Object : _usershopsservice.CreateUserShopDto
-      ]),
-      _ts_metadata("design:returntype", Promise)
-    ], UserShopsController.prototype, "create", null);
-    _ts_decorate([
-      (0, _common.Delete)(":id"),
-      _ts_param(0, (0, _common.Req)()),
-      _ts_param(1, (0, _common.Param)("id", _common.ParseIntPipe)),
-      _ts_metadata("design:type", Function),
-      _ts_metadata("design:paramtypes", [
-        typeof _authguard.AuthenticatedRequest === "undefined" ? Object : _authguard.AuthenticatedRequest,
-        Number
-      ]),
-      _ts_metadata("design:returntype", Promise)
-    ], UserShopsController.prototype, "delete", null);
-    UserShopsController = _ts_decorate([
-      (0, _common.Controller)("user-shops"),
-      (0, _common.UseGuards)(_authguard.AuthGuard),
-      _ts_metadata("design:type", Function),
-      _ts_metadata("design:paramtypes", [
-        typeof _usershopsservice.UserShopsService === "undefined" ? Object : _usershopsservice.UserShopsService,
-        typeof _shopsservice.ShopsService === "undefined" ? Object : _shopsservice.ShopsService
-      ])
-    ], UserShopsController);
-  }
-});
-
-// dist/entities/user-shops/user-shops.module.js
-var require_user_shops_module = __commonJS({
-  "dist/entities/user-shops/user-shops.module.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", {
-      value: true
-    });
-    Object.defineProperty(exports, "UserShopsModule", {
-      enumerable: true,
-      get: function() {
-        return UserShopsModule;
-      }
-    });
-    var _common = require_common();
-    var _apikeysmodule = require_api_keys_module();
-    var _authguard = require_auth_guard();
-    var _shopsmodule = require_shops_module();
-    var _tenantsmodule = require_tenants_module();
-    var _userrolesmodule = require_user_roles_module();
-    var _usershopscontroller = require_user_shops_controller();
-    var _usershopsservice = require_user_shops_service();
-    function _ts_decorate(decorators, target, key, desc) {
-      var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
-      if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
-      else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;
-      return c > 3 && r && Object.defineProperty(target, key, r), r;
-    }
-    var UserShopsModule = class UserShopsModule {
-    };
-    UserShopsModule = _ts_decorate([
-      (0, _common.Module)({
-        imports: [
-          _apikeysmodule.ApiKeysModule,
-          _userrolesmodule.UserRolesModule,
-          _tenantsmodule.TenantsModule,
-          _shopsmodule.ShopsModule
-        ],
-        controllers: [
-          _usershopscontroller.UserShopsController
-        ],
-        providers: [
-          _usershopsservice.UserShopsService,
-          _authguard.AuthGuard
-        ],
-        exports: [
-          _usershopsservice.UserShopsService
-        ]
-      })
-    ], UserShopsModule);
-  }
-});
-
-// dist/entities/user-shops/index.js
-var require_user_shops3 = __commonJS({
-  "dist/entities/user-shops/index.js"(exports) {
-    "use strict";
-    Object.defineProperty(exports, "__esModule", {
-      value: true
-    });
-    _export_star(require_user_shops_controller(), exports);
-    _export_star(require_user_shops_module(), exports);
-    _export_star(require_user_shops_service(), exports);
-    function _export_star(from, to) {
-      Object.keys(from).forEach(function(k) {
-        if (k !== "default" && !Object.prototype.hasOwnProperty.call(to, k)) {
-          Object.defineProperty(to, k, {
-            enumerable: true,
-            get: function() {
-              return from[k];
-            }
-          });
-        }
-      });
-      return from;
-    }
-  }
-});
-
 // dist/entities/users/index.js
 var require_users4 = __commonJS({
   "dist/entities/users/index.js"(exports) {
@@ -127973,8 +127645,7 @@ var require_app_module = __commonJS({
     var _index22 = require_skus3();
     var _index23 = require_tenants4();
     var _index24 = require_user_roles3();
-    var _index25 = require_user_shops3();
-    var _index26 = require_users4();
+    var _index25 = require_users4();
     function _ts_decorate(decorators, target, key, desc) {
       var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
       if (typeof Reflect === "object" && typeof Reflect.decorate === "function") r = Reflect.decorate(decorators, target, key, desc);
@@ -127998,13 +127669,12 @@ var require_app_module = __commonJS({
           }),
           _index8.DatabaseModule,
           _index1.AuthModule,
-          _index26.UsersModule,
+          _index25.UsersModule,
           _index12.MeModule,
           _index19.RolesModule,
           _index24.UserRolesModule,
           _index23.TenantsModule,
           _index21.ShopsModule,
-          _index25.UserShopsModule,
           _index.ApiKeysModule,
           _index2.BootstrapModule,
           _index11.MarketplacesModule,

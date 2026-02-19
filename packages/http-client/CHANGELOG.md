@@ -1,5 +1,16 @@
 # @sales-planner/http-client
 
+## 0.22.0
+
+### Minor Changes
+
+- Make userName optional in quick setup (CreateTenantWithShopDto). Falls back to userEmail when omitted.
+
+### Patch Changes
+
+- Updated dependencies
+  - @sales-planner/shared@0.20.0
+
 ## 0.21.0
 
 ### Minor Changes

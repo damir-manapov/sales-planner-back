@@ -72,7 +72,6 @@ export type CreateUserRequest = CreateUserDto;
 | `CompetitorSale` | `id`, `competitorProductId`, `period`, `quantity`, `shopId`, `tenantId` |
 | `Role` | Predefined, read-only — `id`, `name`, `description` |
 | `ApiKey` | `id`, `userId`, `key`, `name`, `expiresAt`, `lastUsedAt` |
-| `UserShop` | `id`, `userId`, `shopId`, `createdAt`, `updatedAt` |
 
 ### Computed Entities (Read-Only)
 
@@ -90,13 +89,12 @@ export type CreateUserRequest = CreateUserDto;
 | `CreateTenantDto` | `title`, `ownerId?`, `createdBy` |
 | `CreateTenantRequest` | `title`, `ownerId?` |
 | `UpdateTenantDto` / `UpdateTenantRequest` | `title?` |
-| `CreateTenantWithShopDto` / `CreateTenantWithShopRequest` | `title`, `shopTitle`, `userEmail`, `userName` |
+| `CreateTenantWithShopDto` / `CreateTenantWithShopRequest` | `tenantTitle`, `shopTitle?`, `userEmail`, `userName?` (defaults to `userEmail`) |
 | `CreateShopDto` / `CreateShopRequest` | `title`, `tenantId` |
 | `UpdateShopDto` / `UpdateShopRequest` | `title?` |
 | `CreateApiKeyDto` / `CreateApiKeyRequest` | `userId`, `name?`, `expiresAt?` |
 | `UpdateApiKeyDto` / `UpdateApiKeyRequest` | `name?`, `expiresAt?` |
 | `CreateUserRoleDto` / `CreateUserRoleRequest` | `userId`, `roleId`, `tenantId`, `shopId?` |
-| `CreateUserShopDto` / `CreateUserShopRequest` | `userId`, `shopId` |
 
 ### DTOs — Shop-Scoped
 
@@ -146,7 +144,6 @@ Each of `Brand`, `Category`, `Group`, `Status`, `Supplier`, `Warehouse`, `Market
 | `CompetitorSaleQuery` | `PaginationQuery & PeriodQuery` |
 | `PaginatedResponse<T>` | `{ items: T[]; total: number; limit: number; offset: number }` |
 | `GetUserRolesQuery` | `{ userId?: number; roleId?: number; tenantId?: number }` |
-| `GetUserShopsQuery` | `{ userId?: number; shopId?: number; tenantId?: number }` |
 
 ### Response Types
 

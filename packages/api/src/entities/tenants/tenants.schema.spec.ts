@@ -145,6 +145,17 @@ describe('Tenant Schemas', () => {
       expect(() => CreateTenantWithShopSchema.parse(data)).toThrow();
     });
 
+    it('should accept missing userName and use default', () => {
+      const data = {
+        tenantTitle: 'Test Tenant',
+        userEmail: 'user@example.com',
+      };
+
+      const result = CreateTenantWithShopSchema.parse(data);
+
+      expect(result).toEqual(data);
+    });
+
     it('should reject empty userName', () => {
       const data = {
         tenantTitle: 'Test Tenant',

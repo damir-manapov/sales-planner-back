@@ -890,12 +890,21 @@ curl -H "x-api-key: $API_KEY" "http://localhost:3000/tenants/1"
 
 # Create tenant with shop and user (systemAdmin only) - returns API key of owner
 # Shop automatically takes the same name as the tenant
+# userName is optional — defaults to userEmail if omitted
 curl -X POST -H "x-api-key: $SYSTEM_ADMIN_API_KEY" -H "Content-Type: application/json" \
   "http://localhost:3000/tenants/with-shop-and-user" \
   -d '{
     "tenantTitle": "New Company",
     "userEmail": "owner@company.com",
     "userName": "Company Owner"
+  }'
+
+# Minimal request (userName defaults to userEmail):
+curl -X POST -H "x-api-key: $SYSTEM_ADMIN_API_KEY" -H "Content-Type: application/json" \
+  "http://localhost:3000/tenants/with-shop-and-user" \
+  -d '{
+    "tenantTitle": "New Company",
+    "userEmail": "owner@company.com"
   }'
 
 # Response includes tenant, shop, user, and generated API key:
@@ -912,7 +921,8 @@ The `createdBy` field tracks which user created each tenant and cannot be manual
 **Create Tenant with Shop and User** (`POST /tenants/with-shop-and-user`):
 - Only `systemAdmin` can use this endpoint
 - Creates user, tenant, and shop in one transaction
-- Shop automatically uses the same name as the tenant
+- `shopTitle` is optional — defaults to `tenantTitle` if omitted
+- `userName` is optional — defaults to `userEmail` if omitted
 - Generates API key for the new user
 - Sets the new user as tenant owner and creator
 - Returns tenant, shop, user, and API key for immediate use

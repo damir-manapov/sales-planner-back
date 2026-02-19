@@ -1,5 +1,17 @@
 # @sales-planner/react
 
+## 0.5.0
+
+### Minor Changes
+
+- Make userName optional in quick setup (CreateTenantWithShopDto). Falls back to userEmail when omitted.
+
+### Patch Changes
+
+- Updated dependencies
+  - @sales-planner/shared@0.20.0
+  - @sales-planner/http-client@0.22.0
+
 ## 0.4.0
 
 ### Minor Changes

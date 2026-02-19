@@ -32,7 +32,7 @@ export const CreateTenantWithShopSchema = z.object({
   tenantTitle: title(),
   shopTitle: title().optional(),
   userEmail: email(),
-  userName: name(),
+  userName: name().optional(),
 });
 
 // Infer TypeScript types from schemas with compatibility checks

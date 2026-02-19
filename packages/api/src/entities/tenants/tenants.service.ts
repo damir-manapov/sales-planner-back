@@ -109,12 +109,12 @@ export class TenantsService {
     dto: CreateTenantWithShopDto,
   ): Promise<TenantWithShopAndApiKey> {
     return this.db.transaction().execute(async (trx) => {
-      // Create user
+      // Create user (use email as name if userName not provided)
       const user = await trx
         .insertInto('users')
         .values({
           email: dto.userEmail,
-          name: dto.userName,
+          name: dto.userName ?? dto.userEmail,
           updatedAt: new Date(),
         })
         .returningAll()
