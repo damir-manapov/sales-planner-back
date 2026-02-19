@@ -67,11 +67,6 @@ export {
   useUserRoleById,
   useCreateUserRole,
   useDeleteUserRole,
-  // User Shops
-  useUserShops,
-  useUserShopById,
-  useCreateUserShop,
-  useDeleteUserShop,
   // API Keys
   useApiKeys,
   useCreateApiKey,

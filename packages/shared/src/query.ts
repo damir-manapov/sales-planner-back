@@ -27,12 +27,6 @@ export interface GetUserRolesQuery {
   tenantId?: number;
 }
 
-export interface GetUserShopsQuery {
-  userId?: number;
-  shopId?: number;
-  tenantId?: number;
-}
-
 /**
  * Paginated response wrapper
  */

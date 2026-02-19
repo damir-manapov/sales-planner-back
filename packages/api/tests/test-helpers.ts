@@ -121,7 +121,7 @@ export async function expectConflict(operation: () => Promise<unknown>): Promise
 /**
  * Delete a user and all related data.
  * Cascades through: sales_history, skus, marketplaces, brands, categories, groups,
- * statuses, suppliers, shops, user_roles, user_shops, api_keys, tenants, and the user.
+ * statuses, suppliers, shops, user_roles, api_keys, tenants, and the user.
  */
 export async function cleanupUser(app: INestApplication, userId: number): Promise<void> {
   const db = getDb(app);
@@ -152,7 +152,6 @@ export async function cleanupUser(app: INestApplication, userId: number): Promis
       await db.deleteFrom('groups').where('shopId', '=', shop.id).execute();
       await db.deleteFrom('statuses').where('shopId', '=', shop.id).execute();
       await db.deleteFrom('suppliers').where('shopId', '=', shop.id).execute();
-      await db.deleteFrom('user_shops').where('shopId', '=', shop.id).execute();
     }
 
     // Delete shops after their dependent data
@@ -168,6 +167,5 @@ export async function cleanupUser(app: INestApplication, userId: number): Promis
   // Delete user's remaining data and the user
   await db.deleteFrom('api_keys').where('userId', '=', userId).execute();
   await db.deleteFrom('user_roles').where('userId', '=', userId).execute();
-  await db.deleteFrom('user_shops').where('userId', '=', userId).execute();
   await db.deleteFrom('users').where('id', '=', userId).execute();
 }

@@ -115830,7 +115830,7 @@ var require_app_controller = __commonJS({
     function _ts_metadata(k, v) {
       if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
     }
-    var APP_VERSION = true ? "0.10.5" : "0.0.0";
+    var APP_VERSION = true ? "0.10.6" : "0.0.0";
     var AppController = class AppController {
       getHello() {
         return this.appService.getHello();

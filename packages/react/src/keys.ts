@@ -30,10 +30,6 @@ export const queryKeys = {
     ['sales-planner', 'user-roles', query ?? {}] as const,
   userRoleDetail: (id: number) => ['sales-planner', 'user-roles', id] as const,
 
-  userShops: (query?: Record<string, unknown>) =>
-    ['sales-planner', 'user-shops', query ?? {}] as const,
-  userShopDetail: (id: number) => ['sales-planner', 'user-shops', id] as const,
-
   apiKeys: (query?: Record<string, unknown>) => ['sales-planner', 'api-keys', query ?? {}] as const,
   apiKeyDetail: (id: number) => ['sales-planner', 'api-keys', id] as const,
 

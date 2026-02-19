@@ -27,7 +27,6 @@ export const VALID_TABLE_NAMES: readonly TableName[] = [
   'suppliers',
   'tenants',
   'user_roles',
-  'user_shops',
   'users',
   'warehouses',
 ] as const;

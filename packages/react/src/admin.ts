@@ -17,9 +17,6 @@ import type {
   UserRoleResponse,
   CreateUserRoleRequest,
   GetUserRolesQuery,
-  UserShop,
-  CreateUserShopRequest,
-  GetUserShopsQuery,
   ApiKey,
   CreateApiKeyRequest,
 } from '@sales-planner/shared';
@@ -320,60 +317,6 @@ export function useDeleteUserRole(
     mutationFn: (id: number) => client.userRoles.delete(id),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['sales-planner', 'user-roles'] });
-    },
-    ...options,
-  });
-}
-
-// ── User Shops ──
-
-export function useUserShops(
-  query?: GetUserShopsQuery,
-  options?: Omit<UseQueryOptions<UserShop[]>, 'queryKey' | 'queryFn'>,
-) {
-  const client = useSalesPlannerClient();
-  return useQuery({
-    queryKey: queryKeys.userShops(query as Record<string, unknown> | undefined),
-    queryFn: () => client.userShops.getAll(query),
-    ...options,
-  });
-}
-
-export function useUserShopById(
-  id: number,
-  options?: Omit<UseQueryOptions<UserShop>, 'queryKey' | 'queryFn'>,
-) {
-  const client = useSalesPlannerClient();
-  return useQuery({
-    queryKey: queryKeys.userShopDetail(id),
-    queryFn: () => client.userShops.getById(id),
-    ...options,
-  });
-}
-
-export function useCreateUserShop(
-  options?: Omit<UseMutationOptions<UserShop, Error, CreateUserShopRequest>, 'mutationFn'>,
-) {
-  const client = useSalesPlannerClient();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (request: CreateUserShopRequest) => client.userShops.create(request),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['sales-planner', 'user-shops'] });
-    },
-    ...options,
-  });
-}
-
-export function useDeleteUserShop(
-  options?: Omit<UseMutationOptions<void, Error, number>, 'mutationFn'>,
-) {
-  const client = useSalesPlannerClient();
-  const qc = useQueryClient();
-  return useMutation({
-    mutationFn: (id: number) => client.userShops.delete(id),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ['sales-planner', 'user-shops'] });
     },
     ...options,
   });

@@ -84,7 +84,6 @@ import { TenantsClient } from './tenants-client.js';
 import { ShopsClient } from './shops-client.js';
 import { SkusClient } from './skus-client.js';
 import { UserRolesClient } from './user-roles-client.js';
-import { UserShopsClient } from './user-shops-client.js';
 import { ApiKeysClient } from './api-keys-client.js';
 import { SkuMetricsClient } from './sku-metrics-client.js';
 import { ComputedEntitiesClient } from './computed-entities-client.js';
@@ -204,7 +203,6 @@ export class SalesPlannerClient {
   >;
   readonly roles: RolesClient;
   readonly userRoles: UserRolesClient;
-  readonly userShops: UserShopsClient;
   readonly apiKeys: ApiKeysClient;
   readonly skuMetrics: SkuMetricsClient;
   readonly computed: ComputedEntitiesClient;
@@ -232,7 +230,6 @@ export class SalesPlannerClient {
     this.competitorSales = new ShopScopedClient(config, 'competitor-sales');
     this.roles = new RolesClient(config);
     this.userRoles = new UserRolesClient(config);
-    this.userShops = new UserShopsClient(config);
     this.apiKeys = new ApiKeysClient(config);
     this.skuMetrics = new SkuMetricsClient(config);
     this.computed = new ComputedEntitiesClient(config);

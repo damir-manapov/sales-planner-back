@@ -25,7 +25,6 @@ export type {
   SkuCompetitorMapping,
   CompetitorProduct,
   CompetitorSale,
-  UserShop,
   // Computed entities
   SkuMetrics,
   // DTOs — system
@@ -42,7 +41,6 @@ export type {
   CreateApiKeyDto,
   CreateApiKeyRequest,
   CreateUserRoleDto,
-  CreateUserShopDto,
   // DTOs — shop-scoped
   CreateSkuDto,
   CreateSkuRequest,
@@ -90,7 +88,6 @@ export type {
   LeftoverQuery,
   CompetitorSaleQuery,
   GetUserRolesQuery,
-  GetUserShopsQuery,
   // Response types
   PaginatedResponse,
   UserWithRolesAndTenants,

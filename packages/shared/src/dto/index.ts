@@ -27,5 +27,4 @@ export * from './sku-competitor-mappings';
 export * from './competitor-sales';
 export * from './marketplaces';
 export * from './api-keys';
-export * from './user-shops';
 export * from './user-roles';

@@ -28,7 +28,6 @@ import { ShopsModule } from './entities/shops/index.js';
 import { SkusModule } from './entities/skus/index.js';
 import { TenantsModule } from './entities/tenants/index.js';
 import { UserRolesModule } from './entities/user-roles/index.js';
-import { UserShopsModule } from './entities/user-shops/index.js';
 import { UsersModule } from './entities/users/index.js';
 
 @Module({
@@ -46,7 +45,6 @@ import { UsersModule } from './entities/users/index.js';
     UserRolesModule,
     TenantsModule,
     ShopsModule,
-    UserShopsModule,
     ApiKeysModule,
     BootstrapModule,
     MarketplacesModule,

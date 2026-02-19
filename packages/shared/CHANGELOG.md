@@ -1,5 +1,11 @@
 # @sales-planner/shared
 
+## 0.19.0
+
+### Minor Changes
+
+- Remove user-shops entity (unused for access control, superseded by user-roles)
+
 ## 0.18.0
 
 ### Minor Changes

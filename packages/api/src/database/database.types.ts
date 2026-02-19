@@ -332,14 +332,6 @@ export interface Users {
   updatedAt: Generated<Timestamp>;
 }
 
-export interface UserShops {
-  createdAt: Generated<Timestamp>;
-  id: Generated<number>;
-  shopId: number;
-  updatedAt: Generated<Timestamp>;
-  userId: number;
-}
-
 export interface Warehouses {
   code: string;
   createdAt: Generated<Timestamp>;
@@ -410,7 +402,6 @@ export interface DB {
   suppliers: Suppliers;
   tenants: Tenants;
   user_roles: UserRoles;
-  user_shops: UserShops;
   users: Users;
   warehouses: Warehouses;
 }

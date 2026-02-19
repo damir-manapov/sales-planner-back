@@ -1,5 +1,16 @@
 # @sales-planner/http-client
 
+## 0.21.0
+
+### Minor Changes
+
+- Remove user-shops entity (unused for access control, superseded by user-roles)
+
+### Patch Changes
+
+- Updated dependencies
+  - @sales-planner/shared@0.19.0
+
 ## 0.20.0
 
 ### Minor Changes
