@@ -1,5 +1,19 @@
 # @sales-planner/api
 
+## 0.10.11
+
+### Patch Changes
+
+- Updated dependencies
+  - @sales-planner/shared@0.20.3
+
+## 0.10.10
+
+### Patch Changes
+
+- Updated dependencies
+  - @sales-planner/shared@0.20.2
+
 ## 0.10.9
 
 ### Patch Changes

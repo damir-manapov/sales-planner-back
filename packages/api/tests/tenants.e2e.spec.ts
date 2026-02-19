@@ -7,6 +7,7 @@ import { ROLE_NAMES } from '../src/common/constants.js';
 import { TestContext } from './test-context.js';
 import {
   cleanupUser,
+  expectBadRequest,
   expectConflict,
   expectForbidden,
   expectNotFound,
@@ -269,6 +270,56 @@ describe('Tenants (e2e)', () => {
       // Cleanup
       await ctx.getSystemClient().tenants.delete(result.tenant.id);
       await ctx.getSystemClient().users.delete(result.user.id);
+    });
+
+    it('POST /tenants/with-shop-and-user - should use custom shopTitle when provided', async () => {
+      const requestData = {
+        tenantTitle: `Company ${generateUniqueId()}`,
+        shopTitle: `Custom Shop ${generateUniqueId()}`,
+        userEmail: `shop-test-${generateUniqueId()}@test.com`,
+        userName: 'Shop Test User',
+      };
+
+      const result = await ctx.getSystemClient().tenants.createWithShopAndUser(requestData);
+
+      expect(result.shop.title).toBe(requestData.shopTitle);
+      expect(result.shop.title).not.toBe(requestData.tenantTitle);
+
+      // Cleanup
+      await ctx.getSystemClient().tenants.delete(result.tenant.id);
+      await ctx.getSystemClient().users.delete(result.user.id);
+    });
+
+    it('POST /tenants/with-shop-and-user - should default userName to userEmail when omitted', async () => {
+      const email = `noname-${generateUniqueId()}@test.com`;
+      const result = await ctx.getSystemClient().tenants.createWithShopAndUser({
+        tenantTitle: `Company ${generateUniqueId()}`,
+        userEmail: email,
+      });
+
+      expect(result.user.name).toBe(email);
+
+      // Cleanup
+      await ctx.getSystemClient().tenants.delete(result.tenant.id);
+      await ctx.getSystemClient().users.delete(result.user.id);
+    });
+
+    it('POST /tenants/with-shop-and-user - should return 400 for empty tenantTitle', async () => {
+      await expectBadRequest(() =>
+        ctx.getSystemClient().tenants.createWithShopAndUser({
+          tenantTitle: '',
+          userEmail: `bad-${generateUniqueId()}@test.com`,
+        }),
+      );
+    });
+
+    it('POST /tenants/with-shop-and-user - should return 400 for invalid email', async () => {
+      await expectBadRequest(() =>
+        ctx.getSystemClient().tenants.createWithShopAndUser({
+          tenantTitle: `Company ${generateUniqueId()}`,
+          userEmail: 'not-an-email',
+        }),
+      );
     });
 
     it('POST /tenants/with-shop-and-user - should return 409 for duplicate email', async () => {

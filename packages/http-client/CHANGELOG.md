@@ -1,5 +1,21 @@
 # @sales-planner/http-client
 
+## 0.22.3
+
+### Patch Changes
+
+- Add comprehensive quick setup e2e tests: custom shopTitle, userName defaults to email, validation errors (400). Add expectBadRequest test helper.
+- Updated dependencies
+  - @sales-planner/shared@0.20.3
+
+## 0.22.2
+
+### Patch Changes
+
+- Add comprehensive quick setup e2e tests: custom shopTitle, userName defaults to email, validation errors (400).
+- Updated dependencies
+  - @sales-planner/shared@0.20.2
+
 ## 0.22.1
 
 ### Patch Changes

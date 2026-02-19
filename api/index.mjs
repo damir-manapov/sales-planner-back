@@ -114447,6 +114447,7 @@ var require_tenants_service = __commonJS({
     });
     var _common = require_common();
     var _constants = require_constants7();
+    var _exceptions = require_exceptions4();
     var _databaseservice = require_database_service();
     function _ts_decorate(decorators, target, key, desc) {
       var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;
@@ -114518,50 +114519,57 @@ var require_tenants_service = __commonJS({
         await this.db.deleteFrom("tenants").where("id", "=", id).execute();
       }
       async createTenantWithShopAndUser(dto) {
-        return this.db.transaction().execute(async (trx) => {
-          const user = await trx.insertInto("users").values({
-            email: dto.userEmail,
-            name: dto.userName ?? dto.userEmail,
-            updatedAt: /* @__PURE__ */ new Date()
-          }).returningAll().executeTakeFirstOrThrow();
-          const apiKeyValue = `sk_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
-          await trx.insertInto("api_keys").values({
-            userId: user.id,
-            key: apiKeyValue,
-            name: "Default API Key"
-          }).execute();
-          const tenant = await trx.insertInto("tenants").values({
-            title: dto.tenantTitle,
-            ownerId: user.id,
-            createdBy: user.id
-          }).returningAll().executeTakeFirstOrThrow();
-          const shop = await trx.insertInto("shops").values({
-            title: dto.shopTitle || dto.tenantTitle,
-            tenantId: tenant.id
-          }).returningAll().executeTakeFirstOrThrow();
-          const tenantAdminRole = await trx.selectFrom("roles").select("id").where("name", "=", _constants.ROLE_NAMES.TENANT_ADMIN).executeTakeFirst();
-          if (tenantAdminRole) {
-            await trx.insertInto("user_roles").values({
+        try {
+          return await this.db.transaction().execute(async (trx) => {
+            const user = await trx.insertInto("users").values({
+              email: dto.userEmail,
+              name: dto.userName ?? dto.userEmail,
+              updatedAt: /* @__PURE__ */ new Date()
+            }).returningAll().executeTakeFirstOrThrow();
+            const apiKeyValue = `sk_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
+            await trx.insertInto("api_keys").values({
               userId: user.id,
-              roleId: tenantAdminRole.id,
-              tenantId: tenant.id
+              key: apiKeyValue,
+              name: "Default API Key"
             }).execute();
+            const tenant = await trx.insertInto("tenants").values({
+              title: dto.tenantTitle,
+              ownerId: user.id,
+              createdBy: user.id
+            }).returningAll().executeTakeFirstOrThrow();
+            const shop = await trx.insertInto("shops").values({
+              title: dto.shopTitle || dto.tenantTitle,
+              tenantId: tenant.id
+            }).returningAll().executeTakeFirstOrThrow();
+            const tenantAdminRole = await trx.selectFrom("roles").select("id").where("name", "=", _constants.ROLE_NAMES.TENANT_ADMIN).executeTakeFirst();
+            if (tenantAdminRole) {
+              await trx.insertInto("user_roles").values({
+                userId: user.id,
+                roleId: tenantAdminRole.id,
+                tenantId: tenant.id
+              }).execute();
+            }
+            return {
+              tenant,
+              shop: {
+                id: shop.id,
+                title: shop.title,
+                tenantId: shop.tenantId
+              },
+              user: {
+                id: user.id,
+                email: user.email,
+                name: user.name
+              },
+              apiKey: apiKeyValue
+            };
+          });
+        } catch (error) {
+          if ((0, _exceptions.isUniqueViolation)(error)) {
+            throw new _exceptions.DuplicateResourceException("User", dto.userEmail);
           }
-          return {
-            tenant,
-            shop: {
-              id: shop.id,
-              title: shop.title,
-              tenantId: shop.tenantId
-            },
-            user: {
-              id: user.id,
-              email: user.email,
-              name: user.name
-            },
-            apiKey: apiKeyValue
-          };
-        });
+          throw error;
+        }
       }
       constructor(db) {
         this.db = db;
@@ -115829,7 +115837,7 @@ var require_app_controller = __commonJS({
     function _ts_metadata(k, v) {
       if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
     }
-    var APP_VERSION = true ? "0.10.8" : "0.0.0";
+    var APP_VERSION = true ? "0.10.9" : "0.0.0";
     var AppController = class AppController {
       getHello() {
         return this.appService.getHello();

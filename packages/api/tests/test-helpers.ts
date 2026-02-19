@@ -91,6 +91,13 @@ export async function expectApiError(
 }
 
 /**
+ * Assert that an async operation throws a 400 Bad Request error.
+ */
+export async function expectBadRequest(operation: () => Promise<unknown>): Promise<void> {
+  return expectApiError(operation, 400, 'Expected 400 Bad Request');
+}
+
+/**
  * Assert that an async operation throws a 401 Unauthorized error.
  */
 export async function expectUnauthorized(operation: () => Promise<unknown>): Promise<void> {
