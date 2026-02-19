@@ -7,6 +7,7 @@ import { ROLE_NAMES } from '../src/common/constants.js';
 import { TestContext } from './test-context.js';
 import {
   cleanupUser,
+  expectConflict,
   expectForbidden,
   expectNotFound,
   expectUnauthorized,
@@ -264,6 +265,25 @@ describe('Tenants (e2e)', () => {
       expect(tenant?.shops).toHaveLength(1);
       expect(tenant?.shops[0]?.id).toBe(result.shop.id);
       expect(tenant?.shops[0]?.title).toBe(requestData.tenantTitle);
+
+      // Cleanup
+      await ctx.getSystemClient().tenants.delete(result.tenant.id);
+      await ctx.getSystemClient().users.delete(result.user.id);
+    });
+
+    it('POST /tenants/with-shop-and-user - should return 409 for duplicate email', async () => {
+      const email = `duplicate-${generateUniqueId()}@test.com`;
+      const result = await ctx.getSystemClient().tenants.createWithShopAndUser({
+        tenantTitle: `Tenant ${generateUniqueId()}`,
+        userEmail: email,
+      });
+
+      await expectConflict(() =>
+        ctx.getSystemClient().tenants.createWithShopAndUser({
+          tenantTitle: `Tenant ${generateUniqueId()}`,
+          userEmail: email,
+        }),
+      );
 
       // Cleanup
       await ctx.getSystemClient().tenants.delete(result.tenant.id);

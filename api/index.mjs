@@ -114521,7 +114521,7 @@ var require_tenants_service = __commonJS({
         return this.db.transaction().execute(async (trx) => {
           const user = await trx.insertInto("users").values({
             email: dto.userEmail,
-            name: dto.userName,
+            name: dto.userName ?? dto.userEmail,
             updatedAt: /* @__PURE__ */ new Date()
           }).returningAll().executeTakeFirstOrThrow();
           const apiKeyValue = `sk_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
@@ -115494,7 +115494,7 @@ var require_tenants_schema = __commonJS({
       tenantTitle: title(),
       shopTitle: title().optional(),
       userEmail: email(),
-      userName: name()
+      userName: name().optional()
     });
   }
 });
@@ -115829,7 +115829,7 @@ var require_app_controller = __commonJS({
     function _ts_metadata(k, v) {
       if (typeof Reflect === "object" && typeof Reflect.metadata === "function") return Reflect.metadata(k, v);
     }
-    var APP_VERSION = true ? "0.10.7" : "0.0.0";
+    var APP_VERSION = true ? "0.10.8" : "0.0.0";
     var AppController = class AppController {
       getHello() {
         return this.appService.getHello();

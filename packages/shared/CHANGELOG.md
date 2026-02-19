@@ -1,5 +1,11 @@
 # @sales-planner/shared
 
+## 0.20.1
+
+### Patch Changes
+
+- Return 409 Conflict instead of 500 when quick setup is called with an existing email.
+
 ## 0.20.0
 
 ### Minor Changes

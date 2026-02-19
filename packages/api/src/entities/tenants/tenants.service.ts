@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import type { PaginatedResponse, PaginationQuery, Tenant } from '@sales-planner/shared';
 import { ROLE_NAMES } from '../../common/constants.js';
+import { DuplicateResourceException, isUniqueViolation } from '../../common/exceptions.js';
 import { DatabaseService } from '../../database/database.service.js';
 import type {
   CreateTenantDto,
@@ -108,82 +109,89 @@ export class TenantsService {
   async createTenantWithShopAndUser(
     dto: CreateTenantWithShopDto,
   ): Promise<TenantWithShopAndApiKey> {
-    return this.db.transaction().execute(async (trx) => {
-      // Create user (use email as name if userName not provided)
-      const user = await trx
-        .insertInto('users')
-        .values({
-          email: dto.userEmail,
-          name: dto.userName ?? dto.userEmail,
-          updatedAt: new Date(),
-        })
-        .returningAll()
-        .executeTakeFirstOrThrow();
+    try {
+      return await this.db.transaction().execute(async (trx) => {
+        // Create user (use email as name if userName not provided)
+        const user = await trx
+          .insertInto('users')
+          .values({
+            email: dto.userEmail,
+            name: dto.userName ?? dto.userEmail,
+            updatedAt: new Date(),
+          })
+          .returningAll()
+          .executeTakeFirstOrThrow();
 
-      // Generate API key for the user
-      const apiKeyValue = `sk_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
-      await trx
-        .insertInto('api_keys')
-        .values({
-          userId: user.id,
-          key: apiKeyValue,
-          name: 'Default API Key',
-        })
-        .execute();
-
-      // Create tenant with user as owner
-      const tenant = await trx
-        .insertInto('tenants')
-        .values({
-          title: dto.tenantTitle,
-          ownerId: user.id,
-          createdBy: user.id,
-        })
-        .returningAll()
-        .executeTakeFirstOrThrow();
-
-      // Create shop under tenant
-      const shop = await trx
-        .insertInto('shops')
-        .values({
-          title: dto.shopTitle || dto.tenantTitle,
-          tenantId: tenant.id,
-        })
-        .returningAll()
-        .executeTakeFirstOrThrow();
-
-      // Assign tenantAdmin role to user
-      const tenantAdminRole = await trx
-        .selectFrom('roles')
-        .select('id')
-        .where('name', '=', ROLE_NAMES.TENANT_ADMIN)
-        .executeTakeFirst();
-
-      if (tenantAdminRole) {
+        // Generate API key for the user
+        const apiKeyValue = `sk_${Math.random().toString(36).slice(2)}${Date.now().toString(36)}`;
         await trx
-          .insertInto('user_roles')
+          .insertInto('api_keys')
           .values({
             userId: user.id,
-            roleId: tenantAdminRole.id,
-            tenantId: tenant.id,
+            key: apiKeyValue,
+            name: 'Default API Key',
           })
           .execute();
-      }
 
-      return {
-        tenant,
-        shop: {
-          id: shop.id,
-          title: shop.title,
-          tenantId: shop.tenantId,
-        },
-        user: {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-        },
-        apiKey: apiKeyValue,
-      };
-    });
+        // Create tenant with user as owner
+        const tenant = await trx
+          .insertInto('tenants')
+          .values({
+            title: dto.tenantTitle,
+            ownerId: user.id,
+            createdBy: user.id,
+          })
+          .returningAll()
+          .executeTakeFirstOrThrow();
+
+        // Create shop under tenant
+        const shop = await trx
+          .insertInto('shops')
+          .values({
+            title: dto.shopTitle || dto.tenantTitle,
+            tenantId: tenant.id,
+          })
+          .returningAll()
+          .executeTakeFirstOrThrow();
+
+        // Assign tenantAdmin role to user
+        const tenantAdminRole = await trx
+          .selectFrom('roles')
+          .select('id')
+          .where('name', '=', ROLE_NAMES.TENANT_ADMIN)
+          .executeTakeFirst();
+
+        if (tenantAdminRole) {
+          await trx
+            .insertInto('user_roles')
+            .values({
+              userId: user.id,
+              roleId: tenantAdminRole.id,
+              tenantId: tenant.id,
+            })
+            .execute();
+        }
+
+        return {
+          tenant,
+          shop: {
+            id: shop.id,
+            title: shop.title,
+            tenantId: shop.tenantId,
+          },
+          user: {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+          },
+          apiKey: apiKeyValue,
+        };
+      });
+    } catch (error) {
+      if (isUniqueViolation(error)) {
+        throw new DuplicateResourceException('User', dto.userEmail);
+      }
+      throw error;
+    }
   }
 }
